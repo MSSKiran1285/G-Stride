@@ -1,0 +1,62 @@
+{
+  "name": "Create Purchase Order - Happy Path",
+  "objective": "Create a new Standard Purchase Order for the given supplier, ordering the specified material/quantity at the negotiated net price, and capture the resulting Purchase Order number for downstream use.",
+  "preconditions": "User is authorized to create purchase orders; the supplier and material are already maintained as master data.",
+  "learningObjectives": [
+    "After this section you can create a Purchase Order from the Manage Purchase Orders app through to save.",
+    "After this section you can add a line item specifying material, plant, quantity, and net price.",
+    "After this section you can locate the system-generated Purchase Order number after saving."
+  ],
+  "commonErrorsAndTips": [
+    "Supplier not authorized for the chosen purchasing organization. The system will flag the document incomplete; verify the supplier master record's purchasing view.",
+    "Leaving Net Price blank or zero. Some validations allow it but it results in a zero-value PO; always confirm the negotiated price is populated before saving.",
+    "Selecting the wrong Plant. Line item defaults may not match the intended receiving location; double-check Plant against the storage location you intend to receive into.",
+    "A typed material code that doesn't match a real master record can leave the row incomplete. Use the value-help dropdown result rather than assuming free-text entry always resolves."
+  ],
+  "steps": [
+    {
+      "module": "Login",
+      "params": {
+        "url": "${url}",
+        "username": "${username}",
+        "password": "${password}"
+      }
+    },
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#PurchaseOrder-manage"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createPurchaseOrder",
+      "params": {
+        "control": "CreateButton"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createPurchaseOrder",
+      "params": {
+        "field": "SupplierField",
+        "value": "${supplier}"
+      }
+    },
+    {
+      "module": "AddLineItem",
+      "appId": "createPurchaseOrder",
+      "params": {
+        "rows": "[{\"LineItemMaterialField\":\"${material}\",\"LineItemPlantField\":\"${plant}\",\"LineItemQuantityField\":\"${quantity}\",\"LineItemNetPriceField\":\"${netPrice}\"}]"
+      }
+    },
+    {
+      "module": "SaveAndCaptureDocumentNumber",
+      "appId": "createPurchaseOrder",
+      "params": {
+        "placeholderTitle": "New Purchase Order",
+        "captureAs": "poNumber"
+      }
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "name": "Post Supplier Invoice (3-Way Match)",
+  "objective": "Create a Supplier Invoice referencing the Purchase Order, match it to the PO and Goods Receipt (3-way match), simulate the posting, then post it and capture the resulting invoice document number.",
+  "preconditions": "The Purchase Order exists and has a completed Goods Receipt against it; the invoicing party (supplier) is authorized to bill against this PO.",
+  "learningObjectives": [
+    "After this section you can create a Supplier Invoice header referencing a Purchase Order.",
+    "After this section you can assign PO line items to the invoice and match the gross amount to the PO reference.",
+    "After this section you can simulate an invoice posting before committing it, and capture the resulting document number."
+  ],
+  "commonErrorsAndTips": [
+    "Invoice Date left outside the allowed open posting period. The system will reject posting with a period-closed error; use today's date unless backdating is specifically required.",
+    "Gross Amount not matching the PO/GR value. The 3-way match will show a variance warning; either correct the amount or confirm the variance is expected before proceeding.",
+    "Skipping Simulate before Post. Simulation surfaces account-determination and tax errors before they become a failed posting; always simulate first.",
+    "An unexpected confirmation dialog (e.g. a duplicate-invoice warning) can block the flow if not dismissed. Check for and dismiss any warning dialog before assuming the next step failed."
+  ],
+  "steps": [
+    { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
+    { "module": "NavigateToApp", "params": { "url": "${url}ui#SupplierInvoice-create" } },
+    { "module": "DismissDialogIfPresent", "appId": "postSupplierInvoice", "params": { "buttonText": "No", "timeoutMs": "8000" } },
+    { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "InvoicingPartyField", "value": "${supplier}" } },
+    { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "InvoiceDateField", "value": "${today}" } },
+    { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "ReferenceField", "value": "${poNumber}" } },
+    {
+      "module": "AssignPurchaseOrderItems",
+      "appId": "postSupplierInvoice",
+      "params": { "purchaseOrder": "${poNumber}" }
+    },
+    {
+      "module": "MatchGrossAmountToPoReference",
+      "appId": "postSupplierInvoice",
+      "params": { "amountKey": "invoiceAmount" }
+    },
+    { "module": "DismissDialogIfPresent", "appId": "postSupplierInvoice", "params": { "buttonText": "Yes", "timeoutMs": "5000" } },
+    { "module": "SimulateInvoice", "appId": "postSupplierInvoice", "params": {} },
+    { "module": "ClickByText", "appId": "postSupplierInvoice", "params": { "text": "Post" } },
+    {
+      "module": "CaptureDocumentNumberFromSuccessDialog",
+      "appId": "postSupplierInvoice",
+      "params": { "captureAs": "invoiceDocumentNumber", "label": "Supplier Invoice Number", "buttonText": "No" }
+    }
+  ]
+}

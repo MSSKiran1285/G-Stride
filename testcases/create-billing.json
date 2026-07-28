@@ -1,0 +1,106 @@
+{
+  "name": "Create Billing Document",
+  "objective": "Create, save, and post a Billing Document (invoice) referencing the Outbound Delivery created in the previous stage.",
+  "preconditions": "The delivery has completed Post Goods Issue and has no outstanding Proof-of-Delivery requirement blocking billing.",
+  "learningObjectives": [
+    "After this section you can locate a delivery in the \"due for billing\" worklist and create its billing document.",
+    "After this section you can distinguish a temporary billing document number from a final one.",
+    "After this section you can post a billing document to complete the accounting entry."
+  ],
+  "commonErrorsAndTips": [
+    "Searching by the wrong reference. The \"SD Document\" filter accepts sales order, delivery, or order numbers — for this flow, always search by the Delivery number, since billing is delivery-based, not order-based.",
+    "Assuming the number shown right after \"Create Billing Documents\" is final. It is a temporary placeholder (e.g., TMP0000689) until Save is clicked — do not record it as the invoice number yet. Even right after Save, the on-screen header can briefly still display the old temporary number for a moment before it refreshes — re-check rather than reading it the instant Save returns.",
+    "Forgetting to click \"Post Billing Document.\" A document with status \"To Be Posted\" has a real number but has not updated financial accounting. The process is not complete until status shows \"Completed.\"",
+    "Billing a delivery that failed Proof of Delivery (POD). Some deliveries show \"POD report back not yet carried out or incomplete\" and cannot be billed until POD is confirmed — this is a data/configuration condition, not an automation error."
+  ],
+  "steps": [
+    {
+      "module": "Login",
+      "params": {
+        "url": "${url}",
+        "username": "${username}",
+        "password": "${password}"
+      }
+    },
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#BillingDocument-create"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createBillingDocument",
+      "params": {
+        "field": "SDDocumentSearchField",
+        "value": "${deliveryNumber}",
+        "pressKey": "Enter"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createBillingDocument",
+      "params": {
+        "control": "BillingGoButton"
+      }
+    },
+    {
+      "module": "SelectTableRow",
+      "appId": "createBillingDocument",
+      "params": {
+        "field": "BillingDueListTable",
+        "rowIndex": "0"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createBillingDocument",
+      "params": {
+        "control": "CreateBillingDocumentsButton"
+      }
+    },
+    {
+      "module": "Wait",
+      "params": {
+        "ms": "3000"
+      }
+    },
+    {
+      "module": "ClickByText",
+      "params": {
+        "text": "Save",
+        "timeoutMs": "15000"
+      }
+    },
+    {
+      "module": "Wait",
+      "params": {
+        "ms": "3000"
+      }
+    },
+    {
+      "module": "CaptureControlValue",
+      "appId": "createBillingDocument",
+      "params": {
+        "field": "BillingDocumentNumberDisplay",
+        "captureAs": "billingDocumentNumber",
+        "label": "Billing Document Number",
+        "retryWhilePrefix": "TMP",
+        "timeoutMs": "15000"
+      }
+    },
+    {
+      "module": "ClickByText",
+      "params": {
+        "text": "Post Billing Document",
+        "timeoutMs": "15000"
+      }
+    },
+    {
+      "module": "Wait",
+      "params": {
+        "ms": "3000"
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Cleanup Abandoned Purchase Order Drafts",
+  "steps": [
+    { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
+    { "module": "CleanupAbandonedDrafts", "params": { "url": "${url}" } }
+  ]
+}

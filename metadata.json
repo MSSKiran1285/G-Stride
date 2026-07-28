@@ -1,0 +1,8 @@
+{
+  "name": "SAP Test Automation Studio",
+  "description": "SAP S/4HANA test automation platform studio web interface",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

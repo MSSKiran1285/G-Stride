@@ -1,0 +1,131 @@
+{
+  "name": "Create Sales Order - Happy Path",
+  "objective": "Create a new Standard Order for customer Cityscape Cycles (USCU_S14) for 10 units of E BIKE (MZ-FG-EB01), and capture the resulting Sales Order number for downstream use.",
+  "preconditions": "User is authorized to create sales orders in Sales Organization 1710 / Distribution Channel 10 / Division 00; the Sold-to Party and Material are already maintained as master data.",
+  "learningObjectives": [
+    "After this section you can create a Standard Order from the organizational-data dialog through to save.",
+    "After this section you can identify which fields are mandatory before the system will let you proceed to the Items tab.",
+    "After this section you can locate the system-generated Sales Order number in the confirmation message."
+  ],
+  "commonErrorsAndTips": [
+    "Wrong Sales Order Type selected. Always confirm \"OR – Standard Order\" is selected unless the business scenario specifically calls for another type (e.g., rush order, return order); the wrong type changes pricing and delivery rules downstream.",
+    "Forgetting to click Continue after organizational data. The header screen will not appear until Sales Organization, Distribution Channel, and Division are all set and Continue is clicked.",
+    "Sold-to Party not authorized for the chosen Sales Area. The system will mark the document \"Incomplete\"; check the incompleteness log before proceeding to Items.",
+    "Leaving Requested Quantity blank. The line item shows a validation error and the order will not save until a quantity greater than zero is entered."
+  ],
+  "steps": [
+    {
+      "module": "Login",
+      "params": {
+        "url": "${url}",
+        "username": "${username}",
+        "password": "${password}"
+      }
+    },
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#SalesOrder-manageSalesOrderV2?preferredMode=create&/SalesOrderManage(...)?i-action=create"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createSalesOrder",
+      "params": {
+        "field": "salesOrderTypeField",
+        "value": "${orderType}"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createSalesOrder",
+      "params": {
+        "field": "SalesOrganizationField",
+        "value": "${salesOrg}"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createSalesOrder",
+      "params": {
+        "field": "distributionChannelField",
+        "value": "${distributionChannel}"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createSalesOrder",
+      "params": {
+        "field": "divisionField",
+        "value": "${division}"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createSalesOrder",
+      "params": {
+        "control": "continueButton"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createSalesOrder",
+      "params": {
+        "field": "soldToPartyField",
+        "value": "${soldToParty}"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createSalesOrder",
+      "params": {
+        "control": "itemsTabButton"
+      }
+    },
+    {
+      "module": "AddLineItem",
+      "appId": "createSalesOrder",
+      "params": {
+        "rows": "[{\"lineItemProductField\":\"${product}\",\"lineItemQuantityField\":\"${quantity}\"}]",
+        "addClickTiming": "after"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createSalesOrder",
+      "params": {
+        "control": "createButton"
+      }
+    },
+    {
+      "module": "Wait",
+      "params": {
+        "ms": "5000"
+      }
+    },
+    {
+      "module": "DismissDialogIfPresent",
+      "appId": "createSalesOrder",
+      "params": {
+        "buttonText": "Save",
+        "timeoutMs": "15000"
+      }
+    },
+    {
+      "module": "Wait",
+      "params": {
+        "ms": "3000"
+      }
+    },
+    {
+      "module": "CaptureDocumentNumberFromSuccessDialog",
+      "appId": "createSalesOrder",
+      "params": {
+        "dialogTitles": "Success;Warning",
+        "captureAs": "soNumber",
+        "label": "Sales Order Number",
+        "buttonText": "Close"
+      }
+    }
+  ]
+}

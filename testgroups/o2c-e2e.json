@@ -1,0 +1,52 @@
+{
+  "name": "O2C: Create SO - Delivery - Billing",
+  "appId": "createSalesOrder",
+  "testCaseFiles": ["create-so.json", "create-delivery.json", "create-billing.json"],
+  "dataFile": "o2c-e2e.csv",
+  "documentTitle": "Order-to-Cash Automation — Test Evidence & Training Guide",
+  "documentSubtitle": "Create Sales Order → Outbound Delivery & Post Goods Issue → Billing Document",
+  "testCaseId": "[TBD]",
+  "narrative": "Order-to-Cash (O2C) is the sequence of steps a company follows from the moment a customer places an order to the moment that order is invoiced. It begins when a sales representative captures a Sales Order, recording what the customer wants, how much, and under which commercial terms. Once the order is confirmed, the warehouse creates an Outbound Delivery to physically prepare the goods for shipment. Warehouse staff then perform Picking — confirming the exact quantity taken from stock for each line item — and finally post a Goods Issue (PGI), which removes the stock from inventory and creates a Material Document as the accounting record of that movement. Once goods have left the warehouse, the sale becomes billable: Finance creates a Billing Document (an invoice) referencing the delivery, saves it to obtain a permanent document number, and posts it to update the general ledger.",
+  "glossary": [
+    { "term": "OR", "meaning": "Sales Order Type \"Standard Order\" — the default order type for a normal cash sale" },
+    { "term": "1710", "meaning": "Sales Organization \"Dom. Sales Org US\" — the selling entity responsible for the sale" },
+    { "term": "10 (Distribution Channel)", "meaning": "\"Direct Sales\" — the channel through which goods reach the customer" },
+    { "term": "00 (Division)", "meaning": "\"Product Division 00\" — the product-line grouping used for reporting" },
+    { "term": "Sold-to Party", "meaning": "The customer placing the order" },
+    { "term": "SD Document", "meaning": "Generic term for any Sales & Distribution document (order, delivery, or billing reference) used as a search key" },
+    { "term": "Due List", "meaning": "A worklist of documents ready for the next process step (e.g., orders due for delivery, deliveries due for billing)" },
+    { "term": "PGI (Post Goods Issue)", "meaning": "The transaction that removes shipped goods from inventory and creates a Material Document" },
+    { "term": "Material Document", "meaning": "The accounting/inventory record created when stock physically moves (e.g., at Goods Issue)" },
+    { "term": "TMP number", "meaning": "A temporary billing document number assigned before Save; replaced by a permanent number once saved" },
+    { "term": "Status: To Be Posted", "meaning": "The billing document has a real number but has not yet updated financial accounting" },
+    { "term": "Status: Completed", "meaning": "The billing document has been posted to accounting — the process step is finished" },
+    { "term": "Manage Sales Orders - V2", "meaning": "Fiori app used to create/manage sales orders (SalesOrder-manageSalesOrderV2)" },
+    { "term": "Create Outbound Deliveries", "meaning": "Fiori app showing sales orders due for delivery (OutboundDelivery-createFromDueList)" },
+    { "term": "Pick Outbound Delivery", "meaning": "Fiori app used to enter picking quantities and post Goods Issue (OutboundDelivery-pick)" },
+    { "term": "Create Billing Documents", "meaning": "Fiori app showing deliveries due for billing (BillingDocument-create)" },
+    { "term": "Manage Billing Documents", "meaning": "Fiori app used to save and post a billing document (BillingDocument-manage)" }
+  ],
+  "trainingSupplement": {
+    "practiceFields": {
+      "Order Type": "OR",
+      "Sales Organization": "1710",
+      "Distribution Channel": "10",
+      "Division": "00",
+      "Sold-to Party": "USCU_S14",
+      "Product": "MZ-FG-EB01",
+      "Quantity": "10"
+    },
+    "checkpoints": [
+      "Scenario 1 — Create Sales Order: write down the Sales Order number the system assigns you; you'll need it for Scenario 2.",
+      "Scenario 2 — Create Delivery and Post Goods Issue: write down your new Outbound Delivery number and your new Material Document number.",
+      "Scenario 3 — Create Billing Document: write down your new Billing Document number, and confirm its status shows \"Completed\" before finishing."
+    ],
+    "quiz": [
+      { "question": "What is the business meaning of Sales Order Type \"OR\"?", "answer": "It designates the document as a Standard Order — the default order type for a normal cash sale." },
+      { "question": "After clicking \"Create Deliveries\" in the due list, which app do you use to enter picking quantities and post Goods Issue?", "answer": "The \"Pick Outbound Delivery\" app." },
+      { "question": "True or False: The number shown immediately after clicking \"Create Billing Documents\" is the final invoice number.", "answer": "False — it is a temporary (TMP) number. The final number is assigned only after clicking Save." },
+      { "question": "What must you do before \"Post GI\" becomes available on the Pick Outbound Delivery screen?", "answer": "You must enter the picking quantities for all items and click Save." },
+      { "question": "What does a Billing Document status of \"To Be Posted\" mean, and what action moves it to \"Completed\"?", "answer": "It means the document has a real number but has not yet updated financial accounting. Clicking \"Post Billing Document\" moves it to \"Completed.\"" }
+    ]
+  }
+}

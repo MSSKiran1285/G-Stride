@@ -1,0 +1,18 @@
+{
+  "name": "@taf/core",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "keytar": "^7.9.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.5.4",
+    "typescript": "^5.5.4"
+  }
+}

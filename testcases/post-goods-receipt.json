@@ -1,0 +1,35 @@
+{
+  "name": "Post Goods Receipt for Purchase Order",
+  "objective": "Post a Goods Receipt against the Purchase Order created in the previous stage, confirming the delivered quantity into the target storage location, and capture the resulting Material Document number.",
+  "preconditions": "The Purchase Order exists and has open (undelivered) quantity; a valid storage location is configured for the receiving plant.",
+  "learningObjectives": [
+    "After this section you can search the Post Goods Receipt app by Purchase Order number.",
+    "After this section you can confirm the delivered quantity for each open line item.",
+    "After this section you can post the goods receipt and capture the resulting Material Document number."
+  ],
+  "commonErrorsAndTips": [
+    "The storage location must be selected explicitly (this app requires a value-help pick, not free-text) — the Post button stays disabled without it.",
+    "Delivered Quantity greater than the open PO quantity. The system either blocks the posting or flags an over-delivery warning; confirm quantity against the PO's own open balance first.",
+    "Searching by an already-consumed Purchase Order shows no open line items. This usually means the PO has already been fully received, not that the search failed.",
+    "The Post action can silently fail to update inventory if the material lacks a valid batch/serial profile it requires. Check the message log at the top of the screen if the confirmation dialog doesn't appear as expected."
+  ],
+  "steps": [
+    { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
+    {
+      "module": "OpenAppFromCatalog",
+      "params": {
+        "catalogUrl": "${url}ui#Shell-appfinder&/catalog/%7B%22catalogSelector%22:%22Materials%2520Management%2520-%2520Goods%2520Receipt%2520Processing%22,%22tileFilter%22:%22goods%2520receipt%22,%22tagFilter%22:%5B%5D%7D",
+        "appTitle": "Post Goods Receipt for Purchasing Document"
+      }
+    },
+    { "module": "SearchGoodsReceiptByPO", "appId": "postGoodsReceipt", "params": { "purchaseOrder": "${poNumber}" } },
+    { "module": "ReceiveOpenLineItem", "appId": "postGoodsReceipt", "params": { "deliveredQuantity": "${deliveredQuantity}" } },
+    { "module": "SelectStorageLocation", "appId": "postGoodsReceipt", "params": { "storageLocationLabel": "Std. storage 1" } },
+    { "module": "ClickButton", "appId": "postGoodsReceipt", "params": { "control": "PostButton" } },
+    {
+      "module": "CaptureDocumentNumberFromSuccessDialog",
+      "appId": "postGoodsReceipt",
+      "params": { "captureAs": "materialDocumentNumber", "label": "Material Document Number" }
+    }
+  ]
+}

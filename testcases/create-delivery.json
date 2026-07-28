@@ -1,0 +1,162 @@
+{
+  "name": "Create Outbound Delivery and Post Goods Issue",
+  "objective": "Create an Outbound Delivery from the Sales Order created in the previous stage, pick the required quantities, and post Goods Issue to remove stock from inventory.",
+  "preconditions": "The Sales Order exists and is delivery-relevant; sufficient unrestricted-use stock exists for the ordered material at the relevant plant/storage location.",
+  "learningObjectives": [
+    "After this section you can locate a sales order in the \"due for delivery\" worklist and create its delivery.",
+    "After this section you can enter picking quantities against a delivery and save them.",
+    "After this section you can post Goods Issue and locate the resulting Material Document number."
+  ],
+  "commonErrorsAndTips": [
+    "\"No results found\" when searching the due list. This does not necessarily mean the order failed — it usually means the order has already been delivered and no longer has open quantity.",
+    "The header \"select all\" checkbox doesn't enable \"Create Deliveries.\" On some Fiori due-list screens, the header checkbox does not reliably register selection with the underlying template. If the Create button stays greyed out, select the row's own checkbox instead.",
+    "Clicking \"Post GI\" before \"Save.\" The Post GI action is not available until picking quantities have been explicitly saved; always Save first, then Post GI.",
+    "Picking quantity exceeds available stock. Post GI will fail with a \"Deficit of SL Unrestricted-use stock\" error. Check on-hand stock via the Manage Stock app before large or repeated test runs."
+  ],
+  "steps": [
+    {
+      "module": "Login",
+      "params": {
+        "url": "${url}",
+        "username": "${username}",
+        "password": "${password}"
+      }
+    },
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#OutboundDelivery-createFromDueList"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "PlannedCreationDateField",
+        "value": ""
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "SalesDocumentSearchField",
+        "value": "${soNumber}",
+        "pressKey": "Enter"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "control": "GoButton"
+      }
+    },
+    {
+      "module": "SelectTableRow",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "DueListTable",
+        "rowIndex": "0"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "control": "CreateDeliveriesButton"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "control": "DisplayLogButton"
+      }
+    },
+    {
+      "module": "CaptureControlValue",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "DeliveryNumberColumn",
+        "captureAs": "deliveryNumber",
+        "label": "Outbound Delivery Number"
+      }
+    },
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#OutboundDelivery-pick"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "DeliverySearchField",
+        "value": "${deliveryNumber}",
+        "pressKey": "Enter"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "control": "SelectAllItemsCheckbox"
+      }
+    },
+    {
+      "module": "FillTableCell",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "pickingQuantityField",
+        "rowIndex": "0",
+        "value": "${quantity}"
+      }
+    },
+    {
+      "module": "FillTableCell",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "pickingQuantityField",
+        "rowIndex": "1",
+        "value": "${quantity}"
+      }
+    },
+    {
+      "module": "ClickByText",
+      "params": {
+        "text": "Save",
+        "timeoutMs": "15000"
+      }
+    },
+    {
+      "module": "Wait",
+      "params": {
+        "ms": "3000"
+      }
+    },
+    {
+      "module": "ClickByText",
+      "params": {
+        "text": "Post GI",
+        "timeoutMs": "15000"
+      }
+    },
+    {
+      "module": "Wait",
+      "params": {
+        "ms": "3000"
+      }
+    },
+    {
+      "module": "CaptureControlValue",
+      "appId": "createOutboundDelivery",
+      "params": {
+        "field": "MaterialDocumentDisplay",
+        "captureAs": "materialDocumentNumber",
+        "label": "Material Document Number"
+      }
+    }
+  ]
+}

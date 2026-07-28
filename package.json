@@ -1,0 +1,32 @@
+{
+  "name": "sap-taf",
+  "private": true,
+  "version": "0.1.0",
+  "description": "QA/4HANA Studio test automation platform by AI ELK.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -b && npm run build:web",
+    "build:web": "npm run build --workspace=@taf/studio-web",
+    "dev": "npm run build:web && tsx packages/studio-server/src/standalone.ts",
+    "start": "node packages/studio-server/dist/standalone.js",
+    "lint": "tsc -b",
+    "clean": "tsc -b --clean",
+    "test:regression": "node --test regression/**/*.test.js",
+    "test:ui:isolated": "node regression/run-isolated-ui.js",
+    "chain:p2p-o2c": "node packages/cli/dist/index.js run testcases/create-po.json testcases/post-goods-receipt.json testcases/post-supplier-invoice.json testcases/create-so.json testcases/create-delivery.json testcases/create-billing.json --app-id createPurchaseOrder --data data/p2p-o2c-e2e.csv --headless true",
+    "suite:p2p-o2c": "node packages/cli/dist/index.js suite testcases/create-po.json testcases/create-so.json --app-id createPurchaseOrder --data data/p2p-o2c-e2e.csv --headless true",
+    "batch:p2p-o2c": "node packages/cli/dist/index.js batch testgroups/po-gr-invoice.json testgroups/o2c-e2e.json --headless true"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.1",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "lucide-react": "^1.27.0"
+  }
+}
