@@ -1,0 +1,33 @@
+{
+  "name": "qa4hana-test-operations",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "generate:data": "node scripts/generate-catalog.mjs",
+    "dev": "npm run generate:data && next dev",
+    "build": "npm run generate:data && next build",
+    "build:open-next": "opennextjs-cloudflare build"
+  },
+  "dependencies": {
+    "lucide-react": "^1.27.0",
+    "next": "latest",
+    "postcss": "^8.5.18",
+    "react": "latest",
+    "react-dom": "latest",
+    "sharp": "^0.35.0"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "^6.0.2",
+    "wrangler": "latest"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.18",
+      "sharp": "0.35.0"
+    }
+  }
+}
