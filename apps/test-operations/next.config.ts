@@ -1,8 +1,8 @@
 import type { NextConfig } from 'next';
-import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 import path from 'node:path';
 
 const nextConfig: NextConfig = {
+  output: 'export',
   reactStrictMode: true,
   turbopack: {
     root: path.resolve(import.meta.dirname),
@@ -10,7 +10,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-if (process.env.NODE_ENV === 'development') {
-  initOpenNextCloudflareForDev();
-}

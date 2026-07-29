@@ -6,7 +6,7 @@
     "generate:data": "node scripts/generate-catalog.mjs",
     "dev": "npm run generate:data && next dev",
     "build": "npm run generate:data && next build",
-    "build:open-next": "opennextjs-cloudflare build"
+    "build:open-next": "npm run build && node scripts/package-static-worker.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.27.0",

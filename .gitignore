@@ -5,6 +5,7 @@ dist/
 .open-next/
 .wrangler/
 apps/test-operations/.artifacts/
+apps/test-operations/out/
 .claude/
 *.tsbuildinfo
 .env
