@@ -1,6 +1,105 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-07-30T10-14-07-231Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T10:14:07.962Z",
+      "finishedAt": "2026-07-30T10:15:19.283Z",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T10-13-49-216Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T10:13:50.222Z",
+      "finishedAt": "2026-07-30T10:14:06.736Z",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T10-13-43-238Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T10:13:43.366Z",
+      "finishedAt": "2026-07-30T10:13:48.724Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-07-30T10-11-33-727Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T10:11:34.447Z",
+      "finishedAt": "2026-07-30T10:12:45.394Z",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T10-11-16-496Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T10:11:17.195Z",
+      "finishedAt": "2026-07-30T10:11:33.290Z",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T10-11-11-081Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T10:11:11.136Z",
+      "finishedAt": "2026-07-30T10:11:16.096Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-07-30T10-06-33-716Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T10:06:34.438Z",
+      "finishedAt": "2026-07-30T10:07:47.828Z",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T10-06-16-423Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T10:06:17.174Z",
+      "finishedAt": "2026-07-30T10:06:33.275Z",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T10-06-11-201Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T10:06:11.266Z",
+      "finishedAt": "2026-07-30T10:06:16.014Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-07-30T09-46-23-487Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-07-30T09:46:24.324Z",
@@ -120,105 +219,6 @@
       "skipped": 0,
       "mode": "Live UI",
       "targetClass": "Non-production SAP"
-    },
-    {
-      "id": "T1.3.1-ISOLATED-UI-R4",
-      "label": "T1.3.1 isolated Studio UI final",
-      "startedAt": "2026-07-29T09:56:57.005Z",
-      "finishedAt": "2026-07-29T09:57:43.266Z",
-      "passed": 25,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated synthetic"
-    },
-    {
-      "id": "T1.3.1-LIVE-UI-R1",
-      "label": "T1.3.1 live read-only Studio UI matrix",
-      "startedAt": "2026-07-29T09:50:34.834Z",
-      "finishedAt": "2026-07-29T09:55:50.186Z",
-      "passed": 6,
-      "failed": 2,
-      "skipped": 5,
-      "mode": "Live UI",
-      "targetClass": "Non-production SAP"
-    },
-    {
-      "id": "T1.3.1-LIVE-API-R1",
-      "label": "T1.3.1 live read-only API matrix",
-      "startedAt": "2026-07-29T09:44:47.837Z",
-      "finishedAt": "2026-07-29T09:50:17.562Z",
-      "passed": 7,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Live API",
-      "targetClass": "Non-production SAP"
-    },
-    {
-      "id": "T1.3.1-ISOLATED-API-R2",
-      "label": "T1.3.1 isolated API matrix final",
-      "startedAt": "2026-07-29T09:23:58.556Z",
-      "finishedAt": "2026-07-29T09:24:08.432Z",
-      "passed": 25,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Synthetic non-production"
-    },
-    {
-      "id": "T1.3.1-ISOLATED-API",
-      "label": "T1.3.1 isolated API execution matrix",
-      "startedAt": "2026-07-29T09:21:00.940Z",
-      "finishedAt": "2026-07-29T09:21:10.742Z",
-      "passed": 19,
-      "failed": 6,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Synthetic non-production"
-    },
-    {
-      "id": "T1.3.1-CORE",
-      "label": "T1.3.1 core engine and security",
-      "startedAt": "2026-07-29T09:18:19.969Z",
-      "finishedAt": "2026-07-29T09:18:24.017Z",
-      "passed": 41,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "T1.3.1-ISOLATED-UI-R3",
-      "label": "T1.3.1 isolated execution matrix final",
-      "startedAt": "2026-07-29T09:14:42.878Z",
-      "finishedAt": "2026-07-29T09:16:58.346Z",
-      "passed": 25,
-      "failed": 0,
-      "skipped": 3,
-      "mode": "Headless UI",
-      "targetClass": "Synthetic non-production"
-    },
-    {
-      "id": "T1.3.1-ISOLATED-UI-R2",
-      "label": "T1.3.1 isolated execution matrix remediation",
-      "startedAt": "2026-07-29T09:10:33.884Z",
-      "finishedAt": "2026-07-29T09:12:13.583Z",
-      "passed": 22,
-      "failed": 3,
-      "skipped": 3,
-      "mode": "Headless UI",
-      "targetClass": "Synthetic non-production"
-    },
-    {
-      "id": "T1.3.1-ISOLATED-UI",
-      "label": "T1.3.1 isolated execution matrix",
-      "startedAt": "2026-07-29T09:04:11.506Z",
-      "finishedAt": "2026-07-29T09:06:39.827Z",
-      "passed": 20,
-      "failed": 5,
-      "skipped": 3,
-      "mode": "Headless UI",
-      "targetClass": "Synthetic non-production"
     }
   ],
   "failureLedger": [
