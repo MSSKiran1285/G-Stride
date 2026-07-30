@@ -4,6 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 
+// A deliberate sentinel test-case file name — starting a Chain/Suite with exactly this file
+// deterministically fails (with a structured diagnosis + correction link), so BL-032's
+// correction-link UI can be exercised without a real SAP failure. Never matches a real Test.
+const FORCE_FAIL_FILE = 'regression-force-fail.json';
+
 function createSyntheticRunService(root) {
   const entries = new Map();
 
@@ -18,7 +23,10 @@ function createSyntheticRunService(root) {
 
   function statusFor(entry) {
     const completed = Date.now() - Date.parse(entry.record.startedAt) >= 150;
-    const state = completed ? 'passed' : 'running';
+    const forcedFailure = completed
+      && entry.options.mode !== 'batch'
+      && (entry.options.testCaseFiles || []).some((file) => path.basename(file) === FORCE_FAIL_FILE);
+    const state = forcedFailure ? 'failed' : completed ? 'passed' : 'running';
     const files = entry.options.mode === 'batch'
       ? entry.options.groupFiles || []
       : entry.options.testCaseFiles;
@@ -28,14 +36,15 @@ function createSyntheticRunService(root) {
     const names = entry.options.mode === 'batch'
       ? (files.length > 0 ? files.map(groupName) : snapshotPackMembers.map((member) => member.name))
       : files.map((file) => path.basename(file, '.json'));
+    const FORCE_FAIL_MESSAGE = 'Object repository: no control named "SyntheticButton" for app "synthetic".';
     const members = names.map((name, index) => ({
       memberId: `synthetic-member-${index + 1}`,
       name,
-      status: completed ? 'passed' : index === 0 ? 'running' : 'pending',
+      status: completed ? state : index === 0 ? 'running' : 'pending',
       iterations: [{
         iterationId: `synthetic-iteration-${index + 1}`,
         index: 0,
-        status: completed ? 'passed' : index === 0 ? 'running' : 'pending',
+        status: completed ? state : index === 0 ? 'running' : 'pending',
         stages: [],
         evidencePdfUrl: null,
       }],
@@ -51,13 +60,24 @@ function createSyntheticRunService(root) {
           startedAt: entry.record.startedAt,
           durationMs: completed ? 150 : 0,
           steps: completed
-            ? [{
-                module: 'Wait',
-                description: 'Synthetic execution completed',
-                status: 'passed',
-                startedAt: entry.record.startedAt,
-                durationMs: 1,
-              }]
+            ? [forcedFailure
+              ? {
+                  module: 'ClickButton',
+                  description: 'Synthetic forced failure',
+                  status: 'failed',
+                  startedAt: entry.record.startedAt,
+                  durationMs: 1,
+                  stepId: 'step-0',
+                  error: FORCE_FAIL_MESSAGE,
+                }
+              : {
+                  module: 'Wait',
+                  description: 'Synthetic execution completed',
+                  status: 'passed',
+                  startedAt: entry.record.startedAt,
+                  durationMs: 1,
+                  stepId: 'step-0',
+                }]
             : [],
           stages: [],
           capturedValues: {},
@@ -100,7 +120,23 @@ function createSyntheticRunService(root) {
       evidenceDocuments: [],
       evidencePdfUrl: null,
       hierarchy: { executionId: record.id, members },
-      diagnosis: null,
+      diagnosis: forcedFailure
+        ? {
+            memberId: members[0]?.memberId,
+            memberName: members[0]?.name,
+            iterationId: members[0]?.iterations[0]?.iterationId,
+            iterationIndex: 0,
+            stage: resultNames[0],
+            step: 'Synthetic forced failure',
+            category: 'object',
+            message: FORCE_FAIL_MESSAGE,
+            correction: {
+              kind: 'object',
+              route: '/objects/synthetic/SyntheticButton',
+              label: 'Open "SyntheticButton" in the Control Object Repository',
+            },
+          }
+        : null,
       rerunEligibility: {
         full: { eligible: completed },
         failed: {

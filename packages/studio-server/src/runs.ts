@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
-import { ExecutionPlan, ExecutionPlanSnapshot, createExecutionPlanSnapshot, loadDataSet } from '@taf/core';
+import { BusinessProcessSpec, ExecutionPlan, ExecutionPlanSnapshot, SingleTestSpec, createExecutionPlanSnapshot, loadDataSet } from '@taf/core';
 import type { ExecutionInitiator, ExecutionTargetContext } from './executionContext';
 
 // studio-server's dist/ lives at packages/studio-server/dist. Walk to the repo
@@ -174,6 +174,12 @@ export interface RerunReview {
   changedInputs: RerunDifference[];
 }
 
+export interface FailureCorrection {
+  kind: 'test' | 'object' | 'data';
+  route: string;
+  label: string;
+}
+
 export interface FailureDiagnosis {
   memberId?: string;
   memberName?: string;
@@ -186,6 +192,10 @@ export interface FailureDiagnosis {
   category: 'setup' | 'data' | 'object' | 'authentication' | 'navigation' | 'assertion' | 'execution';
   message: string;
   screenshotPath?: string;
+  /** The exact Test, object, or dataset this failure points at, when one can be determined —
+   *  BL-032 AC3 ("links open the exact Test, object, dataset, mapping or setting"). Absent
+   *  when nothing in the plan/message resolves to a specific artifact. */
+  correction?: FailureCorrection;
 }
 
 export interface ExecutionHierarchyIteration {
@@ -315,6 +325,29 @@ export function readEvidenceManifest(reportDir: string): EvidenceDocumentReferen
   } catch {
     return [];
   }
+}
+
+/** Every "run-N.json" result file in a report directory, keyed by its own iteration number N
+ *  (1-based, parsed from the filename) rather than by array position — BL-031's fix for a
+ *  real misalignment: when a mid-run iteration produces no result at all (e.g. a data-binding
+ *  failure before the test case even starts), the CLI's own writer simply never creates that
+ *  file, leaving a genuine gap in the numbering. Reading files back in sorted-array order
+ *  (the old approach) would then silently attribute a LATER iteration's result to an EARLIER
+ *  iteration's hierarchy row. Keying by the parsed number instead makes every row show its
+ *  own, correctly-attributed result (or none) regardless of any earlier gap. */
+export function readIndexedResults(reportDir: string): Map<number, unknown> {
+  const indexed = new Map<number, unknown>();
+  if (!existsSync(reportDir)) return indexed;
+  for (const file of readdirSync(reportDir)) {
+    const match = file.match(/^run-(\d+)\.json$/);
+    if (!match) continue;
+    try {
+      indexed.set(Number(match[1]), JSON.parse(readFileSync(path.join(reportDir, file), 'utf8')));
+    } catch {
+      // skip an unreadable/malformed result file rather than fail the whole hierarchy build
+    }
+  }
+  return indexed;
 }
 
 export function startRun(opts: StartRunOptions): RunRecord {
@@ -559,6 +592,11 @@ function buildHierarchy(
         name: plan?.name ?? (status.testCaseFiles.join(' → ') || 'Execution'),
         bindingId: plan?.dataBindings[0]?.bindingId,
       }];
+  const indexedResults = status.mode === 'batch' ? new Map<number, unknown>() : readIndexedResults(status.reportDir);
+  // The Nth evidence document (in manifest order) always corresponds to the Nth result THAT
+  // ACTUALLY EXISTS, by iteration number — the CLI writes both under the same skip-aware
+  // per-iteration loop, so a skipped iteration is simply absent from both, in the same order.
+  const sortedResultNumbers = [...indexedResults.keys()].sort((a, b) => a - b);
   let resultOffset = 0;
   const hierarchyMembers: ExecutionHierarchyMember[] = members.map((member, memberIndex) => {
     const qualifiedBinding = plan?.kind === 'regressionPack' && member.bindingId
@@ -570,16 +608,17 @@ function buildHierarchy(
     const batchResults = status.groupResults?.filter((group) =>
       group.name === member.name || members.length === status.groupResults?.length && status.groupResults[memberIndex] === group
     ) ?? [];
-    const completed = status.mode === 'batch'
-      ? batchResults
-      : status.results.slice(resultOffset, resultOffset + plannedCount);
+    const memberResultBase = resultOffset;
     resultOffset += plannedCount;
-    const iterations = Array.from({ length: Math.max(plannedCount, completed.length) }, (_, index) => {
+    const iterationCount = status.mode === 'batch' ? Math.max(plannedCount, batchResults.length) : plannedCount;
+    const iterations = Array.from({ length: iterationCount }, (_, index) => {
       const batch = status.mode === 'batch' ? batchResults[index] : undefined;
-      const result = status.mode !== 'batch' ? completed[index] as any : undefined;
+      const globalNumber = memberResultBase + index + 1;
+      const result = status.mode !== 'batch' ? indexedResults.get(globalNumber) as any : undefined;
+      const evidenceRank = status.mode !== 'batch' && result !== undefined ? sortedResultNumbers.indexOf(globalNumber) : -1;
       const evidence = status.mode === 'batch'
         ? batch?.evidencePdfUrl ?? null
-        : status.evidenceDocuments[resultOffset - plannedCount + index]?.url ?? null;
+        : evidenceRank >= 0 ? status.evidenceDocuments[evidenceRank]?.url ?? null : null;
       return {
         iterationId: `${member.memberId}-${index + 1}`,
         index,
@@ -623,6 +662,65 @@ function failureCategory(message: string): FailureDiagnosis['category'] {
   return 'execution';
 }
 
+/** Resolves the exact TestAssetSnapshot (file/appId/name) a failure's own stage came from —
+ *  looked up by stageId within the failed member's executable, falling back to that
+ *  executable's first/only stage when no stageId is known (e.g. a pre-BL-031 result). */
+function findFailedTestAsset(
+  plan: ExecutionPlan | undefined,
+  memberId: string | undefined,
+  stageId: string | undefined
+): { file: string; appId: string; name: string } | undefined {
+  if (!plan) return undefined;
+  const executable: SingleTestSpec | BusinessProcessSpec | undefined =
+    plan.kind === 'regressionPack' ? plan.members.find((m) => m.memberId === memberId)?.executable : plan;
+  if (!executable) return undefined;
+  const stages = executable.kind === 'businessProcess'
+    ? executable.stages
+    : [{ stageId: executable.testExecution.test.assetId, ...executable.testExecution }];
+  const stage = (stageId ? stages.find((s) => s.stageId === stageId) : undefined) ?? stages[0];
+  return stage ? { file: stage.test.file, appId: stage.test.appId, name: stage.test.name } : undefined;
+}
+
+/** The failing dataset file for a member's own data binding, if it has one — used for a
+ *  'data'-category failure's correction link. Relational sources link to their header file. */
+function findMemberDataFile(plan: ExecutionPlan | undefined, memberId: string | undefined): string | undefined {
+  if (!plan) return undefined;
+  const executable: SingleTestSpec | BusinessProcessSpec | undefined =
+    plan.kind === 'regressionPack' ? plan.members.find((m) => m.memberId === memberId)?.executable : plan;
+  const file = executable?.dataBindings[0]?.source.files[0];
+  return file ? path.basename(file) : undefined;
+}
+
+/** BL-032 AC3: "links open the exact Test, object, dataset, mapping or setting" — an object
+ *  category's control name is recovered from the message's own double-quoted convention
+ *  (every object-repository throw site quotes the control name first — see
+ *  ObjectRepository.get and controlAccess.ts), never invented. */
+function correctionFor(
+  category: FailureDiagnosis['category'],
+  message: string,
+  plan: ExecutionPlan | undefined,
+  memberId: string | undefined,
+  stageId: string | undefined
+): FailureCorrection | undefined {
+  if (category === 'object') {
+    const name = message.match(/"([^"]+)"/)?.[1];
+    const appId = findFailedTestAsset(plan, memberId, stageId)?.appId;
+    if (name && appId) {
+      return { kind: 'object', route: `/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}`, label: `Open "${name}" in the Control Object Repository` };
+    }
+  }
+  if (category === 'data') {
+    const file = findMemberDataFile(plan, memberId);
+    if (file) return { kind: 'data', route: `/data/${encodeURIComponent(file)}`, label: `Open dataset "${file}"` };
+  }
+  const asset = findFailedTestAsset(plan, memberId, stageId);
+  if (asset) {
+    const file = path.basename(asset.file);
+    return { kind: 'test', route: `/compose/tests/${encodeURIComponent(file)}`, label: `Open Test "${asset.name}"` };
+  }
+  return undefined;
+}
+
 function diagnoseFailure(
   status: Omit<RunStatus, 'hierarchy' | 'diagnosis'>,
   hierarchy: ExecutionHierarchy
@@ -642,6 +740,8 @@ function diagnoseFailure(
     ?? status.progress?.childWork?.error
     ?? status.logTail
     ?? 'Execution failed without a structured error.';
+  const category = failureCategory(message);
+  const plan = readSnapshot(status.reportDir)?.plan;
   return {
     memberId: failedMember?.memberId,
     memberName: failedMember?.name,
@@ -651,9 +751,10 @@ function diagnoseFailure(
     step: failedStep?.description ?? failedStep?.module,
     childIndex: status.progress?.childWork?.currentIndex,
     childKey: status.progress?.childWork?.currentKey,
-    category: failureCategory(message),
+    category,
     message,
     screenshotPath: failedStep?.screenshotPath,
+    correction: correctionFor(category, message, plan, failedMember?.memberId, failedStage?.stageId),
   };
 }
 

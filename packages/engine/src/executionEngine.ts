@@ -2,7 +2,7 @@ import { performance } from 'node:perf_hooks';
 import { ObjectRepository, TestCase, RunResult, RunStage, StepResult, FieldEvidence, resolveParams } from '@taf/core';
 import { IAutomationAdapter } from './adapter';
 import { ModuleRegistry } from './moduleRegistry';
-import { ChildWorkProgress } from './module';
+import type { ChildWorkProgress } from './module';
 
 export interface ExecutionOptions {
   appId: string;
@@ -76,7 +76,9 @@ async function runSteps(
     const module = registry.get(call.module);
     const stepStartedAt = new Date().toISOString();
     const stepStart = performance.now();
+    const stepId = `step-${steps.length}`;
     let resolvedParams: Record<string, string> = {};
+    let lastChildWork: ChildWorkProgress | undefined;
     try {
       resolvedParams = resolveParams(call.params, options.dataRow, runState);
       await module.execute({
@@ -86,12 +88,14 @@ async function runSteps(
         params: resolvedParams,
         runState,
         evidenceDir: options.evidenceDir,
-        onChildProgress: (childWork) =>
-          emitProgress(progressTracker, {
+        onChildProgress: (childWork) => {
+          lastChildWork = childWork;
+          return emitProgress(progressTracker, {
             currentStage,
             currentStep: describeStep(module, resolvedParams, runState),
             childWork,
-          }),
+          });
+        },
       });
       steps.push({
         module: call.module,
@@ -99,6 +103,8 @@ async function runSteps(
         status: 'passed',
         startedAt: stepStartedAt,
         durationMs: performance.now() - stepStart,
+        stepId,
+        childWork: lastChildWork,
       });
       if (progressTracker) progressTracker.completedSteps++;
       await emitProgress(progressTracker, {
@@ -117,6 +123,8 @@ async function runSteps(
         durationMs: performance.now() - stepStart,
         error: err instanceof Error ? err.message : String(err),
         screenshotPath,
+        stepId,
+        childWork: lastChildWork,
       });
       if (progressTracker) progressTracker.completedSteps++;
       await emitProgress(progressTracker, {
@@ -162,7 +170,11 @@ async function runStage(
   registry: ModuleRegistry,
   options: ExecutionOptions,
   runState: Record<string, unknown>,
-  progressTracker?: ProgressTracker
+  progressTracker?: ProgressTracker,
+  /** The orchestrator overwrites this with the plan's own stageId for a Business Process or
+   *  Single Test — this positional fallback only matters when runStage is exercised directly
+   *  (e.g. a bare chain with no plan-level stage identity available). */
+  stageId = 'stage-0'
 ): Promise<RunStage> {
   const stageStartedAt = new Date().toISOString();
   const stageStart = performance.now();
@@ -178,6 +190,7 @@ async function runStage(
     testCase.name
   );
   return {
+    stageId,
     testCaseName: testCase.name,
     status,
     startedAt: stageStartedAt,
@@ -228,7 +241,7 @@ export async function executeTestCaseChain(
 
   for (const [stageIndex, testCase] of testCases.entries()) {
     const calls = stageIndex === 0 ? testCase.steps : testCase.steps.filter((call) => call.module !== 'Login');
-    const stage = await runStage(testCase, calls, adapter, objectRepository, registry, options, runState, progressTracker);
+    const stage = await runStage(testCase, calls, adapter, objectRepository, registry, options, runState, progressTracker, `stage-${stageIndex}`);
     stages.push(stage);
     progressTracker.completedStages++;
     await emitProgress(progressTracker, {
@@ -304,7 +317,7 @@ export async function executeGroup(
 
   for (const [stageIndex, testCase] of testCases.entries()) {
     const calls = stageIndex === 0 ? testCase.steps : testCase.steps.filter((call) => call.module !== 'Login');
-    const stage = await runStage(testCase, calls, adapter, objectRepository, registry, options, runState, progressTracker);
+    const stage = await runStage(testCase, calls, adapter, objectRepository, registry, options, runState, progressTracker, `stage-${stageIndex}`);
     stages.push(stage);
     progressTracker.completedStages++;
     await emitProgress(progressTracker, {

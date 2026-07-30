@@ -31,6 +31,13 @@ async function main() {
     name: 'Synthetic second stage',
     steps: [{ module: 'Wait', params: { ms: '1' } }],
   });
+  // Starting a Chain/Suite with exactly this file name deterministically fails via
+  // synthetic-run-service.js's FORCE_FAIL_FILE sentinel — its content is never read by the
+  // synthetic service (only its file name matters), so its own steps are unreachable filler.
+  writeJson(path.join(testCasesDir, 'regression-force-fail.json'), {
+    name: 'Regression Force Fail',
+    steps: [{ module: 'Wait', params: { ms: '1' } }],
+  });
   writeJson(path.join(testCasesDir, 'contract-producer.json'), {
     name: 'Contract Producer',
     contract: {

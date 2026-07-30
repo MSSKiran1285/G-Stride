@@ -95,6 +95,27 @@ test('POST /api/runs completes a synthetic headless Chain', EXECUTION, async () 
   assert.equal(final.results.length, 1);
 });
 
+test('a failed Chain reports a focused diagnosis with an exact correction link (BL-032 AC1/AC3)', EXECUTION, async () => {
+  const started = await startApprovedRun({
+    mode: 'chain',
+    testCaseFiles: ['regression-force-fail.json'],
+    appId: 'syntheticApp',
+    headless: true,
+  });
+  assert.equal(started.status, 201);
+
+  const final = await pollRun(started.body.id, 30_000);
+  assert.equal(final.status, 'failed');
+  assert.ok(final.diagnosis, 'expected a failed run to report a diagnosis');
+  assert.equal(final.diagnosis.category, 'object');
+  assert.match(final.diagnosis.message, /no control named "SyntheticButton"/);
+  assert.deepEqual(final.diagnosis.correction, {
+    kind: 'object',
+    route: '/objects/synthetic/SyntheticButton',
+    label: 'Open "SyntheticButton" in the Control Object Repository',
+  });
+});
+
 test('POST /api/runs completes a synthetic headless Suite', EXECUTION, async () => {
   const started = await startApprovedRun({
     mode: 'suite',

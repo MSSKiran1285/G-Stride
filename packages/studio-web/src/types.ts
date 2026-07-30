@@ -607,6 +607,8 @@ export interface RunStatus {
     category: 'setup' | 'data' | 'object' | 'authentication' | 'navigation' | 'assertion' | 'execution';
     message: string;
     screenshotPath?: string;
+    /** The exact Test, object, or dataset this failure points at, when determinable (BL-032 AC3). */
+    correction?: { kind: 'test' | 'object' | 'data'; route: string; label: string };
   } | null;
 }
 

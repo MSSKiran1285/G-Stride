@@ -319,7 +319,7 @@ async function runIteration(
         }
       );
       const runStage = stageResult.stages[0];
-      if (runStage) completedStages.push({ ...runStage, testCaseName: stage.test.name });
+      if (runStage) completedStages.push({ ...runStage, testCaseName: stage.test.name, stageId: stage.stageId });
       Object.assign(capturedValues, stageResult.capturedValues);
       stageOutputs[stage.stageId] = extractStageOutputs(stage, stageResult.capturedValues);
       if (stageResult.status === 'failed') {

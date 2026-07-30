@@ -1244,6 +1244,15 @@ export function RunPanel({
                     <div><dt>Child item</dt><dd>{run.diagnosis.childKey ?? (run.diagnosis.childIndex !== undefined ? run.diagnosis.childIndex + 1 : 'Not applicable')}</dd></div>
                   </dl>
                   <p className="error-text">{run.diagnosis.message}</p>
+                  {run.diagnosis.correction && (
+                    <button
+                      type="button"
+                      className="ghost"
+                      onClick={() => onNavigateToRoute?.(run.diagnosis!.correction!.route)}
+                    >
+                      {run.diagnosis.correction.label}
+                    </button>
+                  )}
                 </>
               )}
               <p className="section-title">Run log (last 4000 chars)</p>

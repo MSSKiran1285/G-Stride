@@ -197,6 +197,33 @@ test('Run tab: Business Process completes a synthetic multi-stage Chain', EXECUT
   });
 });
 
+test('Run tab: a failed Chain shows a focused diagnosis with a link to the exact object (BL-032 AC1/AC3)', EXECUTION, async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'run-chain-forced-failure', async (page) => {
+      await page.goto(BASE_URL);
+      await page.getByRole('button', { name: /Execution Center/ }).first().click();
+      await page.getByRole('button', { name: 'Business Process', exact: true }).click();
+
+      await page.locator('li:has-text("regression-force-fail.json") button:has-text("+ Add")').click();
+      await page.locator('div:has(> label:text-is("App ID")) input').fill('syntheticApp');
+      await page.getByLabel(/headless/i).check();
+      await page.getByRole('button', { name: 'Run preflight' }).click();
+      await confirmApprovedPreflight(page);
+
+      const bannerText = await pollCompletionBanner(page, 30_000);
+      assert.ok(bannerText.toLowerCase().includes('failed'), `expected Chain to fail, got: "${bannerText}"`);
+
+      const diagnosis = page.locator('.failure-diagnosis');
+      await diagnosis.getByText('Root failure · object').waitFor();
+      await diagnosis.getByText(/no control named "SyntheticButton"/).waitFor();
+      const correctionLink = diagnosis.getByRole('button', { name: 'Open "SyntheticButton" in the Control Object Repository' });
+      await correctionLink.waitFor();
+      await correctionLink.click();
+      assert.equal(new URL(page.url()).pathname, '/objects/synthetic/SyntheticButton');
+    });
+  });
+});
+
 test('Run tab: Pack Tests completes a synthetic independent Suite', EXECUTION, async () => {
   await withBrowser(async (browser) => {
     await withPage(browser, 'run-suite-synthetic', async (page) => {

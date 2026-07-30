@@ -1,3 +1,17 @@
+/** A step's own child-item loop (e.g. AddLineItem's line items), captured as it last stood —
+ *  BL-031's Child-Item level identity/status/totals. Mirrors engine's ChildWorkProgress
+ *  structurally (duplicated rather than imported: core has zero dependency on engine by
+ *  design, the same reasoning as isLikelyUnstableId's duplication from adapter-fiori). */
+export interface ChildWorkSummary {
+  label: string;
+  completed: number;
+  total: number;
+  currentIndex?: number;
+  currentKey?: string;
+  status: 'running' | 'passed' | 'failed';
+  error?: string;
+}
+
 export interface StepResult {
   module: string;
   /** Plain-English, run-specific account of what this step actually did — see Module.describe.narrate. */
@@ -7,6 +21,11 @@ export interface StepResult {
   durationMs: number;
   error?: string;
   screenshotPath?: string;
+  /** Stable within its stage (e.g. "step-0") — BL-031's Step-level identity. */
+  stepId: string;
+  /** The last known state of this step's own child-item loop, if it has one — persists past
+   *  the step's completion rather than only living in a transient live-progress snapshot. */
+  childWork?: ChildWorkSummary;
 }
 
 export interface FieldEvidence {
@@ -22,6 +41,9 @@ export interface FieldEvidence {
  * actually belongs to.
  */
 export interface RunStage {
+  /** Stable within its iteration (e.g. the plan's stageId, or "stage-0" for a single Test) —
+   *  BL-031's Test/Stage-level identity. */
+  stageId: string;
   testCaseName: string;
   status: 'passed' | 'failed';
   startedAt: string;
