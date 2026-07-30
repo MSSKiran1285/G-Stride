@@ -42,6 +42,7 @@ import {
   EVIDENCE_GOVERNANCE,
   WorkspaceGovernanceStore,
 } from './workspaceGovernance';
+import { OverviewPreferencesStore } from './overviewPreferences';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const DEFAULT_TESTCASES_DIR = path.join(REPO_ROOT, 'testcases');
@@ -52,6 +53,7 @@ const DEFAULT_REPORTS_DIR = path.join(REPO_ROOT, 'reports');
 const DEFAULT_EVIDENCE_ARCHIVE_DIR = path.join(REPO_ROOT, 'audit-evidence');
 const DEFAULT_AUTH_CONFIG_PATH = path.join(REPO_ROOT, '.studio', 'auth.json');
 const DEFAULT_GOVERNANCE_PATH = path.join(REPO_ROOT, '.studio', 'workspace-governance.json');
+const DEFAULT_OVERVIEW_PREFERENCES_PATH = path.join(REPO_ROOT, '.studio', 'overview-preferences.json');
 
 /** A test case file name must be a plain "*.json" basename — never a path (no traversal outside testcases/). */
 function safeTestCaseName(name: string): string {
@@ -154,6 +156,7 @@ export interface StudioServerOptions {
   evidenceArchiveDir?: string;
   authConfigPath?: string;
   governancePath?: string;
+  overviewPreferencesPath?: string;
   /** Test seam for the non-mutating SAP login verification. */
   verifySap?: (
     credentials: Awaited<ReturnType<typeof getCredentials>>,
@@ -183,6 +186,7 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   const evidenceArchiveDir = options.evidenceArchiveDir ?? DEFAULT_EVIDENCE_ARCHIVE_DIR;
   const auth = new StudioAuth(options.authConfigPath ?? DEFAULT_AUTH_CONFIG_PATH);
   const governance = new WorkspaceGovernanceStore(options.governancePath ?? DEFAULT_GOVERNANCE_PATH);
+  const overviewPreferences = new OverviewPreferencesStore(options.overviewPreferencesPath ?? DEFAULT_OVERVIEW_PREFERENCES_PATH);
   const objectDbPath = options.objectDbPath ?? path.join(REPO_ROOT, 'object-repository.db');
   const objectRepository = new ObjectRepository(objectDbPath);
   const documentDbPath = options.documentDbPath ?? path.join(REPO_ROOT, 'document-log.db');
@@ -577,6 +581,19 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
 
   app.get('/api/evidence-governance', (_req, res) => {
     res.json(EVIDENCE_GOVERNANCE);
+  });
+
+  // BL-019 AC2: "Cost assumptions are saved as owner workspace preferences" — a single shared
+  // JSON preference file, the same pattern workspaceGovernance.ts already uses for SAP target state.
+  app.get('/api/settings/overview-preferences', (_req, res) => {
+    res.json(overviewPreferences.getImpactAssumptions());
+  });
+
+  app.put('/api/settings/overview-preferences', (req, res) => {
+    if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+      return res.status(400).json({ error: 'Body must be an object of numeric assumption fields.' });
+    }
+    res.json(overviewPreferences.saveImpactAssumptions(req.body));
   });
 
   // Evidence screenshots / PDFs referenced by run results — served exactly at the

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
+  AlertTriangle,
   ArrowRight,
   ChevronRight,
   CircleDollarSign,
@@ -16,11 +17,13 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { api } from '../api';
-import type { CapturedDocument, RunHistorySummary, WorkspaceContext } from '../types';
+import type { CapturedDocument, ImpactAssumptions, RunHistorySummary, TestLibraryItem, WorkspaceContext } from '../types';
+import { studioRoutes } from '../routes';
 import type { View } from '../App';
 
 interface AutomationOverviewProps {
   onNavigate: (view: View) => void;
+  onNavigateToRoute: (path: string) => void;
   workspaceContext: WorkspaceContext | null;
 }
 
@@ -58,22 +61,6 @@ function executionName(run: RunHistorySummary) {
   if (run.testCaseNames.length === 1) return displayName(run.testCaseNames[0]);
   if (run.testCaseNames.length > 1) return `${run.testCaseNames.length} test cases`;
   return 'Execution';
-}
-
-interface ImpactAssumptions {
-  manualMinutesPerTest: number;
-  manualDurationMultiplier: number;
-  manualHourlyCost: number;
-  automationHourlyCost: number;
-  automationEngineerHourlyCost: number;
-  buildAndSetupHours: number;
-  buildAmortizationMonths: number;
-  maintenanceHoursPerMonth: number;
-  licenseCostPerMonth: number;
-  infrastructureCostPerMonth: number;
-  reviewMinutesPerExecution: number;
-  triageMinutesPerFailure: number;
-  otherAutomationCost: number;
 }
 
 interface ExecutionImpact {
@@ -220,31 +207,87 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-export function AutomationOverview({ onNavigate, workspaceContext }: AutomationOverviewProps) {
+export interface WeeklyTrendBucket {
+  weekStart: string;
+  total: number;
+  passed: number;
+  failed: number;
+  passRate: number | null;
+}
+
+/** Buckets runs into real calendar weeks (Monday-start, UTC) — every bucket's counts come
+ *  directly from actual recorded runs; a week with no executions is simply absent rather than
+ *  interpolated or projected (BL-019 AC3: "never fabricate trends"). */
+export function computeWeeklyTrend(runs: RunHistorySummary[]): WeeklyTrendBucket[] {
+  const startOfWeek = (iso: string): string | null => {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return null;
+    const day = (date.getUTCDay() + 6) % 7; // 0 = Monday
+    const monday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - day));
+    return monday.toISOString().slice(0, 10);
+  };
+  const buckets = new Map<string, { total: number; passed: number; failed: number }>();
+  for (const run of runs) {
+    const week = startOfWeek(run.startedAt);
+    if (!week) continue;
+    const bucket = buckets.get(week) ?? { total: 0, passed: 0, failed: 0 };
+    bucket.total += 1;
+    if (run.status === 'passed') bucket.passed += 1;
+    if (run.status === 'failed') bucket.failed += 1;
+    buckets.set(week, bucket);
+  }
+  return [...buckets.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([weekStart, bucket]) => ({
+      weekStart,
+      total: bucket.total,
+      passed: bucket.passed,
+      failed: bucket.failed,
+      passRate: bucket.total > 0 ? (bucket.passed / bucket.total) * 100 : null,
+    }));
+}
+
+function formatWeekLabel(weekStart: string): string {
+  const date = new Date(`${weekStart}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return weekStart;
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date);
+}
+
+const IMPACT_WINDOW_SIZE = 500;
+
+/** Used only while the saved preference is still loading (or unavailable) — see
+ *  OverviewPreferencesStore's identical defaults on the server. */
+const DEFAULT_IMPACT_ASSUMPTIONS: ImpactAssumptions = {
+  manualMinutesPerTest: 12,
+  manualDurationMultiplier: 3,
+  manualHourlyCost: 50,
+  automationHourlyCost: 2,
+  automationEngineerHourlyCost: 75,
+  buildAndSetupHours: 40,
+  buildAmortizationMonths: 12,
+  maintenanceHoursPerMonth: 4,
+  licenseCostPerMonth: 100,
+  infrastructureCostPerMonth: 50,
+  reviewMinutesPerExecution: 3,
+  triageMinutesPerFailure: 15,
+  otherAutomationCost: 0,
+};
+
+export function AutomationOverview({ onNavigate, onNavigateToRoute, workspaceContext }: AutomationOverviewProps) {
   const [testCases, setTestCases] = useState<string[]>([]);
+  const [testLibrary, setTestLibrary] = useState<TestLibraryItem[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [objectsCount, setObjectsCount] = useState<number | null>(null);
   const [documents, setDocuments] = useState<CapturedDocument[]>([]);
-  const [recentRuns, setRecentRuns] = useState<RunHistorySummary[]>([]);
+  const [allRuns, setAllRuns] = useState<RunHistorySummary[]>([]);
   const [selectedTestCase, setSelectedTestCase] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [impactAssumptions, setImpactAssumptions] = useState<ImpactAssumptions>({
-    manualMinutesPerTest: 12,
-    manualDurationMultiplier: 3,
-    manualHourlyCost: 50,
-    automationHourlyCost: 2,
-    automationEngineerHourlyCost: 75,
-    buildAndSetupHours: 40,
-    buildAmortizationMonths: 12,
-    maintenanceHoursPerMonth: 4,
-    licenseCostPerMonth: 100,
-    infrastructureCostPerMonth: 50,
-    reviewMinutesPerExecution: 3,
-    triageMinutesPerFailure: 15,
-    otherAutomationCost: 0,
-  });
+  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
+  const [dateRangeFilter, setDateRangeFilter] = useState<'7' | '30' | '90' | 'all'>('all');
+  const [appIdFilter, setAppIdFilter] = useState('');
+  const [impactAssumptions, setImpactAssumptions] = useState<ImpactAssumptions | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -253,12 +296,14 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
       setLoading(true);
       setLoadError(null);
 
-      const [testCasesResult, groupsResult, appIdsResult, documentsResult, runsResult] = await Promise.allSettled([
+      const [testCasesResult, testLibraryResult, groupsResult, appIdsResult, documentsResult, runsResult, assumptionsResult] = await Promise.allSettled([
         api.listTestCases(),
+        api.listTestLibrary(),
         api.listGroups(),
         api.listAppIds(),
         api.listDocuments(),
-        api.listAuditRuns(),
+        api.listAuditRuns({ limit: IMPACT_WINDOW_SIZE, sortBy: 'startedAt', sortDirection: 'desc' }),
+        api.getOverviewPreferences(),
       ]);
 
       if (!active) return;
@@ -275,6 +320,12 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
         unavailable = true;
       }
 
+      if (testLibraryResult.status === 'fulfilled') setTestLibrary(testLibraryResult.value);
+      else {
+        setTestLibrary([]);
+        unavailable = true;
+      }
+
       if (groupsResult.status === 'fulfilled') setGroups(groupsResult.value);
       else {
         setGroups([]);
@@ -287,11 +338,14 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
         unavailable = true;
       }
 
-      if (runsResult.status === 'fulfilled') setRecentRuns(runsResult.value.items);
+      if (runsResult.status === 'fulfilled') setAllRuns(runsResult.value.items);
       else {
-        setRecentRuns([]);
+        setAllRuns([]);
         unavailable = true;
       }
+
+      if (assumptionsResult.status === 'fulfilled') setImpactAssumptions(assumptionsResult.value);
+      else unavailable = true;
 
       if (appIdsResult.status === 'fulfilled') {
         const objectResults = await Promise.allSettled(appIdsResult.value.map((appId) => api.listObjects(appId)));
@@ -312,6 +366,7 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
 
       if (unavailable) setLoadError('Some workspace data is unavailable. You can retry without leaving this page.');
       setLoading(false);
+      setRefreshedAt(new Date());
     }
 
     void loadOverview();
@@ -320,11 +375,23 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
     };
   }, [reloadKey]);
 
+  // BL-019 AC2: persisted as an owner workspace preference, debounced so dragging through a
+  // number input doesn't fire a PUT per keystroke.
+  useEffect(() => {
+    if (!impactAssumptions) return;
+    const timer = setTimeout(() => {
+      api.saveOverviewPreferences(impactAssumptions).catch(() => undefined);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [impactAssumptions]);
+
+  const recentRuns = useMemo(() => allRuns.slice(0, 4), [allRuns]);
+
   const selectedRunCount = useMemo(
     () => selectedTestCase
-      ? recentRuns.filter((run) => run.testCaseNames.includes(selectedTestCase)).length
+      ? allRuns.filter((run) => run.testCaseNames.includes(selectedTestCase)).length
       : 0,
-    [recentRuns, selectedTestCase],
+    [allRuns, selectedTestCase],
   );
 
   const selectedEvidenceCount = useMemo(
@@ -334,10 +401,36 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
     [documents, selectedTestCase],
   );
 
-  const executionImpact = useMemo(
-    () => calculateExecutionImpact(recentRuns, impactAssumptions),
-    [recentRuns, impactAssumptions],
+  // The App ID filter scopes recorded EXECUTIONS, so its options come from the runs
+  // themselves — not from the unrelated Object Repository app-id list (api.listAppIds()),
+  // which only reflects which apps have saved controls, not which apps have been run.
+  const runAppIds = useMemo(
+    () => [...new Set(allRuns.map((run) => run.appId).filter(Boolean))].sort(),
+    [allRuns],
   );
+
+  const filteredRuns = useMemo(() => {
+    const cutoff = dateRangeFilter === 'all' ? null : Date.now() - Number(dateRangeFilter) * 86_400_000;
+    return allRuns.filter((run) => {
+      if (appIdFilter && run.appId !== appIdFilter) return false;
+      if (cutoff !== null && new Date(run.startedAt).getTime() < cutoff) return false;
+      return true;
+    });
+  }, [allRuns, dateRangeFilter, appIdFilter]);
+
+  const executionImpact = useMemo(
+    () => calculateExecutionImpact(filteredRuns, impactAssumptions ?? DEFAULT_IMPACT_ASSUMPTIONS),
+    [filteredRuns, impactAssumptions],
+  );
+
+  const weeklyTrend = useMemo(() => computeWeeklyTrend(filteredRuns), [filteredRuns]);
+
+  const recentFailureCount = useMemo(
+    () => allRuns.filter((run) => run.status === 'failed' && Date.now() - new Date(run.startedAt).getTime() <= 7 * 86_400_000).length,
+    [allRuns],
+  );
+  const draftTestCount = useMemo(() => testLibrary.filter((item) => item.status === 'draft').length, [testLibrary]);
+  const unpublishedTestCount = useMemo(() => testLibrary.filter((item) => item.status === 'ready').length, [testLibrary]);
 
   return (
     <div className="canvas-overview">
@@ -385,11 +478,49 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
         </div>
       )}
 
+      {!loading && (recentFailureCount > 0 || draftTestCount > 0 || unpublishedTestCount > 0) && (
+        <section className="canvas-attention" aria-labelledby="attention-heading">
+          <div className="canvas-attention-heading">
+            <AlertTriangle size={18} aria-hidden="true" />
+            <h2 id="attention-heading">Needs attention</h2>
+          </div>
+          <div className="canvas-attention-list">
+            {recentFailureCount > 0 && (
+              <button type="button" className="canvas-attention-row" onClick={() => onNavigate('documents')}>
+                <span>{recentFailureCount} execution{recentFailureCount === 1 ? '' : 's'} failed in the last 7 days</span>
+                <span className="text-action">Open Audit and Evidence <ArrowRight size={14} aria-hidden="true" /></span>
+              </button>
+            )}
+            {draftTestCount > 0 && (
+              <button type="button" className="canvas-attention-row" onClick={() => onNavigate('editor')}>
+                <span>{draftTestCount} draft test{draftTestCount === 1 ? '' : 's'} without steps yet</span>
+                <span className="text-action">Open Test Library <ArrowRight size={14} aria-hidden="true" /></span>
+              </button>
+            )}
+            {unpublishedTestCount > 0 && (
+              <button type="button" className="canvas-attention-row" onClick={() => onNavigate('editor')}>
+                <span>{unpublishedTestCount} test{unpublishedTestCount === 1 ? '' : 's'} not yet published (blocked from Regression Packs)</span>
+                <span className="text-action">Open Test Library <ArrowRight size={14} aria-hidden="true" /></span>
+              </button>
+            )}
+          </div>
+        </section>
+      )}
+
       <ExecutionImpactDashboard
         impact={executionImpact}
-        assumptions={impactAssumptions}
+        assumptions={impactAssumptions ?? DEFAULT_IMPACT_ASSUMPTIONS}
         loading={loading}
         onAssumptionsChange={setImpactAssumptions}
+        dateRangeFilter={dateRangeFilter}
+        onDateRangeChange={setDateRangeFilter}
+        appIdFilter={appIdFilter}
+        onAppIdFilterChange={setAppIdFilter}
+        appIds={runAppIds}
+        windowSize={IMPACT_WINDOW_SIZE}
+        totalRunsAvailable={allRuns.length}
+        refreshedAt={refreshedAt}
+        weeklyTrend={weeklyTrend}
       />
 
       <div className="canvas-overview-layout">
@@ -452,8 +583,8 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
                 {loading ? (
                   <div className="canvas-empty-state compact">Loading execution history…</div>
                 ) : recentRuns.length > 0 ? (
-                  recentRuns.slice(0, 4).map((run) => (
-                    <button type="button" key={run.id} className="canvas-run-row" onClick={() => onNavigate('documents')}>
+                  recentRuns.map((run) => (
+                    <button type="button" key={run.id} className="canvas-run-row" onClick={() => onNavigateToRoute(studioRoutes.auditRun(run.id))}>
                       <span className={`run-status-dot ${run.status}`} aria-hidden="true" />
                       <span className="canvas-row-content">
                         <strong>{executionName(run)}</strong>
@@ -511,7 +642,7 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
               </div>
 
               <div className="canvas-inspector-actions">
-                <button type="button" className="primary" onClick={() => onNavigate('editor')}>
+                <button type="button" className="primary" onClick={() => onNavigateToRoute(studioRoutes.test(selectedTestCase))}>
                   Open in Compose
                 </button>
                 <button type="button" className="outline" onClick={() => onNavigate('run')}>
@@ -556,6 +687,15 @@ interface ExecutionImpactDashboardProps {
   assumptions: ImpactAssumptions;
   loading: boolean;
   onAssumptionsChange: (assumptions: ImpactAssumptions) => void;
+  dateRangeFilter: '7' | '30' | '90' | 'all';
+  onDateRangeChange: (value: '7' | '30' | '90' | 'all') => void;
+  appIdFilter: string;
+  onAppIdFilterChange: (value: string) => void;
+  appIds: string[];
+  windowSize: number;
+  totalRunsAvailable: number;
+  refreshedAt: Date | null;
+  weeklyTrend: WeeklyTrendBucket[];
 }
 
 function ExecutionImpactDashboard({
@@ -563,6 +703,15 @@ function ExecutionImpactDashboard({
   assumptions,
   loading,
   onAssumptionsChange,
+  dateRangeFilter,
+  onDateRangeChange,
+  appIdFilter,
+  onAppIdFilterChange,
+  appIds,
+  windowSize,
+  totalRunsAvailable,
+  refreshedAt,
+  weeklyTrend,
 }: ExecutionImpactDashboardProps) {
   const updateAssumption = (key: keyof ImpactAssumptions, value: number) => {
     onAssumptionsChange({
@@ -573,6 +722,7 @@ function ExecutionImpactDashboard({
 
   const passWidth = impact.total > 0 ? (impact.passed / impact.total) * 100 : 0;
   const failWidth = impact.total > 0 ? (impact.failed / impact.total) * 100 : 0;
+  const rangeLabel = dateRangeFilter === 'all' ? 'all recorded history' : `the last ${dateRangeFilter} days`;
 
   return (
     <section className="execution-impact" aria-labelledby="execution-impact-heading">
@@ -587,12 +737,37 @@ function ExecutionImpactDashboard({
         </button>
       </div>
 
+      <div className="impact-scope-toolbar" role="group" aria-label="Filter execution impact">
+        <label>
+          Date range
+          <select value={dateRangeFilter} onChange={(event) => onDateRangeChange(event.currentTarget.value as '7' | '30' | '90' | 'all')}>
+            <option value="all">All available history</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </label>
+        <label>
+          App ID
+          <select value={appIdFilter} onChange={(event) => onAppIdFilterChange(event.currentTarget.value)}>
+            <option value="">All App IDs</option>
+            {appIds.map((appId) => <option key={appId} value={appId}>{appId}</option>)}
+          </select>
+        </label>
+      </div>
+
+      <p className="impact-scope-disclosure">
+        Scope: <strong>{loading ? '—' : impact.total}</strong> execution{impact.total === 1 ? '' : 's'} matching {appIdFilter || 'all App IDs'} over {rangeLabel},
+        drawn from the {Math.min(totalRunsAvailable, windowSize)} most recently recorded execution{totalRunsAvailable === 1 ? '' : 's'} (up to {windowSize}).{' '}
+        {refreshedAt && <>As of {new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(refreshedAt)}.</>}
+      </p>
+
       <div className="impact-metrics-grid">
         <article className="impact-metric">
           <span className="impact-metric-icon"><Activity size={18} aria-hidden="true" /></span>
           <span className="impact-metric-label">Total executions <small>Actual</small></span>
           <strong className="impact-metric-value">{loading ? '—' : impact.total}</strong>
-          <span className="impact-metric-detail">Recorded in the immutable run ledger</span>
+          <span className="impact-metric-detail">Recorded in the immutable run ledger, within the scope above</span>
         </article>
 
         <article className="impact-metric outcome">
@@ -606,6 +781,9 @@ function ExecutionImpactDashboard({
             <span className="passed" style={{ width: `${passWidth}%` }} />
             <span className="failed" style={{ width: `${failWidth}%` }} />
           </div>
+          <span className="impact-metric-detail">
+            {impact.passRate === null ? 'No executions in scope' : `${impact.passed} of ${impact.total} passed (${Math.round(impact.passRate)}%)`}
+          </span>
         </article>
 
         <article className="impact-metric">
@@ -643,6 +821,42 @@ function ExecutionImpactDashboard({
           </span>
         </article>
       </div>
+
+      <section className="impact-trend" aria-labelledby="impact-trend-heading">
+        <h3 id="impact-trend-heading">Weekly trend</h3>
+        <p className="hint">
+          Each row is a real calendar week drawn only from recorded executions in the scope above — a week with no
+          executions is simply absent, never interpolated or projected.
+        </p>
+        {weeklyTrend.length === 0 ? (
+          <p className="hint">No executions in scope to trend.</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="impact-trend-table">
+              <caption className="sr-only">Weekly execution count and pass rate</caption>
+              <thead>
+                <tr><th scope="col">Week of</th><th scope="col">Executions</th><th scope="col">Passed</th><th scope="col">Failed</th><th scope="col">Pass rate</th></tr>
+              </thead>
+              <tbody>
+                {weeklyTrend.map((week) => (
+                  <tr key={week.weekStart}>
+                    <td data-label="Week of">{formatWeekLabel(week.weekStart)}</td>
+                    <td data-label="Executions">{week.total}</td>
+                    <td data-label="Passed">{week.passed}</td>
+                    <td data-label="Failed">{week.failed}</td>
+                    <td data-label="Pass rate">
+                      <span className="impact-trend-bar" role="img" aria-label={week.passRate === null ? 'No executions' : `${Math.round(week.passRate)} percent passed`}>
+                        <span style={{ width: `${week.passRate ?? 0}%` }} />
+                      </span>
+                      {week.passRate === null ? '—' : `${Math.round(week.passRate)}%`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <details className="impact-assumptions">
         <summary>Calculation assumptions and model</summary>

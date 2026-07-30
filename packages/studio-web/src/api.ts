@@ -27,6 +27,7 @@ import type {
   ExecutionPreflightResult,
   WorkspaceContext,
   EvidenceGovernance,
+  ImpactAssumptions,
   TestContract,
   TestLibraryItem,
   TestValidationIssue,
@@ -80,6 +81,9 @@ export const api = {
       message: string;
     }>('/api/settings/integrations/sap/verify', { method: 'POST' }),
   getEvidenceGovernance: () => request<EvidenceGovernance>('/api/evidence-governance'),
+  getOverviewPreferences: () => request<ImpactAssumptions>('/api/settings/overview-preferences'),
+  saveOverviewPreferences: (assumptions: ImpactAssumptions) =>
+    request<ImpactAssumptions>('/api/settings/overview-preferences', { method: 'PUT', body: JSON.stringify(assumptions) }),
   listModules: () => request<ModuleInfo[]>('/api/modules'),
   listTestCases: () => request<string[]>('/api/testcases'),
   listTestLibrary: () => request<TestLibraryItem[]>('/api/testcases/library'),

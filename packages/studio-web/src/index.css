@@ -4328,10 +4328,76 @@ button.template-card {
   background: var(--warning-bg);
 }
 
+.canvas-attention {
+  max-width: 1500px;
+  margin: 0 auto 1.4rem;
+}
+
+.canvas-attention-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  color: var(--warning);
+}
+
+.canvas-attention-heading h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.canvas-attention-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.canvas-attention-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.85rem;
+  color: var(--text);
+  border-left: 3px solid var(--warning);
+  border-radius: var(--radius-md);
+  background: var(--warning-bg);
+  font-size: 0.76rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.canvas-attention-row .text-action {
+  white-space: nowrap;
+}
+
 .execution-impact {
   max-width: 1500px;
   margin: 0 auto 2.1rem;
   padding-top: 0.3rem;
+}
+
+.impact-scope-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.impact-scope-toolbar label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--text-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.impact-scope-disclosure {
+  max-width: 52rem;
+  margin: 0 0 0.9rem;
+  color: var(--text-soft);
+  font-size: 0.72rem;
 }
 
 .execution-impact-heading {
@@ -4481,6 +4547,53 @@ button.template-card {
 
 .impact-outcome-bar .failed {
   background: var(--danger);
+}
+
+.impact-trend {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.impact-trend h3 {
+  margin: 0 0 0.3rem;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.impact-trend-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.72rem;
+}
+
+.impact-trend-table th,
+.impact-trend-table td {
+  padding: 0.4rem 0.6rem;
+  color: var(--text-soft);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.impact-trend-table th {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.impact-trend-bar {
+  display: inline-block;
+  width: 60px;
+  height: 6px;
+  margin-right: 0.4rem;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--panel-subtle);
+  vertical-align: middle;
+}
+
+.impact-trend-bar span {
+  display: block;
+  height: 100%;
+  background: var(--success);
 }
 
 .impact-assumptions {

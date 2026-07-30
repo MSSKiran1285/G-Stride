@@ -352,7 +352,7 @@ export function App() {
             <ErrorBoundary key={view}>
               <div className="view-transition-wrapper">
                 {view === 'launchpad' ? (
-                  <AutomationOverview onNavigate={navigateTo} workspaceContext={workspaceContext} />
+                  <AutomationOverview onNavigate={navigateTo} onNavigateToRoute={(path) => navigateToPath(path)} workspaceContext={workspaceContext} />
                 ) : view === 'objects' ? (
                   <ObjectScanner
                     initialAppId={route.objectAppId}

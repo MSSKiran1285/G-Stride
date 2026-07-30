@@ -4,8 +4,15 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 const { assertServerReachable, BASE_URL } = require('../lib/apiClient');
 const { withBrowser, withPage } = require('../lib/browserSession');
+const { RunHistoryStore } = require('../../packages/core/dist');
 
 before(assertServerReachable);
+
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} is required — run this file through regression/run-isolated-ui.js, not node --test directly.`);
+  return value;
+}
 
 test('Canvas First Overview presents the approved shell and real workspace data', async () => {
   await withBrowser(async (browser) => {
@@ -91,4 +98,98 @@ test('Canvas First Overview primary action opens Compose without execution', asy
       await page.getByRole('heading', { name: 'Compose' }).waitFor();
     });
   });
+});
+
+test('Automation Overview: Needs attention surfaces real alerts, recent runs and tests open exact routes (BL-018 AC1/AC3)', async () => {
+  const store = new RunHistoryStore(requireEnv('REGRESSION_RUN_HISTORY_DB'));
+  try {
+    store.record({
+      id: 'overview-recent-failure',
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      status: 'failed',
+      executedBy: 'overview-executor',
+      mode: 'chain',
+      appId: 'syntheticApp',
+      testCaseNames: ['Cleanup Abandoned Drafts'],
+      testCaseFiles: ['cleanup-abandoned-drafts.json'],
+      result: { status: 'failed' },
+    });
+
+    await withBrowser(async (browser) => {
+      await withPage(browser, 'overview-attention-and-routes', async (page) => {
+        await page.goto(BASE_URL);
+        await page.getByRole('heading', { name: 'Good morning' }).waitFor();
+
+        const attention = page.locator('.canvas-attention');
+        await attention.getByText(/execution.* failed in the last 7 days/).waitFor();
+        await attention.getByText(/not yet published \(blocked from Regression Packs\)/).waitFor();
+
+        // A recent execution row opens the exact audit detail route, not the general workspace.
+        const failedRow = page.locator('.canvas-run-row', { hasText: 'Cleanup Abandoned Drafts' }).first();
+        await failedRow.click();
+        assert.equal(new URL(page.url()).pathname, '/audit/runs/overview-recent-failure');
+
+        await page.goto(BASE_URL);
+        await page.getByRole('heading', { name: 'Good morning' }).waitFor();
+
+        // Selecting a test case and opening it in Compose lands on that exact Test's route.
+        await page.getByRole('heading', { name: 'Cleanup Abandoned Drafts' }).click();
+        await page.getByRole('button', { name: 'Open in Compose' }).click();
+        assert.equal(new URL(page.url()).pathname, '/compose/tests/cleanup-abandoned-drafts.json');
+      });
+    });
+  } finally {
+    store.close();
+  }
+});
+
+test('Automation Overview: execution impact filters, scope disclosure and weekly trend reflect real data (BL-019 AC1/AC3)', async () => {
+  const store = new RunHistoryStore(requireEnv('REGRESSION_RUN_HISTORY_DB'));
+  try {
+    store.record({
+      id: 'overview-impact-filter-a',
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date(Date.now() + 1000).toISOString(),
+      status: 'passed',
+      executedBy: 'overview-executor',
+      mode: 'chain',
+      appId: 'overviewFilterAppA',
+      testCaseNames: ['Overview Filter Test A'],
+      result: { status: 'passed' },
+    });
+    store.record({
+      id: 'overview-impact-filter-b',
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date(Date.now() + 1000).toISOString(),
+      status: 'passed',
+      executedBy: 'overview-executor',
+      mode: 'chain',
+      appId: 'overviewFilterAppB',
+      testCaseNames: ['Overview Filter Test B'],
+      result: { status: 'passed' },
+    });
+
+    await withBrowser(async (browser) => {
+      await withPage(browser, 'overview-impact-filters-and-trend', async (page) => {
+        await page.goto(BASE_URL);
+        await page.getByRole('heading', { name: 'Execution impact' }).waitFor();
+
+        await page.locator('.impact-scope-disclosure').getByText(/Scope: /).waitFor();
+        await page.getByRole('heading', { name: 'Weekly trend' }).waitFor();
+        await page.locator('.impact-trend-table').waitFor();
+
+        await page.getByLabel('App ID').selectOption('overviewFilterAppA');
+        await page.locator('.impact-scope-disclosure', { hasText: 'overviewFilterAppA' }).waitFor();
+        const totalCell = page.locator('.impact-metric', { hasText: 'Total executions' }).locator('.impact-metric-value');
+        await page.waitForFunction(
+          (expected) => document.querySelector('.impact-metric-value')?.textContent?.trim() === expected,
+          '1',
+        );
+        assert.equal((await totalCell.textContent())?.trim(), '1', 'App ID filter should scope Total executions to exactly the matching run');
+      });
+    });
+  } finally {
+    store.close();
+  }
 });

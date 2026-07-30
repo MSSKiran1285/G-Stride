@@ -25,6 +25,7 @@ const app = createStudioServer({
   evidenceArchiveDir: path.join(tempRoot, 'audit-evidence'),
   authConfigPath: path.join(tempRoot, 'auth.json'),
   governancePath: path.join(tempRoot, 'workspace-governance.json'),
+  overviewPreferencesPath: path.join(tempRoot, 'overview-preferences.json'),
   executionEnabled: true,
   runService: createSyntheticRunService(tempRoot),
   verifySap: async () => ({

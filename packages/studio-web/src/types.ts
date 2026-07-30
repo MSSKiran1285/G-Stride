@@ -68,6 +68,24 @@ export interface EvidenceGovernance {
   rationale: string;
 }
 
+/** Automation Overview's execution-impact cost model, saved as an owner workspace preference
+ *  (BL-019 AC2) rather than reset to defaults on every reload. */
+export interface ImpactAssumptions {
+  manualMinutesPerTest: number;
+  manualDurationMultiplier: number;
+  manualHourlyCost: number;
+  automationHourlyCost: number;
+  automationEngineerHourlyCost: number;
+  buildAndSetupHours: number;
+  buildAmortizationMonths: number;
+  maintenanceHoursPerMonth: number;
+  licenseCostPerMonth: number;
+  infrastructureCostPerMonth: number;
+  reviewMinutesPerExecution: number;
+  triageMinutesPerFailure: number;
+  otherAutomationCost: number;
+}
+
 /** Mirrors @taf/core's ArtifactKind — the tag-store's artifact types for BL-10's processArea grouping. */
 export type ArtifactKind = 'testCase' | 'group' | 'dataFile' | 'appId';
 
