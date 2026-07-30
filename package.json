@@ -1,7 +1,7 @@
 {
   "name": "sap-taf",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0-dev.0",
   "description": "QA/4HANA Studio test automation platform by AI ELK.",
   "workspaces": [
     "packages/*"
@@ -21,9 +21,13 @@
     "test:ui:isolated": "node regression/run-isolated-ui.js",
     "test:accessibility": "node regression/run-isolated-ui.js accessibility.test.js",
     "test:quality:core": "node regression/run-recorded-core.js",
+    "test:quality:api": "node regression/run-recorded-isolated.js api",
+    "test:quality:ui": "node regression/run-recorded-isolated.js ui",
     "test:migration": "node --test regression/legacy-migration.test.js regression/execution-orchestrator.test.js",
     "test:secrets": "node regression/secret-scan.mjs",
+    "release:manifest": "node scripts/generate-release-manifest.mjs",
     "test:release:isolated": "npm run build && npm run lint && npm run test:secrets && npm run test:quality:core && npm run test:api:isolated && npm run test:ui:isolated",
+    "test:release:recorded": "npm run build && npm run lint && npm run test:secrets && npm run test:quality:core && npm run test:quality:api && npm run test:quality:ui",
     "chain:p2p-o2c": "node packages/cli/dist/index.js run testcases/create-po.json testcases/post-goods-receipt.json testcases/post-supplier-invoice.json testcases/create-so.json testcases/create-delivery.json testcases/create-billing.json --app-id createPurchaseOrder --data data/p2p-o2c-e2e.csv --headless true",
     "suite:p2p-o2c": "node packages/cli/dist/index.js suite testcases/create-po.json testcases/create-so.json --app-id createPurchaseOrder --data data/p2p-o2c-e2e.csv --headless true",
     "batch:p2p-o2c": "node packages/cli/dist/index.js batch testgroups/po-gr-invoice.json testgroups/o2c-e2e.json --headless true"

@@ -4555,6 +4555,1749 @@
           "error": null
         }
       ]
+    },
+    {
+      "id": "CORE-2026-07-30T09-25-43-679Z",
+      "label": "Core regression",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "startedAt": "2026-07-30T09:25:43.758Z",
+      "commitSha": "109a86d7273d66b7a551ef1a62a9f360d8726489",
+      "worktreeClean": false,
+      "finishedAt": "2026-07-30T09:25:49.782Z",
+      "durationMs": 5975.7015,
+      "counts": {
+        "tests": 57,
+        "failed": 0,
+        "passed": 57,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 57,
+        "suites": 0
+      },
+      "tests": [
+        {
+          "name": "automation run reference is short, unique, owner-linked, and retains failed state for review",
+          "file": "regression/automation-run-reference.test.js",
+          "status": "Passed",
+          "durationMs": 3.0598,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "encrypted credential fallback persists securely across server and CLI processes",
+          "file": "regression/credentials-fallback.test.js",
+          "status": "Passed",
+          "durationMs": 140.3054,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Execution Center resolves the same canonical evidence URLs as Audit and Evidence",
+          "file": "regression/evidence-reference.test.js",
+          "status": "Passed",
+          "durationMs": 3.0376,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "canonical evidence URL mapping rejects absolute and traversal paths",
+          "file": "regression/evidence-reference.test.js",
+          "status": "Passed",
+          "durationMs": 0.1579,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "AddLineItem reports bounded child progress for every owned line item",
+          "file": "regression/execution-child-progress.test.js",
+          "status": "Passed",
+          "durationMs": 36.6177,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "AddLineItem identifies the failing child index and does not overstate completion",
+          "file": "regression/execution-child-progress.test.js",
+          "status": "Passed",
+          "durationMs": 1.9181,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "nested JSON preserves one header with many line items as one transaction",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 3.256,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "nested JSON preserves many headers with owned line items as separate transactions",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 2.9134,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "relational CSV joins child rows to their owning header without creating duplicate headers",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 4.4328,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "relational CSV rejects duplicate headers and orphan child rows with actionable issues",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 2.4145,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Execution Plan validation requires explicit relational join metadata",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 1.2647,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process runs every transaction in isolation and maps stage outputs explicitly",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 26.5087,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "runtime applies the same filter-before-limit selection used by preflight",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 11.9017,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process stops later transaction iterations after a failed iteration by default",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 12.6702,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process stops at the failed stage and retains earlier captured values for review",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 12.1207,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "cooperative cancellation finishes the active transaction and starts no later iteration",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 12.9371,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Regression Pack isolates members and continues after a failed member",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 10.6685,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Regression Pack continues when one member dataset cannot be loaded",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 15.0021,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Legacy compatibility translators preserve Chain, Suite, and multi-row Batch semantics",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 6.2615,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Translated Batch executes every Group data row instead of only the first",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 11.443,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Stage 1 example plans satisfy the versioned execution contract",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 6.75,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process hand-offs are ordered and namespaced",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 0.7974,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Execution snapshots clone, freeze, and hash plan plus transaction data",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 4.9629,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "data selection applies nested filters before the immutable record limit",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 0.5852,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Regression Pack snapshots namespace member data bindings",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 1.1715,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Credential values are rejected from plans and data snapshots",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 1.322,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Snapshot creation rejects missing and unknown data bindings",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 0.551,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight calculates a Single Test matrix without opening SAP",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 50.8043,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight filters the exact effective data, previews mappings, and seals filter identity",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 24.8098,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Start claim enforces warning acknowledgement, plan hash, and configuration freshness",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 27.7356,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight blocks missing target and missing assets with safe correction findings",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 15.4898,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight blocks unclassified or stale SAP target context with recovery guidance",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 17.276,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight blocks required inputs that are absent from selected records",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 15.5216,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "transactional preflight enforces non-production, fail-stop, owner reference, and retained state",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 20.874,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight joins relational CSV into transaction snapshots with owned child rows",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 20.5941,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "single batch group reports determinate step and stage progress",
+          "file": "regression/execution-progress.test.js",
+          "status": "Passed",
+          "durationMs": 40.7324,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "failed-scope rerun creates a new immutable snapshot containing only eligible transactions",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 2.9925,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "full rerun preserves all source records while creating new execution lineage",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 0.4185,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "failed-only Pack rerun excludes passed transaction records inside a failed member",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 1.2041,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "transactional rerun blocks started retained state but permits an unattempted transaction",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 2.2026,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "execution logs redact known credentials and generic authorization secrets",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 0.6355,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "execution APIs require preflight and return no-store security headers plus retention policy",
+          "file": "regression/execution-release-hardening.test.js",
+          "status": "Passed",
+          "durationMs": 165.3289,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "every persisted legacy Test translates without source mutation",
+          "file": "regression/legacy-migration.test.js",
+          "status": "Passed",
+          "durationMs": 15.045,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "every persisted legacy Group translates to a Business Process and combined Batch Pack",
+          "file": "regression/legacy-migration.test.js",
+          "status": "Passed",
+          "durationMs": 7.8651,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "legacy Suite translation preserves selected order and independent executable identity",
+          "file": "regression/legacy-migration.test.js",
+          "status": "Passed",
+          "durationMs": 1.3738,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+          "file": "regression/quality-catalog.test.js",
+          "status": "Passed",
+          "durationMs": 24.3748,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Test Operations failure ledger preserves every recorded failure and remediation link",
+          "file": "regression/quality-catalog.test.js",
+          "status": "Passed",
+          "durationMs": 0.2457,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "SAP Settings saves encrypted credentials and exposes only non-secret status",
+          "file": "regression/sap-settings.test.js",
+          "status": "Passed",
+          "durationMs": 713.9944,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "local bootstrap owner can access protected artifacts and safe workspace context",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 117.879,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "registered workspace denies anonymous artifact and audit access without revealing existence",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 68.4273,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "execution context captures owner and non-secret target metadata",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 0.3041,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "owner classifies and safely verifies SAP without returning credentials",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 76.6883,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "evidence governance exposes retention and enforced redaction without secrets",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 57.4152,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "SAP test cases derive navigation URLs from the configured credential profile",
+          "file": "regression/tenant-configuration.test.js",
+          "status": "Passed",
+          "durationMs": 1.5891,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "negative transaction passes only when title stays unsaved and SAP validation is present",
+          "file": "regression/transactional-negative.test.js",
+          "status": "Passed",
+          "durationMs": 13.7093,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "negative transaction fails and stops when SAP unexpectedly assigns a document",
+          "file": "regression/transactional-negative.test.js",
+          "status": "Passed",
+          "durationMs": 2.0636,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "negative transaction does not treat an unchanged title without validation as a pass",
+          "file": "regression/transactional-negative.test.js",
+          "status": "Passed",
+          "durationMs": 630.2957,
+          "skipReason": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "id": "CORE-2026-07-30T09-42-16-277Z",
+      "label": "Core regression",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "startedAt": "2026-07-30T09:42:16.394Z",
+      "commitSha": "109a86d7273d66b7a551ef1a62a9f360d8726489",
+      "worktreeClean": false,
+      "sourceTreeClean": false,
+      "finishedAt": "2026-07-30T09:42:21.353Z",
+      "durationMs": 4920.6883,
+      "counts": {
+        "tests": 57,
+        "failed": 0,
+        "passed": 57,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0,
+        "topLevel": 57,
+        "suites": 0
+      },
+      "tests": [
+        {
+          "name": "automation run reference is short, unique, owner-linked, and retains failed state for review",
+          "file": "regression/automation-run-reference.test.js",
+          "status": "Passed",
+          "durationMs": 3.2418,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "encrypted credential fallback persists securely across server and CLI processes",
+          "file": "regression/credentials-fallback.test.js",
+          "status": "Passed",
+          "durationMs": 149.773,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Execution Center resolves the same canonical evidence URLs as Audit and Evidence",
+          "file": "regression/evidence-reference.test.js",
+          "status": "Passed",
+          "durationMs": 4.1977,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "canonical evidence URL mapping rejects absolute and traversal paths",
+          "file": "regression/evidence-reference.test.js",
+          "status": "Passed",
+          "durationMs": 0.2637,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "AddLineItem reports bounded child progress for every owned line item",
+          "file": "regression/execution-child-progress.test.js",
+          "status": "Passed",
+          "durationMs": 22.9469,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "AddLineItem identifies the failing child index and does not overstate completion",
+          "file": "regression/execution-child-progress.test.js",
+          "status": "Passed",
+          "durationMs": 1.4971,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "nested JSON preserves one header with many line items as one transaction",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 3.7335,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "nested JSON preserves many headers with owned line items as separate transactions",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 2.2238,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "relational CSV joins child rows to their owning header without creating duplicate headers",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 2.3098,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "relational CSV rejects duplicate headers and orphan child rows with actionable issues",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 2.2745,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Execution Plan validation requires explicit relational join metadata",
+          "file": "regression/execution-data.test.js",
+          "status": "Passed",
+          "durationMs": 1.2165,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process runs every transaction in isolation and maps stage outputs explicitly",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 22.7051,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "runtime applies the same filter-before-limit selection used by preflight",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 10.4209,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process stops later transaction iterations after a failed iteration by default",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 10.921,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process stops at the failed stage and retains earlier captured values for review",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 12.1606,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "cooperative cancellation finishes the active transaction and starts no later iteration",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 9.7497,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Regression Pack isolates members and continues after a failed member",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 20.0357,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Regression Pack continues when one member dataset cannot be loaded",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 10.691,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Legacy compatibility translators preserve Chain, Suite, and multi-row Batch semantics",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 2.037,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Translated Batch executes every Group data row instead of only the first",
+          "file": "regression/execution-orchestrator.test.js",
+          "status": "Passed",
+          "durationMs": 11.3463,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Stage 1 example plans satisfy the versioned execution contract",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 4.4974,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process hand-offs are ordered and namespaced",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 0.6468,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Execution snapshots clone, freeze, and hash plan plus transaction data",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 1.5145,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "data selection applies nested filters before the immutable record limit",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 0.3593,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Regression Pack snapshots namespace member data bindings",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 0.9439,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Credential values are rejected from plans and data snapshots",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 1.9377,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Snapshot creation rejects missing and unknown data bindings",
+          "file": "regression/execution-plan-contract.test.js",
+          "status": "Passed",
+          "durationMs": 0.5038,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight calculates a Single Test matrix without opening SAP",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 40.3023,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight filters the exact effective data, previews mappings, and seals filter identity",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 21.6831,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Start claim enforces warning acknowledgement, plan hash, and configuration freshness",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 16.9685,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight blocks missing target and missing assets with safe correction findings",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 12.5916,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight blocks unclassified or stale SAP target context with recovery guidance",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 12.9528,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight blocks required inputs that are absent from selected records",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 14.0472,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "transactional preflight enforces non-production, fail-stop, owner reference, and retained state",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 15.2664,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "preflight joins relational CSV into transaction snapshots with owned child rows",
+          "file": "regression/execution-preflight.test.js",
+          "status": "Passed",
+          "durationMs": 13.527,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "single batch group reports determinate step and stage progress",
+          "file": "regression/execution-progress.test.js",
+          "status": "Passed",
+          "durationMs": 47.8835,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "failed-scope rerun creates a new immutable snapshot containing only eligible transactions",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 1.8941,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "full rerun preserves all source records while creating new execution lineage",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 0.3321,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "failed-only Pack rerun excludes passed transaction records inside a failed member",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 0.6101,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "transactional rerun blocks started retained state but permits an unattempted transaction",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 0.6778,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "execution logs redact known credentials and generic authorization secrets",
+          "file": "regression/execution-recovery.test.js",
+          "status": "Passed",
+          "durationMs": 0.3253,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "execution APIs require preflight and return no-store security headers plus retention policy",
+          "file": "regression/execution-release-hardening.test.js",
+          "status": "Passed",
+          "durationMs": 133.4176,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "every persisted legacy Test translates without source mutation",
+          "file": "regression/legacy-migration.test.js",
+          "status": "Passed",
+          "durationMs": 8.9088,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "every persisted legacy Group translates to a Business Process and combined Batch Pack",
+          "file": "regression/legacy-migration.test.js",
+          "status": "Passed",
+          "durationMs": 3.6626,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "legacy Suite translation preserves selected order and independent executable identity",
+          "file": "regression/legacy-migration.test.js",
+          "status": "Passed",
+          "durationMs": 2.5074,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+          "file": "regression/quality-catalog.test.js",
+          "status": "Passed",
+          "durationMs": 10.8256,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Test Operations failure ledger preserves every recorded failure and remediation link",
+          "file": "regression/quality-catalog.test.js",
+          "status": "Passed",
+          "durationMs": 0.2208,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "SAP Settings saves encrypted credentials and exposes only non-secret status",
+          "file": "regression/sap-settings.test.js",
+          "status": "Passed",
+          "durationMs": 526.4282,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "local bootstrap owner can access protected artifacts and safe workspace context",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 116.6914,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "registered workspace denies anonymous artifact and audit access without revealing existence",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 75.1541,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "execution context captures owner and non-secret target metadata",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 0.2909,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "owner classifies and safely verifies SAP without returning credentials",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 78.7175,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "evidence governance exposes retention and enforced redaction without secrets",
+          "file": "regression/t1-security-context.test.js",
+          "status": "Passed",
+          "durationMs": 57.5362,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "SAP test cases derive navigation URLs from the configured credential profile",
+          "file": "regression/tenant-configuration.test.js",
+          "status": "Passed",
+          "durationMs": 1.4679,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "negative transaction passes only when title stays unsaved and SAP validation is present",
+          "file": "regression/transactional-negative.test.js",
+          "status": "Passed",
+          "durationMs": 6.449,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "negative transaction fails and stops when SAP unexpectedly assigns a document",
+          "file": "regression/transactional-negative.test.js",
+          "status": "Passed",
+          "durationMs": 1.5327,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "negative transaction does not treat an unchanged title without validation as a pass",
+          "file": "regression/transactional-negative.test.js",
+          "status": "Passed",
+          "durationMs": 613.2995,
+          "skipReason": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T09-46-06-087Z",
+      "label": "Isolated API regression",
+      "mode": "API",
+      "targetClass": "Isolated",
+      "startedAt": "2026-07-30T09:46:06.804Z",
+      "commitSha": "109a86d7273d66b7a551ef1a62a9f360d8726489",
+      "worktreeClean": false,
+      "sourceTreeClean": false,
+      "finishedAt": "2026-07-30T09:46:22.937Z",
+      "durationMs": 16078.4602,
+      "counts": {
+        "tests": 48,
+        "failed": 0,
+        "passed": 44,
+        "cancelled": 0,
+        "skipped": 4,
+        "todo": 0,
+        "topLevel": 48,
+        "suites": 0
+      },
+      "tests": [
+        {
+          "name": "GET /api/data lists known fixtures",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 16.575,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/data/:file parses an existing CSV",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 5.131,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/data/:file for an unknown file returns an empty dataset, not 404",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 3.8044,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/data/:file rejects a non-.csv file name",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 5.1042,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/data/:file rejects a body missing rows",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 3.094,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT then GET /api/data/:file round-trips (Data positive)",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 9.5476,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "nested JSON dataset validates, previews child work, saves, and reopens without flattening",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 7.9729,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "relational CSV preview and persistence reject ambiguous data and preserve owned child rows",
+          "file": "regression/api/data.test.js",
+          "status": "Passed",
+          "durationMs": 18.4282,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/groups lists known fixtures",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 15.8756,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/groups/:file returns the parsed group",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 3.7726,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/groups/:file 404s for an unknown file",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 1.9352,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/groups/:file rejects an empty testCaseFiles array",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 6.8134,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/groups/:file rejects a missing appId",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 2.6804,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT then GET /api/groups/:file round-trips (Groups positive)",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 4.1556,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET inferred Test contract exposes typed authoring metadata",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 2.5408,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "versioned Business Process persists a typed prior-stage hand-off",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 7.6884,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process rejects forward references and cycles",
+          "file": "regression/api/groups.test.js",
+          "status": "Passed",
+          "durationMs": 2.8339,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/packs lists the published isolated Pack fixture",
+          "file": "regression/api/packs.test.js",
+          "status": "Passed",
+          "durationMs": 16.7261,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT then GET /api/packs/:file persists independent member bindings",
+          "file": "regression/api/packs.test.js",
+          "status": "Passed",
+          "durationMs": 12.7528,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/packs/:file rejects duplicate member IDs",
+          "file": "regression/api/packs.test.js",
+          "status": "Passed",
+          "durationMs": 2.8534,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/packs/:file rejects sequential or unknown member types",
+          "file": "regression/api/packs.test.js",
+          "status": "Passed",
+          "durationMs": 2.4759,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/packs/:file rejects incompatible Test session policies",
+          "file": "regression/api/packs.test.js",
+          "status": "Passed",
+          "durationMs": 2.5455,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/packs/:file rejects orphaned artifact and data references",
+          "file": "regression/api/packs.test.js",
+          "status": "Passed",
+          "durationMs": 7.608,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/packs/:file rejects traversal and missing artifacts safely",
+          "file": "regression/api/packs.test.js",
+          "status": "Passed",
+          "durationMs": 4.5069,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/runs rejects an invalid mode",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 18.3765,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/runs (chain) rejects a missing testCaseFiles/appId",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 3.0106,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/runs (batch) rejects a missing groupFiles",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 2.5873,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/runs/:id 404s for an unknown run",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 4.4312,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/runs completes a synthetic headless Chain",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 3051.9172,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/runs completes a synthetic headless Suite",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 3038.6947,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/runs completes a synthetic headless multi-group Batch",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 3032.0017,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/runs executes a published mixed saved Regression Pack",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 3033.425,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "rerun requires an explicit difference review and records immutable lineage",
+          "file": "regression/api/runs.test.js",
+          "status": "Passed",
+          "durationMs": 3036.0838,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "live: read-only Chain authenticates and opens Manage Purchase Orders, with evidence PDF",
+          "file": "regression/api/runs.test.js",
+          "status": "Skipped",
+          "durationMs": 0.4527,
+          "skipReason": "set REGRESSION_LIVE=1 to run the read-only matrix against the configured non-production SAP target",
+          "error": null
+        },
+        {
+          "name": "live: read-only Suite runs independent login and procurement navigation tests",
+          "file": "regression/api/runs.test.js",
+          "status": "Skipped",
+          "durationMs": 0.0795,
+          "skipReason": "set REGRESSION_LIVE=1 to run the read-only matrix against the configured non-production SAP target",
+          "error": null
+        },
+        {
+          "name": "live: read-only Batch runs two independent SAP smoke groups",
+          "file": "regression/api/runs.test.js",
+          "status": "Skipped",
+          "durationMs": 0.0475,
+          "skipReason": "set REGRESSION_LIVE=1 to run the read-only matrix against the configured non-production SAP target",
+          "error": null
+        },
+        {
+          "name": "live transactional: negative test — create PO is blocked without a line item",
+          "file": "regression/api/runs.test.js",
+          "status": "Skipped",
+          "durationMs": 0.0404,
+          "skipReason": "set REGRESSION_LIVE_TRANSACTIONAL=1 only after test-data ownership, fail-stop retention, and live-run approval are confirmed",
+          "error": null
+        },
+        {
+          "name": "GET /api/testcases lists known fixtures",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 19.2659,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/testcases/library returns filterable business metadata for legacy Tests",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 5.6523,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "POST /api/testcases/:file creates metadata without overwriting an existing Test",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 22.9269,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Test publishing validation reports unresolved values, objects and output collisions",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 7.8622,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "published typed Test round-trips visual value bindings without changing executable params",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 11.0061,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "system-context and prior-output bindings validate against their canonical placeholders",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 2.795,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/testcases/:file returns the parsed test case",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 2.1243,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "GET /api/testcases/:file 404s for an unknown file",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 1.3751,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/testcases/:file rejects a non-.json file name",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 2.0004,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT /api/testcases/:file rejects a body missing required fields",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 3.5681,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "PUT then GET /api/testcases/:file round-trips (Compose positive)",
+          "file": "regression/api/testcases.test.js",
+          "status": "Passed",
+          "durationMs": 6.1409,
+          "skipReason": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "id": "ISOLATED-UI-2026-07-30T09-46-23-487Z",
+      "label": "Isolated UI regression",
+      "mode": "Headless UI",
+      "targetClass": "Isolated",
+      "startedAt": "2026-07-30T09:46:24.324Z",
+      "commitSha": "109a86d7273d66b7a551ef1a62a9f360d8726489",
+      "worktreeClean": false,
+      "sourceTreeClean": false,
+      "finishedAt": "2026-07-30T09:47:45.209Z",
+      "durationMs": 80825.8389,
+      "counts": {
+        "tests": 44,
+        "failed": 0,
+        "passed": 40,
+        "cancelled": 0,
+        "skipped": 4,
+        "todo": 0,
+        "topLevel": 44,
+        "suites": 0
+      },
+      "tests": [
+        {
+          "name": "Axe reports no serious or critical violations in every primary workspace",
+          "file": "regression/ui/accessibility.test.js",
+          "status": "Passed",
+          "durationMs": 8136.8535,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "skip navigation and keyboard focus enter every primary workspace",
+          "file": "regression/ui/accessibility.test.js",
+          "status": "Passed",
+          "durationMs": 3445.9017,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "primary workspaces reflow at 320 CSS pixels (640px viewport at 200% zoom equivalent)",
+          "file": "regression/ui/accessibility.test.js",
+          "status": "Passed",
+          "durationMs": 3067.9037,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Audit and Evidence uses a searchable run library instead of date accordions",
+          "file": "regression/ui/audit-library.test.js",
+          "status": "Passed",
+          "durationMs": 712.0279,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Compose: create a test case, add a step, save, reload, reopen (required Compose positive)",
+          "file": "regression/ui/compose.test.js",
+          "status": "Passed",
+          "durationMs": 1652.7871,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Data: create a dataset, add a row, save, reload, reopen (required Data positive)",
+          "file": "regression/ui/data-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1224.2089,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Data: author and preview nested JSON transactions before save",
+          "file": "regression/ui/data-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1109.1428,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Data: relate header and child CSVs, preview counts, and persist the relationship",
+          "file": "regression/ui/data-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1046.5735,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Processes: create, save, reload and reopen a process",
+          "file": "regression/ui/groups-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1245.9806,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Business Process canvas authors and restores a typed stage hand-off",
+          "file": "regression/ui/groups-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1223.0047,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Canvas First Overview presents the approved shell and real workspace data",
+          "file": "regression/ui/overview.test.js",
+          "status": "Passed",
+          "durationMs": 1227.9779,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Canvas First Overview primary action opens Compose without execution",
+          "file": "regression/ui/overview.test.js",
+          "status": "Passed",
+          "durationMs": 932.5316,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Regression Packs: create, bind independent members, save, reload and reopen",
+          "file": "regression/ui/packs-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1269.7352,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "unsaved Regression Pack changes are protected from shell navigation",
+          "file": "regression/ui/packs-tab.test.js",
+          "status": "Passed",
+          "durationMs": 980.9732,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: execution type switching renders the approved business language",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1352.8405,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: the file/group filter box narrows the available list",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 940.3065,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: preflight impact review can be opened and cancelled without execution",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1086.7644,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: filter recalculates and previews the exact approved data snapshot",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1196.9084,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: a preflight data finding opens the exact dataset route",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 1245.0972,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: configuration remains usable at 320 CSS pixels and exposes keyboard focus",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 693.3235,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: Business Process completes a synthetic multi-stage Chain",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 4285.4382,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: Pack Tests completes a synthetic independent Suite",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 4202.591,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: Batch mode runs \"Cleanup Drafts\" to completion (execution opt-in)",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 4189.2965,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: Pack Processes completes a synthetic multi-group Batch",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 4280.3614,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: published Saved Pack preflights and executes mixed Test and Process members",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 4297.7865,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Run tab: rerun review compares immutable inputs before creating lineage",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Passed",
+          "durationMs": 4343.7826,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "live: Run tab read-only Chain authenticates and opens Manage Purchase Orders",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Skipped",
+          "durationMs": 0.2144,
+          "skipReason": "set REGRESSION_LIVE=1 to run the read-only matrix against the configured non-production SAP target",
+          "error": null
+        },
+        {
+          "name": "live: Run tab read-only Suite runs two independent SAP smoke tests",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Skipped",
+          "durationMs": 0.0627,
+          "skipReason": "set REGRESSION_LIVE=1 to run the read-only matrix against the configured non-production SAP target",
+          "error": null
+        },
+        {
+          "name": "live: Run tab read-only Batch runs two independent SAP smoke groups",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Skipped",
+          "durationMs": 0.0452,
+          "skipReason": "set REGRESSION_LIVE=1 to run the read-only matrix against the configured non-production SAP target",
+          "error": null
+        },
+        {
+          "name": "live transactional: Run tab full PO -> GR -> Invoice via the UI",
+          "file": "regression/ui/run-tab.test.js",
+          "status": "Skipped",
+          "durationMs": 0.0332,
+          "skipReason": "set REGRESSION_LIVE_TRANSACTIONAL=1 only after test-data ownership, fail-stop retention, and live-run approval are confirmed",
+          "error": null
+        },
+        {
+          "name": "artifact detail routes restore Compose, Data, Process, Object, and Audit context after refresh",
+          "file": "regression/ui/stable-routes.test.js",
+          "status": "Passed",
+          "durationMs": 1671.0332,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "browser back and forward restore route-selected artifacts",
+          "file": "regression/ui/stable-routes.test.js",
+          "status": "Passed",
+          "durationMs": 1526.0486,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "T1.3 grouped picker supports search and selection without leaving the keyboard",
+          "file": "regression/ui/t1-foundations.test.js",
+          "status": "Passed",
+          "durationMs": 1082.8087,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "T1.3 ordered transfer controls announce keyboard reorder operations",
+          "file": "regression/ui/t1-foundations.test.js",
+          "status": "Passed",
+          "durationMs": 984.2445,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "T1.3 shell and responsive tables remain operable at narrow widths",
+          "file": "regression/ui/t1-foundations.test.js",
+          "status": "Passed",
+          "durationMs": 656.9228,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "T1.3 primary text and controls meet normal-text contrast in both themes",
+          "file": "regression/ui/t1-foundations.test.js",
+          "status": "Passed",
+          "durationMs": 644.5021,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "Test Library filters by name, process area, application and readiness",
+          "file": "regression/ui/test-library.test.js",
+          "status": "Passed",
+          "durationMs": 721.0933,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "guided creation copies a template and restores the stable Test route",
+          "file": "regression/ui/test-library.test.js",
+          "status": "Passed",
+          "durationMs": 1425.5509,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "typed Test publishes with a dataset binding and round-trips executable ModuleCall JSON",
+          "file": "regression/ui/typed-test-authoring.test.js",
+          "status": "Passed",
+          "durationMs": 1828.2978,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "publishing is blocked by required parameters, missing objects and output collisions",
+          "file": "regression/ui/typed-test-authoring.test.js",
+          "status": "Passed",
+          "durationMs": 1706.4212,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "unsaved new test case is protected from shell navigation",
+          "file": "regression/ui/unsaved-guards.test.js",
+          "status": "Passed",
+          "durationMs": 1126.6497,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "unsaved new dataset is protected from shell navigation",
+          "file": "regression/ui/unsaved-guards.test.js",
+          "status": "Passed",
+          "durationMs": 1023.8803,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "unsaved new group is protected from shell navigation",
+          "file": "regression/ui/unsaved-guards.test.js",
+          "status": "Passed",
+          "durationMs": 1001.004,
+          "skipReason": null,
+          "error": null
+        },
+        {
+          "name": "browser Back cannot discard an unsaved route-selected artifact without confirmation",
+          "file": "regression/ui/unsaved-guards.test.js",
+          "status": "Passed",
+          "durationMs": 1010.4962,
+          "skipReason": null,
+          "error": null
+        }
+      ]
     }
   ],
   "failures": [

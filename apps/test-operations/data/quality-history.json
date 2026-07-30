@@ -1,6 +1,50 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-07-30T09-46-23-487Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T09:46:24.324Z",
+      "finishedAt": "2026-07-30T09:47:45.209Z",
+      "passed": 40,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T09-46-06-087Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T09:46:06.804Z",
+      "finishedAt": "2026-07-30T09:46:22.937Z",
+      "passed": 44,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T09-42-16-277Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T09:42:16.394Z",
+      "finishedAt": "2026-07-30T09:42:21.353Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T09-25-43-679Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T09:25:43.758Z",
+      "finishedAt": "2026-07-30T09:25:49.782Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "CORE-2026-07-30T02-28-41-009Z",
       "label": "Core regression",
       "startedAt": "2026-07-30T02:28:41.084Z",

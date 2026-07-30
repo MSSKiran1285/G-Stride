@@ -108,6 +108,7 @@
       font-size: .7rem; font-weight: 800; white-space: nowrap;
     }
     .chip { background: var(--blue-soft); color: var(--blue); }
+    .chip.actual-release { background: var(--amber-soft); color: var(--amber); }
     .priority { background: var(--coral-soft); color: var(--coral-dark); }
     .status.implemented { background: var(--green-soft); color: var(--green); }
     .status.partial { background: var(--amber-soft); color: var(--amber); }
@@ -128,6 +129,12 @@
     .legacy { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .74rem; overflow-wrap: anywhere; }
     .empty { padding: 2.5rem; text-align: center; color: var(--muted); }
     .governance { margin-top: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .version-alert {
+      margin-top: 1rem; padding: 1rem 1.2rem; border: 1px solid var(--amber); border-left-width: 4px;
+      border-radius: 12px; background: var(--amber-soft); color: var(--navy-2); font-size: .88rem; line-height: 1.5;
+    }
+    .version-alert strong { color: var(--navy); }
+    .version-alert a { color: var(--blue); font-weight: 700; }
     details.panel summary { cursor: pointer; font-weight: 800; }
     details.panel > div { margin-top: 1rem; }
     .change-list { display: grid; gap: .65rem; }
@@ -199,6 +206,12 @@
         </aside>
       </section>
 
+      <div class="version-alert" role="note">
+        <strong>Version note:</strong> <code>v2.0.0</code> (commit <code>fb4bd49</code>, 30 Jul 2026 08:07:59 +05:30) remains the frozen, signed GA release backed by a 125-test catalogue — its tag and sign-off are unchanged.
+        <code>main</code> continued afterward without a version bump and is now tracked as <strong>2.1.0-dev</strong>. BL-012, BL-020, BL-021, BL-028 and BL-029 reached their final Implemented state on <code>main</code> after the freeze and are marked "Shipped 2.1.0" below — their planned tranche reflects original scoping, not their actual release.
+        See <a href="./RELEASE_GOVERNANCE_2.1.md">RELEASE_GOVERNANCE_2.1.md</a> for the full decision record.
+      </div>
+
       <section class="metrics" aria-label="Backlog summary">
         <div class="metric"><span>Total backlog</span><strong id="metricTotal">0</strong></div>
         <div class="metric"><span>Implemented</span><strong id="metricImplemented">0</strong></div>
@@ -267,7 +280,8 @@
         description: "Display only server-backed workspace and target context and avoid unsupported connection claims.",
         story: "As a tester, I want verified target context so that I know where an execution will act.",
         criteria: ["Shell and review use server-backed target metadata.", "Unavailable or stale context is explicit and blocks unsafe execution.", "No decorative control implies a successful connection."],
-        workspace: ["Shell", "Execution Center"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["Shell", "Execution Center"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Unsupported environment claims were removed; server-backed SAP configuration is displayed. Freshness verification remains strengthened by BL-014.",
         evidence: ["App.tsx target label", "P0_IMPLEMENTATION_REPORT.md"], updated: "2026-07-27"
       },
@@ -276,7 +290,8 @@
         description: "Present target, scope, data, side effects and evidence behavior before starting execution.",
         story: "As an operator, I want an impact review so that I can prevent unintended SAP changes.",
         criteria: ["Review shows target, mode, ordered scope, data and browser policy.", "SAP side effects and cancellation boundary are explicit.", "Duplicate submission produces one run ID."],
-        workspace: ["Execution Center"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["Execution Center"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Review, warning acknowledgement and duplicate-submit protection are implemented; authoritative matrix enhancements continue in BL-030.",
         evidence: ["RunPanel.tsx", "regression/ui/run-tab.test.js"], updated: "2026-07-27"
       },
@@ -285,7 +300,8 @@
         description: "Source Overview values from APIs and distinguish loading, empty and unavailable data.",
         story: "As a test manager, I want trustworthy dashboard states so that I do not act on fabricated information.",
         criteria: ["Metrics and recent records come from APIs.", "Loading, empty and unavailable states are distinct.", "No fallback execution or document record is fabricated."],
-        workspace: ["Automation Overview"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["Automation Overview"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Workspace counts, immutable runs and evidence are API-backed with retry and empty states.",
         evidence: ["AutomationOverview.tsx", "regression/ui/overview.test.js"], updated: "2026-07-27"
       },
@@ -294,7 +310,8 @@
         description: "Bind locally by default and require an explicit decision before network exposure.",
         story: "As the workspace owner, I want Studio locally restricted so that unfinished controls are not exposed.",
         criteria: ["Default host is 127.0.0.1.", "Non-loopback binding requires an explicit override.", "Startup communicates network exposure risk."],
-        workspace: ["Platform"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["Platform"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Loopback is the default and host override is explicit.",
         evidence: ["packages/studio-server/src/standalone.ts", "P0_IMPLEMENTATION_REPORT.md"], updated: "2026-07-27"
       },
@@ -303,7 +320,8 @@
         description: "Provide coherent forms, tables, statuses, dialogs, drawers and responsive functional layouts.",
         story: "As a user, I want consistent functional styling so that every workspace is readable and operable.",
         criteria: ["Functional classes have visible states and spacing.", "Status and feedback are not color-only.", "Core screens remain usable at supported widths."],
-        workspace: ["All workspaces"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["All workspaces"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Canvas First shell and functional compatibility styles are present; component-system consolidation remains BL-011.",
         evidence: ["packages/studio-web/src/index.css", "P0_IMPLEMENTATION_REPORT.md"], updated: "2026-07-27"
       },
@@ -312,7 +330,8 @@
         description: "Keep source content UTF-8 and prevent accidental character corruption.",
         story: "As a user, I want readable product copy so that technical symbols and punctuation are unambiguous.",
         criteria: ["Source is valid UTF-8.", "Build and browser output preserve characters.", "Display-tool mojibake is not written back to source."],
-        workspace: ["All workspaces"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["All workspaces"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Source verification closed the issue; PowerShell display encoding was identified as the false signal.",
         evidence: ["PRODUCT_BACKLOG.md P0 status"], updated: "2026-07-27"
       },
@@ -321,7 +340,8 @@
         description: "Guard dirty tests, datasets, processes and execution drafts during navigation and reload.",
         story: "As an author, I want unsaved changes protected so that navigation does not destroy my work.",
         criteria: ["Dirty state reaches shell navigation.", "Artifact switching and browser unload require confirmation.", "New drafts are dirty from their first meaningful change."],
-        workspace: ["Compose", "Test Data", "Processes & Packs", "Execution Center"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["Compose", "Test Data", "Processes & Packs", "Execution Center"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Composer, Dataset, Group and Execution draft guards are implemented and regression tested.",
         evidence: ["App.tsx navigation guard", "regression/ui/unsaved-guards.test.js"], updated: "2026-07-27"
       },
@@ -330,7 +350,8 @@
         description: "Make core shell navigation, forms, actions and feedback semantically operable.",
         story: "As a keyboard or screen-reader user, I want equivalent access to core Studio actions.",
         criteria: ["Primary navigation and actions use semantic controls.", "Focus is visible and labels are programmatic.", "Errors and status changes are announced where required."],
-        workspace: ["All workspaces"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["All workspaces"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "P0 semantic baseline is present; complex-widget behavior and full accessibility/release verification were subsequently closed by BL-016 and BL-017.",
         evidence: ["App.tsx skip link and headings", "P0_IMPLEMENTATION_REPORT.md"], updated: "2026-07-27"
       },
@@ -339,7 +360,8 @@
         description: "Exercise UI workflows against temporary synthetic fixtures without live SAP side effects.",
         story: "As a developer, I want isolated UI regression coverage so that changes can be verified safely.",
         criteria: ["Harness uses temporary storage.", "Execution is disabled unless explicitly approved.", "Fixtures and temporary databases are removed after the run."],
-        workspace: ["Quality Engineering"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["Quality Engineering"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Isolated UI harness covers Overview, Compose, Data, Groups, Execution, Audit and dirty guards.",
         evidence: ["regression/run-isolated-ui.js", "regression/ui"], updated: "2026-07-27"
       },
@@ -348,7 +370,8 @@
         description: "Reconnect polling safely and preserve run identity after temporary server failures.",
         story: "As an operator, I want monitoring to recover so that a network interruption does not hide a live run.",
         criteria: ["Polling has bounded backoff and cancellation.", "Last update and connection state are visible.", "Refresh never starts duplicate execution work."],
-        workspace: ["Execution Center"], release: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        workspace: ["Execution Center"], plannedTranche: "T0 · Delivered baseline", priority: "P0", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Recursive polling, backoff, manual retry and cleanup are implemented.",
         evidence: ["RunPanel.tsx", "P0_IMPLEMENTATION_REPORT.md"], updated: "2026-07-27"
       },
@@ -357,7 +380,7 @@
         description: "Replace local styling variations with reusable Canvas First layout and interaction primitives.",
         story: "As a product team, we want shared primitives so that workspaces remain visually and behaviorally consistent.",
         criteria: ["Tokens cover color, type, spacing, focus, status and elevation.", "Page header, toolbar, card, table, drawer and empty-state primitives are reused.", "Light and dark themes meet contrast requirements."],
-        workspace: ["Design System", "All workspaces"], release: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
+        workspace: ["Design System", "All workspaces"], plannedTranche: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Canvas First now exposes shared type, spacing, focus, status, elevation and theme tokens plus reusable page header, toolbar, card, table, drawer, empty and async-feedback primitives. Automated checks cover normal-text contrast in both themes.",
         evidence: ["index.css T1.3 Canvas First primitives", "WorkspacePrimitives.tsx", "DocumentsPanel.tsx primitive adoption", "t1-foundations.test.js theme contrast"], updated: "2026-07-29"
@@ -367,7 +390,7 @@
         description: "Give every workspace, artifact and run a recoverable URL with navigation guards.",
         story: "As a user, I want stable URLs so that refresh, bookmarks and correction links preserve context.",
         criteria: ["Workspace routes survive refresh and browser navigation.", "Tests, datasets, processes, packs and audit records have stable detail routes.", "Dirty-state guards apply to route changes."],
-        workspace: ["Shell", "All workspaces"], release: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
+        workspace: ["Shell", "All workspaces"], plannedTranche: "T1 · 2.0 Alpha", actualRelease: "2.1.0", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Canonical routes restore Tests, datasets, Business Processes, Regression Packs, object selections, execution runs and audit records across refresh and browser back/forward. Preflight findings open the exact dataset/source or SAP setting, and shell, tab, browser-history and unload navigation protect unsaved work.",
         evidence: ["routes.ts", "App.tsx route orchestration", "ProcessPacksWorkspace.tsx", "PackEditor.tsx", "DocumentsPanel audit detail", "executionPreflight.ts correctionRoute", "stable-routes.test.js", "packs-tab.test.js", "unsaved-guards.test.js"], updated: "2026-07-30"
@@ -377,7 +400,7 @@
         description: "Keep stable navigation, account actions and workspace context usable across supported widths.",
         story: "As a user, I want a calm responsive shell so that navigation does not dominate the work canvas.",
         criteria: ["Sidebar collapses without hiding destinations.", "Account menu owns Settings, Help and Sign out.", "Header actions wrap or simplify at narrow widths without overlap."],
-        workspace: ["Shell"], release: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
+        workspace: ["Shell"], plannedTranche: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "The compact sidebar retains programmatic destination names, the account menu owns Settings, Help and Sign out with complete menu-key behavior, and target plus workflow actions reflow without shell overflow at narrow widths.",
         evidence: ["App.tsx responsive shell", "AccountMenu.tsx menu keyboard contract", "index.css narrow shell rules", "t1-foundations.test.js narrow-width journey"], updated: "2026-07-29"
@@ -387,7 +410,7 @@
         description: "Unify owner, SAP target, safety class, profile reference and verification freshness.",
         story: "As an operator, I want one authoritative context so that every workspace refers to the same target.",
         criteria: ["Server returns non-secret workspace and target context.", "Shell, scan and execution review show the same context and freshness.", "A stale or mismatched context blocks Start with recovery guidance."],
-        workspace: ["Shell", "Settings", "Control Object Repository", "Execution Center"], release: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
+        workspace: ["Shell", "Settings", "Control Object Repository", "Execution Center"], plannedTranche: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "One non-secret server context now supplies owner, SAP hostname, profile, safety class and 24-hour verification freshness to the shell, live scanner and execution review. Preflight hashes that context, blocks unknown/stale targets and invalidates mismatches before Start.",
         evidence: ["executionContext.ts", "workspaceGovernance.ts", "/api/workspace-context", "ObjectScanner.tsx", "RunPanel.tsx", "execution-preflight.test.js", "t1-security-context.test.js"], updated: "2026-07-29"
@@ -397,7 +420,7 @@
         description: "Use consistent loading, empty, warning, error, success and retry behavior.",
         story: "As a user, I want predictable feedback so that I know whether Studio is working, waiting or blocked.",
         criteria: ["Every API-backed surface has loading, empty and error states.", "Errors are actionable and safe.", "Success is associated with the item or action that changed."],
-        workspace: ["All workspaces"], release: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
+        workspace: ["All workspaces"], plannedTranche: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "API-backed workspaces now use consistent announced loading, empty, actionable error/retry and item-associated save-success behavior. Existing execution, scan and settings feedback uses the same status semantics.",
         evidence: ["WorkspacePrimitives.tsx AsyncFeedback and EmptyState", "TestCaseEditor.tsx", "DataEditor.tsx", "GroupEditor.tsx", "DocumentsPanel.tsx", "ObjectBrowser.tsx"], updated: "2026-07-29"
@@ -407,7 +430,7 @@
         description: "Implement accessible search, grouped selection, ordered transfer, drag alternatives and responsive tables.",
         story: "As a keyboard or assistive-technology user, I want complete complex-widget behavior.",
         criteria: ["Grouped pickers implement an approved combobox or tree pattern.", "Every reorder action has keyboard controls and announcements.", "Tables preserve labels and actions at supported narrow widths."],
-        workspace: ["Compose", "Test Data", "Processes & Packs", "Control Object Repository", "Execution Center"], release: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
+        workspace: ["Compose", "Test Data", "Processes & Packs", "Control Object Repository", "Execution Center"], plannedTranche: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Grouped selection now uses a searchable combobox/listbox with Arrow, Home, End, Enter and Escape behavior. All draggable ordering surfaces also provide keyboard buttons and live announcements. Responsive tables expose row labels and retain actions.",
         evidence: ["GroupedPicker.tsx", "FileChainPicker.tsx", "TestCaseEditor.tsx reorder alternatives", "ObjectBrowser.tsx reorder alternatives", "index.css responsive-table", "t1-foundations.test.js keyboard journeys"], updated: "2026-07-29"
@@ -417,7 +440,7 @@
         description: "Validate completed journeys to WCAG 2.2 AA and assemble production release evidence.",
         story: "As a product owner, I want objective accessibility and release evidence before approving 2.0.",
         criteria: ["Axe has no unapproved serious or critical findings.", "Keyboard and NVDA journeys are recorded for every primary workspace.", "Responsive, security, secret-scan and approved live SAP evidence are signed."],
-        workspace: ["Quality Engineering", "All workspaces"], release: "T4 · 2.0 GA", priority: "P0", status: "Implemented",
+        workspace: ["Quality Engineering", "All workspaces"], plannedTranche: "T4 · 2.0 GA", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "All seven primary workspaces pass Axe with no serious/critical findings, keyboard skip/focus entry, and 320 CSS-pixel reflow. A paced NVDA 2026.1.1 session in headed Chrome 150 recorded every workspace landmark, heading, control role, label and state against isolated data. A Chrome-only 6px Execution Center overflow was found, fixed and retested. The final GA gate passed build, typecheck, 57 core tests, 28 isolated API tests, 32 isolated UI tests and a 256-file pre-cleanup secret scan; the frozen 251-file release set was rescanned successfully. Technical accessibility, security and positive P2P/O2C evidence verification was signed by the verification executor and accepted by workspace owner Sathyanarayanan Kiran at 21:18:11 +05:30. BL-041's technical hold was resolved, and the workspace owner approved QA/4HANA Studio 2.0 for GA on 30 July 2026 at 08:00:18 +05:30.",
         evidence: ["regression/ui/accessibility.test.js", "regression/results/nvda/primary-workspaces-2026-07-29.log", "NVDA_PRIMARY_WORKSPACE_RESULTS.md", "ACCESSIBILITY_RELEASE_VERIFICATION.md", "RELEASE_SIGN_OFF_2.0.md"], updated: "2026-07-30"
@@ -427,7 +450,7 @@
         description: "Turn Overview into a trusted landing page with direct continuation, alerts and scoped metrics.",
         story: "As a test manager, I want Overview to show recent work and issues needing attention.",
         criteria: ["Selected tests and runs open their exact detail routes.", "Configured target status is accurate and actionable.", "Recent failures, stale drafts and blocked readiness are surfaced without duplicating navigation."],
-        workspace: ["Automation Overview"], release: "T4 · 2.0 GA", priority: "P1", status: "Partial",
+        workspace: ["Automation Overview"], plannedTranche: "T4 · 2.0 GA", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "1/3",
         coverage: "Canvas, API counts, recent work and impact dashboard exist, and target state now comes from authoritative workspace context. Recent rows still open the general workspace rather than exact details, and failure/readiness/draft alerts remain.",
         evidence: ["AutomationOverview.tsx"], updated: "2026-07-29"
@@ -437,7 +460,7 @@
         description: "Scope outcomes, runtime, manual effort and TCO by time, target, process and test.",
         story: "As a test manager, I want transparent trends so that I can identify risk and realised automation value.",
         criteria: ["Every metric states date range, filters, numerator, denominator and freshness.", "Cost assumptions are saved as owner workspace preferences.", "Charts have accessible tabular equivalents and never fabricate trends."],
-        workspace: ["Automation Overview"], release: "T4 · 2.0 GA", priority: "P1", status: "Partial",
+        workspace: ["Automation Overview"], plannedTranche: "T4 · 2.0 GA", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "0/3",
         coverage: "Actual totals and a broad TCO model exist, but metric scope/freshness, saved assumptions, filters, time-series trends and accessible chart equivalents are not complete.",
         evidence: ["AutomationOverview.tsx ExecutionImpactDashboard"], updated: "2026-07-29"
@@ -447,7 +470,7 @@
         description: "Find, create, duplicate, archive and open tests using business metadata rather than file-first controls.",
         story: "As a test author, I want a searchable Test Library so that I avoid duplicates and resume exact work.",
         criteria: ["List supports name, process area, application and status filters.", "New Test captures business name, application, domain and blank/template choice.", "Opening or creating uses a stable test route while preserving JSON compatibility."],
-        workspace: ["Compose"], release: "T2 · 2.0 Beta", priority: "P1", status: "Implemented",
+        workspace: ["Compose"], plannedTranche: "T2 · 2.0 Beta", actualRelease: "2.1.0", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "3/3",
         coverage: "Compose now opens a responsive Test Library with name/file search plus process-area, application and readiness filters. Guided creation captures the business name, generated or edited file name, application, process area and blank-versus-existing-Test starting point. Creation is server-persisted, conflict-safe and immediately opens a refresh-stable detail route; legacy Tests without application metadata remain valid and default to SAP in the library index.",
         evidence: ["TestLibrary.tsx", "TestCaseEditor.tsx application metadata", "server.ts /api/testcases/library and POST /api/testcases/:file", "api.ts listTestLibrary/createTestCase", "testcases.test.js", "test-library.test.js", "compose.test.js", "stable-routes.test.js", "unsaved-guards.test.js"], updated: "2026-07-30"
@@ -457,17 +480,17 @@
         description: "Compose steps, objects, value sources, declared inputs/outputs and readiness in one guided canvas.",
         story: "As a functional consultant, I want guided test composition so that saved Tests are understandable and runnable.",
         criteria: ["Steps distinguish literal, dataset, system-context and prior-output values.", "Tests visually declare typed inputs, outputs and sensitivity.", "Required objects, parameters, unresolved values and output collisions block publishing.", "Reordering is keyboard accessible and existing ModuleCall JSON round-trips."],
-        workspace: ["Compose"], release: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
-        deliveryState: "In progress", acceptanceProgress: "1/4",
-        coverage: "Schema-driven steps, object selection, persistence, accessible reordering and ModuleCall round-trip exist. Visual value sources, typed contract authoring and publish-readiness validation remain.",
-        evidence: ["TestCaseEditor.tsx", "StepEditor.tsx", "packages/core/src/domain/testContract.ts"], updated: "2026-07-29"
+        workspace: ["Compose"], plannedTranche: "T2 · 2.0 Beta", actualRelease: "2.1.0", priority: "P1", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "4/4",
+        coverage: "Compose now distinguishes literal, dataset, system-context and prior-output step values; visually authors typed Test inputs, outputs and sensitivity; and blocks publishing for unresolved required values, missing objects or parameters, and output collisions. Existing ModuleCall JSON remains executable and round-trips through the editor, while keyboard-accessible reordering is retained.",
+        evidence: ["TestCaseEditor.tsx", "StepEditor.tsx", "TestContractEditor.tsx", "packages/core/src/domain/testContract.ts", "server.ts Test publish validation", "testcases.test.js", "typed-test-authoring.test.js", "compose.test.js"], updated: "2026-07-30"
       },
       {
         id: "BL-022", legacy: "PB-020 · OBJ-01", title: "Complete the Control Object Repository workbench",
         description: "Search, inspect, edit, highlight and safely maintain reusable SAP UI5 objects.",
         story: "As an automation engineer, I want a central object workbench so that selectors remain reusable and understandable.",
         criteria: ["Search spans domain, App ID, name, label, type and stability.", "Object detail shows selector metadata, scope, usage and last verification.", "Rename and delete show dependency impact and preserve or guide reference correction.", "Ordering has keyboard controls and does not require drag."],
-        workspace: ["Control Object Repository"], release: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
+        workspace: ["Control Object Repository"], plannedTranche: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "1/4",
         coverage: "Domain/App ID browse, local filtering, stable object routes, highlight, edit/delete and keyboard ordering exist. Stability, usage/verification metadata and dependency-safe rename/delete remain.",
         evidence: ["ObjectBrowser.tsx", "server object APIs"], updated: "2026-07-29"
@@ -477,7 +500,7 @@
         description: "Verify the SAP target, capture or pick controls, curate names and save stable objects safely.",
         story: "As a functional consultant, I want guided capture so that objects are stable and stored under the correct application.",
         criteria: ["Scan starts from the configured SAP URL and displays target/session health.", "Bulk capture and interactive picking identify exact duplicates before save.", "App ID is detected or explicitly confirmed for each capture.", "Contextual capture returns the saved object to the originating Compose field without losing work."],
-        workspace: ["Control Object Repository", "Compose"], release: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
+        workspace: ["Control Object Repository", "Compose"], plannedTranche: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "3/4",
         coverage: "Configured SAP URL/context health, session recovery, bulk capture, continuous Ctrl/Cmd picking, exact duplicate detection, explicit App ID, highlighting and Save all exist. Contextual return to the originating Compose field remains.",
         evidence: ["ObjectScanner.tsx", "CurationList.tsx", "scanSession.ts"], updated: "2026-07-29"
@@ -487,7 +510,7 @@
         description: "Track selector quality, verification history, duplicates and change impact over time.",
         story: "As an automation maintainer, I want selector health and lineage so that object changes do not silently break Tests.",
         criteria: ["Repository records created, updated and last-verified metadata.", "Health flags unstable IDs, missing live controls and likely duplicates.", "Reverification can compare live metadata without overwriting silently.", "Object changes are attributable and dependency-aware."],
-        workspace: ["Control Object Repository", "Audit & Evidence"], release: "T2 · 2.0 Beta", priority: "P1", status: "Not started",
+        workspace: ["Control Object Repository", "Audit & Evidence"], plannedTranche: "T2 · 2.0 Beta", priority: "P1", status: "Not started",
         deliveryState: "Backlog", acceptanceProgress: "0/4",
         coverage: "Live highlight can report not found, but no persistent health score, history, similarity detection or change audit exists.",
         evidence: ["ObjectBrowser.tsx current-state stocktake"], updated: "2026-07-29"
@@ -497,7 +520,7 @@
         description: "Create, find and safely maintain flat datasets with schema and usage information.",
         story: "As a test-data author, I want a searchable data library so that reusable datasets are governed and understandable.",
         criteria: ["Dataset list supports search, process area, format and stable routes.", "Columns have names, types, examples and sensitivity.", "Rename/removal shows affected Tests and Processes.", "Scalar, list and table cells survive RFC4180 round-trip."],
-        workspace: ["Test Data"], release: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
+        workspace: ["Test Data"], plannedTranche: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "1/4",
         coverage: "Flat CSV create/edit, row operations, rich RFC4180 cells, tags, dirty guards and stable dataset routes exist. Library search/format filters, typed sensitive columns and dependency-safe rename/removal remain.",
         evidence: ["DataEditor.tsx", "ListCell.tsx", "regression/ui/data-tab.test.js"], updated: "2026-07-29"
@@ -507,7 +530,7 @@
         description: "Design one-header/many-item and many-header/many-item datasets without flattening transaction structure.",
         story: "As a test-data author, I want nested and relational models so that SAP document loops reflect real business data.",
         criteria: ["UI authors nested JSON transaction arrays.", "UI relates header and child CSVs by declared keys and collection path.", "Duplicates, missing keys, orphans and collection collisions are actionable.", "Preview shows transaction and child counts before save."],
-        workspace: ["Test Data"], release: "T2 · 2.0 Beta", priority: "P0", status: "Implemented",
+        workspace: ["Test Data"], plannedTranche: "T2 · 2.0 Beta", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "Test Data now authors nested JSON transaction arrays, persists header/child CSV relationship definitions, validates duplicate/missing/orphan/collision conditions through the authoritative loader, and shows transaction plus child counts before save. Joined samples remain nested and owned by their header transaction.",
         evidence: ["packages/core/src/domain/dataSet.ts", "packages/studio-server/src/server.ts data preview/relation APIs", "packages/studio-web/src/components/DataEditor.tsx", "regression/execution-data.test.js", "regression/api/data.test.js", "regression/ui/data-tab.test.js"], updated: "2026-07-29"
@@ -517,7 +540,7 @@
         description: "Bind reusable data to process, stage or Pack member scope and preview exact iterations.",
         story: "As an operator, I want to inspect effective mappings so that the execution consumes the intended values.",
         criteria: ["Mapping supports process data, stage override, Pack-member data, literals, system context and prior outputs.", "Filters and maximum limits recalculate the execution matrix.", "Preview and Start use the same immutable snapshot.", "Invalid mappings block Start and link to the owning workspace."],
-        workspace: ["Execution Center", "Test Data"], release: "T2 · 2.0 Beta", priority: "P0", status: "Implemented",
+        workspace: ["Execution Center", "Test Data"], plannedTranche: "T2 · 2.0 Beta", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "The versioned model supports process, stage, Pack-member, literal, system-context and prior-output mappings. Execution Center now authors typed nested-property filters and record limits, recalculates the authoritative matrix, displays every exact selected record plus its content hash and resolved input source, and seals that plan/data into the same immutable snapshot consumed by Start. Filter changes invalidate the preflight token; invalid mappings remain blocking with exact correction routes.",
         evidence: ["packages/core/src/domain/executionPlan.ts applyDataSelection", "packages/engine/src/executionOrchestrator.ts", "packages/studio-server/src/executionPreflight.ts", "packages/studio-web/src/components/RunPanel.tsx", "regression/execution-plan-contract.test.js", "regression/execution-preflight.test.js", "regression/execution-orchestrator.test.js", "regression/ui/run-tab.test.js"], updated: "2026-07-29"
@@ -527,7 +550,7 @@
         description: "Replace ambiguous Group/Suite concepts with two explicit reusable artifact types.",
         story: "As a test manager, I want dependency and isolation semantics in business language so that I choose the correct composition.",
         criteria: ["Business Process means ordered dependent Tests with explicit hand-offs.", "Regression Pack means independent Tests or Processes with isolated contexts.", "Legacy Group, Chain, Suite and Batch inputs translate without behavior loss.", "The user-facing workspace is named Processes & Packs after approval."],
-        workspace: ["Processes & Packs"], release: "T3 · 2.0 RC", priority: "P1", status: "Implemented",
+        workspace: ["Processes & Packs"], plannedTranche: "T3 · 2.0 RC", actualRelease: "2.1.0", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "The user-facing Processes & Packs workspace now separates ordered Business Processes from persisted Regression Packs. Packs accept independent Test or Business Process members with isolated member data, application, session and failure-policy bindings. Existing Group, Chain, Suite and Batch translation remains backward-compatible.",
         evidence: ["ProcessPacksWorkspace.tsx", "PackEditor.tsx", "GroupEditor.tsx", "server.ts /api/packs", "legacyExecutionPlans.ts", "packs.test.js", "packs-tab.test.js"], updated: "2026-07-30"
@@ -537,7 +560,7 @@
         description: "Compose sequence, independence, contracts, hand-offs, policies and member bindings without editing plan JSON.",
         story: "As a process author, I want a visual canvas so that execution topology and data movement are obvious.",
         criteria: ["Process canvas shows stages and typed output-to-input hand-offs.", "Pack canvas shows independent member lanes and member-specific bindings.", "Validation identifies unresolved inputs, cycles, duplicate outputs and incompatible policies.", "Keyboard composition, version status and publishing are supported."],
-        workspace: ["Processes & Packs", "Compose"], release: "T3 · 2.0 RC", priority: "P1", status: "Implemented",
+        workspace: ["Processes & Packs", "Compose"], plannedTranche: "T3 · 2.0 RC", actualRelease: "2.1.0", priority: "P1", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "The visual Business Process canvas now persists ordered stages, typed Test contracts and explicit process-data, literal, system-context or prior-stage output bindings. Validation rejects unresolved required inputs, forward or cyclic references, unknown and duplicate outputs, type mismatches and incompatible Pack session policies. Keyboard-native Process and Pack composition, versioned draft/published lifecycles, stable routes and direct mixed Saved Pack execution are covered by isolated API and browser journeys.",
         evidence: ["GroupEditor.tsx visual topology and typed hand-offs", "PackEditor.tsx", "ProcessPacksWorkspace.tsx", "server.ts /api/groups and /api/packs validation", "executionPreflight.ts saved Pack planning", "packages/cli/src/commands/batch.ts", "groups.test.js", "packs.test.js", "runs.test.js", "groups-tab.test.js", "packs-tab.test.js", "run-tab.test.js"], updated: "2026-07-30"
@@ -547,7 +570,7 @@
         description: "Validate target, artifacts, data, policies and calculated work through one server-owned model.",
         story: "As an operator, I want authoritative preflight so that configuration errors are corrected before SAP opens.",
         criteria: ["Server validates target, credentials, versions, contracts, objects, mappings and policies.", "Review shows members, iterations, stages, steps and known child work.", "Blocking findings link to the owning artifact; warnings require acknowledgement.", "Start token and plan hash prevent stale or duplicate starts."],
-        workspace: ["Execution Center"], release: "T2 · 2.0 Beta", priority: "P0", status: "Implemented",
+        workspace: ["Execution Center"], plannedTranche: "T2 · 2.0 Beta", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "Authoritative server preflight validates target freshness, credential availability, plan/contract versions, repository objects, data mappings and execution policies. Review presents the full calculated matrix and child count; correction routes and warning acknowledgement are enforced; token, plan hash, target hash and duplicate-claim handling protect Start.",
         evidence: ["executionPreflight.ts", "RunPanel.tsx", "regression/execution-preflight.test.js", "regression/ui/run-tab.test.js"], updated: "2026-07-29"
@@ -557,7 +580,7 @@
         description: "Monitor Pack, Process, Test, Iteration, Step and Child Item from persisted events.",
         story: "As an operator, I want the complete hierarchy so that progress and failures never appear flattened or stalled.",
         criteria: ["All six hierarchy levels have stable identity, status, totals and duration.", "Known child work contributes measurable progress.", "Refresh/reconnect rebuilds the same state from persisted events.", "Monitor, history, metrics and evidence counts reconcile."],
-        workspace: ["Execution Center"], release: "T3 · 2.0 RC", priority: "P1", status: "Partial",
+        workspace: ["Execution Center"], plannedTranche: "T3 · 2.0 RC", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "2/4",
         coverage: "Stable run routes, persisted run/progress records, reconnect recovery and measurable child-work progress exist. A complete six-level persisted event hierarchy with stable child identities and cross-surface count reconciliation remains.",
         evidence: ["RunPanel.tsx", "runs.ts", "regression/execution-child-progress.test.js"], updated: "2026-07-29"
@@ -567,7 +590,7 @@
         description: "Explain the first actionable failure with safe context and links to correction.",
         story: "As an investigator, I want focused diagnosis so that I can correct the cause without reading raw logs.",
         criteria: ["Failure location identifies Process, Test, iteration, step and child item.", "Expected/actual context is redacted according to policy.", "Links open the exact Test, object, dataset, mapping or setting.", "Raw diagnostics remain secondary and safe."],
-        workspace: ["Execution Center", "Audit & Evidence"], release: "T4 · 2.0 GA", priority: "P1", status: "Partial",
+        workspace: ["Execution Center", "Audit & Evidence"], plannedTranche: "T4 · 2.0 GA", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "3/4",
         coverage: "Focused diagnosis identifies member/process, iteration, stage, step and child work; secret filtering/redaction is enforced and raw logs remain secondary. Artifact-specific correction links from a terminal failure remain.",
         evidence: ["RunPanel.tsx result rendering", "EXC-023"], updated: "2026-07-29"
@@ -577,7 +600,7 @@
         description: "Review failed/full rerun scope and compare it with the immutable source execution.",
         story: "As an operator, I want traceable reruns so that recovery does not duplicate business side effects.",
         criteria: ["Rerun review compares plan, data, policies, target and scope.", "Failed-only rerun is offered only where runtime semantics permit.", "New run records parent, reason, scope and changed inputs.", "Cancellation, retry and resume do not duplicate completed side effects."],
-        workspace: ["Execution Center", "Audit & Evidence"], release: "T4 · 2.0 GA", priority: "P0", status: "Implemented",
+        workspace: ["Execution Center", "Audit & Evidence"], plannedTranche: "T4 · 2.0 GA", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "Rerun is now a two-step review-and-confirm workflow that compares immutable plan, selected data, session/failure policies, current verified target and requested scope. The review hash prevents post-review drift; the new run persists parent, reason, scope, reviewed hash and every changed input. Failed-only scope is disabled when no eligible work exists, excludes passed records even inside a failed Pack member, and blocks any started transactional iteration whose SAP state must be retained. Full transactional replay is likewise blocked when it could duplicate documents. Cancellation remains at the active-transaction boundary and request keys make retry idempotent.",
         evidence: ["packages/core/src/domain/executionPlan.ts transaction policy snapshot", "packages/studio-server/src/runs.ts reviewRerun and createRerunSnapshot", "packages/studio-server/src/server.ts rerun-review endpoint", "packages/studio-web/src/components/RunPanel.tsx rerun difference review", "regression/execution-recovery.test.js", "regression/api/runs.test.js", "regression/ui/run-tab.test.js"], updated: "2026-07-29"
@@ -587,7 +610,7 @@
         description: "Protect one immutable evidence source and expose safe provenance from both run and audit views.",
         story: "As an auditor, I want secure canonical evidence so that records are trustworthy and not duplicated.",
         criteria: ["Execution Center and Audit resolve the same archived evidence artifact.", "Artifact access requires authenticated owner authorization.", "Evidence shows run, target class, time zone, plan/data versions and redaction state.", "Missing evidence explains its lifecycle reason without leaking existence."],
-        workspace: ["Audit & Evidence", "Execution Center"], release: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
+        workspace: ["Audit & Evidence", "Execution Center"], plannedTranche: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "Execution Center and Audit reuse one owner-protected archive artifact. New PDFs record run/execution identity, target class and verification time, time zone, plan/snapshot/data versions and enforced redaction state; the Audit library presents retention/redaction policy and a safe lifecycle explanation when no PDF exists.",
         evidence: ["evidencePdf.ts provenance metadata", "server.ts protected artifact mounts", "/api/evidence-governance", "DocumentsPanel.tsx", "evidence-reference.test.js", "t1-security-context.test.js"], updated: "2026-07-29"
@@ -597,7 +620,7 @@
         description: "Find immutable runs, inspect stable details and traverse source/rerun lineage.",
         story: "As a test manager or auditor, I want meaningful history search so that I can answer delivery and compliance questions.",
         criteria: ["Server supports date, outcome, artifact, App ID, environment, run ID and executor filters.", "Results paginate and sort by start, duration and status.", "Every result opens a stable detail route with parent/child lineage.", "Evidence types and source artifacts are linked from the run record."],
-        workspace: ["Audit & Evidence"], release: "T4 · 2.0 GA", priority: "P1", status: "Partial",
+        workspace: ["Audit & Evidence"], plannedTranche: "T4 · 2.0 GA", priority: "P1", status: "Partial",
         deliveryState: "In progress", acceptanceProgress: "1/4",
         coverage: "Flat newest-first history, client filters, stable audit detail routes and canonical PDF/source fields exist. Server-side multi-field filtering, pagination/sorting and complete parent/child lineage traversal remain.",
         evidence: ["DocumentsPanel.tsx", "regression/ui/audit-library.test.js"], updated: "2026-07-29"
@@ -607,7 +630,7 @@
         description: "Protect the sole-owner workspace and server-side SAP integration without exposing credentials.",
         story: "As the workspace owner, I want secure integration settings so that execution and scanning use known targets safely.",
         criteria: ["Authenticated owner identity protects mutations, runs and artifacts.", "Credentials remain server-side and are never returned, logged or committed.", "SAP target has URL, profile reference, safety class and verification status.", "Existing workspace data remains visible when the owner links a Google account."],
-        workspace: ["Settings", "Shell", "Execution Center", "Control Object Repository"], release: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
+        workspace: ["Settings", "Shell", "Execution Center", "Control Object Repository"], plannedTranche: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "Single-owner authentication protects APIs and artifacts; Google linking retains the existing workspace. Credentials stay in the server-side vault/encrypted fallback and are redacted from logs. Settings now persists explicit target classification and performs a non-transactional login-only verification; executions and reruns capture the initiating owner and verified target snapshot.",
         evidence: ["auth.ts", "workspaceGovernance.ts", "sapVerification.ts", "SettingsPanel.tsx", "runs.ts", "CLI --executed-by and target provenance", "sap-settings.test.js", "t1-security-context.test.js"], updated: "2026-07-29"
@@ -617,7 +640,7 @@
         description: "Search Tests, objects, datasets, Processes, Packs and runs and understand their relationships.",
         story: "As a maintainer, I want global search and dependency information so that changes are safe and duplicates are avoided.",
         criteria: ["Search returns typed results with domain, application and lifecycle status.", "Detail views show verified incoming and outgoing usage.", "Rename, delete and archive use dependency information.", "Search respects owner and future role authorization."],
-        workspace: ["Automation Overview", "Compose", "Test Data", "Processes & Packs", "Control Object Repository", "Audit & Evidence"], release: "T5 · Post-2.0", priority: "P2", status: "Not started",
+        workspace: ["Automation Overview", "Compose", "Test Data", "Processes & Packs", "Control Object Repository", "Audit & Evidence"], plannedTranche: "T5 · Post-2.0", priority: "P2", status: "Not started",
         deliveryState: "Backlog", acceptanceProgress: "0/4",
         coverage: "Each workspace has isolated lists or filters; no cross-artifact index or dependency graph exists.",
         evidence: ["Current workspace implementation stocktake"], updated: "2026-07-29"
@@ -627,7 +650,7 @@
         description: "Retain legacy behavior through one versioned orchestration model and comprehensive regression coverage.",
         story: "As a product owner, I want migration and correctness tests so that redesign does not change intended execution behavior.",
         criteria: ["Legacy Chain, Suite and Batch translate to versioned plans.", "Every selected Batch row executes and transaction outputs remain isolated.", "Policies, Pack scheduling, cancellation and evidence counts have regression coverage.", "Build, typecheck, isolated UI, secret scan and approved live cases pass before GA."],
-        workspace: ["Quality Engineering", "Execution Center"], release: "T4 · 2.0 GA", priority: "P0", status: "Implemented",
+        workspace: ["Quality Engineering", "Execution Center"], plannedTranche: "T4 · 2.0 GA", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "Versioned translation, unified orchestration, every-row Batch behavior, isolation, policies, cancellation and evidence counts have regression coverage. The repository-wide migration audit translates every persisted Test and Group without source mutation, validates the combined Batch Pack, and preserves Suite order and independent identity. Build/typecheck, 57 core tests, 28 isolated API tests, 32 isolated UI tests and the high-confidence secret scan are green. Read-only live modes, controlled headed P2P/O2C and the authorised negative remediation are recorded. Run 299669f8-75b6-471d-9c56-ed0375011fc5 passed with immutable retained-state evidence, completing the approved live cases and criterion 4.",
         evidence: ["executionPlan.ts", "legacyExecutionPlans.ts", "regression/legacy-migration.test.js", "regression/secret-scan.mjs", "package.json test:release:isolated", "regression/results/quality-history.json", "audit-evidence/299669f8-75b6-471d-9c56-ed0375011fc5/evidence.pdf", "QA/4HANA Test Operations catalogue"], updated: "2026-07-30"
@@ -637,7 +660,7 @@
         description: "Introduce server-enforced permissions only when multi-user deployment is approved.",
         story: "As a product owner, I want role-based capabilities so that users see and perform authorised actions.",
         criteria: ["Implementation starts after a confirmed multi-user requirement.", "Server protects every mutation, execution, artifact and administration action.", "Role mapping covers manager, consultant, engineer, tester, analyst and auditor."],
-        workspace: ["Platform", "All workspaces"], release: "T5 · Post-2.0", priority: "P3", status: "Deferred",
+        workspace: ["Platform", "All workspaces"], plannedTranche: "T5 · Post-2.0", priority: "P3", status: "Deferred",
         coverage: "The product intentionally uses one preserved owner identity for 2.0.",
         evidence: ["Single-owner product decision"], updated: "2026-07-29"
       },
@@ -646,7 +669,7 @@
         description: "Schedule approved work, notify outcomes and parallelise only where isolation is proven.",
         story: "As a test manager, I want scheduled and parallel runs so that regression throughput scales safely.",
         criteria: ["Schedules capture immutable scope, target and owner.", "Notifications link to stable run records without exposing secrets.", "Parallel work respects target capacity, data isolation and cancellation.", "Concurrency limits and queue health are observable."],
-        workspace: ["Execution Center", "Automation Overview"], release: "T5 · Post-2.0", priority: "P3", status: "Deferred",
+        workspace: ["Execution Center", "Automation Overview"], plannedTranche: "T5 · Post-2.0", priority: "P3", status: "Deferred",
         coverage: "Deliberately outside the 2.0 release; Pack member scheduling semantics exist only for current sequential orchestration.",
         evidence: ["Approved 2.0 scope decision"], updated: "2026-07-29"
       },
@@ -655,14 +678,23 @@
         description: "Replace assumed or skipped execution coverage with recorded isolated and non-production SAP results while separating read-only validation from business-document transactions.",
         story: "As the product owner, I want trustworthy mode-level test evidence so that T1.4 starts only after the execution heart of the product is proven.",
         criteria: ["The Test Operations catalogue is generated from recorded test-run output and never fabricates status, time or failure history.", "Isolated API and Studio UI journeys complete Chain, Suite and multi-group Batch with synthetic execution and no SAP side effects.", "Read-only API and Studio UI journeys complete Chain, Suite and two-group Batch against a live-verified non-production SAP target.", "Transactional P2P and negative cases have approved test-data ownership, unique run references, fail-stop behavior, retained-state evidence and a recorded pass. Any remediation is a separate explicitly authorized activity."],
-        workspace: ["Quality Engineering", "Execution Center"], release: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
+        workspace: ["Quality Engineering", "Execution Center"], plannedTranche: "T1 · 2.0 Alpha", priority: "P0", status: "Implemented",
         deliveryState: "Done", acceptanceProgress: "4/4",
         coverage: "The 125-test Test Operations catalogue is generated from repository inventory plus recorded Node output; executable reconciliation proves that status, timestamp, duration and retained failure history are not fabricated. Core (57), isolated API (28), isolated UI (32), live read-only API (3 modes) and live read-only Studio UI (3 modes) are green. Controlled headed P2P and O2C runs passed with owner-linked references, fail-stop policy and canonical evidence. The first controlled negative attempt, eb060bc6-673b-4e65-8919-6ccf66b6a645, remains immutably failed and retained. After explicit owner authorisation, remediation run 299669f8-75b6-471d-9c56-ed0375011fc5 passed all six steps under reference Q4HP2P2607309366: the title remained New Purchase Order, SAP displayed \"Document contains no items,\" no document number or downstream step occurred, and state remained retain-for-review. The recorded pass is ingested into Test Operations. All four criteria are complete.",
         evidence: ["regression/reporters/result-capture.js", "regression/record-quality-run.mjs", "regression/quality-catalog.test.js", "regression/results/quality-history.json", "regression/results/raw/live-negative-remediation-2026-07-30.ndjson", "regression/transactional-negative.test.js", "packages/engine/src/modules/assertDocumentCreationBlocked.ts", "testcases/create-po-missing-item-negative.json", "regression/api/runs.test.js", "regression/ui/run-tab.test.js", "audit-evidence/d55cd0f0-07ed-433f-8e40-1b61cd102827/evidence.pdf", "audit-evidence/4b4f15d7-32df-4348-be70-23fe5243ff7a/evidence.pdf", "audit-evidence/eb060bc6-673b-4e65-8919-6ccf66b6a645/evidence.pdf", "audit-evidence/299669f8-75b6-471d-9c56-ed0375011fc5/evidence.pdf", "QA/4HANA Test Operations catalogue"], updated: "2026-07-30"
       }
     ];
 
+    const frozen20Implemented = new Set([
+      "BL-001", "BL-002", "BL-003", "BL-004", "BL-005", "BL-006", "BL-007", "BL-008",
+      "BL-009", "BL-010", "BL-011", "BL-013", "BL-014", "BL-015", "BL-016", "BL-017",
+      "BL-026", "BL-027", "BL-030", "BL-033", "BL-034", "BL-036", "BL-038", "BL-041"
+    ]);
+
     backlog.forEach(item => {
+      // actualRelease records where the current delivered state first shipped. The explicit
+      // frozen set prevents a future Implemented item from silently defaulting back into 2.0.0.
+      item.actualRelease ??= frozen20Implemented.has(item.id) ? "2.0.0" : undefined;
       item.deliveryState ??= item.status === "Implemented"
         ? "Done"
         : item.status === "Partial"
@@ -680,6 +712,8 @@
     });
 
     const changes = [
+      { date: "30 Jul 2026", title: "Release governance correction: main reclassified as 2.1.0-dev", detail: "v2.0.0 (commit fb4bd49, tagged 08:07:59 +05:30) is confirmed frozen and unchanged; it is backed by the 125-test catalogue and remains the signed GA release. Commit-level comparison proves that BL-012, BL-020, BL-021, BL-028 and BL-029 reached their current Implemented state only after the freeze. package.json is now 2.1.0-dev.0; those five items carry an explicit actualRelease of 2.1.0 while retaining their original plannedTranche for historical context. The 149-test catalogue on main is not covered by the 2.0.0 sign-off and needs its own commit-matched 2.1.0 verification manifest before any future release approval. See RELEASE_GOVERNANCE_2.1.md." },
+      { date: "30 Jul 2026", title: "Completed BL-021 · Typed, validated Single Tests", detail: "Reconciled the delivered Compose implementation against all four acceptance criteria. Visual value-source authoring, typed and sensitive input/output contracts, publish-readiness blocking, accessible reordering and legacy ModuleCall round-trip are implemented and covered by API and browser regression tests. BL-021 is now 4/4 Implemented." },
       { date: "30 Jul 2026", title: "Completed BL-020 · Routeable Test Library", detail: "Replaced file-first Compose entry with a searchable Test Library, process-area/application/readiness filters and guided blank-or-template creation. New Tests persist business metadata through an overwrite-safe server endpoint and open immediately on stable routes while legacy JSON stays compatible. BL-020 is 3/3 Implemented. Build and typecheck, 57 core tests, 41 eligible isolated API tests, 38 eligible isolated UI tests and the 257-file secret scan passed; eight live-SAP cases remained deliberately gated." },
       { date: "30 Jul 2026", title: "Completed BL-029 · Visual Processes and executable Saved Packs", detail: "Added a visual ordered-stage Business Process canvas, typed Test contracts and explicit data hand-offs with validation for unresolved inputs, forward or cyclic references, unknown and duplicate outputs, type mismatches and incompatible Pack policies. Published mixed Saved Packs now preflight and execute directly from Execution Center while legacy Batch remains compatible. BL-029 is 4/4 Implemented. The final source passed build and typecheck, 57 core tests, 44 isolated API tests, 40 isolated UI tests and the 259-file secret scan; the 149-test operations catalogue was regenerated and eight live-SAP cases remained deliberately gated." },
       { date: "30 Jul 2026", title: "Started 2.1 Pack foundation · Closed BL-012 and BL-028; advanced BL-029", detail: "Added a persisted version-1 Regression Pack contract, independent Test and Business Process member lanes, member-specific data/application/session/failure bindings, draft/published lifecycle, referential validation, stable Pack routes and dirty-state protection. BL-012 is now 3/3 Implemented, BL-028 is 4/4 Implemented, and BL-029 is 2/4 Partial. Build, 34 isolated API and 34 isolated UI tests passed; four live-SAP cases in each suite remained intentionally gated." },
@@ -737,10 +771,10 @@
     function filteredItems() {
       const query = filters.search.value.trim().toLowerCase();
       return backlog.filter(item => {
-        const searchable = [item.id, item.legacy, item.title, item.description, item.story, item.coverage, item.deliveryState, item.acceptanceProgress, ...item.criteria, ...item.workspace, ...item.evidence].join(" ").toLowerCase();
+        const searchable = [item.id, item.legacy, item.title, item.description, item.story, item.coverage, item.deliveryState, item.acceptanceProgress, item.plannedTranche, item.actualRelease, ...item.criteria, ...item.workspace, ...item.evidence].join(" ").toLowerCase();
         return (!query || searchable.includes(query))
           && (!filters.workspace.value || item.workspace.includes(filters.workspace.value))
-          && (!filters.release.value || item.release === filters.release.value)
+          && (!filters.release.value || item.plannedTranche === filters.release.value)
           && (!filters.status.value || item.status === filters.status.value)
           && (!filters.delivery.value || item.deliveryState === filters.delivery.value)
           && (!filters.priority.value || item.priority === filters.priority.value);
@@ -755,7 +789,7 @@
           <td class="id-cell">${escapeHtml(item.id)}</td>
           <td class="title-cell"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.description)}</span></td>
           <td><div class="chips">${item.workspace.map(value => `<span class="chip">${escapeHtml(value)}</span>`).join("")}</div></td>
-          <td><span class="chip">${escapeHtml(item.release)}</span></td>
+          <td><span class="chip">${escapeHtml(item.plannedTranche)}</span>${item.actualRelease && item.actualRelease !== "2.0.0" ? `<div style="margin-top:.3rem"><span class="chip actual-release">Shipped ${escapeHtml(item.actualRelease)}</span></div>` : ""}</td>
           <td><span class="chip priority">${escapeHtml(item.priority)}</span></td>
           <td><span class="status delivery ${statusClass(item.deliveryState)}">${escapeHtml(item.deliveryState)}</span></td>
           <td><span class="chip">${escapeHtml(item.acceptanceProgress)}</span></td>
@@ -771,7 +805,8 @@
                 <h4>Build coverage</h4><p>${escapeHtml(item.coverage)}</p>
                 <h4 style="margin-top:.85rem">Evidence</h4><ul>${item.evidence.map(value => `<li>${escapeHtml(value)}</li>`).join("")}</ul>
                 <h4 style="margin-top:.85rem">Legacy traceability</h4><p class="legacy">${escapeHtml(item.legacy)}</p>
-                <p style="margin-top:.65rem"><small>Updated ${escapeHtml(item.updated)}</small></p>
+                <p style="margin-top:.65rem"><small>Planned tranche ${escapeHtml(item.plannedTranche)}${item.actualRelease ? ` · Actual release ${escapeHtml(item.actualRelease)}` : " · Actual release not yet delivered"}</small></p>
+                <p style="margin-top:.3rem"><small>Updated ${escapeHtml(item.updated)}</small></p>
               </section>
             </div>
           </td>

@@ -2,10 +2,47 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
 const { Transform } = require('node:stream');
 
 const destination = process.env.REGRESSION_RESULT_FILE;
 const runStartedAt = new Date().toISOString();
+const repoRoot = path.resolve(__dirname, '../..');
+const qualityOutputPaths = [
+  'apps/test-operations/data/quality-history.json',
+  'apps/test-operations/data/test-catalog.json',
+  'regression/results/',
+];
+
+function statusPath(line) {
+  const raw = line.slice(3).trim();
+  return (raw.includes(' -> ') ? raw.split(' -> ').at(-1) : raw)
+    .replaceAll('\\', '/')
+    .replace(/^"|"$/g, '');
+}
+
+function isQualityOutput(file) {
+  return qualityOutputPaths.some((allowed) =>
+    allowed.endsWith('/') ? file.startsWith(allowed) : file === allowed);
+}
+
+function readGitState() {
+  try {
+    const commitSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
+    const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }).trim();
+    const entries = status ? status.split(/\r?\n/).filter(Boolean) : [];
+    const worktreeClean = entries.length === 0;
+    const sourceTreeClean = entries.every((line) => isQualityOutput(statusPath(line)));
+    return { commitSha, worktreeClean, sourceTreeClean };
+  } catch {
+    return { commitSha: null, worktreeClean: null, sourceTreeClean: null };
+  }
+}
+
+const { commitSha, worktreeClean, sourceTreeClean } = readGitState();
 const serialize = (value) => JSON.stringify(value, (_key, item) => {
   if (item instanceof Error) {
     return {
@@ -31,6 +68,9 @@ if (destination) {
         mode: process.env.REGRESSION_RUN_MODE || 'Unit / Integration',
         targetClass: process.env.REGRESSION_TARGET_CLASS || 'Isolated',
         startedAt: runStartedAt,
+        commitSha,
+        worktreeClean,
+        sourceTreeClean,
       },
     })}\n`,
     'utf8',
