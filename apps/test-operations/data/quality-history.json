@@ -1,6 +1,83 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-07-30T11-34-08-369Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T11:34:09.141Z",
+      "finishedAt": "2026-07-30T11:35:21.595Z",
+      "passed": 41,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T11-33-50-987Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T11:33:51.688Z",
+      "finishedAt": "2026-07-30T11:34:07.920Z",
+      "passed": 49,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T11-33-45-230Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T11:33:45.283Z",
+      "finishedAt": "2026-07-30T11:33:50.537Z",
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-07-30T11-29-18-323Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T11:29:19.102Z",
+      "finishedAt": "2026-07-30T11:30:32.550Z",
+      "passed": 41,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T11-29-00-259Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T11:29:01.227Z",
+      "finishedAt": "2026-07-30T11:29:17.824Z",
+      "passed": 49,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T11-28-54-635Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T11:28:54.690Z",
+      "finishedAt": "2026-07-30T11:28:59.732Z",
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T11-28-18-007Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T11:28:18.074Z",
+      "finishedAt": "2026-07-30T11:28:23.966Z",
+      "passed": 61,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-07-30T10-56-16-181Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-07-30T10:56:16.945Z",
@@ -142,86 +219,26 @@
       "skipped": 0,
       "mode": "Unit / Integration",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T10-38-38-208Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T10:38:38.285Z",
-      "finishedAt": "2026-07-30T10:38:43.642Z",
-      "passed": 56,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T10-14-07-231Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T10:14:07.962Z",
-      "finishedAt": "2026-07-30T10:15:19.283Z",
-      "passed": 40,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-30T10-13-49-216Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-30T10:13:50.222Z",
-      "finishedAt": "2026-07-30T10:14:06.736Z",
-      "passed": 44,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T10-13-43-238Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T10:13:43.366Z",
-      "finishedAt": "2026-07-30T10:13:48.724Z",
-      "passed": 57,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T10-11-33-727Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T10:11:34.447Z",
-      "finishedAt": "2026-07-30T10:12:45.394Z",
-      "passed": 40,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-30T10-11-16-496Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-30T10:11:17.195Z",
-      "finishedAt": "2026-07-30T10:11:33.290Z",
-      "passed": 44,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T10-11-11-081Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T10:11:11.136Z",
-      "finishedAt": "2026-07-30T10:11:16.096Z",
-      "passed": 57,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0019",
+      "runId": "CORE-2026-07-30T11-28-18-007Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-07-30T11:28:23.966Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'GET /api/data lists known fixtures',\n      source: 'regression/api/data.test.js'\n    },\n...\n    {\n-     name: 'PUT /api/objects/:appId/:name saves scope and stamps created/updated metadata',\n-     source: 'regression/api/objects.test.js'\n-   },\n-   {\n-     name: 'GET /api/objects/:appId flags an auto-generated-looking id as unstable',\n-     source: 'regression/api/objects.test.js'\n-   },\n-   {\n-     name: 'GET /api/objects/:appId flags likely duplicates by matching type + label',\n-     source: 'regression/api/objects.test.js'\n-   },\n-   {\n-     name: 'object usage, dependency-aware rename and delete blocking (BL-022 AC3)',\n-     source: 'regression/api/objects.test.js'\n-   },\n-   {\n-     name: 'POST /api/objects/:appId/:name/reverify requires an open scan session',\n-     source: 'regression/api/objects.test.js'\n-   },\n-   {\n      name: 'GET /api/packs lists the published isolated Pack fixture',\n      source: 'regression/api/packs.test.js'\n    },\n    {\n      name: 'PUT then GET /api/packs/:file persists independent member bindings',\n...\n    {\n-     name: 'upsert stamps createdAt/updatedAt/updatedBy and preserves createdAt across a second upsert',\n-     source: 'regression/object-repository.test.js'\n-   },\n-   {\n-     name: 'rename preserves createdAt and migrates verification history to the new name',\n-     source: 'regression/object-repository.test.js'\n-   },\n-   {\n-     name: 'recordVerification appends history and updates the denormalized last-verified snapshot',\n-     source: 'regression/object-repository.test.js'\n-   },\n-   {\n-     name: 'isLikelyUnstableId flags clone segments and all-generated ids, not ordinary view ids',\n-     source: 'regression/object-repository.test.js'\n-   },\n-   {\n-     name: 'findLikelyDuplicates groups same-appId controls sharing type + label under different names',\n-     source: 'regression/object-repository.test.js'\n-   },\n-   {\n      name: 'Test Operations catalogue inventory and status fields come only from repository tests and recorded runs',\n      source: 'regression/quality-catalog.test.js'\n    },\n    {\n      name: 'Test Operations failure ledger preserves every recorded failure and remediation link',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-07-30T11:28:59.732Z",
+      "remediationRunId": "CORE-2026-07-30T11-28-54-635Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-07-30T11-28-54-635Z."
+    },
     {
       "id": "FL-0018",
       "runId": "ISOLATED-UI-2026-07-30T10-39-57-821Z",
