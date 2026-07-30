@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
-import type { ModuleCall, ModuleInfo, TestApplication, TestCase, TestContract, TestValidationIssue } from '../types';
+import type { CaptureRequest, ModuleCall, ModuleInfo, TestApplication, TestCase, TestContract, TestValidationIssue } from '../types';
 import { StepEditor } from './StepEditor';
 import { DomainTag } from './DomainTag';
 import { GroupedPicker } from './GroupedPicker';
@@ -42,6 +42,7 @@ interface TestCaseEditorProps {
   onSelectedFileChange?: (file: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
   showLibraryControls?: boolean;
+  onRequestCapture?: (request: CaptureRequest) => void;
 }
 
 export function TestCaseEditor({
@@ -50,6 +51,7 @@ export function TestCaseEditor({
   onSelectedFileChange,
   onDirtyChange,
   showLibraryControls = true,
+  onRequestCapture,
 }: TestCaseEditorProps = {}) {
   const [files, setFiles] = useState<string[]>([]);
   const [modules, setModules] = useState<ModuleInfo[]>([]);
@@ -464,6 +466,7 @@ export function TestCaseEditor({
                               contractInputKeys={contractInputKeys}
                               onSave={(call) => updateStep(i, call)}
                               onCancel={() => setEditingIndex(null)}
+                              onRequestCapture={onRequestCapture}
                             />
                           </td>
                         </tr>
@@ -481,6 +484,7 @@ export function TestCaseEditor({
                           contractInputKeys={contractInputKeys}
                           onSave={(call) => updateStep(editingIndex, call)}
                           onCancel={() => setEditingIndex(null)}
+                          onRequestCapture={onRequestCapture}
                         />
                       </td>
                     </tr>

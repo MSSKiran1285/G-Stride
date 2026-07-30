@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import type { ObjectControl, ObjectKind } from '../types';
+import type { CaptureRequest, ObjectControl, ObjectKind } from '../types';
 
 /**
  * Buckets a captured control into a broad "kind" so a module's param can only suggest
@@ -52,6 +52,15 @@ interface ObjectPickerProps {
    * relevance heuristics that could be wrong. */
   module?: string;
   paramKey?: string;
+  /** The App ID this field's objects belong to — required for "Capture a new object" below
+   *  to know where a newly captured control should be saved. Omit to hide that action. */
+  appId?: string;
+  /** Human description of this field for the capture overlay's header, e.g. "Control name for
+   *  Click Button" — falls back to placeholder if not given. */
+  fieldLabel?: string;
+  /** Opens the app-level contextual capture overlay (BL-023 AC4) instead of navigating away
+   *  from Compose. Omit to hide the "Capture a new object" action entirely. */
+  onRequestCapture?: (request: CaptureRequest) => void;
 }
 
 /**
@@ -66,7 +75,7 @@ interface ObjectPickerProps {
  * "highlight on screen" action — the only fully reliable disambiguator when text
  * alone still leaves two options looking identical.
  */
-export function ObjectPicker({ value, onChange, options, kind, placeholder, module, paramKey }: ObjectPickerProps) {
+export function ObjectPicker({ value, onChange, options, kind, placeholder, module, paramKey, appId, fieldLabel, onRequestCapture }: ObjectPickerProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [highlightingName, setHighlightingName] = useState<string | null>(null);
@@ -115,6 +124,12 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
     setOpen(false);
   }
 
+  function requestCapture() {
+    if (!onRequestCapture || !appId) return;
+    setOpen(false);
+    onRequestCapture({ appId, kind, fieldLabel: fieldLabel || placeholder || 'this field', onCaptured: select });
+  }
+
   async function highlight(o: ObjectControl) {
     setHighlightingName(o.name);
     setNotFoundName(null);
@@ -129,7 +144,8 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
   }
 
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div className="row" style={{ flexWrap: 'nowrap', gap: '0.4rem', alignItems: 'flex-start' }}>
+    <div ref={containerRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
       <input
         type="text"
         aria-label={placeholder || 'Object name'}
@@ -141,6 +157,11 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
+        // Every actionable row/button inside the dropdown (select, highlight, capture) calls
+        // preventDefault() on mousedown specifically so it never triggers this blur first —
+        // without it, a typed value with no matches (or the ever-present "+ Capture" row) could
+        // leave the dropdown open indefinitely, visually covering whatever control sits below it.
+        onBlur={() => setOpen(false)}
         onKeyDown={(e) => {
           if (e.key === 'Escape') setOpen(false);
           else if (e.key === 'ArrowDown') {
@@ -216,7 +237,10 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
                 className="ghost caution"
                 style={{ flex: '0 0 auto' }}
                 disabled={highlightingName === o.name}
-                onMouseDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => {
+                  e.preventDefault(); // keep focus on the input so blur doesn't close the dropdown before the click registers
+                  e.stopPropagation();
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   highlight(o);
@@ -264,6 +288,22 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
           )}
         </div>
       )}
+    </div>
+    {onRequestCapture && appId && (
+      // Deliberately NOT inside the dropdown: that panel is absolutely positioned and can
+      // visually cover whatever sits below it while open, which would make this button
+      // unreachable (both to a real click and to Playwright's hit-testing) exactly when
+      // the tester needs it most — right after typing a name with no existing match.
+      <button
+        type="button"
+        className="ghost"
+        style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+        onClick={requestCapture}
+        title={`Capture a new object for ${appId}`}
+      >
+        + Capture
+      </button>
+    )}
     </div>
   );
 }

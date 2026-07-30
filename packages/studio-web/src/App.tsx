@@ -21,6 +21,7 @@ import { AutomationOverview } from './components/AutomationOverview';
 import { AccountMenu } from './components/AccountMenu';
 import { DataEditor } from './components/DataEditor';
 import { DocumentsPanel } from './components/DocumentsPanel';
+import { ContextualCapturePanel } from './components/ContextualCapturePanel';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProcessPacksWorkspace } from './components/ProcessPacksWorkspace';
 import { LoginScreen } from './components/LoginScreen';
@@ -29,7 +30,7 @@ import { RunPanel } from './components/RunPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { TestLibrary } from './components/TestLibrary';
 import { AsyncFeedback, DrawerHeader } from './components/WorkspacePrimitives';
-import type { AuthState, IntegrationSettings, SapIntegrationStatus, WorkspaceContext } from './types';
+import type { AuthState, CaptureRequest, IntegrationSettings, SapIntegrationStatus, WorkspaceContext } from './types';
 import { parseStudioRoute, studioRoutes, VIEW_PATHS } from './routes';
 import type { WorkspaceView } from './routes';
 
@@ -104,6 +105,10 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialIntegration, setSettingsInitialIntegration] = useState<'sap' | 'salesforce' | 'oracle' | 'servicenow'>('sap');
   const [activeViewDirty, setActiveViewDirty] = useState(false);
+  // Rendered as a sibling overlay (like settingsOpen/SettingsPanel below), never a route
+  // change — so a Compose field can launch a capture session without tripping the
+  // activeViewDirty navigation guard or losing in-progress Test edits (BL-023 AC4).
+  const [captureRequest, setCaptureRequest] = useState<CaptureRequest | null>(null);
   const [auth, setAuth] = useState<AuthState | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [integrationSettings, setIntegrationSettings] = useState<IntegrationSettings | null>(null);
@@ -359,6 +364,7 @@ export function App() {
                     initialFile={route.testFile}
                     onSelectedFileChange={(file) => updateDetailPath(file ? studioRoutes.test(file) : VIEW_PATHS.editor)}
                     onDirtyChange={setActiveViewDirty}
+                    onRequestCapture={setCaptureRequest}
                   />
                 ) : view === 'data' ? (
                   <DataEditor
@@ -451,6 +457,9 @@ export function App() {
           onSapSaved={handleSapSaved}
           onClose={() => setSettingsOpen(false)}
         />
+      )}
+      {captureRequest && (
+        <ContextualCapturePanel request={captureRequest} onClose={() => setCaptureRequest(null)} />
       )}
     </div>
   );

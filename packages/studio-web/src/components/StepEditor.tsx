@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
-import type { ModuleCall, ModuleInfo, ModuleParamDescriptor, ObjectControl, TestStepValueBinding, TestSystemContextKey } from '../types';
+import type { CaptureRequest, ModuleCall, ModuleInfo, ModuleParamDescriptor, ObjectControl, TestStepValueBinding, TestSystemContextKey } from '../types';
 import { TableRowsEditor } from './TableRowsEditor';
 import { ObjectPicker } from './ObjectPicker';
 import { GroupedPicker } from './GroupedPicker';
@@ -42,6 +42,9 @@ interface Props {
   contractInputKeys?: string[];
   onSave: (call: ModuleCall) => void;
   onCancel: () => void;
+  /** Opens the app-level contextual capture overlay for an object-kind field — see
+   *  ObjectPicker's onRequestCapture and App.tsx's ContextualCapturePanel (BL-023 AC4). */
+  onRequestCapture?: (request: CaptureRequest) => void;
 }
 
 /** Every ${key} referenced in a param value. */
@@ -58,7 +61,7 @@ function inferValueBinding(value: string, handoffKeys: Set<string>): TestStepVal
   return { source: 'dataset', key: exact };
 }
 
-export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contractInputKeys = [], onSave, onCancel }: Props) {
+export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contractInputKeys = [], onSave, onCancel, onRequestCapture }: Props) {
   const [moduleName, setModuleName] = useState(initial?.module ?? modules[0]?.name ?? '');
   const [appId, setAppId] = useState(initial?.appId ?? '');
   const [params, setParams] = useState<Record<string, string>>(initial?.params ?? {});
@@ -76,6 +79,19 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
       .then(setObjectControls)
       .catch(() => setObjectControls([]));
   }, [effectiveAppId]);
+
+  /** Wraps the field's own capture request so the just-saved object shows up in this picker's
+   *  options immediately — otherwise it's usable (onChange already filled the value) but
+   *  invisible if the tester reopens the dropdown before the next unrelated refetch. */
+  function handleRequestCapture(request: CaptureRequest) {
+    onRequestCapture?.({
+      ...request,
+      onCaptured: (name) => {
+        request.onCaptured(name);
+        api.listObjects(effectiveAppId).then(setObjectControls).catch(() => undefined);
+      },
+    });
+  }
 
   function setParam(key: string, value: string) {
     setParams((prev) => ({ ...prev, [key]: value }));
@@ -189,6 +205,9 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
             placeholder={p.placeholder}
             module={moduleName}
             paramKey={p.key}
+            appId={effectiveAppId || undefined}
+            fieldLabel={p.label}
+            onRequestCapture={onRequestCapture && effectiveAppId ? handleRequestCapture : undefined}
           />
         ) : renderValueField(p, value)}
         {handoff.length > 0 && (

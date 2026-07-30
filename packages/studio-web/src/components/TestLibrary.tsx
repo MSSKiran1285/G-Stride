@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, FileCode2, Plus, Search } from 'lucide-react';
 import { api } from '../api';
-import type { TestApplication, TestCase, TestLibraryItem, TestLibraryStatus } from '../types';
+import type { CaptureRequest, TestApplication, TestCase, TestLibraryItem, TestLibraryStatus } from '../types';
 import { TestCaseEditor } from './TestCaseEditor';
 import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
 
@@ -24,9 +24,10 @@ interface TestLibraryProps {
   initialFile?: string;
   onSelectedFileChange: (file?: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onRequestCapture?: (request: CaptureRequest) => void;
 }
 
-export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange }: TestLibraryProps) {
+export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, onRequestCapture }: TestLibraryProps) {
   const [items, setItems] = useState<TestLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -144,6 +145,7 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange }
           onSelectedFileChange={(file) => onSelectedFileChange(file)}
           onDirtyChange={onDirtyChange}
           showLibraryControls={false}
+          onRequestCapture={onRequestCapture}
         />
       </div>
     );

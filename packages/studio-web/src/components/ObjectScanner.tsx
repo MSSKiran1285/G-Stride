@@ -9,14 +9,19 @@ export function ObjectScanner({
   initialAppId,
   initialObjectName,
   onSelectionChange,
+  captureTarget,
 }: {
   initialAppId?: string;
   initialObjectName?: string;
   onSelectionChange?: (appId: string, objectName?: string) => void;
+  /** Set by ContextualCapturePanel when this scanner is embedded as an overlay launched
+   *  from a specific Compose field, rather than opened directly from Control Object
+   *  Repository — see BL-023 AC4. */
+  captureTarget?: { appId: string; fieldLabel: string; onUse: (name: string) => void };
 } = {}) {
   const [url, setUrl] = useState('');
   const [sapTarget, setSapTarget] = useState<SapIntegrationStatus | null>(null);
-  const [appId, setAppId] = useState('');
+  const [appId, setAppId] = useState(captureTarget?.appId ?? '');
   const [session, setSession] = useState<ScanSessionInfo | null>(null);
   const [controls, setControls] = useState<DiscoveredControl[] | null>(null);
   const [pageUrl, setPageUrl] = useState<string | null>(null);
@@ -59,8 +64,12 @@ export function ObjectScanner({
   // resumes polling if picking was still active when you navigated away, and the last App ID
   // you typed (purely a Studio-side convenience, so localStorage rather than a server field).
   useEffect(() => {
-    const savedAppId = localStorage.getItem('taf.objectScanner.appId');
-    if (savedAppId) setAppId(savedAppId);
+    // A contextual capture session already knows exactly which App ID it's for — the last
+    // App ID typed in some unrelated earlier session is never a better default here.
+    if (!captureTarget) {
+      const savedAppId = localStorage.getItem('taf.objectScanner.appId');
+      if (savedAppId) setAppId(savedAppId);
+    }
     api
       .getIntegrationSettings()
       .then((settings) => {
@@ -199,6 +208,12 @@ export function ObjectScanner({
       <div className="panel stack">
         <p className="section-title">Scan a live screen</p>
 
+        {captureTarget && (
+          <p className="fiori-message-strip" role="status">
+            Capturing for <strong>{captureTarget.fieldLabel}</strong> (App ID: {captureTarget.appId}) — save an object below and use it to fill that field.
+          </p>
+        )}
+
         {!session ? (
           <div className="stack">
             <div className="row">
@@ -284,6 +299,7 @@ export function ObjectScanner({
           onDismiss={dismissPicked}
           showSaveAll={false}
           onSaveAllStateChange={setPickSaveState}
+          captureTarget={captureTarget && { fieldLabel: captureTarget.fieldLabel, onUse: captureTarget.onUse }}
         />
       )}
 
@@ -311,7 +327,13 @@ export function ObjectScanner({
             );
           })()}
 
-          {!showAll && <CurationList controls={controls} defaultAppId={appId} />}
+          {!showAll && (
+            <CurationList
+              controls={controls}
+              defaultAppId={appId}
+              captureTarget={captureTarget && { fieldLabel: captureTarget.fieldLabel, onUse: captureTarget.onUse }}
+            />
+          )}
 
           {showAll && (
             <div className="table-wrap">

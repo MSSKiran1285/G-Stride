@@ -248,6 +248,19 @@ export interface ObjectControl {
   parentControlId: string | null;
 }
 
+/** A Compose field's request to capture a brand-new object without leaving the Test editor
+ * or losing its in-progress (possibly unsaved) work — see App.tsx's ContextualCapturePanel
+ * overlay, which is a sibling panel (like SettingsPanel) rather than a route change, so it
+ * never trips the dirty-navigation guard. */
+export interface CaptureRequest {
+  appId: string;
+  kind?: ObjectKind[];
+  /** What the tester sees while capturing, e.g. the param's label ("Control name for Click Button"). */
+  fieldLabel: string;
+  /** Called with the saved object's name once the tester captures/saves one for this field. */
+  onCaptured: (name: string) => void;
+}
+
 export type ControlCategory = 'actionable' | 'informational' | 'structural';
 export type ControlScope = 'shell' | 'app';
 

@@ -39,3 +39,45 @@ test('Compose: create a test case, add a step, save, reload, reopen (required Co
     });
   });
 });
+
+test('Compose: contextual capture opens over an object field and returns without losing the in-progress step (BL-023 AC4)', async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'compose-contextual-capture', async (page) => {
+      await page.goto(BASE_URL);
+      await page.getByRole('button', { name: /Compose/ }).first().click();
+
+      await page.getByRole('button', { name: 'New Test' }).click();
+      await page.getByLabel('Business name').fill('Regression Contextual Capture');
+      await page.getByRole('button', { name: 'Create Test' }).click();
+      await page.waitForURL('**/compose/tests/regression-contextual-capture.json');
+
+      await page.getByRole('button', { name: '+ Add step' }).click();
+      await page.getByRole('button', { name: 'Module' }).click();
+      await page.getByText('Click Button', { exact: true }).last().click();
+      await page.getByLabel('App ID override').fill('createPurchaseOrder');
+
+      const controlField = page.getByPlaceholder('e.g. CreateButton');
+      await page.getByRole('button', { name: '+ Capture' }).click();
+
+      // The overlay is a sibling panel, not a route change — the Compose route underneath
+      // must stay exactly where the in-progress step edit is.
+      const overlay = page.getByRole('dialog', { name: 'For: Control name' });
+      await overlay.waitFor({ timeout: 5000 });
+      await overlay.getByText('Capturing for').waitFor();
+      await overlay.getByText('App ID: createPurchaseOrder').waitFor();
+      assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-contextual-capture.json');
+
+      await overlay.getByRole('button', { name: 'Close capture and return to Compose without a change' }).click();
+      await overlay.waitFor({ state: 'hidden', timeout: 5000 });
+
+      // Closing without capturing anything must not have discarded the step being edited —
+      // no navigation ever happened, so nothing was ever at risk.
+      assert.equal(await page.getByLabel('App ID override').inputValue(), 'createPurchaseOrder');
+      await controlField.fill('CreateButton');
+      await page.getByRole('button', { name: 'Save step' }).click();
+      await page.locator('.step-module', { hasText: 'ClickButton' }).waitFor({ timeout: 5000 });
+      const stepParams = await page.locator('.step-params').first().innerText();
+      assert.ok(stepParams.includes('control=CreateButton'), `expected "control=CreateButton" in step params, got "${stepParams}"`);
+    });
+  });
+});

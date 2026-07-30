@@ -18,6 +18,9 @@ interface CurationListProps {
   /** Reports how many rows are ready to save whenever that changes — only meaningful when
    *  showSaveAll is false, so the caller's own button can reflect the same state. */
   onSaveAllStateChange?: (state: { ready: number; total: number; busy: boolean }) => void;
+  /** When set, every saved (or already-saved) row gets a "Use for <field>" action that hands
+   *  its name back to the field that requested this capture session — see BL-023 AC4. */
+  captureTarget?: { fieldLabel: string; onUse: (name: string) => void };
 }
 
 interface RowState {
@@ -62,7 +65,7 @@ function groupLabel(control: DiscoveredControl, byId: Map<string, DiscoveredCont
 }
 
 export const CurationList = forwardRef<CurationListHandle, CurationListProps>(function CurationList(
-  { controls, defaultAppId, onDismiss, showSaveAll = true, onSaveAllStateChange },
+  { controls, defaultAppId, onDismiss, showSaveAll = true, onSaveAllStateChange, captureTarget },
   ref
 ) {
   const [existing, setExisting] = useState<Map<string, { appId: string; name: string }>>(new Map());
@@ -286,6 +289,11 @@ export const CurationList = forwardRef<CurationListHandle, CurationListProps>(fu
                         <td className="hint">{actionHint(c)}</td>
                         <td colSpan={3} className="hint">
                           Already saved as &quot;{already.name}&quot; ({already.appId})
+                          {captureTarget && (
+                            <button className="ghost" style={{ marginLeft: '0.6rem' }} onClick={() => captureTarget.onUse(already.name)}>
+                              Use for {captureTarget.fieldLabel}
+                            </button>
+                          )}
                         </td>
                         <td></td>
                         {highlightCell}
@@ -322,7 +330,16 @@ export const CurationList = forwardRef<CurationListHandle, CurationListProps>(fu
                       </td>
                       <td>
                         {row.saving && <span className="hint">Saving…</span>}
-                        {row.saved && <span className="badge passed">saved</span>}
+                        {row.saved && (
+                          <span className="row" style={{ alignItems: 'center', gap: '0.4rem' }}>
+                            <span className="badge passed">saved</span>
+                            {captureTarget && (
+                              <button className="ghost" onClick={() => captureTarget.onUse(row.name.trim())}>
+                                Use for {captureTarget.fieldLabel}
+                              </button>
+                            )}
+                          </span>
+                        )}
                         {row.error && <p className="error-text">{row.error}</p>}
                       </td>
                       {highlightCell}
