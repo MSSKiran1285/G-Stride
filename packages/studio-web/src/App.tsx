@@ -13,6 +13,7 @@ import {
   PanelLeftOpen,
   Play,
   Scan,
+  Search,
   Sliders,
   Zap,
 } from 'lucide-react';
@@ -22,6 +23,7 @@ import { AccountMenu } from './components/AccountMenu';
 import { DataEditor } from './components/DataEditor';
 import { DocumentsPanel } from './components/DocumentsPanel';
 import { ContextualCapturePanel } from './components/ContextualCapturePanel';
+import { GlobalSearchPanel } from './components/GlobalSearchPanel';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ProcessPacksWorkspace } from './components/ProcessPacksWorkspace';
 import { LoginScreen } from './components/LoginScreen';
@@ -109,6 +111,9 @@ export function App() {
   // change — so a Compose field can launch a capture session without tripping the
   // activeViewDirty navigation guard or losing in-progress Test edits (BL-023 AC4).
   const [captureRequest, setCaptureRequest] = useState<CaptureRequest | null>(null);
+  // BL-037: global search is another app-level sibling overlay for the same reason —
+  // it must stay reachable from every workspace without tripping the dirty-navigation guard.
+  const [searchOpen, setSearchOpen] = useState(false);
   const [auth, setAuth] = useState<AuthState | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [integrationSettings, setIntegrationSettings] = useState<IntegrationSettings | null>(null);
@@ -320,6 +325,14 @@ export function App() {
           <div className="workspace-header-right">
             <button
               type="button"
+              className="header-search-trigger"
+              onClick={() => setSearchOpen(true)}
+              title="Search Tests, Objects, Datasets, Processes, Packs and Runs"
+            >
+              <Search size={15} aria-hidden="true" /> Search
+            </button>
+            <button
+              type="button"
               className={`context-target${workspaceContext?.target.configured ? ' configured' : ''}`}
               onClick={() => openSettings('sap')}
               title="Open SAP target settings"
@@ -461,6 +474,15 @@ export function App() {
       )}
       {captureRequest && (
         <ContextualCapturePanel request={captureRequest} onClose={() => setCaptureRequest(null)} />
+      )}
+      {searchOpen && (
+        <GlobalSearchPanel
+          onNavigate={(path) => {
+            setSearchOpen(false);
+            navigateToPath(path);
+          }}
+          onClose={() => setSearchOpen(false)}
+        />
       )}
     </div>
   );

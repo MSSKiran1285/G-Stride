@@ -103,3 +103,25 @@ test('GET /api/packs/:file rejects traversal and missing artifacts safely', asyn
   const missing = await api.get('/api/packs/not-found.json');
   assert.equal(missing.status, 404);
 });
+
+test('DELETE and PUT .../rename for a Regression Pack — no dependency scan needed, nothing references a Pack (BL-037)', async () => {
+  const packFile = 'regression-pack-lifecycle.json';
+  await api.put(`/api/packs/${packFile}`, validPack);
+
+  const renamed = 'regression-pack-lifecycle-renamed.json';
+  const rename = await api.put(`/api/packs/${packFile}/rename`, { newName: renamed });
+  assert.equal(rename.status, 200);
+  assert.deepEqual(rename.body, { ok: true });
+  assert.equal((await api.get(`/api/packs/${packFile}`)).status, 404);
+  assert.equal((await api.get(`/api/packs/${renamed}`)).status, 200);
+
+  const missingRename = await api.put('/api/packs/does-not-exist.json/rename', { newName: 'whatever.json' });
+  assert.equal(missingRename.status, 404);
+  const collisionRename = await api.put(`/api/packs/${renamed}/rename`, { newName: 'published-mixed-pack.json' });
+  assert.equal(collisionRename.status, 409);
+
+  const del = await api.delete(`/api/packs/${renamed}`);
+  assert.equal(del.status, 200);
+  assert.deepEqual(del.body, { ok: true, usage: { packs: [] } });
+  assert.equal((await api.get(`/api/packs/${renamed}`)).status, 404);
+});

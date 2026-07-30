@@ -759,6 +759,161 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  /** Every Process (Group) and Regression Pack that references a Test file directly —
+   *  BL-037's dependency-aware delete/rename for Tests (a Group's own testCaseFiles/stages,
+   *  or a Pack "test"-kind member). */
+  function findTestUsage(file: string): { groups: string[]; packs: string[] } {
+    const groups: string[] = [];
+    const packs: string[] = [];
+    if (existsSync(groupsDir)) {
+      for (const groupFile of readdirSync(groupsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const group = JSON.parse(readFileSync(path.join(groupsDir, groupFile), 'utf-8'));
+          if (Array.isArray(group.testCaseFiles) && group.testCaseFiles.includes(file)) groups.push(groupFile);
+        } catch {
+          // skip an unreadable/malformed file rather than fail the whole scan
+        }
+      }
+    }
+    if (existsSync(packsDir)) {
+      for (const packFile of readdirSync(packsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const pack = JSON.parse(readFileSync(path.join(packsDir, packFile), 'utf-8'));
+          if (Array.isArray(pack.members) && pack.members.some((m: any) => m?.kind === 'test' && m?.file === file)) packs.push(packFile);
+        } catch {
+          // skip
+        }
+      }
+    }
+    return { groups, packs };
+  }
+
+  app.get('/api/testcases/:file/usage', (req, res) => {
+    try {
+      res.json(findTestUsage(safeTestCaseName(req.params.file)));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/testcases/:file', (req, res) => {
+    try {
+      const file = safeTestCaseName(req.params.file);
+      const usage = findTestUsage(file);
+      const usedBy = [...usage.groups, ...usage.packs];
+      if (usedBy.length > 0 && req.query.force !== 'true') {
+        return res.status(409).json({
+          error: `"${file}" is referenced by ${usedBy.length} artifact${usedBy.length === 1 ? '' : 's'}. Pass force=true to delete anyway.`,
+          usage,
+        });
+      }
+      const full = path.join(testCasesDir, file);
+      if (existsSync(full)) rmSync(full);
+      tagStore.setTag('testCase', file, '');
+      res.json({ ok: true, usage });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/testcases/:file/rename', (req, res) => {
+    try {
+      const file = safeTestCaseName(req.params.file);
+      const { newName } = req.body ?? {};
+      if (typeof newName !== 'string' || !newName.trim()) {
+        return res.status(400).json({ error: 'Body must include newName: string' });
+      }
+      const newFile = safeTestCaseName(newName.trim());
+      const oldFull = path.join(testCasesDir, file);
+      const newFull = path.join(testCasesDir, newFile);
+      if (!existsSync(oldFull)) return res.status(404).json({ error: `Test "${file}" does not exist.` });
+      if (existsSync(newFull)) return res.status(409).json({ error: `Test "${newFile}" already exists.` });
+
+      // Rename is a same-Test identity change, not a delete — propagating it into every
+      // referencing Process/Pack is the safe, expected behavior (the same IDE-style symbol
+      // rename BL-022/BL-025 already established for objects and datasets).
+      const usage = findTestUsage(file);
+      for (const groupFile of usage.groups) {
+        const groupPath = path.join(groupsDir, groupFile);
+        const group = JSON.parse(readFileSync(groupPath, 'utf-8'));
+        group.testCaseFiles = (group.testCaseFiles ?? []).map((f: string) => (f === file ? newFile : f));
+        for (const stage of group.stages ?? []) {
+          if (stage.testCaseFile === file) stage.testCaseFile = newFile;
+        }
+        writeFileSync(groupPath, JSON.stringify(group, null, 2) + '\n');
+      }
+      for (const packFile of usage.packs) {
+        const packPath = path.join(packsDir, packFile);
+        const pack = JSON.parse(readFileSync(packPath, 'utf-8'));
+        for (const member of pack.members ?? []) {
+          if (member?.kind === 'test' && member.file === file) member.file = newFile;
+        }
+        writeFileSync(packPath, JSON.stringify(pack, null, 2) + '\n');
+      }
+
+      renameSync(oldFull, newFull);
+      const processArea = tagStore.getTag('testCase', file);
+      if (processArea) {
+        tagStore.setTag('testCase', newFile, processArea);
+        tagStore.setTag('testCase', file, '');
+      }
+      res.json({ ok: true, updatedGroups: usage.groups, updatedPacks: usage.packs });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  /** Every Object this Test's own steps reference — BL-037 AC2's "outgoing" dependency view
+   *  for a Test (findTestUsage above is its "incoming" view: which Processes/Packs use it).
+   *  isObjectReferenceParam is a hoisted function declaration defined further down this file
+   *  (with the rest of the Object Repository routes) — safe to call here regardless. */
+  function findTestReferences(testCase: any): { appId: string; name: string }[] {
+    const seen = new Set<string>();
+    const refs: { appId: string; name: string }[] = [];
+    const defaultAppId = testCase.steps?.find((s: any) => s.appId)?.appId ?? '';
+    for (const step of testCase.steps ?? []) {
+      const appId = step.appId || defaultAppId;
+      for (const [key, value] of Object.entries(step.params ?? {})) {
+        if (typeof value !== 'string' || !isObjectReferenceParam(step.module, key)) continue;
+        const names: string[] = [];
+        if (key === 'rows') {
+          try {
+            const rows = JSON.parse(value);
+            if (Array.isArray(rows)) {
+              for (const row of rows) {
+                if (row && typeof row === 'object') names.push(...Object.keys(row));
+              }
+            }
+          } catch {
+            // not JSON — not a TableRowsEditor-shaped param
+          }
+        } else {
+          names.push(value);
+        }
+        for (const name of names) {
+          const dedupeKey = `${appId}::${name}`;
+          if (!seen.has(dedupeKey)) {
+            seen.add(dedupeKey);
+            refs.push({ appId, name });
+          }
+        }
+      }
+    }
+    return refs;
+  }
+
+  app.get('/api/testcases/:file/references', (req, res) => {
+    try {
+      const file = safeTestCaseName(req.params.file);
+      const full = path.join(testCasesDir, file);
+      if (!existsSync(full)) return res.status(404).json({ error: 'Not found' });
+      const testCase = JSON.parse(readFileSync(full, 'utf-8'));
+      res.json({ objects: findTestReferences(testCase) });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
   app.get('/api/groups', (_req, res) => {
     if (!existsSync(groupsDir)) return res.json([]);
     res.json(readdirSync(groupsDir).filter((f) => f.endsWith('.json')));
@@ -861,6 +1016,85 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       mkdirSync(groupsDir, { recursive: true });
       writeFileSync(path.join(groupsDir, file), JSON.stringify(body, null, 2) + '\n');
       res.json({ ok: true });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  /** Every Regression Pack that references a Process (Group) file directly — BL-037's
+   *  dependency-aware delete/rename for Processes. */
+  function findGroupUsage(file: string): { packs: string[] } {
+    const packs: string[] = [];
+    if (existsSync(packsDir)) {
+      for (const packFile of readdirSync(packsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const pack = JSON.parse(readFileSync(path.join(packsDir, packFile), 'utf-8'));
+          if (Array.isArray(pack.members) && pack.members.some((m: any) => m?.kind === 'process' && m?.file === file)) packs.push(packFile);
+        } catch {
+          // skip an unreadable/malformed file rather than fail the whole scan
+        }
+      }
+    }
+    return { packs };
+  }
+
+  app.get('/api/groups/:file/usage', (req, res) => {
+    try {
+      res.json(findGroupUsage(safeGroupFileName(req.params.file)));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/groups/:file', (req, res) => {
+    try {
+      const file = safeGroupFileName(req.params.file);
+      const usage = findGroupUsage(file);
+      if (usage.packs.length > 0 && req.query.force !== 'true') {
+        return res.status(409).json({
+          error: `"${file}" is referenced by ${usage.packs.length} Regression Pack${usage.packs.length === 1 ? '' : 's'}. Pass force=true to delete anyway.`,
+          usage,
+        });
+      }
+      const full = path.join(groupsDir, file);
+      if (existsSync(full)) rmSync(full);
+      tagStore.setTag('group', file, '');
+      res.json({ ok: true, usage });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/groups/:file/rename', (req, res) => {
+    try {
+      const file = safeGroupFileName(req.params.file);
+      const { newName } = req.body ?? {};
+      if (typeof newName !== 'string' || !newName.trim()) {
+        return res.status(400).json({ error: 'Body must include newName: string' });
+      }
+      const newFile = safeGroupFileName(newName.trim());
+      const oldFull = path.join(groupsDir, file);
+      const newFull = path.join(groupsDir, newFile);
+      if (!existsSync(oldFull)) return res.status(404).json({ error: `Process "${file}" does not exist.` });
+      if (existsSync(newFull)) return res.status(409).json({ error: `Process "${newFile}" already exists.` });
+
+      const usage = findGroupUsage(file);
+      for (const packFile of usage.packs) {
+        const packPath = path.join(packsDir, packFile);
+        const pack = JSON.parse(readFileSync(packPath, 'utf-8'));
+        for (const member of pack.members ?? []) {
+          if (member?.kind === 'process' && member.file === file) member.file = newFile;
+        }
+        writeFileSync(packPath, JSON.stringify(pack, null, 2) + '\n');
+      }
+
+      renameSync(oldFull, newFull);
+      const processArea = tagStore.getTag('group', file);
+      if (processArea) {
+        tagStore.setTag('group', newFile, processArea);
+        tagStore.setTag('group', file, '');
+      }
+      res.json({ ok: true, updatedPacks: usage.packs });
     } catch (err: any) {
       res.status(err.status ?? 500).json({ error: err.message });
     }
@@ -969,6 +1203,39 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  // A Regression Pack is never referenced by anything else, so it has no dependency-aware
+  // delete/rename to compute — but a stable route needs both to exist regardless, for
+  // BL-037's search results to manage every artifact kind consistently.
+  app.delete('/api/packs/:file', (req, res) => {
+    try {
+      const file = safePackFileName(req.params.file);
+      const full = path.join(packsDir, file);
+      if (existsSync(full)) rmSync(full);
+      res.json({ ok: true, usage: { packs: [] } });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/packs/:file/rename', (req, res) => {
+    try {
+      const file = safePackFileName(req.params.file);
+      const { newName } = req.body ?? {};
+      if (typeof newName !== 'string' || !newName.trim()) {
+        return res.status(400).json({ error: 'Body must include newName: string' });
+      }
+      const newFile = safePackFileName(newName.trim());
+      const oldFull = path.join(packsDir, file);
+      const newFull = path.join(packsDir, newFile);
+      if (!existsSync(oldFull)) return res.status(404).json({ error: `Regression Pack "${file}" does not exist.` });
+      if (existsSync(newFull)) return res.status(409).json({ error: `Regression Pack "${newFile}" already exists.` });
+      renameSync(oldFull, newFull);
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
   // Fact-based disambiguation for ObjectPicker: "was this object name ever actually
   // used for this exact module+param before?" — not a guess, a scan of what's really
   // in every saved test case. Deliberately App-ID-agnostic: the caller already has an
@@ -996,6 +1263,136 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
 
   app.get('/api/app-ids', (_req, res) => {
     res.json(objectRepository.listAppIds());
+  });
+
+  // BL-037 AC1: one search across every artifact kind, each result typed with domain
+  // (process area), application (App ID) and lifecycle status, plus the stable route to open
+  // it. Runs behind the same blanket app.use('/api', auth.requireAuthenticated) as everything
+  // else (AC4) — no separate authorization check needed here.
+  app.get('/api/search', (req, res) => {
+    const raw = req.query.q;
+    const q = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+    if (!q) return res.json([]);
+    const results: Array<{
+      kind: 'test' | 'object' | 'dataset' | 'process' | 'pack' | 'run';
+      id: string;
+      label: string;
+      domain: string;
+      application: string;
+      lifecycle: string;
+      route: string;
+    }> = [];
+
+    if (existsSync(testCasesDir)) {
+      const tags = tagStore.listTags('testCase');
+      for (const file of readdirSync(testCasesDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
+          const name = typeof testCase.name === 'string' && testCase.name.trim() ? testCase.name : file;
+          if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
+          const steps = Array.isArray(testCase.steps) ? testCase.steps : [];
+          results.push({
+            kind: 'test',
+            id: file,
+            label: name,
+            domain: tags[file] ?? '',
+            application: steps.find((s: any) => s?.appId)?.appId ?? '',
+            lifecycle: testCase.lifecycle === 'published' ? 'published' : testCase.lifecycle === 'draft' || steps.length === 0 ? 'draft' : 'ready',
+            route: `/compose/tests/${encodeURIComponent(file)}`,
+          });
+        } catch {
+          // skip an unreadable/malformed file rather than fail the whole search
+        }
+      }
+    }
+
+    for (const appId of objectRepository.listAppIds()) {
+      for (const control of objectRepository.listByApp(appId)) {
+        if (!`${control.name} ${control.label ?? ''} ${control.controlType ?? ''}`.toLowerCase().includes(q)) continue;
+        results.push({
+          kind: 'object',
+          id: `${appId}/${control.name}`,
+          label: control.label || control.name,
+          domain: '',
+          application: appId,
+          lifecycle: control.verificationStatus ?? 'never',
+          route: `/objects/${encodeURIComponent(appId)}/${encodeURIComponent(control.name)}`,
+        });
+      }
+    }
+
+    if (existsSync(dataDir)) {
+      const tags = tagStore.listTags('dataFile');
+      for (const file of readdirSync(dataDir).filter((f) => f.endsWith('.csv') || f.endsWith('.json'))) {
+        if (!file.toLowerCase().includes(q)) continue;
+        results.push({
+          kind: 'dataset',
+          id: file,
+          label: file,
+          domain: tags[file] ?? '',
+          application: '',
+          lifecycle: '',
+          route: `/data/${encodeURIComponent(file)}`,
+        });
+      }
+    }
+
+    if (existsSync(groupsDir)) {
+      const tags = tagStore.listTags('group');
+      for (const file of readdirSync(groupsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const group = JSON.parse(readFileSync(path.join(groupsDir, file), 'utf-8'));
+          const name = typeof group.name === 'string' && group.name.trim() ? group.name : file;
+          if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
+          results.push({
+            kind: 'process',
+            id: file,
+            label: name,
+            domain: tags[file] ?? '',
+            application: typeof group.appId === 'string' ? group.appId : '',
+            lifecycle: group.lifecycle ?? '',
+            route: `/process-suites/${encodeURIComponent(file)}`,
+          });
+        } catch {
+          // skip
+        }
+      }
+    }
+
+    if (existsSync(packsDir)) {
+      for (const file of readdirSync(packsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const pack = JSON.parse(readFileSync(path.join(packsDir, file), 'utf-8'));
+          const name = typeof pack.name === 'string' && pack.name.trim() ? pack.name : file;
+          if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
+          results.push({
+            kind: 'pack',
+            id: file,
+            label: name,
+            domain: '',
+            application: '',
+            lifecycle: pack.lifecycle ?? '',
+            route: `/process-suites/packs/${encodeURIComponent(file)}`,
+          });
+        } catch {
+          // skip
+        }
+      }
+    }
+
+    for (const run of runHistory.list({ query: q, limit: 25, sortBy: 'startedAt', sortDirection: 'desc' }).items) {
+      results.push({
+        kind: 'run',
+        id: run.id,
+        label: run.testCaseNames[0] || run.id,
+        domain: '',
+        application: run.appId,
+        lifecycle: run.status,
+        route: `/audit/runs/${encodeURIComponent(run.id)}`,
+      });
+    }
+
+    res.json(results.slice(0, 200));
   });
 
   // BL-10's processArea tag, generalized across every artifact kind (test cases, groups,

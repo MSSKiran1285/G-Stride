@@ -197,6 +197,7 @@ async function main() {
     path.join('regression', 'ui', 'stable-routes.test.js'),
     path.join('regression', 'ui', 'run-tab.test.js'),
     path.join('regression', 'ui', 'audit-library.test.js'),
+    path.join('regression', 'ui', 'global-search.test.js'),
     path.join('regression', 'ui', 'unsaved-guards.test.js'),
     path.join('regression', 'ui', 't1-foundations.test.js'),
     path.join('regression', 'ui', 'accessibility.test.js'),

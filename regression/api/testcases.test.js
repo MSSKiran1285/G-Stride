@@ -194,3 +194,103 @@ test('PUT then GET /api/testcases/:file round-trips (Compose positive)', async (
   const list = await api.get('/api/testcases');
   assert.ok(list.body.includes('regression-sample.json'));
 });
+
+test('GET /api/testcases/:file/references reports every Object a Test\'s own steps use (BL-037 AC2 outgoing)', async () => {
+  await api.put(`/api/objects/testUsageRegressionApp/RegressionRefButton`, {
+    controlId: '__xmlview1--RegressionRefButton',
+    controlType: 'sap.m.Button',
+  });
+  const testCase = {
+    name: 'Regression Reference Source',
+    steps: [{ module: 'ClickButton', appId: 'testUsageRegressionApp', params: { control: 'RegressionRefButton' } }],
+  };
+  await api.put('/api/testcases/regression-reference-source.json', testCase);
+
+  const references = await api.get('/api/testcases/regression-reference-source.json/references');
+  assert.equal(references.status, 200);
+  assert.deepEqual(references.body, { objects: [{ appId: 'testUsageRegressionApp', name: 'RegressionRefButton' }] });
+});
+
+test('Test usage, dependency-aware rename and delete blocking across Processes and Packs (BL-037 AC2/AC3)', async () => {
+  const testFile = 'regression-test-usage.json';
+  await api.put(`/api/testcases/${testFile}`, {
+    name: 'Regression Test Usage Source',
+    steps: [{ module: 'Wait', params: { ms: '1' } }],
+  });
+
+  const emptyUsage = await api.get(`/api/testcases/${testFile}/usage`);
+  assert.equal(emptyUsage.status, 200);
+  assert.deepEqual(emptyUsage.body, { groups: [], packs: [] });
+
+  const groupFile = 'regression-test-usage-group.json';
+  await api.put(`/api/groups/${groupFile}`, {
+    name: 'Regression Test Usage Group',
+    appId: 'regressionTestUsageApp',
+    testCaseFiles: [testFile],
+  });
+
+  const packFile = 'regression-test-usage-pack.json';
+  await api.put(`/api/packs/${packFile}`, {
+    version: 1,
+    name: 'Regression Test Usage Pack',
+    lifecycle: 'draft',
+    members: [{
+      id: 'direct-test-member',
+      kind: 'test',
+      file: testFile,
+      sessionPolicy: 'fresh-per-iteration',
+      iterationFailurePolicy: 'continue-next-iteration',
+    }],
+  });
+
+  const usage = await api.get(`/api/testcases/${testFile}/usage`);
+  assert.deepEqual(usage.body, { groups: [groupFile], packs: [packFile] });
+
+  const blockedDelete = await api.delete(`/api/testcases/${testFile}`);
+  assert.equal(blockedDelete.status, 409);
+  assert.deepEqual(blockedDelete.body.usage, { groups: [groupFile], packs: [packFile] });
+
+  const renamed = 'regression-test-usage-renamed.json';
+  const rename = await api.put(`/api/testcases/${testFile}/rename`, { newName: renamed });
+  assert.equal(rename.status, 200);
+  assert.deepEqual(rename.body, { ok: true, updatedGroups: [groupFile], updatedPacks: [packFile] });
+
+  const groupAfterRename = await api.get(`/api/groups/${groupFile}`);
+  assert.deepEqual(groupAfterRename.body.testCaseFiles, [renamed]);
+  const packAfterRename = await api.get(`/api/packs/${packFile}`);
+  assert.equal(packAfterRename.body.members[0].file, renamed);
+
+  const usageAfterRename = await api.get(`/api/testcases/${renamed}/usage`);
+  assert.deepEqual(usageAfterRename.body, { groups: [groupFile], packs: [packFile] });
+
+  const forcedDelete = await api.delete(`/api/testcases/${renamed}?force=true`);
+  assert.equal(forcedDelete.status, 200);
+  assert.deepEqual(forcedDelete.body.usage, { groups: [groupFile], packs: [packFile] });
+
+  const goneAfterDelete = await api.get(`/api/testcases/${renamed}`);
+  assert.equal(goneAfterDelete.status, 404);
+
+  // Clean up the referencing Pack — this file runs after packs.test.js's own exact-list
+  // assertion, but tidying up avoids leaking state into any later addition to that suite.
+  await api.delete(`/api/packs/${packFile}`);
+});
+
+test('DELETE /api/testcases/:file removes an unreferenced Test outright', async () => {
+  const testFile = 'regression-test-unreferenced.json';
+  await api.put(`/api/testcases/${testFile}`, { name: 'Unreferenced', steps: [] });
+  const del = await api.delete(`/api/testcases/${testFile}`);
+  assert.equal(del.status, 200);
+  assert.deepEqual(del.body, { ok: true, usage: { groups: [], packs: [] } });
+  const get = await api.get(`/api/testcases/${testFile}`);
+  assert.equal(get.status, 404);
+});
+
+test('PUT /api/testcases/:file/rename rejects a missing source or a name collision', async () => {
+  const missing = await api.put('/api/testcases/does-not-exist.json/rename', { newName: 'whatever.json' });
+  assert.equal(missing.status, 404);
+
+  const sourceFile = 'regression-rename-collision-source.json';
+  await api.put(`/api/testcases/${sourceFile}`, { name: 'Source', steps: [] });
+  const collision = await api.put(`/api/testcases/${sourceFile}/rename`, { newName: 'create-po.json' });
+  assert.equal(collision.status, 409);
+});

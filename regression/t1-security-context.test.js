@@ -132,6 +132,9 @@ test('registered workspace denies anonymous artifact and audit access without re
     assert.equal((await fetch(`${baseUrl}/reports/studio/run-1/report.txt`)).status, 401);
     assert.equal((await fetch(`${baseUrl}/api/audit/runs`)).status, 401);
     assert.equal((await fetch(`${baseUrl}/api/workspace-context`)).status, 401);
+    // BL-037: the global search endpoint spans every artifact kind, so it must sit behind
+    // the same blanket auth gate as everything else rather than a bespoke check of its own.
+    assert.equal((await fetch(`${baseUrl}/api/search?q=test`)).status, 401);
   } finally {
     await close(app, server, root);
   }

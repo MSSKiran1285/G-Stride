@@ -91,6 +91,90 @@ test('versioned Business Process persists a typed prior-stage hand-off', async (
   assert.deepEqual(get.body, process);
 });
 
+test('Group usage, dependency-aware rename and delete blocking across Regression Packs (BL-037 AC2/AC3)', async () => {
+  const groupFile = 'regression-group-usage.json';
+  await api.put(`/api/groups/${groupFile}`, {
+    name: 'Regression Group Usage Source',
+    appId: 'regressionGroupUsageApp',
+    testCaseFiles: ['cleanup-abandoned-drafts.json'],
+  });
+
+  const emptyUsage = await api.get(`/api/groups/${groupFile}/usage`);
+  assert.equal(emptyUsage.status, 200);
+  assert.deepEqual(emptyUsage.body, { packs: [] });
+
+  const packFile = 'regression-group-usage-pack.json';
+  await api.put(`/api/packs/${packFile}`, {
+    version: 1,
+    name: 'Regression Group Usage Pack',
+    lifecycle: 'draft',
+    members: [{
+      id: 'direct-process-member',
+      kind: 'process',
+      file: groupFile,
+      sessionPolicy: 'fresh-per-iteration',
+      iterationFailurePolicy: 'stop-execution',
+    }],
+  });
+
+  const usage = await api.get(`/api/groups/${groupFile}/usage`);
+  assert.deepEqual(usage.body, { packs: [packFile] });
+
+  const blockedDelete = await api.delete(`/api/groups/${groupFile}`);
+  assert.equal(blockedDelete.status, 409);
+  assert.deepEqual(blockedDelete.body.usage, { packs: [packFile] });
+
+  const renamed = 'regression-group-usage-renamed.json';
+  const rename = await api.put(`/api/groups/${groupFile}/rename`, { newName: renamed });
+  assert.equal(rename.status, 200);
+  assert.deepEqual(rename.body, { ok: true, updatedPacks: [packFile] });
+
+  const packAfterRename = await api.get(`/api/packs/${packFile}`);
+  assert.equal(packAfterRename.body.members[0].file, renamed);
+
+  const usageAfterRename = await api.get(`/api/groups/${renamed}/usage`);
+  assert.deepEqual(usageAfterRename.body, { packs: [packFile] });
+
+  const forcedDelete = await api.delete(`/api/groups/${renamed}?force=true`);
+  assert.equal(forcedDelete.status, 200);
+  assert.deepEqual(forcedDelete.body.usage, { packs: [packFile] });
+
+  const goneAfterDelete = await api.get(`/api/groups/${renamed}`);
+  assert.equal(goneAfterDelete.status, 404);
+
+  // Clean up the referencing Pack too — packs.test.js asserts the exact fixture list, and
+  // this file's own Pack fixture would otherwise leak into it (both run in the same server).
+  await api.delete(`/api/packs/${packFile}`);
+});
+
+test('DELETE /api/groups/:file removes an unreferenced Process outright', async () => {
+  const groupFile = 'regression-group-unreferenced.json';
+  await api.put(`/api/groups/${groupFile}`, {
+    name: 'Unreferenced Group',
+    appId: 'regressionGroupUsageApp',
+    testCaseFiles: ['cleanup-abandoned-drafts.json'],
+  });
+  const del = await api.delete(`/api/groups/${groupFile}`);
+  assert.equal(del.status, 200);
+  assert.deepEqual(del.body, { ok: true, usage: { packs: [] } });
+  const get = await api.get(`/api/groups/${groupFile}`);
+  assert.equal(get.status, 404);
+});
+
+test('PUT /api/groups/:file/rename rejects a missing source or a name collision', async () => {
+  const missing = await api.put('/api/groups/does-not-exist.json/rename', { newName: 'whatever.json' });
+  assert.equal(missing.status, 404);
+
+  const sourceFile = 'regression-group-rename-collision-source.json';
+  await api.put(`/api/groups/${sourceFile}`, {
+    name: 'Source',
+    appId: 'regressionGroupUsageApp',
+    testCaseFiles: ['cleanup-abandoned-drafts.json'],
+  });
+  const collision = await api.put(`/api/groups/${sourceFile}/rename`, { newName: 'po-gr-invoice.json' });
+  assert.equal(collision.status, 409);
+});
+
 test('Business Process rejects forward references and cycles', async () => {
   const invalid = {
     version: 1,

@@ -239,6 +239,39 @@ export interface DataFileUsage {
   relations: string[];
 }
 
+/** BL-037: one search result, typed with domain (process area), application (App ID) and
+ *  lifecycle status, plus the stable route to open it. */
+export type SearchResultKind = 'test' | 'object' | 'dataset' | 'process' | 'pack' | 'run';
+
+export interface SearchResult {
+  kind: SearchResultKind;
+  id: string;
+  label: string;
+  domain: string;
+  application: string;
+  lifecycle: string;
+  route: string;
+}
+
+/** Every Process (Group) and Regression Pack that references a Test file directly —
+ *  BL-037 AC2's "incoming" dependency view for a Test. */
+export interface TestFileUsage {
+  groups: string[];
+  packs: string[];
+}
+
+/** Every Regression Pack that references a Process (Group) file directly — BL-037 AC2's
+ *  "incoming" dependency view for a Process. */
+export interface GroupFileUsage {
+  packs: string[];
+}
+
+/** Every Object a Test's own steps reference — BL-037 AC2's "outgoing" dependency view for
+ *  a Test. */
+export interface TestReferences {
+  objects: { appId: string; name: string }[];
+}
+
 export interface Group {
   name: string;
   appId: string;

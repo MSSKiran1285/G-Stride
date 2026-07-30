@@ -34,6 +34,10 @@ import type {
   DataLibraryItem,
   DataColumnSchema,
   DataFileUsage,
+  SearchResult,
+  TestFileUsage,
+  GroupFileUsage,
+  TestReferences,
   TestValueType,
   DataSensitivity,
 } from './types';
@@ -104,6 +108,17 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ testCase }),
     }),
+  search: (query: string) => request<SearchResult[]>(`/api/search?q=${encodeURIComponent(query)}`),
+  getTestUsage: (file: string) => request<TestFileUsage>(`/api/testcases/${encodeURIComponent(file)}/usage`),
+  getTestReferences: (file: string) => request<TestReferences>(`/api/testcases/${encodeURIComponent(file)}/references`),
+  /** Blocked with a 409 unless force is true — mirrors BL-022's object delete (BL-037 AC3). */
+  deleteTestCase: (file: string, force = false) =>
+    request<{ ok: true; usage: TestFileUsage }>(`/api/testcases/${encodeURIComponent(file)}${force ? '?force=true' : ''}`, { method: 'DELETE' }),
+  renameTestCase: (file: string, newName: string) =>
+    request<{ ok: true; updatedGroups: string[]; updatedPacks: string[] }>(`/api/testcases/${encodeURIComponent(file)}/rename`, {
+      method: 'PUT',
+      body: JSON.stringify({ newName }),
+    }),
   listAppIds: () => request<string[]>('/api/app-ids'),
   getModuleUsage: (module: string, paramKey: string) =>
     request<string[]>(`/api/module-usage/${encodeURIComponent(module)}/${encodeURIComponent(paramKey)}`),
@@ -154,6 +169,14 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(group),
     }),
+  getGroupUsage: (file: string) => request<GroupFileUsage>(`/api/groups/${encodeURIComponent(file)}/usage`),
+  deleteGroup: (file: string, force = false) =>
+    request<{ ok: true; usage: GroupFileUsage }>(`/api/groups/${encodeURIComponent(file)}${force ? '?force=true' : ''}`, { method: 'DELETE' }),
+  renameGroup: (file: string, newName: string) =>
+    request<{ ok: true; updatedPacks: string[] }>(`/api/groups/${encodeURIComponent(file)}/rename`, {
+      method: 'PUT',
+      body: JSON.stringify({ newName }),
+    }),
   listPacks: () => request<string[]>('/api/packs'),
   getPack: (file: string) => request<RegressionPack>(`/api/packs/${encodeURIComponent(file)}`),
   savePack: (file: string, pack: RegressionPack) =>
@@ -161,6 +184,9 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(pack),
     }),
+  deletePack: (file: string) => request<{ ok: true; usage: { packs: [] } }>(`/api/packs/${encodeURIComponent(file)}`, { method: 'DELETE' }),
+  renamePack: (file: string, newName: string) =>
+    request<{ ok: true }>(`/api/packs/${encodeURIComponent(file)}/rename`, { method: 'PUT', body: JSON.stringify({ newName }) }),
   openScanSession: (url: string) => request<ScanSessionInfo>('/api/scan/open', { method: 'POST', body: JSON.stringify({ url }) }),
   getScanStatus: () => request<ScanStatus>('/api/scan/status'),
   captureScan: () => request<ScanCaptureResult>('/api/scan/capture', { method: 'POST' }),
