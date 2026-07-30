@@ -1,6 +1,83 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-07-30T15-48-21-091Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T15:48:21.841Z",
+      "finishedAt": "2026-07-30T15:49:41.662Z",
+      "passed": 49,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T15-48-00-028Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T15:48:00.770Z",
+      "finishedAt": "2026-07-30T15:48:20.689Z",
+      "passed": 72,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T15-47-54-153Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T15:47:54.203Z",
+      "finishedAt": "2026-07-30T15:47:59.612Z",
+      "passed": 81,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-07-30T15-43-03-495Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-30T15:43:04.233Z",
+      "finishedAt": "2026-07-30T15:44:23.369Z",
+      "passed": 49,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-30T15-42-42-242Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-30T15:42:43.076Z",
+      "finishedAt": "2026-07-30T15:43:03.079Z",
+      "passed": 72,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T15-42-35-981Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T15:42:36.034Z",
+      "finishedAt": "2026-07-30T15:42:41.817Z",
+      "passed": 81,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-30T15-42-14-238Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-30T15:42:14.299Z",
+      "finishedAt": "2026-07-30T15:42:19.806Z",
+      "passed": 80,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-07-30T14-48-57-690Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-07-30T14:48:58.628Z",
@@ -142,86 +219,26 @@
       "skipped": 4,
       "mode": "Headless UI",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-30T14-09-21-158Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-30T14:09:21.895Z",
-      "finishedAt": "2026-07-30T14:09:41.631Z",
-      "passed": 56,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T14-09-14-995Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T14:09:15.052Z",
-      "finishedAt": "2026-07-30T14:09:20.753Z",
-      "passed": 78,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T14-08-38-763Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T14:08:38.815Z",
-      "finishedAt": "2026-07-30T14:08:44.353Z",
-      "passed": 77,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T13-59-35-802Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T13:59:36.514Z",
-      "finishedAt": "2026-07-30T14:00:53.331Z",
-      "passed": 42,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-30T13-59-07-210Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-30T13:59:07.925Z",
-      "finishedAt": "2026-07-30T13:59:27.377Z",
-      "passed": 54,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T13-58-52-822Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T13:58:52.887Z",
-      "finishedAt": "2026-07-30T13:58:58.628Z",
-      "passed": 72,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T13-31-19-014Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T13:31:19.915Z",
-      "finishedAt": "2026-07-30T13:32:38.409Z",
-      "passed": 42,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0033",
+      "runId": "CORE-2026-07-30T15-42-14-238Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-07-30T15:42:19.806Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'GET /api/audit/runs supports every AC1 filter and reports X-Total-Count for pagination (BL-035 AC1/AC2)',\n      source: 'regression/api/audit-runs.test.js'\n    },\n...\n    {\n-     name: 'Group usage, dependency-aware rename and delete blocking across Regression Packs (BL-037 AC2/AC3)',\n-     source: 'regression/api/groups.test.js'\n-   },\n-   {\n-     name: 'DELETE /api/groups/:file removes an unreferenced Process outright',\n-     source: 'regression/api/groups.test.js'\n-   },\n-   {\n-     name: 'PUT /api/groups/:file/rename rejects a missing source or a name collision',\n-     source: 'regression/api/groups.test.js'\n-   },\n-   {\n      name: 'Business Process rejects forward references and cycles',\n      source: 'regression/api/groups.test.js'\n    },\n    {\n      name: 'PUT /api/objects/:appId/:name saves scope and stamps created/updated metadata',\n...\n    {\n-     name: 'DELETE and PUT .../rename for a Regression Pack — no dependency scan needed, nothing references a Pack (BL-037)',\n-     source: 'regression/api/packs.test.js'\n-   },\n-   {\n      name: 'POST /api/runs rejects an invalid mode',\n      source: 'regression/api/runs.test.js'\n    },\n    {\n      name: 'POST /api/runs (chain) rejects a missing testCaseFiles/appId',\n...\n    {\n-     name: 'GET /api/search returns [] for an empty or whitespace-only query',\n-     source: 'regression/api/search.test.js'\n-   },\n-   {\n-     name: 'GET /api/search finds a Test by name and reports domain/application/lifecycle/route (BL-037 AC1)',\n-     source: 'regression/api/search.test.js'\n-   },\n-   {\n-     name: 'GET /api/search finds an Object, a Process and a Regression Pack, each typed by kind',\n-     source: 'regression/api/search.test.js'\n-   },\n-   {\n-     name: 'GET /api/search finds a Dataset by file name',\n-     source: 'regression/api/search.test.js'\n-   },\n-   {\n-     name: 'GET /api/search is case-insensitive and matches on file name as well as display name',\n-     source: 'regression/api/search.test.js'\n-   },\n-   {\n-     name: 'GET /api/search finds a Run by App ID, typed with its status as lifecycle (BL-037 AC1)',\n-     source: 'regression/api/search.test.js'\n-   },\n-   {\n      name: 'GET /api/testcases lists known fixtures',\n      source: 'regression/api/testcases.test.js'\n    },\n    {\n      name: 'GET /api/testcases/library returns filterable business metadata for legacy Tests',\n...\n    {\n-     name: \"GET /api/testcases/:file/references reports every Object a Test\\\\'s own steps use (BL-037 AC2 outgoing)\",\n-     source: 'regression/api/testcases.test.js'\n-   },\n-   {\n-     name: 'Test usage, dependency-aware rename and delete blocking across Processes and Packs (BL-037 AC2/AC3)',\n-     source: 'regression/api/testcases.test.js'\n-   },\n-   {\n-     name: 'DELETE /api/testcases/:file removes an unreferenced Test outright',\n-     source: 'regression/api/testcases.test.js'\n-   },\n-   {\n-     name: 'PUT /api/testcases/:file/rename rejects a missing source or a name collision',\n-     source: 'regression/api/testcases.test.js'\n-   },\n-   {\n      name: 'automation run reference is short, unique, owner-linked, and retains failed state for review',\n      source: 'regression/automation-run-reference.test.js'\n    },\n    {\n      name: 'encrypted credential fallback persists securely across server and CLI processes',\n...\n    {\n-     name: 'Global search finds a Test by name, shows typed domain/App ID/lifecycle, and opens its exact route (BL-037 AC1)',\n-     source: 'regression/ui/global-search.test.js'\n-   },\n-   {\n-     name: 'Global search \"Show usage\" reports incoming Process/Pack dependencies and outgoing Object references for a Test (BL-037 AC2)',\n-     source: 'regression/ui/global-search.test.js'\n-   },\n-   {\n-     name: 'Global search delete asks for confirmation naming the referencing Process, then removes the Test (BL-037 AC3)',\n-     source: 'regression/ui/global-search.test.js'\n-   },\n-   {\n-     name: 'Global search deletes an unreferenced artifact without a dependency warning (BL-037 AC3)',\n-     source: 'regression/ui/global-search.test.js'\n-   },\n-   {\n      name: 'Business Processes: create, save, reload and reopen a process',\n      source: 'regression/ui/groups-tab.test.js'\n    },\n    {\n      name: 'Business Process canvas authors and restores a typed stage hand-off',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-07-30T15:42:41.817Z",
+      "remediationRunId": "CORE-2026-07-30T15-42-35-981Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-07-30T15-42-35-981Z."
+    },
     {
       "id": "FL-0032",
       "runId": "CORE-2026-07-30T14-43-27-534Z",
