@@ -29,11 +29,13 @@ function isQualityOutput(file) {
 function readGitState() {
   try {
     const commitSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
+    // Do not .trim() this: porcelain lines are fixed-width ("XY " prefix), and trimming the
+    // whole multi-line blob eats the leading space off the *first* line only, corrupting its parse.
     const status = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], {
       cwd: repoRoot,
       encoding: 'utf8',
-    }).trim();
-    const entries = status ? status.split(/\r?\n/).filter(Boolean) : [];
+    });
+    const entries = status.split(/\r?\n/).filter(Boolean);
     const worktreeClean = entries.length === 0;
     const sourceTreeClean = entries.every((line) => isQualityOutput(statusPath(line)));
     return { commitSha, worktreeClean, sourceTreeClean };

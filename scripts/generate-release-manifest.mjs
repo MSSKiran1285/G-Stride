@@ -48,8 +48,10 @@ function isQualityOutput(file) {
 }
 
 const candidateCommit = git(['rev-parse', 'HEAD']);
-const status = git(['status', '--porcelain', '--untracked-files=all']);
-const statusEntries = status ? status.split(/\r?\n/).filter(Boolean) : [];
+// Do not .trim() this: porcelain lines are fixed-width ("XY " prefix), and trimming the
+// whole multi-line blob eats the leading space off the *first* line only, corrupting its parse.
+const statusRaw = execFileSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: repoRoot, encoding: 'utf8' });
+const statusEntries = statusRaw.split(/\r?\n/).filter(Boolean);
 const worktreeClean = statusEntries.length === 0;
 const sourceTreeClean = statusEntries.every((line) => isQualityOutput(statusPath(line)));
 
