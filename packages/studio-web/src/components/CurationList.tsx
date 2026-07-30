@@ -168,6 +168,7 @@ export const CurationList = forwardRef<CurationListHandle, CurationListProps>(fu
         label: row.label || undefined,
         parentControlId: c.parentId,
         tableId: c.tableId,
+        scope: c.scope,
       });
       updateRow(c.controlId, { saving: false, saved: true, error: null });
       setExisting((prev) => new Map(prev).set(c.controlId, { appId: row.appId, name: row.name.trim() }));

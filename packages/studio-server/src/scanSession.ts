@@ -123,6 +123,41 @@ export async function highlightControl(controlId: string): Promise<{ found: bool
   return { found: false };
 }
 
+export interface ReverificationResult {
+  outcome: 'verified' | 'drifted' | 'missing';
+  /** Present unless outcome is "missing". */
+  live?: Pick<DiscoveredControl, 'controlId' | 'controlType' | 'bindingPath' | 'text'>;
+}
+
+/**
+ * Compares one stored control against the live screen without writing anything — BL-024
+ * AC3's "reverification can compare live metadata without overwriting silently." Re-runs
+ * the same full capture pipeline captureScan() already uses (inspectUi5Controls) rather than
+ * a single-id DOM query, so a same-id match is exact and a suffix match reuses real,
+ * already-classified control data instead of a second bespoke DOM query — same suffix idea as
+ * FioriPlaywrightAdapter's healIdBySuffix, just without needing a live Page reference of its own.
+ */
+export async function reverifyControl(controlId: string, controlType?: string): Promise<ReverificationResult> {
+  if (!session) {
+    throw Object.assign(new Error('No active scan session — open one first.'), { status: 400 });
+  }
+  const controls = await inspectUi5Controls(session.page);
+  const exact = controls.find((c) => c.controlId === controlId);
+  if (exact) return { outcome: 'verified', live: pickLive(exact) };
+
+  const suffix = controlId.split(/--|::/).at(-1);
+  const bySuffix = suffix
+    ? controls.find((c) => c.controlId !== controlId && c.controlId.endsWith(suffix) && (!controlType || c.controlType === controlType))
+    : undefined;
+  if (bySuffix) return { outcome: 'drifted', live: pickLive(bySuffix) };
+
+  return { outcome: 'missing' };
+}
+
+function pickLive(c: DiscoveredControl): Pick<DiscoveredControl, 'controlId' | 'controlType' | 'bindingPath' | 'text'> {
+  return { controlId: c.controlId, controlType: c.controlType, bindingPath: c.bindingPath, text: c.text };
+}
+
 async function handlePicked(candidateIds: string[]): Promise<void> {
   if (!session) return;
   // The in-page listener only knows DOM ids — it can't run classifyControl/classifyScope

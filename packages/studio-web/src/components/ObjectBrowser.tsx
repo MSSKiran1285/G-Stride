@@ -1,11 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
-import type { ObjectControl } from '../types';
+import type { ObjectControl, ObjectVerificationEvent } from '../types';
 import { DomainTag } from './DomainTag';
 import { AsyncFeedback, EmptyState, TableFrame } from './WorkspacePrimitives';
 
 const UNTAGGED = '(untagged)';
+
+function verificationLabel(status: ObjectControl['verificationStatus']): string {
+  if (status === 'verified') return 'verified';
+  if (status === 'drifted') return 'drifted';
+  if (status === 'missing') return 'missing';
+  return 'never verified';
+}
+
+function verificationBadgeClass(status: ObjectControl['verificationStatus']): string {
+  if (status === 'verified') return 'badge passed';
+  if (status === 'drifted') return 'badge warning';
+  if (status === 'missing') return 'badge failed';
+  return 'badge neutral';
+}
 
 /**
  * Lets an engineer see what's already captured before capturing more — the only way
@@ -53,6 +67,14 @@ export function ObjectBrowser({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [reorderAnnouncement, setReorderAnnouncement] = useState('');
+  const [usage, setUsage] = useState<string[] | null>(null);
+  const [usageError, setUsageError] = useState<string | null>(null);
+  const [verifications, setVerifications] = useState<ObjectVerificationEvent[]>([]);
+  const [reverifying, setReverifying] = useState(false);
+  const [reverifyOutcome, setReverifyOutcome] = useState<{
+    outcome: 'verified' | 'drifted' | 'missing';
+    live?: { controlId: string; controlType: string; bindingPath?: string; text?: string };
+  } | null>(null);
   const domainOf = useCallback((id: string) => appIdTags[id] || UNTAGGED, [appIdTags]);
 
   function refreshTags() {
@@ -98,16 +120,44 @@ export function ObjectBrowser({
     }
   }, [initialObjectName, objects]);
 
+  // Usage and verification history are per-object facts fetched on demand, not carried on
+  // every row in the bulk list response — selecting a different object (or reloading the
+  // list after a rename/delete/reverify) always starts from a clean slate.
+  useEffect(() => {
+    setUsage(null);
+    setUsageError(null);
+    setVerifications([]);
+    setReverifyOutcome(null);
+    if (!appId || !selectedName) return;
+    api.getObjectUsage(appId, selectedName).then(setUsage).catch((e) => setUsageError(String(e)));
+    api.getObjectVerifications(appId, selectedName).then(setVerifications).catch(() => undefined);
+  }, [appId, selectedName]);
+
   const domains = Array.from(new Set(appIds.map(domainOf))).sort((a, b) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b)));
   const appIdsInDomain = domain ? appIds.filter((id) => domainOf(id) === domain) : [];
 
+  // Search spans domain, App ID, name, label, type and stability in one box (BL-022 AC1) —
+  // domain/App ID are already narrowed by the selects above, so this only needs to add the
+  // stability terms on top of the name/label/type matching that already existed.
   const filtered = filter.trim()
-    ? objects.filter(
-        (o) =>
-          o.name.toLowerCase().includes(filter.trim().toLowerCase()) ||
-          (o.label ?? '').toLowerCase().includes(filter.trim().toLowerCase()) ||
-          (o.controlType ?? '').toLowerCase().includes(filter.trim().toLowerCase())
-      )
+    ? objects.filter((o) => {
+        const q = filter.trim().toLowerCase();
+        const stabilityText = [
+          o.unstableId ? 'unstable' : 'stable',
+          verificationLabel(o.verificationStatus),
+          o.likelyDuplicateOf?.length ? 'duplicate' : '',
+        ]
+          .join(' ')
+          .toLowerCase();
+        return (
+          o.name.toLowerCase().includes(q) ||
+          (o.label ?? '').toLowerCase().includes(q) ||
+          (o.controlType ?? '').toLowerCase().includes(q) ||
+          domainOf(appId).toLowerCase().includes(q) ||
+          appId.toLowerCase().includes(q) ||
+          stabilityText.includes(q)
+        );
+      })
     : objects;
 
   const selected = objects.find((o) => o.name === selectedName) ?? null;
@@ -143,8 +193,15 @@ export function ObjectBrowser({
     setSaving(true);
     setActionError(null);
     try {
+      let renameNote = '';
       if (newName !== selected.name) {
-        await api.renameObject(appId, selected.name, newName);
+        // Rename propagates into every referencing Test automatically (same control, new
+        // name — an IDE-style symbol rename, not a destructive change) — see server's
+        // renameObjectInTestCase (BL-022 AC3).
+        const { updatedTests } = await api.renameObject(appId, selected.name, newName);
+        if (updatedTests.length > 0) {
+          renameNote = ` Updated the reference in ${updatedTests.length} Test${updatedTests.length === 1 ? '' : 's'}: ${updatedTests.join(', ')}.`;
+        }
       }
       await api.saveObject(appId, newName, {
         controlId: selected.controlId,
@@ -153,10 +210,54 @@ export function ObjectBrowser({
         label: editDraft.label.trim() || undefined,
         parentControlId: selected.parentControlId ?? undefined,
         tableId: selected.tableId ?? undefined,
+        scope: selected.scope ?? undefined,
       });
       setEditing(false);
       setSelectedName(newName);
       onSelectionChange?.(appId, newName);
+      refreshObjects();
+      if (renameNote) setActionError(renameNote.trim()); // informational, reuses the same visible slot as an error
+    } catch (e) {
+      setActionError(String(e));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function reverify() {
+    if (!selected) return;
+    setReverifying(true);
+    setActionError(null);
+    try {
+      const result = await api.reverifyObject(appId, selected.name);
+      setReverifyOutcome(result);
+      api.getObjectVerifications(appId, selected.name).then(setVerifications).catch(() => undefined);
+      refreshObjects(); // pick up the refreshed verificationStatus/lastVerifiedAt on the row
+    } catch (e) {
+      setActionError(String(e));
+    } finally {
+      setReverifying(false);
+    }
+  }
+
+  /** Accepts a "drifted" reverify result: updates the stored control to the live id/type/
+   *  binding path found by reverify() — an explicit, reviewed action, never automatic
+   *  (BL-024 AC3's "without overwriting silently"). */
+  async function applyReverifyFix() {
+    if (!selected || !reverifyOutcome?.live) return;
+    setSaving(true);
+    setActionError(null);
+    try {
+      await api.saveObject(appId, selected.name, {
+        controlId: reverifyOutcome.live.controlId,
+        controlType: reverifyOutcome.live.controlType,
+        bindingPath: reverifyOutcome.live.bindingPath,
+        label: selected.label ?? undefined,
+        parentControlId: selected.parentControlId ?? undefined,
+        tableId: selected.tableId ?? undefined,
+        scope: selected.scope ?? undefined,
+      });
+      setReverifyOutcome(null);
       refreshObjects();
     } catch (e) {
       setActionError(String(e));
@@ -180,11 +281,20 @@ export function ObjectBrowser({
 
   async function deleteSelected() {
     if (!selected) return;
-    if (!window.confirm(`Delete "${selected.name}" from ${appId}? This can't be undone.`)) return;
+    // usage is already fetched for the detail panel (BL-022 AC2) — reuse it rather than a
+    // second round-trip, and show exactly which Tests would break before confirming
+    // (BL-022 AC3's "dependency impact" for delete, which — unlike rename — can't safely
+    // propagate, so it must block and let the tester decide).
+    const usedBy = usage ?? [];
+    const message =
+      usedBy.length > 0
+        ? `"${selected.name}" is referenced by ${usedBy.length} Test${usedBy.length === 1 ? '' : 's'}: ${usedBy.join(', ')}.\n\nDelete anyway? Those Tests will fail until fixed.`
+        : `Delete "${selected.name}" from ${appId}? This can't be undone.`;
+    if (!window.confirm(message)) return;
     setDeleting(true);
     setActionError(null);
     try {
-      await api.deleteObject(appId, selected.name);
+      await api.deleteObject(appId, selected.name, usedBy.length > 0);
       setSelectedName(null);
       onSelectionChange?.(appId);
       refreshObjects();
@@ -285,6 +395,9 @@ export function ObjectBrowser({
           <button className="pill pill-success" disabled={!selected || highlighting || editing} onClick={highlight}>
             {highlighting ? 'Highlighting…' : 'Highlight'}
           </button>
+          <button className="pill pill-neutral" disabled={!selected || editing || reverifying} onClick={reverify} title="Compare the stored control against the live screen without changing anything — needs an open scan session">
+            {reverifying ? 'Reverifying…' : 'Reverify'}
+          </button>
           <button className="pill pill-neutral" disabled={!selected || editing} onClick={startEdit}>
             Edit
           </button>
@@ -294,6 +407,113 @@ export function ObjectBrowser({
         </div>
       )}
       {actionError && <AsyncFeedback state="error" message={actionError} />}
+
+      {selected && !editing && (
+        <div className="panel stack" style={{ gap: '0.6rem' }}>
+          <p className="section-title">
+            {selected.name} <span className="hint">— selector detail</span>
+          </p>
+          <div className="row" style={{ flexWrap: 'wrap', gap: '0.4rem' }}>
+            <span className={verificationBadgeClass(selected.verificationStatus)}>{verificationLabel(selected.verificationStatus)}</span>
+            {selected.unstableId && (
+              <span className="badge warning" title="This control id looks auto-generated and may regenerate on the next reload">
+                unstable id
+              </span>
+            )}
+            {(selected.likelyDuplicateOf?.length ?? 0) > 0 && (
+              <span className="badge warning" title={`Same type + label as: ${selected.likelyDuplicateOf!.join(', ')}`}>
+                possible duplicate of {selected.likelyDuplicateOf!.length}
+              </span>
+            )}
+            {selected.scope && <span className="badge neutral">{selected.scope}</span>}
+          </div>
+
+          <div className="row" style={{ flexWrap: 'wrap', gap: '1.5rem' }}>
+            <div className="stack" style={{ gap: '0.15rem' }}>
+              <span className="hint">Control ID</span>
+              <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{selected.controlId}</span>
+            </div>
+            {selected.bindingPath && (
+              <div className="stack" style={{ gap: '0.15rem' }}>
+                <span className="hint">Binding path</span>
+                <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{selected.bindingPath}</span>
+              </div>
+            )}
+            {selected.tableId && (
+              <div className="stack" style={{ gap: '0.15rem' }}>
+                <span className="hint">Table ID</span>
+                <span style={{ fontFamily: 'monospace', wordBreak: 'break-all' }}>{selected.tableId}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="row" style={{ flexWrap: 'wrap', gap: '1.5rem' }}>
+            <div className="stack" style={{ gap: '0.15rem' }}>
+              <span className="hint">Created</span>
+              <span>{selected.createdAt ? new Date(selected.createdAt).toLocaleString() : '—'}</span>
+            </div>
+            <div className="stack" style={{ gap: '0.15rem' }}>
+              <span className="hint">Last updated</span>
+              <span>
+                {selected.updatedAt ? new Date(selected.updatedAt).toLocaleString() : '—'}
+                {selected.updatedBy ? ` by ${selected.updatedBy}` : ''}
+              </span>
+            </div>
+            <div className="stack" style={{ gap: '0.15rem' }}>
+              <span className="hint">Last verified</span>
+              <span>{selected.lastVerifiedAt ? new Date(selected.lastVerifiedAt).toLocaleString() : 'never'}</span>
+            </div>
+          </div>
+
+          <div className="stack" style={{ gap: '0.2rem' }}>
+            <span className="hint">Usage</span>
+            {usageError ? (
+              <span className="error-text">{usageError}</span>
+            ) : usage === null ? (
+              <span className="hint">Checking…</span>
+            ) : usage.length === 0 ? (
+              <span className="hint">Not referenced by any saved Test.</span>
+            ) : (
+              <span>Used by {usage.length} Test{usage.length === 1 ? '' : 's'}: {usage.join(', ')}</span>
+            )}
+          </div>
+
+          {reverifyOutcome && (
+            <div className={`fiori-message-strip ${reverifyOutcome.outcome === 'verified' ? 'success' : reverifyOutcome.outcome === 'drifted' ? 'warning' : 'error'}`}>
+              {reverifyOutcome.outcome === 'verified' && 'Live screen matches the stored control exactly — nothing to change.'}
+              {reverifyOutcome.outcome === 'missing' && 'Not found on the live screen — is the right scan session open, or has this control been removed?'}
+              {reverifyOutcome.outcome === 'drifted' && reverifyOutcome.live && (
+                <>
+                  Found a live control with a matching id suffix, but its id has changed:
+                  <br />
+                  stored: <code>{selected.controlId}</code>
+                  <br />
+                  live: <code>{reverifyOutcome.live.controlId}</code> ({reverifyOutcome.live.controlType})
+                  <div className="row" style={{ marginTop: '0.4rem' }}>
+                    <button className="primary" disabled={saving} onClick={applyReverifyFix}>
+                      {saving ? 'Updating…' : 'Update stored control to match'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {verifications.length > 0 && (
+            <details>
+              <summary className="hint" style={{ cursor: 'pointer' }}>Verification history ({verifications.length})</summary>
+              <ul style={{ margin: '0.4rem 0 0', paddingLeft: '1.2rem' }}>
+                {verifications.map((v, i) => (
+                  <li key={i} className="hint">
+                    {new Date(v.verifiedAt).toLocaleString()} — {v.outcome}
+                    {v.verifiedBy ? ` (${v.verifiedBy})` : ''}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
 
       {appId && (
         objects.length === 0 ? (

@@ -16,6 +16,8 @@ import {
   loadTransactionData,
   setCredentials,
   validateTestContract,
+  isLikelyUnstableId,
+  findLikelyDuplicates,
 } from '@taf/core';
 import { ModuleRegistry, capturesForStep, inferLegacyTestContract } from '@taf/engine';
 import {
@@ -28,7 +30,7 @@ import {
   startRun,
 } from './runs';
 import { parseCsv, serializeCsv } from './csv';
-import { openScanSession, getScanStatus, captureScan, closeScanSession, highlightControl, startPick, getPickResult, cancelPick, dismissPick } from './scanSession';
+import { openScanSession, getScanStatus, captureScan, closeScanSession, highlightControl, startPick, getPickResult, cancelPick, dismissPick, reverifyControl } from './scanSession';
 import { StudioAuth } from './auth';
 import { ExecutionDraft, ExecutionDraftKind, ExecutionPreflightService } from './executionPreflight';
 import { executionInitiator, executionTargetContext, workspaceContext } from './executionContext';
@@ -1000,8 +1002,131 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  // Precise usage/rename-propagation for BL-022 AC3 ("dependency impact... preserve or guide
+  // reference correction"): only a step's params that the owning module's own schema marks as
+  // objectKind (an object-repository reference) count — a coincidental string match in an
+  // unrelated freeform param must not. AddLineItem's "rows" param is the one exception: it's a
+  // JSON blob of {objectName: value} rows with no objectKind of its own (see StepEditor's
+  // TABLE_ROWS_KEY handling), so its keys are checked directly instead.
+  function isObjectReferenceParam(moduleName: string, paramKey: string): boolean {
+    if (moduleName === 'AddLineItem' && paramKey === 'rows') return true;
+    try {
+      return Boolean(registry.get(moduleName).describe?.params.find((p) => p.key === paramKey)?.objectKind);
+    } catch {
+      return false; // unknown module — nothing to match against
+    }
+  }
+
+  /** Every step across every persisted Test case that references `name` under `appId`, scoped
+   *  by each step's own App ID (falling back to the test's first-step default, same rule
+   *  TestCaseEditor.tsx uses client-side) so a same-named object under a different App ID is
+   *  never treated as a match. */
+  function findObjectUsage(appId: string, name: string): string[] {
+    const used: string[] = [];
+    if (!existsSync(testCasesDir)) return used;
+    for (const file of readdirSync(testCasesDir).filter((f) => f.endsWith('.json'))) {
+      try {
+        const testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
+        const defaultAppId = testCase.steps?.find((s: any) => s.appId)?.appId ?? '';
+        const referenced = (testCase.steps ?? []).some((step: any) => {
+          if ((step.appId || defaultAppId) !== appId) return false;
+          return Object.entries(step.params ?? {}).some(([key, value]) => {
+            if (typeof value !== 'string' || !isObjectReferenceParam(step.module, key)) return false;
+            if (key === 'rows') {
+              try {
+                const rows = JSON.parse(value);
+                return Array.isArray(rows) && rows.some((row) => row && typeof row === 'object' && name in row);
+              } catch {
+                return false;
+              }
+            }
+            return value === name;
+          });
+        });
+        if (referenced) used.push(file);
+      } catch {
+        // skip an unreadable/malformed file rather than fail the whole scan
+      }
+    }
+    return used;
+  }
+
+  /** Rewrites every reference to `oldName` under `appId` to `newName` in one Test case's steps,
+   *  in place — mutates `testCase`, returns whether anything actually changed. Used to
+   *  propagate a rename rather than silently leaving referencing Tests broken. */
+  function renameObjectInTestCase(testCase: any, appId: string, oldName: string, newName: string): boolean {
+    let changed = false;
+    const defaultAppId = testCase.steps?.find((s: any) => s.appId)?.appId ?? '';
+    for (const step of testCase.steps ?? []) {
+      if ((step.appId || defaultAppId) !== appId) continue;
+      for (const [key, value] of Object.entries(step.params ?? {})) {
+        if (typeof value !== 'string' || !isObjectReferenceParam(step.module, key)) continue;
+        if (key === 'rows') {
+          try {
+            const rows = JSON.parse(value);
+            if (Array.isArray(rows) && rows.some((row) => row && typeof row === 'object' && oldName in row)) {
+              step.params[key] = JSON.stringify(
+                rows.map((row: any) => {
+                  if (!row || typeof row !== 'object' || !(oldName in row)) return row;
+                  const { [oldName]: cellValue, ...rest } = row;
+                  return { ...rest, [newName]: cellValue };
+                })
+              );
+              changed = true;
+            }
+          } catch {
+            // not JSON — not a TableRowsEditor-shaped param
+          }
+          continue;
+        }
+        if (value === oldName) {
+          step.params[key] = newName;
+          changed = true;
+        }
+      }
+    }
+    return changed;
+  }
+
   app.get('/api/objects/:appId', (req, res) => {
-    res.json(objectRepository.listByApp(req.params.appId));
+    const controls = objectRepository.listByApp(req.params.appId);
+    const duplicates = findLikelyDuplicates(controls);
+    res.json(
+      controls.map((c) => ({
+        ...c,
+        unstableId: isLikelyUnstableId(c.controlId),
+        likelyDuplicateOf: duplicates.get(c.name) ?? [],
+      }))
+    );
+  });
+
+  app.get('/api/objects/:appId/:name/usage', (req, res) => {
+    res.json(findObjectUsage(req.params.appId, req.params.name));
+  });
+
+  app.get('/api/objects/:appId/:name/verifications', (req, res) => {
+    res.json(objectRepository.listVerifications(req.params.appId, req.params.name));
+  });
+
+  app.post('/api/objects/:appId/:name/reverify', async (req, res) => {
+    try {
+      const stored = objectRepository.get(req.params.appId, req.params.name);
+      const result = await reverifyControl(stored.controlId, stored.controlType);
+      objectRepository.recordVerification({
+        appId: req.params.appId,
+        name: req.params.name,
+        verifiedAt: new Date().toISOString(),
+        outcome: result.outcome,
+        liveControlId: result.live?.controlId,
+        liveControlType: result.live?.controlType,
+        liveBindingPath: result.live?.bindingPath,
+        liveText: result.live?.text,
+        verifiedBy: auth.state(req).user?.name,
+      });
+      res.json({ stored, ...result });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
   });
 
   // Registered before the generic PUT /:appId/:name below — Express matches routes in
@@ -1017,31 +1142,42 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   });
 
   app.put('/api/objects/:appId/:name', (req, res) => {
-    const { controlId, controlType, bindingPath, label, parentControlId, tableId } = req.body ?? {};
+    const { controlId, controlType, bindingPath, label, parentControlId, tableId, scope } = req.body ?? {};
     if (typeof controlId !== 'string' || !controlId || typeof controlType !== 'string' || !controlType) {
       return res.status(400).json({ error: 'Body must include controlId: string and controlType: string' });
     }
-    objectRepository.upsert({
-      appId: req.params.appId,
-      name: req.params.name,
-      controlId,
-      controlType,
-      bindingPath,
-      label,
-      parentControlId,
-      // better-sqlite3's named-parameter binding needs every key the SQL references to be
-      // present on the object, even as undefined. tableId now comes from the curation UI
-      // too — CurationList sets it automatically for a table Column, since a column's own
-      // controlId doubles as the stable, row-independent locator fillTableCell/AddLineItem
-      // need for driving multiple line items during execution.
-      tableId,
-    });
+    objectRepository.upsert(
+      {
+        appId: req.params.appId,
+        name: req.params.name,
+        controlId,
+        controlType,
+        bindingPath,
+        label,
+        parentControlId,
+        // better-sqlite3's named-parameter binding needs every key the SQL references to be
+        // present on the object, even as undefined. tableId now comes from the curation UI
+        // too — CurationList sets it automatically for a table Column, since a column's own
+        // controlId doubles as the stable, row-independent locator fillTableCell/AddLineItem
+        // need for driving multiple line items during execution.
+        tableId,
+        scope: scope === 'shell' || scope === 'app' ? scope : undefined,
+      },
+      auth.state(req).user?.name
+    );
     res.json({ ok: true });
   });
 
   app.delete('/api/objects/:appId/:name', (req, res) => {
+    const usedBy = findObjectUsage(req.params.appId, req.params.name);
+    if (usedBy.length > 0 && req.query.force !== 'true') {
+      return res.status(409).json({
+        error: `"${req.params.name}" is referenced by ${usedBy.length} Test${usedBy.length === 1 ? '' : 's'}. Pass force=true to delete anyway.`,
+        usedBy,
+      });
+    }
     objectRepository.remove(req.params.appId, req.params.name);
-    res.json({ ok: true });
+    res.json({ ok: true, usedBy });
   });
 
   app.put('/api/objects/:appId/:name/rename', (req, res) => {
@@ -1049,9 +1185,23 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     if (typeof newName !== 'string' || !newName.trim()) {
       return res.status(400).json({ error: 'Body must include newName: string' });
     }
+    const trimmedNewName = newName.trim();
     try {
-      objectRepository.rename(req.params.appId, req.params.name, newName.trim());
-      res.json({ ok: true });
+      // Rename is a same-control identity change, not a delete — propagating it into every
+      // referencing Test is the safe, expected behavior (an IDE-style symbol rename), unlike
+      // delete below which blocks instead of guessing what a removed reference should become.
+      const usedBy = findObjectUsage(req.params.appId, req.params.name);
+      const updatedTests: string[] = [];
+      for (const file of usedBy) {
+        const testPath = path.join(testCasesDir, file);
+        const testCase = JSON.parse(readFileSync(testPath, 'utf-8'));
+        if (renameObjectInTestCase(testCase, req.params.appId, req.params.name, trimmedNewName)) {
+          writeFileSync(testPath, JSON.stringify(testCase, null, 2) + '\n');
+          updatedTests.push(file);
+        }
+      }
+      objectRepository.rename(req.params.appId, req.params.name, trimmedNewName, auth.state(req).user?.name);
+      res.json({ ok: true, updatedTests });
     } catch (err: any) {
       res.status(err.status ?? 500).json({ error: err.message });
     }

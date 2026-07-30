@@ -2,6 +2,7 @@ import type {
   ModuleInfo,
   TestCase,
   ObjectControl,
+  ObjectVerificationEvent,
   RunStatus,
   RerunReview,
   Dataset,
@@ -104,19 +105,33 @@ export const api = {
   saveObject: (
     appId: string,
     name: string,
-    body: { controlId: string; controlType: string; bindingPath?: string; label?: string; parentControlId?: string; tableId?: string }
+    body: { controlId: string; controlType: string; bindingPath?: string; label?: string; parentControlId?: string; tableId?: string; scope?: 'shell' | 'app' }
   ) =>
     request<{ ok: true }>(`/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     }),
-  deleteObject: (appId: string, name: string) =>
-    request<{ ok: true }>(`/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}`, { method: 'DELETE' }),
+  /** Blocked with a 409 (surfaced as a thrown error whose message includes usedBy's count) unless
+   *  force is true — see server's dependency-aware delete (BL-022 AC3). */
+  deleteObject: (appId: string, name: string, force = false) =>
+    request<{ ok: true; usedBy: string[] }>(
+      `/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}${force ? '?force=true' : ''}`,
+      { method: 'DELETE' }
+    ),
   renameObject: (appId: string, name: string, newName: string) =>
-    request<{ ok: true }>(`/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}/rename`, {
+    request<{ ok: true; updatedTests: string[] }>(`/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}/rename`, {
       method: 'PUT',
       body: JSON.stringify({ newName }),
     }),
+  getObjectUsage: (appId: string, name: string) =>
+    request<string[]>(`/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}/usage`),
+  getObjectVerifications: (appId: string, name: string) =>
+    request<ObjectVerificationEvent[]>(`/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}/verifications`),
+  reverifyObject: (appId: string, name: string) =>
+    request<{ stored: ObjectControl; outcome: 'verified' | 'drifted' | 'missing'; live?: { controlId: string; controlType: string; bindingPath?: string; text?: string } }>(
+      `/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}/reverify`,
+      { method: 'POST' }
+    ),
   reorderObjects: (appId: string, order: string[]) =>
     request<{ ok: true }>(`/api/objects/${encodeURIComponent(appId)}/_reorder`, {
       method: 'PUT',

@@ -237,6 +237,8 @@ export interface RegressionPack {
   members: RegressionPackMember[];
 }
 
+export type ObjectVerificationStatus = 'never' | 'verified' | 'drifted' | 'missing';
+
 export interface ObjectControl {
   appId: string;
   name: string;
@@ -246,6 +248,31 @@ export interface ObjectControl {
   tableId: string | null;
   label: string | null;
   parentControlId: string | null;
+  scope?: 'shell' | 'app' | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
+  lastVerifiedAt?: string | null;
+  verificationStatus?: ObjectVerificationStatus | null;
+  /** Computed server-side (BL-024 AC2) — never persisted. */
+  unstableId?: boolean;
+  /** Names of other objects under the same App ID with the same type + label — a fact-based
+   *  proxy for "this looks like the same on-screen element captured twice." */
+  likelyDuplicateOf?: string[];
+}
+
+/** One reverify attempt against a live scan session, kept even when nothing changed — see
+ *  ObjectRepository.VerificationEvent (core) and BL-024 AC1/AC3. */
+export interface ObjectVerificationEvent {
+  appId: string;
+  name: string;
+  verifiedAt: string;
+  outcome: 'verified' | 'drifted' | 'missing';
+  liveControlId?: string | null;
+  liveControlType?: string | null;
+  liveBindingPath?: string | null;
+  liveText?: string | null;
+  verifiedBy?: string | null;
 }
 
 /** A Compose field's request to capture a brand-new object without leaving the Test editor
