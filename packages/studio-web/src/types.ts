@@ -20,6 +20,10 @@ export interface SapIntegrationStatus {
   url: string;
   username: string;
   source: 'environment' | 'credential-store' | 'none';
+  safetyClass: 'unknown' | 'non-production' | 'production-like';
+  verificationStatus: 'not-configured' | 'saved-not-live-verified' | 'live-verified';
+  verifiedAt: string | null;
+  verificationMessage: string | null;
 }
 
 export interface IntegrationSettings {
@@ -27,6 +31,41 @@ export interface IntegrationSettings {
   salesforce: { configured: boolean; available: boolean };
   oracle: { configured: boolean; available: boolean };
   servicenow: { configured: boolean; available: boolean };
+}
+
+export interface ExecutionTargetContext {
+  provider: 'SAP';
+  profileRef: 'default';
+  configured: boolean;
+  hostname: string | null;
+  origin: string | null;
+  credentialSource: SapIntegrationStatus['source'];
+  safetyClass: 'unknown' | 'non-production' | 'production-like';
+  verificationStatus: 'not-configured' | 'saved-not-live-verified' | 'live-verified';
+  verifiedAt: string | null;
+  capturedAt: string;
+}
+
+export interface WorkspaceContext {
+  workspaceId: 'single-owner-workspace';
+  owner: StudioUser;
+  target: ExecutionTargetContext;
+  capturedAt: string;
+}
+
+export interface EvidenceGovernance {
+  retentionPolicy: 'retain-until-workspace-owner-deletes';
+  automaticDeletion: false;
+  executionSnapshots: string;
+  executionEvents: string;
+  canonicalEvidence: string;
+  redaction: {
+    status: 'enforced';
+    credentials: 'excluded';
+    executionLogs: 'filtered';
+    evidenceValues: 'policy-controlled';
+  };
+  rationale: string;
 }
 
 /** Mirrors @taf/core's ArtifactKind — the tag-store's artifact types for BL-10's processArea grouping. */
@@ -65,9 +104,35 @@ export interface TestCase {
   steps: ModuleCall[];
 }
 
-export interface Dataset {
+export interface CsvDataset {
+  format: 'csv';
   headers: string[];
   rows: Record<string, string>[];
+}
+
+export type JsonDataValue = string | number | boolean | null | JsonDataValue[] | { [key: string]: JsonDataValue };
+
+export interface JsonDataset {
+  format: 'json';
+  records: Record<string, JsonDataValue>[];
+}
+
+export type Dataset = CsvDataset | JsonDataset;
+
+export interface DataRelationDefinition {
+  headerFile: string;
+  childFile: string;
+  headerKey: string;
+  childForeignKey: string;
+  collectionPath: string;
+}
+
+export interface DataPreview {
+  valid: boolean;
+  transactionCount: number;
+  childRecordCount: number;
+  sourceRecordCounts: number[];
+  sample?: Record<string, JsonDataValue>[];
 }
 
 export interface Group {
@@ -140,6 +205,93 @@ export interface CapturedDocument {
 }
 
 export type RunMode = 'chain' | 'suite' | 'batch';
+export type ExecutionDraftKind = 'singleTest' | 'businessProcess' | 'regressionPack';
+export type DataFilterOperator =
+  | 'equals'
+  | 'not-equals'
+  | 'contains'
+  | 'starts-with'
+  | 'ends-with'
+  | 'is-empty'
+  | 'is-not-empty';
+
+export interface DataFilter {
+  path: string;
+  operator: DataFilterOperator;
+  value?: string;
+}
+
+export interface ExecutionDraft {
+  executionKind: ExecutionDraftKind;
+  testCaseFiles: string[];
+  groupFiles: string[];
+  appId: string;
+  dataFile?: string;
+  headless: boolean;
+  mode: RunMode;
+  sessionPolicy: 'fresh-per-iteration' | 'reuse-within-process';
+  iterationFailurePolicy: 'stop-execution' | 'continue-next-iteration';
+  maxRecords?: number;
+  dataFilter?: DataFilter;
+  dataMode?: 'file' | 'relational-csv';
+  childDataFile?: string;
+  headerKey?: string;
+  childForeignKey?: string;
+  collectionPath?: string;
+}
+
+export interface PreflightFinding {
+  code: string;
+  severity: 'blocking' | 'warning' | 'information';
+  message: string;
+  area: 'scope' | 'data' | 'target' | 'policy';
+  reference?: string;
+  correction: 'scope' | 'data' | 'settings' | 'preflight';
+  correctionRoute?: string;
+  requiresAcknowledgement?: boolean;
+}
+
+export interface ExecutionPreflightResult {
+  ready: boolean;
+  planKind: ExecutionDraftKind | null;
+  planHash: string | null;
+  snapshotHash: string | null;
+  preflightToken: string | null;
+  expiresAt: string | null;
+  target: {
+    configured: boolean;
+    provider: 'SAP';
+    hostname: string | null;
+    profileRef: string;
+    safetyClass: ExecutionTargetContext['safetyClass'];
+    verificationStatus: ExecutionTargetContext['verificationStatus'];
+    verifiedAt: string | null;
+  };
+  matrix: {
+    members: number;
+    iterations: number;
+    stages: number;
+    steps: number;
+    knownChildRecords: number;
+  };
+  effectiveData: Array<{
+    bindingId: string;
+    sourceFiles: string[];
+    recordCount: number;
+    contentHash: string;
+    records: unknown[];
+  }>;
+  inputMappings: Array<{
+    member: string;
+    test: string;
+    stageId?: string;
+    input: string;
+    sensitivity: string;
+    source: 'literal' | 'processData' | 'stageOutput' | 'systemContext';
+    resolvedFrom: string;
+  }>;
+  findings: PreflightFinding[];
+}
 
 /** Lightweight audit ledger listing (BL-12) — omits the full result blob. */
 export interface RunHistorySummary {
@@ -210,7 +362,7 @@ export interface BatchGroupResult {
 
 export interface RunStatus {
   id: string;
-  status: 'running' | 'passed' | 'failed';
+  status: 'running' | 'cancelling' | 'cancelled' | 'passed' | 'failed';
   mode: 'chain' | 'suite' | 'batch';
   reportDir: string;
   testCaseFiles: string[];
@@ -221,6 +373,20 @@ export interface RunStatus {
   finishedAt?: string;
   exitCode: number | null;
   logTail: string;
+  snapshotHash?: string;
+  cancellationRequestedAt?: string;
+  cancellationBoundary?: 'after-active-iteration';
+  parentRunId?: string;
+  rerunReason?: string;
+  rerunScope?: 'full' | 'failed';
+  rerunReviewHash?: string;
+  rerunChanges?: RerunDifference[];
+  rerunEligibility?: {
+    full: { eligible: boolean; reason?: string };
+    failed: { eligible: boolean; reason?: string };
+  };
+  initiatedBy?: StudioUser;
+  targetContext?: ExecutionTargetContext;
   evidencePdfUrl: string | null;
   evidenceDocuments: Array<{
     runId: string;
@@ -240,5 +406,88 @@ export interface RunStatus {
     currentStage: string;
     currentStep: string;
     percent: number;
+    childWork?: {
+      label: string;
+      completed: number;
+      total: number;
+      currentIndex?: number;
+      currentKey?: string;
+      status: 'running' | 'passed' | 'failed';
+      error?: string;
+    };
+  };
+  hierarchy: {
+    executionId: string;
+    snapshotHash?: string;
+    members: Array<{
+      memberId: string;
+      name: string;
+      status: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled';
+      iterations: Array<{
+        iterationId: string;
+        index: number;
+        status: 'pending' | 'running' | 'passed' | 'failed' | 'cancelled';
+        stages: unknown[];
+        evidencePdfUrl: string | null;
+      }>;
+    }>;
+  };
+  diagnosis: {
+    memberId?: string;
+    memberName?: string;
+    iterationId?: string;
+    iterationIndex?: number;
+    stage?: string;
+    step?: string;
+    childIndex?: number;
+    childKey?: string;
+    category: 'setup' | 'data' | 'object' | 'authentication' | 'navigation' | 'assertion' | 'execution';
+    message: string;
+    screenshotPath?: string;
+  } | null;
+}
+
+export interface RerunDifference {
+  area: 'plan' | 'data' | 'policies' | 'target' | 'scope';
+  field: string;
+  sourceValue: string;
+  rerunValue: string;
+  changed: boolean;
+  explanation: string;
+}
+
+export interface RerunReview {
+  parentRunId: string;
+  scope: 'full' | 'failed';
+  reason: string;
+  eligible: boolean;
+  blockingReasons: string[];
+  sourceSnapshotHash: string | null;
+  proposedSnapshotHash: string | null;
+  reviewHash: string;
+  eligibleMembers: number;
+  eligibleIterations: number;
+  excludedPassedIterations: number;
+  differences: RerunDifference[];
+  changedInputs: RerunDifference[];
+}
+
+export interface ExecutionHealthMetrics {
+  totalExecutions: number;
+  running: number;
+  passed: number;
+  failed: number;
+  cancelled: number;
+  averageDurationMs: number;
+  averageStartLatencyMs: number;
+  completedIterations: number;
+  iterationThroughputPerHour: number;
+  evidenceExpected: number;
+  evidenceAvailable: number;
+  failureCategories: Record<string, number>;
+  preflight: {
+    total: number;
+    blocked: number;
+    blockingFindings: Record<string, number>;
   };
 }

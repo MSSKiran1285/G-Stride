@@ -13,7 +13,20 @@
     "Sold-to Party not authorized for the chosen Sales Area. The system will mark the document \"Incomplete\"; check the incompleteness log before proceeding to Items.",
     "Leaving Requested Quantity blank. The line item shows a validation error and the order will not save until a quantity greater than zero is entered."
   ],
+  "transaction": {
+    "creates": ["salesOrder"],
+    "failureDisposition": "retain-for-review",
+    "ownershipRequired": true
+  },
   "steps": [
+    {
+      "module": "CreateAutomationRunReference",
+      "params": {
+        "prefix": "${automationReferencePrefix}",
+        "owner": "${automationOwner}",
+        "maxLength": "16"
+      }
+    },
     {
       "module": "Login",
       "params": {

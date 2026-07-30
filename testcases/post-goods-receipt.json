@@ -13,6 +13,11 @@
     "Searching by an already-consumed Purchase Order shows no open line items. This usually means the PO has already been fully received, not that the search failed.",
     "The Post action can silently fail to update inventory if the material lacks a valid batch/serial profile it requires. Check the message log at the top of the screen if the confirmation dialog doesn't appear as expected."
   ],
+  "transaction": {
+    "creates": ["materialDocument"],
+    "failureDisposition": "retain-for-review",
+    "ownershipRequired": true
+  },
   "steps": [
     { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
     {

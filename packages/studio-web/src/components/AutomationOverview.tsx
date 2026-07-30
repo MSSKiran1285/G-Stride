@@ -16,11 +16,12 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { api } from '../api';
-import type { CapturedDocument, RunHistorySummary } from '../types';
+import type { CapturedDocument, RunHistorySummary, WorkspaceContext } from '../types';
 import type { View } from '../App';
 
 interface AutomationOverviewProps {
   onNavigate: (view: View) => void;
+  workspaceContext: WorkspaceContext | null;
 }
 
 function displayName(fileName: string) {
@@ -219,7 +220,7 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-export function AutomationOverview({ onNavigate }: AutomationOverviewProps) {
+export function AutomationOverview({ onNavigate, workspaceContext }: AutomationOverviewProps) {
   const [testCases, setTestCases] = useState<string[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [objectsCount, setObjectsCount] = useState<number | null>(null);
@@ -534,7 +535,7 @@ export function AutomationOverview({ onNavigate }: AutomationOverviewProps) {
               </dl>
 
               <div className="canvas-inspector-note">
-                <TriangleTargetMessage />
+                <TriangleTargetMessage context={workspaceContext} />
               </div>
             </>
           ) : (
@@ -601,7 +602,7 @@ function ExecutionImpactDashboard({
             <span><strong>{loading ? '—' : impact.passed}</strong> Passed</span>
             <span><strong>{loading ? '—' : impact.failed}</strong> Failed</span>
           </div>
-          <div className="impact-outcome-bar" aria-label={impact.passRate === null ? 'No execution outcomes' : `${Math.round(impact.passRate)} percent passed`}>
+          <div className="impact-outcome-bar" role="img" aria-label={impact.passRate === null ? 'No execution outcomes' : `${Math.round(impact.passRate)} percent passed`}>
             <span className="passed" style={{ width: `${passWidth}%` }} />
             <span className="failed" style={{ width: `${failWidth}%` }} />
           </div>
@@ -841,11 +842,27 @@ function ExecutionImpactDashboard({
   );
 }
 
-function TriangleTargetMessage() {
+function TriangleTargetMessage({ context }: { context: WorkspaceContext | null }) {
+  if (!context?.target.configured) {
+    return (
+      <>
+        <strong>No SAP target configured</strong>
+        <span>Add the test-system URL and credentials in Settings before execution.</span>
+      </>
+    );
+  }
+  if (context.target.verificationStatus === 'live-verified') {
+    return (
+      <>
+        <strong>SAP target live-verified</strong>
+        <span>{context.target.hostname ?? 'Configured target'} was verified at execution time.</span>
+      </>
+    );
+  }
   return (
     <>
-      <strong>Execution target not verified</strong>
-      <span>Review the configured target before running this test.</span>
+      <strong>SAP target saved · live verification pending</strong>
+      <span>{context.target.hostname ?? 'The configured target'} will be verified when the browser session opens.</span>
     </>
   );
 }

@@ -22,7 +22,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { executionHistory, failureLedger } from '../data/execution-history';
+import qualityHistory from '../data/quality-history.json';
 
 type TestStatus = 'Passed' | 'Failed' | 'Skipped' | 'Not run';
 type View = 'overview' | 'catalog' | 'failures';
@@ -39,6 +39,38 @@ interface CatalogTest {
   durationMs: number | null;
   executionNote: string;
 }
+
+interface QualityRun {
+  id: string;
+  label: string;
+  startedAt: string;
+  finishedAt: string;
+  passed: number;
+  failed: number;
+  skipped: number;
+  mode: string;
+  targetClass: string;
+}
+
+interface FailureEntry {
+  id: string;
+  runId: string;
+  test: string;
+  mode: string;
+  targetClass: string;
+  failedAt: string;
+  error: string;
+  state: 'Current' | 'Remediated';
+  remediatedAt: string | null;
+  remediationRunId: string | null;
+  feature: string;
+  area: string;
+  source: string;
+  remediation: string;
+}
+
+const executionHistory = qualityHistory.executionHistory as QualityRun[];
+const failureLedger = qualityHistory.failureLedger as FailureEntry[];
 
 export interface Snapshot {
   generatedAt: string;
@@ -73,11 +105,25 @@ function formatDuration(duration: number | null) {
   return `${(duration / 1000).toFixed(2)} s`;
 }
 
+function formatTimestamp(value: string | null) {
+  if (!value) return 'Not recorded';
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'UTC',
+  }).format(new Date(value));
+}
+
 export function TestOperations({ snapshot }: { snapshot: Snapshot }) {
   const [view, setView] = useState<View>('overview');
   const passed = snapshot.tests.filter((test) => test.latestStatus === 'Passed').length;
   const failed = snapshot.tests.filter((test) => test.latestStatus === 'Failed').length;
   const skipped = snapshot.tests.filter((test) => test.latestStatus === 'Skipped').length;
+  const notRun = snapshot.tests.filter((test) => test.latestStatus === 'Not run').length;
   const executed = passed + failed;
   const passRate = executed === 0 ? 0 : Math.round((passed / executed) * 1000) / 10;
 
@@ -110,7 +156,7 @@ export function TestOperations({ snapshot }: { snapshot: Snapshot }) {
 
         <div className="sidebar-foot">
           <span className="environment-dot" />
-          <div><strong>Repository snapshot</strong><span>Updated 29 Jul 2026</span></div>
+          <div><strong>Recorded snapshot</strong><span>{formatTimestamp(snapshot.generatedAt)} UTC</span></div>
         </div>
       </aside>
 
@@ -122,7 +168,10 @@ export function TestOperations({ snapshot }: { snapshot: Snapshot }) {
           </div>
           <div className="quality-pulse">
             <span className="pulse-dot" />
-            <div><strong>{failed === 0 ? 'All executed checks passing' : `${failed} checks failing`}</strong><span>{passRate}% executed pass rate</span></div>
+            <div>
+              <strong>{failed > 0 ? `${failed} checks failing` : notRun + skipped > 0 ? 'Coverage remains open' : 'All checks passing'}</strong>
+              <span>{passRate}% executed pass rate · {notRun} not run</span>
+            </div>
           </div>
         </header>
 
@@ -133,6 +182,7 @@ export function TestOperations({ snapshot }: { snapshot: Snapshot }) {
               passed={passed}
               failed={failed}
               skipped={skipped}
+              notRun={notRun}
               passRate={passRate}
               onOpenCatalog={() => setView('catalog')}
               onOpenFailures={() => setView('failures')}
@@ -151,6 +201,7 @@ function Overview({
   passed,
   failed,
   skipped,
+  notRun,
   passRate,
   onOpenCatalog,
   onOpenFailures,
@@ -159,6 +210,7 @@ function Overview({
   passed: number;
   failed: number;
   skipped: number;
+  notRun: number;
   passRate: number;
   onOpenCatalog: () => void;
   onOpenFailures: () => void;
@@ -170,7 +222,9 @@ function Overview({
         name: feature,
         total: featureTests.length,
         passed: featureTests.filter((test) => test.latestStatus === 'Passed').length,
+        failed: featureTests.filter((test) => test.latestStatus === 'Failed').length,
         skipped: featureTests.filter((test) => test.latestStatus === 'Skipped').length,
+        notRun: featureTests.filter((test) => test.latestStatus === 'Not run').length,
       };
     });
   }, [tests]);
@@ -183,9 +237,9 @@ function Overview({
     <div className="page-stack">
       <section className="hero">
         <div>
-          <span className="eyebrow">Latest verified snapshot</span>
-          <h2>Quality is green. History stays visible.</h2>
-          <p>Every QA/4HANA regression test is catalogued by feature and execution mode. Past failures remain in the ledger after remediation.</p>
+          <span className="eyebrow">Latest recorded snapshot</span>
+          <h2>{failed > 0 ? 'Failures need attention.' : notRun + skipped > 0 ? 'Executed quality is green; coverage remains open.' : 'Quality is green.'}</h2>
+          <p>Statuses, durations, skips and failures come from recorded Node test-run output. Past failures remain in the ledger after remediation.</p>
         </div>
         <div className="hero-score">
           <div className="score-ring" style={{ '--score': `${passRate * 3.6}deg` } as React.CSSProperties}>
@@ -203,15 +257,15 @@ function Overview({
         </button>
         <div className="metric-card">
           <span className="metric-icon green"><CheckCircle2 size={19} /></span>
-          <div><small>Latest passed</small><strong>{passed}</strong><span>No active failures</span></div>
+          <div><small>Latest passed</small><strong>{passed}</strong><span>{failed === 0 ? 'No recorded active failures' : `${failed} currently failing`}</span></div>
         </div>
         <div className="metric-card">
           <span className="metric-icon amber"><CircleSlash2 size={19} /></span>
-          <div><small>Intentionally skipped</small><strong>{skipped}</strong><span>Live or execution opt-in</span></div>
+          <div><small>Coverage outstanding</small><strong>{skipped + notRun}</strong><span>{skipped} skipped · {notRun} not run</span></div>
         </div>
         <button type="button" className="metric-card" onClick={onOpenFailures}>
           <span className="metric-icon navy"><History size={19} /></span>
-          <div><small>Historical failures</small><strong>{failureLedger.length}</strong><span>All retained · all remediated</span></div>
+          <div><small>Historical failures</small><strong>{failureLedger.length}</strong><span>{failureLedger.filter((item) => item.state === 'Current').length} currently failing</span></div>
           <ChevronRight size={17} />
         </button>
       </section>
@@ -227,7 +281,7 @@ function Overview({
               const total = run.passed + run.failed + run.skipped;
               return (
                 <div className="history-row" key={run.id}>
-                  <div className="history-label"><strong>{run.label}</strong><span>{run.timestamp} · {run.mode}</span></div>
+                  <div className="history-label"><strong>{run.label}</strong><span>{formatTimestamp(run.startedAt)} UTC · {run.mode} · {run.targetClass}</span></div>
                   <div className="stacked-bar" aria-label={`${run.passed} passed, ${run.failed} failed, ${run.skipped} skipped`}>
                     <span className="passed" style={{ width: `${run.passed / total * 100}%` }} />
                     <span className="failed" style={{ width: `${run.failed / total * 100}%` }} />
@@ -262,7 +316,7 @@ function Overview({
           {features.map((feature) => (
             <article className="feature-card" key={feature.name}>
               <span className="feature-icon">{featureIcons[feature.name]}</span>
-              <div><strong>{feature.name}</strong><span>{feature.passed} passing · {feature.skipped} skipped</span></div>
+              <div><strong>{feature.name}</strong><span>{feature.passed} passed · {feature.failed} failed · {feature.skipped + feature.notRun} outstanding</span></div>
               <div className="feature-score"><Check size={14} /><span>{feature.total}</span></div>
             </article>
           ))}
@@ -304,8 +358,8 @@ function Catalog({ tests }: { tests: CatalogTest[] }) {
   return (
     <div className="page-stack">
       <section className="page-intro">
-        <div><span className="eyebrow">Repository-derived inventory</span><h2>All {tests.length} QA/4HANA tests</h2><p>Grouped by feature with the latest verified status, source, execution mode, and duration.</p></div>
-        <div className="catalog-summary"><span><i className="passed" /> {tests.filter((test) => test.latestStatus === 'Passed').length} passed</span><span><i className="skipped" /> {tests.filter((test) => test.latestStatus === 'Skipped').length} skipped</span></div>
+        <div><span className="eyebrow">Repository-derived inventory</span><h2>All {tests.length} QA/4HANA tests</h2><p>Grouped by feature with the latest recorded status, source, execution mode, and duration.</p></div>
+        <div className="catalog-summary"><span><i className="passed" /> {tests.filter((test) => test.latestStatus === 'Passed').length} passed</span><span><i className="failed" /> {tests.filter((test) => test.latestStatus === 'Failed').length} failed</span><span><i className="skipped" /> {tests.filter((test) => test.latestStatus === 'Skipped' || test.latestStatus === 'Not run').length} outstanding</span></div>
       </section>
 
       <section className="filter-bar" aria-label="Filter test catalog">
@@ -314,7 +368,7 @@ function Catalog({ tests }: { tests: CatalogTest[] }) {
           <option>All features</option>{features.map((item) => <option key={item}>{item}</option>)}
         </select>
         <select aria-label="Filter by status" value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option>All statuses</option><option>Passed</option><option>Failed</option><option>Skipped</option>
+          <option>All statuses</option><option>Passed</option><option>Failed</option><option>Skipped</option><option>Not run</option>
         </select>
         <select aria-label="Filter by execution mode" value={mode} onChange={(event) => setMode(event.target.value)}>
           <option>All modes</option>{modes.map((item) => <option key={item}>{item}</option>)}
@@ -362,7 +416,15 @@ function Catalog({ tests }: { tests: CatalogTest[] }) {
 
 function FailureLedger() {
   const [query, setQuery] = useState('');
-  const filtered = failureLedger.filter((entry) => `${entry.id} ${entry.test} ${entry.cause} ${entry.feature}`.toLowerCase().includes(query.toLowerCase()));
+  const filtered = failureLedger.filter((entry) => `${entry.id} ${entry.test} ${entry.error} ${entry.feature}`.toLowerCase().includes(query.toLowerCase()));
+  const currentFailures = failureLedger.filter((item) => item.state === 'Current').length;
+  const recoveryMinutes = failureLedger
+    .filter((item) => item.remediatedAt)
+    .map((item) => Math.max(0, Date.parse(item.remediatedAt!) - Date.parse(item.failedAt)) / 60_000)
+    .sort((left, right) => left - right);
+  const medianRecovery = recoveryMinutes.length === 0
+    ? null
+    : recoveryMinutes[Math.floor(recoveryMinutes.length / 2)];
 
   return (
     <div className="page-stack">
@@ -374,8 +436,8 @@ function FailureLedger() {
       <section className="ledger-summary">
         <div><AlertTriangle size={18} /><span><small>Recorded failures</small><strong>{failureLedger.length}</strong></span></div>
         <div><CheckCircle2 size={18} /><span><small>Remediated</small><strong>{failureLedger.filter((item) => item.state === 'Remediated').length}</strong></span></div>
-        <div><Activity size={18} /><span><small>Currently failing</small><strong>0</strong></span></div>
-        <div><Clock3 size={18} /><span><small>Median recovery</small><strong>4 min</strong></span></div>
+        <div><Activity size={18} /><span><small>Currently failing</small><strong>{currentFailures}</strong></span></div>
+        <div><Clock3 size={18} /><span><small>Median recovery</small><strong>{medianRecovery === null ? '—' : `${Math.round(medianRecovery)} min`}</strong></span></div>
       </section>
 
       <label className="search-field ledger-search"><Search size={16} /><input type="search" placeholder="Search failure, cause, feature, or ID…" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
@@ -383,12 +445,12 @@ function FailureLedger() {
       <div className="failure-list">
         {filtered.map((entry) => (
           <article className="failure-card" key={entry.id}>
-            <div className="failure-timeline" aria-hidden="true"><span className="failed" /><i /><span className="passed" /></div>
+            <div className="failure-timeline" aria-hidden="true"><span className="failed" /><i /><span className={entry.state === 'Remediated' ? 'passed' : 'failed'} /></div>
             <div className="failure-main">
-              <div className="failure-title"><div><code>{entry.id}</code><h3>{entry.test}</h3></div><span className="status-badge passed"><CheckCircle2 size={14} />{entry.state}</span></div>
-              <div className="failure-meta"><span>{entry.feature}</span><span>{entry.mode}</span><span>Failed {entry.failedAt}</span><span>Passed {entry.passedAt}</span></div>
+              <div className="failure-title"><div><code>{entry.id}</code><h3>{entry.test}</h3></div><span className={`status-badge ${entry.state === 'Remediated' ? 'passed' : 'failed'}`}>{entry.state === 'Remediated' ? <CheckCircle2 size={14} /> : <XCircle size={14} />}{entry.state}</span></div>
+              <div className="failure-meta"><span>{entry.feature}</span><span>{entry.mode}</span><span>{entry.targetClass}</span><span>Failed {formatTimestamp(entry.failedAt)} UTC</span>{entry.remediatedAt && <span>Passed {formatTimestamp(entry.remediatedAt)} UTC</span>}</div>
               <div className="failure-details">
-                <div><small>Observed cause</small><p>{entry.cause}</p></div>
+                <div><small>Observed cause</small><p>{entry.error}</p></div>
                 <div><small>Remediation</small><p>{entry.remediation}</p></div>
               </div>
             </div>

@@ -9,13 +9,34 @@
   "dataFile": "p2p-e2e.csv",
   "narrative": "Procure-to-Pay (P2P) is the sequence a company follows from the moment it needs to buy goods to the moment its supplier is paid. It begins when a buyer creates a Purchase Order specifying the supplier, material, plant, quantity, and negotiated net price. Once the goods physically arrive, the warehouse posts a Goods Receipt against the PO, confirming the delivered quantity and creating a Material Document that updates inventory. Finally, Accounts Payable creates a Supplier Invoice referencing the same PO, performs a three-way match (Purchase Order, Goods Receipt, Invoice) to confirm quantities and amounts agree, simulates the posting to catch account-determination or tax errors up front, then posts it to trigger payment.",
   "glossary": [
-    { "term": "PO", "meaning": "Purchase Order — the buyer's commitment to purchase specific goods from a supplier" },
-    { "term": "GR", "meaning": "Goods Receipt — the warehouse's confirmation that ordered goods physically arrived" },
-    { "term": "3-Way Match", "meaning": "Verifying the Purchase Order, Goods Receipt, and Supplier Invoice all agree on quantity/amount before payment is released" },
-    { "term": "Std. storage 1", "meaning": "The storage location goods are received into for this plant" },
-    { "term": "Simulate", "meaning": "A dry-run posting check that previews the accounting entries an invoice would create, without actually posting it" },
-    { "term": "Supplier / Invoicing Party", "meaning": "The vendor being paid for the goods" },
-    { "term": "Material Document", "meaning": "The accounting/inventory record created when stock physically moves (e.g., at Goods Receipt)" }
+    {
+      "term": "PO",
+      "meaning": "Purchase Order — the buyer's commitment to purchase specific goods from a supplier"
+    },
+    {
+      "term": "GR",
+      "meaning": "Goods Receipt — the warehouse's confirmation that ordered goods physically arrived"
+    },
+    {
+      "term": "3-Way Match",
+      "meaning": "Verifying the Purchase Order, Goods Receipt, and Supplier Invoice all agree on quantity/amount before payment is released"
+    },
+    {
+      "term": "Std. storage 1",
+      "meaning": "The storage location goods are received into for this plant"
+    },
+    {
+      "term": "Simulate",
+      "meaning": "A dry-run posting check that previews the accounting entries an invoice would create, without actually posting it"
+    },
+    {
+      "term": "Supplier / Invoicing Party",
+      "meaning": "The vendor being paid for the goods"
+    },
+    {
+      "term": "Material Document",
+      "meaning": "The accounting/inventory record created when stock physically moves (e.g., at Goods Receipt)"
+    }
   ],
   "trainingSupplement": {
     "practiceFields": {
@@ -32,10 +53,22 @@
       "Stage 3 — Post Supplier Invoice: write down your new Supplier Invoice number, and confirm the 3-way match showed no unexplained variance before posting."
     ],
     "quiz": [
-      { "question": "What does a 3-way match actually compare?", "answer": "The Purchase Order, the Goods Receipt, and the Supplier Invoice — confirming quantities and amounts agree across all three before payment." },
-      { "question": "Why post a Goods Receipt before the Supplier Invoice?", "answer": "The invoice's 3-way match needs a Goods Receipt to compare against; posting the invoice first would have nothing to match." },
-      { "question": "What is the purpose of \"Simulate\" before posting an invoice?", "answer": "It previews the accounting entries and surfaces account-determination or tax errors before you actually commit the posting." },
-      { "question": "True or False: entering a Delivered Quantity larger than the PO's open quantity is always silently accepted.", "answer": "False — the system either blocks the posting or raises an over-delivery warning, depending on configuration." }
+      {
+        "question": "What does a 3-way match actually compare?",
+        "answer": "The Purchase Order, the Goods Receipt, and the Supplier Invoice — confirming quantities and amounts agree across all three before payment."
+      },
+      {
+        "question": "Why post a Goods Receipt before the Supplier Invoice?",
+        "answer": "The invoice's 3-way match needs a Goods Receipt to compare against; posting the invoice first would have nothing to match."
+      },
+      {
+        "question": "What is the purpose of \"Simulate\" before posting an invoice?",
+        "answer": "It previews the accounting entries and surfaces account-determination or tax errors before you actually commit the posting."
+      },
+      {
+        "question": "True or False: entering a Delivered Quantity larger than the PO's open quantity is always silently accepted.",
+        "answer": "False — the system either blocks the posting or raises an over-delivery warning, depending on configuration."
+      }
     ]
   }
 }

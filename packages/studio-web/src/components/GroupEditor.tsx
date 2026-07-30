@@ -4,15 +4,18 @@ import type { Group } from '../types';
 import { FileChainPicker } from './FileChainPicker';
 import { DomainTag } from './DomainTag';
 import { GroupedPicker } from './GroupedPicker';
+import { AsyncFeedback } from './WorkspacePrimitives';
 
 const UNTAGGED = '(untagged)';
 const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b));
 
 interface GroupEditorProps {
+  initialFile?: string;
+  onSelectedFileChange?: (file: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
+export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }: GroupEditorProps = {}) {
   const [groupFiles, setGroupFiles] = useState<string[]>([]);
   const [testCaseFiles, setTestCaseFiles] = useState<string[]>([]);
   const [dataFiles, setDataFiles] = useState<string[]>([]);
@@ -22,6 +25,9 @@ export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
   const [newFileName, setNewFileName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingArtifact, setLoadingArtifact] = useState(false);
+  const [saving, setSaving] = useState(false);
   // BL-10: processArea tag per group file, grouping "Open group" the same way Compose does.
   const [fileTags, setFileTags] = useState<Record<string, string>>({});
   const [processAreas, setProcessAreas] = useState<string[]>([]);
@@ -32,15 +38,33 @@ export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
   }
 
   useEffect(() => {
-    api.listGroups().then(setGroupFiles).catch((e) => setError(String(e)));
-    api.listTestCases().then(setTestCaseFiles).catch((e) => setError(String(e)));
-    api.listData().then(setDataFiles).catch((e) => setError(String(e)));
+    Promise.all([api.listGroups(), api.listTestCases(), api.listData()])
+      .then(([nextGroups, nextTestCases, nextData]) => {
+        setGroupFiles(nextGroups);
+        setTestCaseFiles(nextTestCases);
+        setDataFiles(nextData);
+      })
+      .catch((reason) => setError(String(reason)))
+      .finally(() => setLoading(false));
     refreshTags();
   }, []);
 
   useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!initialFile || initialFile === selectedFile) return;
+    setSelectedFile(initialFile);
+    setSavedAt(null);
+    setError(null);
+    setDirty(false);
+    setLoadingArtifact(true);
+    api.getGroup(initialFile)
+      .then(setGroup)
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoadingArtifact(false));
+  }, [initialFile, selectedFile]);
 
   // Same guard as the test case editor — a saved-then-forgotten group is worse than
   // a confirm dialog on an accidental reload.
@@ -70,10 +94,13 @@ export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
     setSavedAt(null);
     setError(null);
     setDirty(false);
+    setLoadingArtifact(true);
     api
       .getGroup(file)
       .then(setGroup)
-      .catch((e) => setError(String(e)));
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoadingArtifact(false));
+    onSelectedFileChange?.(file);
   }
 
   function createNew() {
@@ -85,6 +112,7 @@ export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
     setDirty(true);
     setNewFileName('');
     setSavedAt(null);
+    onSelectedFileChange?.(file);
   }
 
   async function save() {
@@ -93,14 +121,18 @@ export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
       setError('Add at least one test case file to this group before saving.');
       return;
     }
+    setSaving(true);
     try {
       await api.saveGroup(selectedFile, group);
       setSavedAt(new Date().toLocaleTimeString());
       setDirty(false);
       setError(null);
       if (!groupFiles.includes(selectedFile)) setGroupFiles([...groupFiles, selectedFile].sort());
+      onSelectedFileChange?.(selectedFile);
     } catch (e) {
       setError(String(e));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -129,7 +161,9 @@ export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
         </div>
       </div>
 
-      {error && <p className="error-text" role="alert">{error}</p>}
+      {error && <AsyncFeedback state="error" message={error} />}
+      {loading && <AsyncFeedback state="loading" message="Loading process suites…" />}
+      {loadingArtifact && <AsyncFeedback state="loading" message={`Loading ${selectedFile}…`} compact />}
 
       {group && (
         <div className="panel stack">
@@ -174,10 +208,10 @@ export function GroupEditor({ onDirtyChange }: GroupEditorProps = {}) {
           </div>
 
           <div className="row">
-            <button className="primary" onClick={save}>
-              Save group
+            <button className="primary" onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : 'Save group'}
             </button>
-            {savedAt && !dirty && <span className="hint">Saved at {savedAt}</span>}
+            {savedAt && !dirty && <AsyncFeedback state="success" message={`${selectedFile} — Saved at ${savedAt}`} compact />}
           </div>
         </div>
       )}

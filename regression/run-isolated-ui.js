@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { fork, spawn } = require('node:child_process');
+const { fork, spawn, spawnSync } = require('node:child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 
@@ -27,17 +27,73 @@ async function main() {
     name: 'Synthetic wait test',
     steps: [{ module: 'Wait', params: { ms: '1' } }],
   });
+  writeJson(path.join(testCasesDir, 'synthetic-second-stage.json'), {
+    name: 'Synthetic second stage',
+    steps: [{ module: 'Wait', params: { ms: '1' } }],
+  });
+  writeJson(path.join(testCasesDir, 'create-po.json'), {
+    name: 'Create Purchase Order - Happy Path',
+    steps: [{ module: 'Wait', params: { ms: '1' } }],
+  });
+  writeJson(path.join(testCasesDir, 'route-mapped.json'), {
+    name: 'Route correction test',
+    steps: [{ module: 'Wait', params: { ms: '${missingValue}' } }],
+  });
   writeJson(path.join(groupsDir, 'cleanup-drafts.json'), {
-    name: 'Synthetic cleanup group',
+    name: 'Cleanup Drafts',
     appId: 'syntheticApp',
     testCaseFiles: ['cleanup-abandoned-drafts.json'],
   });
   writeJson(path.join(groupsDir, 'po-gr-invoice.json'), {
-    name: 'Synthetic process group',
+    name: 'Create PO - GR - Invoice',
+    appId: 'createPurchaseOrder',
+    testCaseFiles: ['create-po.json', 'post-goods-receipt.json', 'post-supplier-invoice.json'],
+  });
+  writeJson(path.join(groupsDir, 'synthetic-process.json'), {
+    name: 'Synthetic Process',
+    appId: 'syntheticApp',
+    testCaseFiles: ['cleanup-abandoned-drafts.json', 'synthetic-second-stage.json'],
+  });
+  writeJson(path.join(groupsDir, 'o2c-e2e.json'), {
+    name: 'Synthetic O2C process group',
     appId: 'syntheticApp',
     testCaseFiles: ['cleanup-abandoned-drafts.json'],
   });
   fs.writeFileSync(path.join(dataDir, 'synthetic.csv'), 'value\nexample\n', 'utf8');
+  fs.writeFileSync(path.join(dataDir, 'p2p-e2e.csv'), 'supplier\n10000001\n', 'utf8');
+
+  const { ObjectRepository, RunHistoryStore } = require('../packages/core/dist');
+  const objectRepository = new ObjectRepository(path.join(tempRoot, 'objects.db'));
+  objectRepository.upsert({
+    appId: 'routeApp',
+    name: 'SubmitButton',
+    controlId: 'route-submit',
+    controlType: 'sap.m.Button',
+    bindingPath: undefined,
+    tableId: undefined,
+    label: 'Submit',
+    parentControlId: undefined,
+  });
+  objectRepository.close();
+
+  const routeEvidenceDir = path.join(evidenceArchiveDir, 'route-audit-run');
+  fs.mkdirSync(routeEvidenceDir, { recursive: true });
+  fs.writeFileSync(path.join(routeEvidenceDir, 'evidence.pdf'), 'synthetic route evidence', 'utf8');
+  const runHistory = new RunHistoryStore(path.join(tempRoot, 'run-history.db'));
+  runHistory.record({
+    id: 'route-audit-run',
+    startedAt: '2026-07-29T08:00:00.000Z',
+    finishedAt: '2026-07-29T08:00:01.000Z',
+    status: 'passed',
+    executedBy: 'route-owner@example.invalid',
+    mode: 'chain',
+    appId: 'routeApp',
+    testCaseNames: ['Stable Route Test'],
+    dataFile: 'synthetic.csv',
+    result: { status: 'passed' },
+    evidencePdfPath: path.join('audit-evidence', 'route-audit-run', 'evidence.pdf'),
+  });
+  runHistory.close();
 
   const serverChild = fork(
     path.join(__dirname, 'isolated-studio-server.js'),
@@ -63,22 +119,56 @@ async function main() {
       else reject(new Error('Isolated Studio server sent an invalid startup message.'));
     });
   });
+  const savedTarget = await fetch(`${baseUrl}/api/settings/integrations/sap`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url: 'https://synthetic.non-production.invalid',
+      username: 'isolated-execution-user',
+      password: 'isolated-execution-secret',
+      safetyClass: 'non-production',
+    }),
+  });
+  if (!savedTarget.ok) {
+    throw new Error(`Could not configure the isolated synthetic target: ${await savedTarget.text()}`);
+  }
+  const verifiedTarget = await fetch(`${baseUrl}/api/settings/integrations/sap/verify`, { method: 'POST' });
+  if (!verifiedTarget.ok) {
+    throw new Error(`Could not verify the isolated synthetic target: ${await verifiedTarget.text()}`);
+  }
 
-  const uiTests = [
+  const allUiTests = [
     path.join('regression', 'ui', 'overview.test.js'),
     path.join('regression', 'ui', 'compose.test.js'),
     path.join('regression', 'ui', 'data-tab.test.js'),
     path.join('regression', 'ui', 'groups-tab.test.js'),
+    path.join('regression', 'ui', 'stable-routes.test.js'),
     path.join('regression', 'ui', 'run-tab.test.js'),
     path.join('regression', 'ui', 'audit-library.test.js'),
     path.join('regression', 'ui', 'unsaved-guards.test.js'),
+    path.join('regression', 'ui', 't1-foundations.test.js'),
+    path.join('regression', 'ui', 'accessibility.test.js'),
   ];
+  const requestedFiles = new Set(process.argv.slice(2));
+  const uiTests = requestedFiles.size === 0
+    ? allUiTests
+    : allUiTests.filter((file) => requestedFiles.has(path.basename(file)));
+  if (uiTests.length === 0) {
+    throw new Error(`No UI test files matched: ${[...requestedFiles].join(', ')}`);
+  }
 
   try {
     const exitCode = await new Promise((resolve, reject) => {
       const child = spawn(
         process.execPath,
-        ['--test', '--test-concurrency=1', ...uiTests],
+        [
+          '--test',
+          '--test-concurrency=1',
+          ...(process.env.REGRESSION_RESULT_FILE
+            ? ['--test-reporter=./regression/reporters/result-capture.js']
+            : []),
+          ...uiTests,
+        ],
         {
           cwd: REPO_ROOT,
           env: {
@@ -93,6 +183,24 @@ async function main() {
       child.once('exit', (code) => resolve(code ?? 1));
     });
     if (exitCode !== 0) process.exitCode = exitCode;
+    if (process.env.REGRESSION_RESULT_FILE) {
+      const recorded = spawnSync(
+        process.execPath,
+        [
+          path.join('regression', 'record-quality-run.mjs'),
+          '--input',
+          path.relative(REPO_ROOT, process.env.REGRESSION_RESULT_FILE),
+        ],
+        { cwd: REPO_ROOT, stdio: 'inherit' },
+      );
+      if (recorded.status !== 0) process.exitCode = recorded.status ?? 1;
+      const generated = spawnSync(
+        process.execPath,
+        [path.join('apps', 'test-operations', 'scripts', 'generate-catalog.mjs')],
+        { cwd: REPO_ROOT, stdio: 'inherit' },
+      );
+      if (generated.status !== 0) process.exitCode = generated.status ?? 1;
+    }
   } finally {
     if (serverChild.exitCode === null) {
       serverChild.kill();

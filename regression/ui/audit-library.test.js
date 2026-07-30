@@ -14,6 +14,7 @@ test('Audit and Evidence uses a searchable run library instead of date accordion
       await page.getByRole('button', { name: /Audit and Evidence/ }).first().click();
 
       await page.getByRole('heading', { name: 'Audit and Evidence', level: 2 }).waitFor();
+      await page.getByText('Canonical evidence is owner-protected and redaction is enforced', { exact: true }).waitFor();
       await page.getByPlaceholder('Search process, App ID, run ID, or executor').waitFor();
       await page.getByLabel('Filter audit runs by status').waitFor();
       await page.getByLabel('Filter audit runs by mode').waitFor();

@@ -1,0 +1,71 @@
+{
+  "name": "CREATE PURCHASE ORDER - MISSING LINE ITEM IS BLOCKED",
+  "objective": "Verify that SAP refuses to create a purchase order when the header has a supplier but the document has no line item.",
+  "preconditions": "The run owner has approved the named non-production dataset and the SAP target is live-verified as non-production. Any draft state is retained unchanged for compliance review.",
+  "learningObjectives": [
+    "After this section you can verify SAP purchase-order completeness validation.",
+    "After this section you can distinguish an expected business-validation pass from an execution or network failure.",
+    "After this section you can trace the negative attempt to its owner-linked automation reference."
+  ],
+  "commonErrorsAndTips": [
+    "A changed document title means SAP may have created a purchase order unexpectedly. The test fails and stops immediately; investigate the retained state without automatic reversal.",
+    "An unchanged title without an expected SAP validation message is not a pass. It can indicate a network or UI synchronization failure.",
+    "Run this case only against a live-verified non-production target with approved test-data ownership."
+  ],
+  "transaction": {
+    "creates": ["purchaseOrderDraft", "purchaseOrder"],
+    "failureDisposition": "retain-for-review",
+    "ownershipRequired": true
+  },
+  "steps": [
+    {
+      "module": "CreateAutomationRunReference",
+      "params": {
+        "prefix": "${automationReferencePrefix}",
+        "owner": "${automationOwner}",
+        "maxLength": "16"
+      }
+    },
+    {
+      "module": "Login",
+      "params": {
+        "url": "${url}",
+        "username": "${username}",
+        "password": "${password}"
+      }
+    },
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#PurchaseOrder-manage"
+      }
+    },
+    {
+      "module": "ClickButton",
+      "appId": "createPurchaseOrder",
+      "params": {
+        "control": "CreateButton"
+      }
+    },
+    {
+      "module": "EnterHeaderField",
+      "appId": "createPurchaseOrder",
+      "params": {
+        "field": "SupplierField",
+        "value": "${supplier}"
+      }
+    },
+    {
+      "module": "AssertDocumentCreationBlocked",
+      "appId": "createPurchaseOrder",
+      "params": {
+        "actionField": "SaveButton",
+        "titleField": "PoNumberDisplay",
+        "placeholderTitle": "New Purchase Order",
+        "expectedMessages": "[\"At least one item\",\"Enter at least one item\",\"No items exist\",\"Document contains no items\",\"Document is incomplete\",\"Purchase order is incomplete\"]",
+        "timeoutMs": "10000",
+        "captureAs": "negativeAssertionStatus"
+      }
+    }
+  ]
+}

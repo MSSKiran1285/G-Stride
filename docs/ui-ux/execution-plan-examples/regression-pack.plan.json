@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "planId": "sales-regression-pack",
+  "name": "Sales regression",
+  "target": {
+    "provider": "sap",
+    "profileRef": "default",
+    "contextId": "sap-qa"
+  },
+  "evidence": {
+    "enabled": true,
+    "canonical": true
+  },
+  "kind": "regressionPack",
+  "members": [
+    {
+      "memberId": "draft-cleanup",
+      "name": "Cleanup abandoned drafts",
+      "executable": {
+        "kind": "singleTest",
+        "testExecution": {
+          "test": {
+            "assetId": "cleanup-abandoned-drafts",
+            "file": "testcases/cleanup-abandoned-drafts.json",
+            "name": "Cleanup Abandoned Drafts",
+            "appId": "createPurchaseOrder",
+            "contentHash": "4444444444444444444444444444444444444444444444444444444444444444",
+            "contractMode": "declared",
+            "contract": {
+              "version": 1,
+              "inputs": [],
+              "outputs": []
+            }
+          },
+          "inputBindings": {}
+        },
+        "dataBindings": [],
+        "iterationPolicy": {
+          "session": "fresh-per-iteration",
+          "onIterationFailure": "stop-execution",
+          "sequential": true
+        }
+      }
+    },
+    {
+      "memberId": "o2c-process",
+      "name": "Order to Cash",
+      "executable": {
+        "kind": "businessProcess",
+        "stages": [
+          {
+            "stageId": "createSalesOrder",
+            "test": {
+              "assetId": "create-sales-order",
+              "file": "testcases/create-so.json",
+              "name": "Create Sales Order - Happy Path",
+              "appId": "createSalesOrder",
+              "contentHash": "1111111111111111111111111111111111111111111111111111111111111111",
+              "contractMode": "declared",
+              "contract": {
+                "version": 1,
+                "inputs": [
+                  {
+                    "name": "orderType",
+                    "type": "string",
+                    "required": true,
+                    "sensitivity": "business"
+                  },
+                  {
+                    "name": "items",
+                    "type": "collection",
+                    "required": true,
+                    "sensitivity": "business"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "salesOrderNumber",
+                    "type": "string",
+                    "runtimeKey": "soNumber",
+                    "sensitivity": "business"
+                  }
+                ]
+              }
+            },
+            "inputBindings": {
+              "orderType": {
+                "source": "processData",
+                "bindingId": "orders",
+                "path": "header.orderType"
+              },
+              "items": {
+                "source": "processData",
+                "bindingId": "orders",
+                "path": "items"
+              }
+            }
+          },
+          {
+            "stageId": "createDelivery",
+            "test": {
+              "assetId": "create-delivery",
+              "file": "testcases/create-delivery.json",
+              "name": "Create Delivery and Post Goods Issue",
+              "appId": "createOutboundDelivery",
+              "contentHash": "2222222222222222222222222222222222222222222222222222222222222222",
+              "contractMode": "declared",
+              "contract": {
+                "version": 1,
+                "inputs": [
+                  {
+                    "name": "salesOrderNumber",
+                    "type": "string",
+                    "required": true,
+                    "runtimeKey": "soNumber",
+                    "sensitivity": "business"
+                  }
+                ],
+                "outputs": [
+                  {
+                    "name": "deliveryNumber",
+                    "type": "string",
+                    "sensitivity": "business"
+                  }
+                ]
+              }
+            },
+            "inputBindings": {
+              "salesOrderNumber": {
+                "source": "stageOutput",
+                "stageId": "createSalesOrder",
+                "output": "salesOrderNumber"
+              }
+            }
+          }
+        ],
+        "dataBindings": [
+          {
+            "bindingId": "orders",
+            "scope": "pack-member",
+            "source": {
+              "kind": "file",
+              "format": "json",
+              "files": [
+                "docs/ui-ux/execution-plan-examples/sales-orders.sample.json"
+              ]
+            }
+          }
+        ],
+        "iterationPolicy": {
+          "session": "fresh-per-iteration",
+          "onIterationFailure": "stop-execution",
+          "sequential": true
+        }
+      }
+    }
+  ],
+  "onMemberFailure": "continue-next-member",
+  "sequential": true
+}

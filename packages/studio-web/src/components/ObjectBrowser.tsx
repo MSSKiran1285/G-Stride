@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
 import type { ObjectControl } from '../types';
 import { DomainTag } from './DomainTag';
+import { AsyncFeedback, EmptyState, TableFrame } from './WorkspacePrimitives';
 
 const UNTAGGED = '(untagged)';
 
@@ -21,7 +23,15 @@ const UNTAGGED = '(untagged)';
  * row — a row's controls (highlight/edit/delete) only make sense for one object at a
  * time, and one shared toolbar reads clearer than repeating three actions N times.
  */
-export function ObjectBrowser() {
+export function ObjectBrowser({
+  initialAppId,
+  initialObjectName,
+  onSelectionChange,
+}: {
+  initialAppId?: string;
+  initialObjectName?: string;
+  onSelectionChange?: (appId: string, objectName?: string) => void;
+} = {}) {
   const [appIds, setAppIds] = useState<string[]>([]);
   const [appIdTags, setAppIdTags] = useState<Record<string, string>>({});
   const [processAreas, setProcessAreas] = useState<string[]>([]);
@@ -42,6 +52,8 @@ export function ObjectBrowser() {
   const [editingDomain, setEditingDomain] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [reorderAnnouncement, setReorderAnnouncement] = useState('');
+  const domainOf = useCallback((id: string) => appIdTags[id] || UNTAGGED, [appIdTags]);
 
   function refreshTags() {
     api.listTags('appId').then(setAppIdTags).catch(() => undefined);
@@ -62,6 +74,12 @@ export function ObjectBrowser() {
   }, []);
 
   useEffect(() => {
+    if (!initialAppId || initialAppId === appId || !appIds.includes(initialAppId)) return;
+    setDomain(domainOf(initialAppId));
+    setAppId(initialAppId);
+  }, [initialAppId, appId, appIds, domainOf]);
+
+  useEffect(() => {
     setSelectedName(null);
     setEditing(false);
     setEditingDomain(false);
@@ -73,7 +91,13 @@ export function ObjectBrowser() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appId]);
 
-  const domainOf = (id: string) => appIdTags[id] || UNTAGGED;
+  useEffect(() => {
+    if (!initialObjectName || objects.length === 0) return;
+    if (objects.some((object) => object.name === initialObjectName)) {
+      setSelectedName(initialObjectName);
+    }
+  }, [initialObjectName, objects]);
+
   const domains = Array.from(new Set(appIds.map(domainOf))).sort((a, b) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b)));
   const appIdsInDomain = domain ? appIds.filter((id) => domainOf(id) === domain) : [];
 
@@ -132,6 +156,7 @@ export function ObjectBrowser() {
       });
       setEditing(false);
       setSelectedName(newName);
+      onSelectionChange?.(appId, newName);
       refreshObjects();
     } catch (e) {
       setActionError(String(e));
@@ -141,11 +166,12 @@ export function ObjectBrowser() {
   }
 
   function reorder(from: number, to: number) {
-    if (from === to) return;
+    if (from === to || to < 0 || to >= objects.length) return;
     const next = [...objects];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     setObjects(next);
+    setReorderAnnouncement(`${moved.name} moved to position ${to + 1}.`);
     api.reorderObjects(appId, next.map((o) => o.name)).catch((e) => {
       setActionError(String(e));
       refreshObjects();
@@ -160,6 +186,7 @@ export function ObjectBrowser() {
     try {
       await api.deleteObject(appId, selected.name);
       setSelectedName(null);
+      onSelectionChange?.(appId);
       refreshObjects();
     } catch (e) {
       setActionError(String(e));
@@ -193,7 +220,15 @@ export function ObjectBrowser() {
           ))}
         </select>
         {domain && (
-          <select aria-label="Object repository App ID" value={appId} onChange={(e) => setAppId(e.target.value)} style={{ maxWidth: '18rem' }}>
+          <select
+            aria-label="Object repository App ID"
+            value={appId}
+            onChange={(e) => {
+              setAppId(e.target.value);
+              if (e.target.value) onSelectionChange?.(e.target.value);
+            }}
+            style={{ maxWidth: '18rem' }}
+          >
             <option value="">— select an App ID ({appIdsInDomain.length}) —</option>
             {appIdsInDomain.map((id) => (
               <option key={id} value={id}>
@@ -214,7 +249,8 @@ export function ObjectBrowser() {
         )}
       </div>
 
-      {error && <p className="error-text">{error}</p>}
+      {error && <AsyncFeedback state="error" message={error} onRetry={refreshObjects} />}
+      <span className="sr-only" role="status" aria-live="polite">{reorderAnnouncement}</span>
 
       {appId && (
         <div className="stack" style={{ gap: '0.4rem' }}>
@@ -257,11 +293,14 @@ export function ObjectBrowser() {
           </button>
         </div>
       )}
-      {actionError && <p className="error-text">{actionError}</p>}
+      {actionError && <AsyncFeedback state="error" message={actionError} />}
 
       {appId && (
-        <div className="table-wrap">
-          <table>
+        objects.length === 0 ? (
+          <EmptyState title="No saved objects" description="Open a scan session and capture controls for this App ID." compact />
+        ) : (
+        <TableFrame label="Saved control objects">
+          <table className="responsive-table">
             <thead>
               <tr>
                 <th></th>
@@ -301,10 +340,10 @@ export function ObjectBrowser() {
                     className={[dragIndex === i ? 'dragging' : '', dragOverIndex === i ? 'drag-over' : ''].filter(Boolean).join(' ')}
                     style={{ background: isSelected ? 'var(--accent-soft)' : undefined }}
                   >
-                    <td className="drag-handle" title={reorderable ? 'Drag to reorder' : 'Clear the filter to reorder'} style={{ opacity: reorderable ? 1 : 0.3 }}>
+                    <td className="drag-handle" data-label="Reorder" title={reorderable ? 'Drag to reorder' : 'Clear the filter to reorder'} style={{ opacity: reorderable ? 1 : 0.3 }}>
                       ⠿
                     </td>
-                    <td>
+                    <td data-label="Select">
                       <input
                         type="radio"
                         aria-label={`Select object ${o.name}`}
@@ -315,11 +354,12 @@ export function ObjectBrowser() {
                           setEditing(false);
                           setNotFound(false);
                           setActionError(null);
+                          onSelectionChange?.(appId, o.name);
                         }}
                       />
                     </td>
-                    <td className="hint">{i + 1}</td>
-                    <td style={{ fontWeight: 600 }}>
+                    <td className="hint" data-label="Position">{i + 1}</td>
+                    <td style={{ fontWeight: 600 }} data-label="Name">
                       {isEditingRow ? (
                         <input
                           aria-label={`Rename object ${o.name}`}
@@ -332,11 +372,11 @@ export function ObjectBrowser() {
                         o.name
                       )}
                     </td>
-                    <td className="hint">
+                    <td className="hint" data-label="Type">
                       {o.controlType?.split('.').pop() ?? '—'}
                       {o.tableId && <span className="hint"> (table column)</span>}
                     </td>
-                    <td className="hint">
+                    <td className="hint" data-label="Label and actions">
                       {isEditingRow ? (
                         <div className="row" style={{ gap: '0.4rem', alignItems: 'center' }}>
                           <input
@@ -354,7 +394,29 @@ export function ObjectBrowser() {
                           </button>
                         </div>
                       ) : (
-                        o.label || '—'
+                        <div className="object-row-label-actions">
+                          <span>{o.label || '—'}</span>
+                          <span className="object-order-actions">
+                            <button
+                              type="button"
+                              className="ghost icon-only"
+                              aria-label={`Move object ${o.name} up`}
+                              onClick={() => reorder(i, i - 1)}
+                              disabled={!reorderable || i === 0}
+                            >
+                              <ArrowUp size={14} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              className="ghost icon-only"
+                              aria-label={`Move object ${o.name} down`}
+                              onClick={() => reorder(i, i + 1)}
+                              disabled={!reorderable || i === objects.length - 1}
+                            >
+                              <ArrowDown size={14} aria-hidden="true" />
+                            </button>
+                          </span>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -369,7 +431,8 @@ export function ObjectBrowser() {
               )}
             </tbody>
           </table>
-        </div>
+        </TableFrame>
+        )
       )}
     </div>
   );

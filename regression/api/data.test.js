@@ -10,12 +10,13 @@ test('GET /api/data lists known fixtures', async () => {
   const { status, body } = await api.get('/api/data');
   assert.equal(status, 200);
   assert.ok(Array.isArray(body));
-  assert.ok(body.includes('suppliers.csv'));
+  assert.ok(body.includes('p2p-e2e.csv'));
 });
 
 test('GET /api/data/:file parses an existing CSV', async () => {
-  const { status, body } = await api.get('/api/data/suppliers.csv');
+  const { status, body } = await api.get('/api/data/p2p-e2e.csv');
   assert.equal(status, 200);
+  assert.equal(body.format, 'csv');
   assert.ok(body.headers.includes('supplier'));
   assert.ok(body.rows.length >= 1);
 });
@@ -23,7 +24,7 @@ test('GET /api/data/:file parses an existing CSV', async () => {
 test('GET /api/data/:file for an unknown file returns an empty dataset, not 404', async () => {
   const { status, body } = await api.get('/api/data/does-not-exist.csv');
   assert.equal(status, 200);
-  assert.deepEqual(body, { headers: [], rows: [] });
+  assert.deepEqual(body, { format: 'csv', headers: [], rows: [] });
 });
 
 test('PUT /api/data/:file rejects a non-.csv file name', async () => {
@@ -38,6 +39,7 @@ test('PUT /api/data/:file rejects a body missing rows', async () => {
 
 test('PUT then GET /api/data/:file round-trips (Data positive)', async () => {
   const dataset = {
+    format: 'csv',
     headers: ['col1', 'col2'],
     rows: [
       { col1: 'a', col2: 'b' },
@@ -54,4 +56,84 @@ test('PUT then GET /api/data/:file round-trips (Data positive)', async () => {
 
   const list = await api.get('/api/data');
   assert.ok(list.body.includes('regression-sample.csv'));
+});
+
+test('nested JSON dataset validates, previews child work, saves, and reopens without flattening', async () => {
+  const records = [
+    {
+      scenarioKey: 'SO-1',
+      customer: 'USCU_S14',
+      items: [
+        { line: 10, material: 'MAT-1' },
+        { line: 20, material: 'MAT-2' },
+      ],
+    },
+    {
+      scenarioKey: 'SO-2',
+      customer: 'USCU_S15',
+      items: [{ line: 10, material: 'MAT-3' }],
+    },
+  ];
+  const preview = await api.post('/api/data/preview', { format: 'json', records });
+  assert.equal(preview.status, 200);
+  assert.equal(preview.body.transactionCount, 2);
+  assert.equal(preview.body.childRecordCount, 3);
+
+  const put = await api.put('/api/data/regression-nested.json', { format: 'json', records });
+  assert.equal(put.status, 200);
+  const get = await api.get('/api/data/regression-nested.json');
+  assert.equal(get.status, 200);
+  assert.deepEqual(get.body, { format: 'json', records });
+});
+
+test('relational CSV preview and persistence reject ambiguous data and preserve owned child rows', async () => {
+  await api.put('/api/data/regression-orders.csv', {
+    format: 'csv',
+    headers: ['scenarioKey', 'customer'],
+    rows: [
+      { scenarioKey: 'A', customer: 'C1' },
+      { scenarioKey: 'B', customer: 'C2' },
+    ],
+  });
+  await api.put('/api/data/regression-items.csv', {
+    format: 'csv',
+    headers: ['scenarioKey', 'material'],
+    rows: [
+      { scenarioKey: 'A', material: 'M1' },
+      { scenarioKey: 'A', material: 'M2' },
+      { scenarioKey: 'B', material: 'M3' },
+    ],
+  });
+  const definition = {
+    headerFile: 'regression-orders.csv',
+    childFile: 'regression-items.csv',
+    headerKey: 'scenarioKey',
+    childForeignKey: 'scenarioKey',
+    collectionPath: 'items',
+  };
+  const preview = await api.post('/api/data/preview', { format: 'relational-csv', ...definition });
+  assert.equal(preview.status, 200);
+  assert.equal(preview.body.transactionCount, 2);
+  assert.equal(preview.body.childRecordCount, 3);
+  assert.deepEqual(preview.body.sample.map((record) => record.items.length), [2, 1]);
+
+  const saved = await api.put('/api/data-relations/regression-orders-with-items.json', definition);
+  assert.equal(saved.status, 200);
+  assert.equal(saved.body.preview.transactionCount, 2);
+  const reopened = await api.get('/api/data-relations/regression-orders-with-items.json');
+  assert.deepEqual(reopened.body, definition);
+
+  await api.put('/api/data/regression-orphans.csv', {
+    format: 'csv',
+    headers: ['scenarioKey', 'material'],
+    rows: [{ scenarioKey: 'UNKNOWN', material: 'M4' }],
+  });
+  const invalid = await api.post('/api/data/preview', {
+    format: 'relational-csv',
+    ...definition,
+    childFile: 'regression-orphans.csv',
+  });
+  assert.equal(invalid.status, 400);
+  assert.match(invalid.body.error, /unknown header key/i);
+  assert.ok(invalid.body.issues.some((issue) => issue.code === 'orphan-child-record'));
 });

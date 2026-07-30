@@ -13,6 +13,11 @@
     "Clicking \"Post GI\" before \"Save.\" The Post GI action is not available until picking quantities have been explicitly saved; always Save first, then Post GI.",
     "Picking quantity exceeds available stock. Post GI will fail with a \"Deficit of SL Unrestricted-use stock\" error. Check on-hand stock via the Manage Stock app before large or repeated test runs."
   ],
+  "transaction": {
+    "creates": ["outboundDelivery", "materialDocument"],
+    "failureDisposition": "retain-for-review",
+    "ownershipRequired": true
+  },
   "steps": [
     {
       "module": "Login",

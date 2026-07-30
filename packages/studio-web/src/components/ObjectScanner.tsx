@@ -1,12 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import type { DiscoveredControl, ScanSessionInfo } from '../types';
+import type { DiscoveredControl, SapIntegrationStatus, ScanSessionInfo } from '../types';
 import { CurationList } from './CurationList';
 import type { CurationListHandle } from './CurationList';
 import { ObjectBrowser } from './ObjectBrowser';
 
-export function ObjectScanner() {
+export function ObjectScanner({
+  initialAppId,
+  initialObjectName,
+  onSelectionChange,
+}: {
+  initialAppId?: string;
+  initialObjectName?: string;
+  onSelectionChange?: (appId: string, objectName?: string) => void;
+} = {}) {
   const [url, setUrl] = useState('');
+  const [sapTarget, setSapTarget] = useState<SapIntegrationStatus | null>(null);
   const [appId, setAppId] = useState('');
   const [session, setSession] = useState<ScanSessionInfo | null>(null);
   const [controls, setControls] = useState<DiscoveredControl[] | null>(null);
@@ -55,6 +64,7 @@ export function ObjectScanner() {
     api
       .getIntegrationSettings()
       .then((settings) => {
+        setSapTarget(settings.sap);
         if (settings.sap.configured && settings.sap.url) setUrl(settings.sap.url);
       })
       .catch(() => undefined);
@@ -206,6 +216,15 @@ export function ObjectScanner() {
             </button>
             </div>
             <span className="hint">The initial URL comes from Settings → Test-system connections → SAP. You can append or replace the Fiori route for this scan.</span>
+            {sapTarget?.configured && (
+              <span className={`fiori-message-strip ${sapTarget.verificationStatus === 'live-verified' ? 'success' : 'warning'}`}>
+                Target: {sapTarget.safetyClass === 'non-production' ? 'Non-production' : sapTarget.safetyClass === 'production-like' ? 'Production-like' : 'Unclassified'}
+                {' · '}
+                {sapTarget.verificationStatus === 'live-verified' && sapTarget.verifiedAt
+                  ? `verified ${new Date(sapTarget.verifiedAt).toLocaleString()}`
+                  : 'verification required before execution'}
+              </span>
+            )}
           </div>
         ) : (
           <div className="row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
@@ -251,7 +270,11 @@ export function ObjectScanner() {
       </div>
       </div>
 
-      <ObjectBrowser />
+      <ObjectBrowser
+        initialAppId={initialAppId}
+        initialObjectName={initialObjectName}
+        onSelectionChange={onSelectionChange}
+      />
 
       {pickedControls.length > 0 && (
         <CurationList

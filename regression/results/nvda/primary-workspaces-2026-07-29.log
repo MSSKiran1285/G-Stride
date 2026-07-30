@@ -1,0 +1,858 @@
+INFO - __main__ (21:01:04.251) - MainThread (107924):
+Starting NVDA version 2026.1.1 AMD64
+INFO - core.main (21:01:05.145) - MainThread (107924):
+Config dir: C:\tmp\nvda-2026.1.1-portable\userConfig
+INFO - config.ConfigManager._loadConfig (21:01:05.151) - MainThread (107924):
+Loading config: C:\tmp\nvda-2026.1.1-portable\userConfig\nvda.ini
+DEBUGWARNING - languageHandler._createGettextTranslation (21:01:05.160) - MainThread (107924):
+couldn't set the translation service locale to en_US
+INFO - core.main (21:01:06.292) - MainThread (107924):
+Windows version: Windows 11 25H2 (10.0.26200.8875) workstation AMD64
+INFO - core.main (21:01:06.294) - MainThread (107924):
+Using Python version 3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]
+INFO - core.main (21:01:06.294) - MainThread (107924):
+Using comtypes version 1.4.13
+INFO - core.main (21:01:06.298) - MainThread (107924):
+Using configobj version 5.1.0 with validate version 1.0.1
+INFO - core.main (21:01:06.410) - MainThread (107924):
+Add-ons are disabled. Restart NVDA to enable them.
+INFO - NVDAHelperLocal (21:01:06.684) - MainThread (107924):
+Thread 107924, build\x86_64\localWin10\oneCoreSpeech.cpp, ocSpeech_initialize, 215:
+ocSpeech_initialize
+
+INFO - NVDAHelperLocal (21:01:06.684) - MainThread (107924):
+Thread 107924, build\x86_64\localWin10\oneCoreSpeech.cpp, OcSpeechState::activate, 89:
+Activating
+
+INFO - NVDAHelperLocal (21:01:06.778) - MainThread (107924):
+Thread 107924, build\x86_64\localWin10\oneCoreSpeech.cpp, preventEndUtteranceSilence_, 443:
+AppendedSilence supported
+
+INFO - synthDriverHandler.setSynth (21:01:06.786) - MainThread (107924):
+Loaded synthDriver oneCore
+INFO - mathPres.MathCAT.MathCAT.MathCAT.__init__ (21:01:06.796) - MainThread (107924):
+MathCAT 0.7.2 installed. Using rules dir: C:\tmp\nvda-2026.1.1-portable\include\nvda-mathcat\assets\Rules
+INFO - core._setUpWxApp (21:01:06.801) - MainThread (107924):
+Using wx version 4.2.4 msw (phoenix) wxWidgets 3.2.8
+INFO - brailleInput.initialize (21:01:06.803) - MainThread (107924):
+Braille input initialized
+INFO - braille.initialize (21:01:06.803) - MainThread (107924):
+Using liblouis version 3.36.0
+INFO - braille.initialize (21:01:06.803) - MainThread (107924):
+Using pySerial version 3.5
+INFO - braille.BrailleHandler._setDisplay (21:01:06.805) - MainThread (107924):
+Loaded braille display driver 'noBraille', current display has 0 cells.
+DEBUGWARNING - hwPortUtils.listUsbDevices (21:01:06.807) - ThreadPoolExecutor-0_0 (63800):
+Couldn't get DEVPKEY_Device_BusReportedDeviceDesc for {'hardwareID': 'USB\\VID_8087&PID_0026&REV_0002', 'usbID': 'VID_8087&PID_0026', 'devicePath': '\\\\?\\usb#vid_8087&pid_0026#5&26f097a4&0&10#{a5dcbf10-6530-11d2-901f-00c04fb951ed}'}: [WinError 1168] Element not found.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:06.970) - MainThread (107924):
+Unable to open process for processId 19236
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+PermissionError: [WinError 5] Access is denied.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:06.972) - MainThread (107924):
+Unable to get process handle for process 19236 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 19236 to create process handle
+INFO - core.main (21:01:07.137) - MainThread (107924):
+Java Access Bridge support initialized
+INFO - UIAHandler.UIAHandler.MTAThreadFunc (21:01:07.278) - UIAHandler.UIAHandler.MTAThread (2528):
+UIAutomation: IUIAutomation6
+DEBUGWARNING - inputCore.InputManager.loadLocaleGestureMap (21:01:07.444) - MainThread (107924):
+No locale gesture map for language en
+DEBUGWARNING - inputCore.InputManager.loadUserGestureMap (21:01:07.444) - MainThread (107924):
+No user gesture map
+DEBUGWARNING - touchHandler.touchSupported (21:01:07.516) - MainThread (107924):
+Touch only supported on installed copies
+INFO - core.main (21:01:07.542) - MainThread (107924):
+NVDA initialized
+IO - speech.speech.speak (21:01:07.684) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'window', CancellableSpeech (still valid)]
+DEBUGWARNING - characterProcessing._getSpeechSymbolsForLocale (21:01:07.686) - MainThread (107924):
+Error loading 'cldr' symbols for locale 'en_US'
+Traceback (most recent call last):
+  File "characterProcessing.pyc", line 425, in _getSpeechSymbolsForLocale
+  File "characterProcessing.pyc", line 829, in getSymbols
+  File "characterProcessing.pyc", line 69, in fetchLocaleData
+  File "characterProcessing.pyc", line 837, in _initSymbols
+FileNotFoundError: No 'cldr' data for locale 'en_US'
+DEBUGWARNING - characterProcessing._getSpeechSymbolsForLocale (21:01:07.687) - MainThread (107924):
+Error loading 'builtin' symbols for locale 'en_US'
+Traceback (most recent call last):
+  File "characterProcessing.pyc", line 425, in _getSpeechSymbolsForLocale
+  File "characterProcessing.pyc", line 829, in getSymbols
+  File "characterProcessing.pyc", line 69, in fetchLocaleData
+  File "characterProcessing.pyc", line 837, in _initSymbols
+FileNotFoundError: No 'builtin' data for locale 'en_US'
+IO - speech.speech.speak (21:01:07.752) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'region', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:07.789) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'application', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:07.802) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:07.807) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:07.815) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:07.820) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:07.825) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:07.900) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Ask for follow-up changes', 'edit', CancellableSpeech (still valid), 'blank']
+IO - speech.speech.speak (21:01:24.050) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK - Google Chrome', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:24.062) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:24.071) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.075) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.099) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'expanded', 'Collapse navigation', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.101) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Workspace', 'navigation landmark', 'button', 'current page', 'Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.116) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Control Object Repository', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.119) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Compose', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.133) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Test Data', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.136) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Process Suites', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.152) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Execution Center', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:24.153) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Audit and Evidence']
+IO - speech.speech.speak (21:01:24.683) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'about:blank']
+IO - speech.speech.speak (21:01:24.684) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:24.890) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:24.949) - MainThread (107924):
+Unable to open process for processId 0
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+OSError: [WinError 87] The parameter is incorrect.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:24.951) - MainThread (107924):
+Unable to get process handle for process 0 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 0 to create process handle
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:01:24.962) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+DEBUGWARNING - appModuleHandler.AppModule._get_isAlive (21:01:25.011) - MainThread (107924):
+Process handle 0 for AppModule(appModuleHandler, appName='[system process]', processID=0) is invalid, assuming process is dead.
+IO - speech.speech.speak (21:01:25.195) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:25.254) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.270) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.281) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'expanded', 'Collapse navigation', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.298) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Workspace', 'navigation landmark', 'button', 'Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.300) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'current page', 'Control Object Repository', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.316) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Compose', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.318) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Test Data', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.332) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Process Suites', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.335) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Execution Center', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:25.336) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Audit and Evidence']
+IO - speech.speech.speak (21:01:25.778) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'about:blank']
+IO - speech.speech.speak (21:01:25.778) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:26.118) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:26.217) - MainThread (107924):
+Unable to open process for processId 0
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+OSError: [WinError 87] The parameter is incorrect.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:26.224) - MainThread (107924):
+Unable to get process handle for process 0 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 0 to create process handle
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:01:26.256) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+DEBUGWARNING - appModuleHandler.AppModule._get_isAlive (21:01:26.283) - MainThread (107924):
+Process handle 0 for AppModule(appModuleHandler, appName='[system process]', processID=0) is invalid, assuming process is dead.
+IO - speech.speech.speak (21:01:26.324) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:26.337) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.351) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.355) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'expanded', 'Collapse navigation', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.368) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Workspace', 'navigation landmark', 'button', 'Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.371) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Control Object Repository', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.385) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'current page', 'Compose', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.388) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Test Data', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.418) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Process Suites', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.420) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Execution Center', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:26.421) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Audit and Evidence']
+IO - speech.speech.speak (21:01:26.936) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'about:blank']
+IO - speech.speech.speak (21:01:26.937) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:01:27.231) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+IO - speech.speech.speak (21:01:27.335) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Loading document...']
+IO - speech.speech.speak (21:01:27.350) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:27.353) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable']
+IO - speech.speech.speak (21:01:27.354) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:28.101) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+IO - speech.speech.speak (21:01:28.106) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'about:blank']
+IO - speech.speech.speak (21:01:28.107) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+ERROR - speech.manager.SpeechManager._handleIndex (21:01:28.314) - MainThread (107924):
+Error running speech callback
+Traceback (most recent call last):
+  File "speech\manager.pyc", line 704, in _handleIndex
+  File "speech\commands.pyc", line 434, in run
+  File "speech\sayAll.pyc", line 322, in _onLineReached
+  File "speech\sayAll.pyc", line 366, in lineReached
+  File "documentBase.pyc", line 76, in makeTextInfo
+  File "virtualBuffers\__init__.pyc", line 251, in __init__
+  File "textInfos\offsets.pyc", line 507, in __init__
+  File "virtualBuffers\__init__.pyc", line 273, in _getStoryLength
+OSError: [WinError 1775] A null context handle was passed from the client to the host during a remote procedure call
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IA2WindowHandle (21:01:28.411) - MainThread (107924):
+IAccessible2::windowHandle failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible.__init__ (21:01:28.419) - MainThread (107924):
+could not get IAccessible2::uniqueID to use as IA2UniqueID
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 821, in __init__
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:28.432) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IA2States (21:01:28.433) - MainThread (107924):
+could not get IAccessible2 states
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 2222, in _get_IA2States
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IA2Attributes (21:01:28.434) - MainThread (107924):
+IAccessibleObject.attributes COMError (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:28.503) - MainThread (107924):
+Unable to open process for processId 0
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+OSError: [WinError 87] The parameter is incorrect.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:28.505) - MainThread (107924):
+Unable to get process handle for process 0 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 0 to create process handle
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:01:28.511) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+DEBUGWARNING - appModuleHandler.AppModule._get_isAlive (21:01:28.541) - MainThread (107924):
+Process handle 0 for AppModule(appModuleHandler, appName='[system process]', processID=0) is invalid, assuming process is dead.
+IO - speech.speech.speak (21:01:28.589) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:28.598) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.618) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.620) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'expanded', 'Collapse navigation', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.635) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Workspace', 'navigation landmark', 'button', 'Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.637) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Control Object Repository', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.651) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Compose', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.653) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Test Data', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.665) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'current page', 'Process Suites', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.668) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Execution Center', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:28.668) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Audit and Evidence']
+IO - speech.speech.speak (21:01:29.132) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'about:blank']
+IO - speech.speech.speak (21:01:29.132) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:29.414) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:29.476) - MainThread (107924):
+Unable to open process for processId 0
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+OSError: [WinError 87] The parameter is incorrect.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:29.480) - MainThread (107924):
+Unable to get process handle for process 0 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 0 to create process handle
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:29.484) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:01:29.518) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+DEBUGWARNING - appModuleHandler.AppModule._get_isAlive (21:01:29.553) - MainThread (107924):
+Process handle 0 for AppModule(appModuleHandler, appName='[system process]', processID=0) is invalid, assuming process is dead.
+IO - speech.speech.speak (21:01:29.788) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:29.854) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.865) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.868) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'expanded', 'Collapse navigation', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.878) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Workspace', 'navigation landmark', 'button', 'Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.881) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Control Object Repository', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.892) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Compose', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.897) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Test Data', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.915) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Process Suites', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.917) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'current page', 'Execution Center', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:29.918) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Audit and Evidence']
+IO - speech.speech.speak (21:01:30.386) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'about:blank']
+IO - speech.speech.speak (21:01:30.386) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IA2Attributes (21:01:30.704) - MainThread (107924):
+IAccessibleObject.attributes COMError (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:30.773) - MainThread (107924):
+Unable to open process for processId 0
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+OSError: [WinError 87] The parameter is incorrect.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:01:30.775) - MainThread (107924):
+Unable to get process handle for process 0 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 0 to create process handle
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:01:30.787) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+DEBUGWARNING - appModuleHandler.AppModule._get_isAlive (21:01:30.790) - MainThread (107924):
+Process handle 0 for AppModule(appModuleHandler, appName='[system process]', processID=0) is invalid, assuming process is dead.
+DEBUGWARNING - NVDAObjects.IAccessible.IA2TextTextInfo._getCaretOffset (21:01:30.871) - MainThread (107924):
+IAccessibleText::caretOffset failed
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 313, in _getCaretOffset
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IA2TextTextInfo._getLineOffsets (21:01:30.872) - MainThread (107924):
+IAccessibleText::textAtOffset failed
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 425, in _getLineOffsets
+  File "comtypes\_memberspec.pyc", line 629, in __call__
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IA2TextTextInfo._getStoryLength (21:01:30.877) - MainThread (107924):
+IAccessibleText::nCharacters failed
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 355, in _getStoryLength
+  File "comtypes\_post_coinit\_cominterface_meta_patcher.pyc", line 21, in __getattr__
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IA2TextTextInfo._getLineOffsets (21:01:30.883) - MainThread (107924):
+IAccessibleText::textAtOffset failed
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 399, in _getCharacterOffsets
+  File "comtypes\_memberspec.pyc", line 629, in __call__
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 425, in _getLineOffsets
+  File "comtypes\_memberspec.pyc", line 629, in __call__
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IA2TextTextInfo._getFormatFieldAndOffsets (21:01:30.887) - MainThread (107924):
+could not get attributes
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 371, in _getFormatFieldAndOffsets
+  File "comtypes\_memberspec.pyc", line 629, in __call__
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+IO - speech.speech.speak (21:01:30.888) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid), 'blank']
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:31.069) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+IO - speech.speech.speak (21:01:31.077) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK - Google Chrome', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:31.143) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:31.148) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.150) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.164) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'expanded', 'Collapse navigation', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.166) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Workspace', 'navigation landmark', 'button', 'Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.182) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Control Object Repository', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.184) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Compose', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.198) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Test Data', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.201) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Process Suites', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.215) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Execution Center', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:31.216) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'current page', 'Audit and Evidence']
+IO - speech.speech.speak (21:01:31.585) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'about:blank']
+IO - speech.speech.speak (21:01:31.585) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - UIAHandler.UIAHandler.getNearestWindowHandle (21:01:32.464) - Dummy-80 (103172):
+error walking up to an element with a valid windowHandle
+Traceback (most recent call last):
+  File "UIAHandler\__init__.pyc", line 1373, in getNearestWindowHandle
+_ctypes.COMError: (-2147418113, 'Catastrophic failure', (None, None, None, 0, None))
+DEBUGWARNING - UIAHandler.UIAHandler.getNearestWindowHandle (21:01:32.465) - Dummy-81 (103172):
+error walking up to an element with a valid windowHandle
+Traceback (most recent call last):
+  File "UIAHandler\__init__.pyc", line 1373, in getNearestWindowHandle
+_ctypes.COMError: (-2147220991, 'An event was unable to invoke any of the subscribers', (None, None, None, 0, None))
+DEBUGWARNING - UIAHandler.UIAHandler.getNearestWindowHandle (21:01:32.467) - Dummy-82 (103172):
+error walking up to an element with a valid windowHandle
+Traceback (most recent call last):
+  File "UIAHandler\__init__.pyc", line 1373, in getNearestWindowHandle
+_ctypes.COMError: (-2147220991, 'An event was unable to invoke any of the subscribers', (None, None, None, 0, None))
+DEBUGWARNING - UIAHandler.UIAHandler.getNearestWindowHandle (21:01:32.468) - Dummy-83 (103172):
+error walking up to an element with a valid windowHandle
+Traceback (most recent call last):
+  File "UIAHandler\__init__.pyc", line 1373, in getNearestWindowHandle
+_ctypes.COMError: (-2147220991, 'An event was unable to invoke any of the subscribers', (None, None, None, 0, None))
+IO - speech.speech.speak (21:01:32.782) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.790) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.804) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'application', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.820) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.824) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.827) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'frame', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.832) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.834) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.844) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.847) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.848) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'application', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.849) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.850) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.850) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'frame', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.851) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:32.852) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+DEBUGWARNING - garbageHandler._collectionCallback (21:01:32.978) - MainThread (107924):
+Found at least 7 unreachable objects in run
+IO - speech.speech.speak (21:01:33.256) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Ask for follow-up changes', 'edit', 'multi line', CancellableSpeech (still valid), 'blank']
+IO - speech.speech.speak (21:01:34.167) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK - Google Chrome', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:34.208) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:34.216) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.224) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.240) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'expanded', 'Collapse navigation', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.246) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Workspace', 'navigation landmark', 'button', 'current page', 'Automation Overview', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.254) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Control Object Repository', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.257) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Compose', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.269) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Test Data', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.273) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Process Suites', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.284) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Execution Center', CallbackCommand(name=say-all:lineReached)]
+IO - speech.speech.speak (21:01:34.285) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'button', 'Audit and Evidence']
+IO - speech.speech.speak (21:01:35.355) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'clickable', 'Skip to main content', 'same page', 'link']
+IO - speech.speech.speak (21:01:35.418) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'main landmark', 'YOUR AUTOMATION WORKSPACE', 'Good morning', 'heading', 'level 1', 'Continue recent work, review executions, or start a new test.', 'Create test', 'button', 'New execution', 'button', '4', ' Tests', 'button', '4', ' Process suites', 'button', '1', ' Controls', 'button', '0', ' Evidence records', 'button', 'region', 'MEASURED OUTCOMES AND MODELED IMPACT', 'Execution impact', 'heading', 'level 2', 'Run totals and duration are exact. Manual effort and cost are transparent scenario estimates.', 'Recent runs', 'button', 'Total executions', 'ACTUAL', '1', 'Recorded in the immutable run ledger', 'Execution outcomes', 'ACTUAL', '1', ' Passed', '0', ' Failed', '100 percent passed', 'graphic', 'Automation runtime', 'ACTUAL', '0.0 h', 'Sum of recorded execution durations', 'Plausible manual effort', 'MODELED', '0.2 h', 'Scenario range 0.1–0.3 h', 'Potential time saved', 'MODELED', '0.2 h', 'Manual estimate minus automation runtime', 'Potential cost saved', 'MODELED', '-$694', '$10 manual equivalent − $704 automation TCO · investment not yet recovered', 'Calculation assumptions and model', 'button', 'collapsed', 'out of region', 'region', 'Pick up where you left off', 'heading', 'level 2', 'Saved test cases available in this workspace', 'View all', 'button', 'Cleanup Abandoned Drafts', 'Saved test case · cleanup-abandoned-drafts.json', 'toggle button', 'pressed', 'Create PO', 'Saved test case · create-po.json', 'toggle button', 'not pressed', 'Route Mapped', 'Saved test case · route-mapped.json', 'toggle button', 'not pressed', 'Synthetic Second Stage', 'Saved test case · synthetic-second-stage.json', 'toggle button', 'not pressed', 'out of region', 'region', 'Recent executions', 'heading', 'level 2', 'Latest immutable run records', 'History', 'button', 'Stable Route Test', 'Jul 29, 1:30 PM · 1s', 'Passed', 'button', 'out of region', 'region', 'Captured evidence', 'heading', 'level 2', 'Evidence saved by recorded runs', 'No evidence captured yet', 'Evidence from recorded executions will appear here.', 'out of region', 'Selected test case details', 'complementary landmark', 'TEST CASE', 'Cleanup Abandoned Drafts', 'heading', 'level 2', 'Open in Compose', 'button', 'Execute', 'button', 'list', 'Source file', 'cleanup-abandoned-drafts.json', 'Recorded executions', '0', 'Evidence records', '0', 'out of list', 'SAP target live-verified', 'synthetic.non-production.invalid was verified at execution time.']
+IO - speech.speech.speak (21:01:36.654) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Create test', 'button']
+IO - speech.speech.speak (21:01:37.900) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:37.903) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable']
+IO - speech.speech.speak (21:01:37.904) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:01:39.580) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'clickable', 'Skip to main content', 'same page', 'link']
+IO - speech.speech.speak (21:01:39.631) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'main landmark', 'Control Object Repository', 'heading', 'level 1', 'Scan a live screen', 'SAP page URL to scan', 'edit', 'https://synthetic.non-production.invalid/', 'App ID for scan', 'edit', 'App ID, e.g. procurement', ' ', 'Open scan session', 'button', 'The initial URL comes from Settings → Test-system connections → SAP. You can append or replace the Fiori route for this scan.Target: Non-production · verified 7/29/2026, 9:01:21 PM', 'Browse objects', 'Every App ID with at least one saved object, grouped by domain — check here before capturing a screen again under a new name.', 'Object repository domain', 'combo box', 'collapsed', '— select a domain (1) —']
+IO - speech.speech.speak (21:01:40.803) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP page URL to scan', 'edit', CancellableSpeech (still valid), 'selected https://synthetic.non-production.invalid/']
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:01:42.064) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+IO - speech.speech.speak (21:01:42.103) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:42.107) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:01:42.108) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:01:43.672) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'clickable', 'Skip to main content', 'same page', 'link']
+IO - speech.speech.speak (21:01:43.713) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'main landmark', 'Compose', 'heading', 'level 1', 'How Objects, Modules, and App ID fit together', 'button', 'collapsed', 'OPEN TEST CASE', 'Open test case', 'menu button', 'collapsed', 'opens list', 'OR CREATE NEW', 'New test case file name', 'edit', 'my-new-scenario', ' ', 'Create']
+IO - speech.speech.speak (21:01:44.886) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'How Objects, Modules, and App ID fit together', 'button', 'collapsed']
+IO - speech.speech.speak (21:01:46.171) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:46.181) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:01:46.181) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:01:47.767) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'clickable', 'Skip to main content', 'same page', 'link']
+IO - speech.speech.speak (21:01:47.808) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'main landmark', 'Test Data', 'heading', 'level 1', 'OPEN DATASET', 'Open dataset', 'menu button', 'collapsed', 'opens list', 'OR CREATE NEW', 'New dataset format', 'combo box', 'collapsed', 'Flat CSV', 'New dataset file name', 'edit', 'my-new-dataset', ' ', 'New dataset column names', 'edit', 'columns, e.g. supplier,material,plant,quantity', ' ', 'Create', 'button', 'region', 'One header · many owned children', 'Relational CSV builder', 'heading', 'level 2', 'Join two CSV files without flattening line items. Validation blocks duplicate header keys, missing keys, orphan children, and collection-name collisions.', 'OPEN RELATIONSHIP', 'OPEN RELATIONSHIP', 'combo box', 'collapsed', '— New relationship —', 'RELATIONSHIP NAME', 'RELATIONSHIP NAME', 'edit', 'sales-orders-with-items', ' ', 'HEADER CSV', 'HEADER CSV', 'combo box', 'collapsed', 'Select header file', 'HEADER KEY', 'HEADER KEY', 'edit', 'scenarioKey', ' ', 'CHILD CSV', 'CHILD CSV', 'combo box', 'collapsed', 'Select child file', 'CHILD FOREIGN KEY', 'CHILD FOREIGN KEY', 'edit', 'scenarioKey', ' ', 'CHILD COLLECTION NAME', 'CHILD COLLECTION NAME', 'edit', 'items', 'Validate relationship', 'button', 'Save relationship']
+IO - speech.speech.speak (21:01:48.989) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Open dataset', 'menu button', 'collapsed', 'opens list']
+IO - speech.speech.speak (21:01:50.268) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:50.272) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:01:50.273) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:01:51.847) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'clickable', 'Skip to main content', 'same page', 'link']
+IO - speech.speech.speak (21:01:51.897) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'main landmark', 'Process Suites', 'heading', 'level 1', 'OPEN GROUP', 'Open group', 'menu button', 'collapsed', 'opens list', 'OR CREATE NEW', 'New group file name', 'edit', 'po-gr-invoice', ' ', 'Create']
+IO - speech.speech.speak (21:01:53.102) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Open group', 'menu button', 'collapsed', 'opens list']
+IO - speech.speech.speak (21:01:54.336) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:54.338) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:01:54.339) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:01:55.962) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'clickable', 'Skip to main content', 'same page', 'link']
+IO - speech.speech.speak (21:01:56.024) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'main landmark', 'Execution Center', 'heading', 'level 1', 'NEW EXECUTION', 'Prepare a controlled SAP run', 'heading', 'level 2', 'Choose the business intent, bind its data, and validate the exact work before SAP is opened.', 'Preflight required', 'Execution health and planning metrics', 'button', 'collapsed', 'Execution preparation steps', 'list', '1', 'Scope', '2', 'Data & policies', '3', 'Preflight', '4', 'Review', 'out of list', 'Execution type', 'Single Test', 'button', 'Business Process', 'button', 'Pack · Tests', 'button', 'Pack · Processes', 'button', 'One reusable Test. A dataset creates one isolated iteration per record; without a dataset it runs once.', 'AVAILABLE TESTS', 'Filter available tests', 'edit', 'Filter…', ' ', 'list', 'cleanup-abandoned-drafts.json', 'Add cleanup-abandoned-drafts.json to Selected Test', 'button', 'create-po.json', 'Add create-po.json to Selected Test', 'button', 'route-mapped.json', 'Add route-mapped.json to Selected Test', 'button', 'synthetic-second-stage.json', 'Add synthetic-second-stage.json to Selected Test', 'button', 'out of list', 'SELECTED TEST', 'list', 'Nothing selected yet.', 'out of list', 'APP ID', 'Execution App ID', 'edit', 'createPurchaseOrder', 'DATA MODEL', 'DATA MODEL', 'combo box', 'collapsed', 'Single CSV or nested JSON', 'TRANSACTION DATA FILE', 'Execution data file', 'combo box', 'collapsed', '— none —', 'HEADLESS', 'check box', 'not checked', 'SESSION POLICY', 'SESSION POLICY', 'combo box', 'collapsed', 'Fresh browser per transaction', 'AFTER AN ITERATION FAILURE', 'AFTER AN ITERATION FAILURE', 'combo box', 'collapsed', 'Continue to next transaction', 'MAXIMUM TRANSACTION RECORDS', 'MAXIMUM TRANSACTION RECORDS', 'spin button', 'editable', 'All selected records', ' ', 'FILTER PROPERTY', 'FILTER PROPERTY', 'edit', 'e.g. scenarioKey or header.salesOrg', ' ', 'FILTER RULE', 'FILTER RULE', 'combo box', 'unavailable', 'collapsed', 'Equals', 'FILTER VALUE', 'FILTER VALUE', 'edit', 'unavailable', 'Exact or partial value', ' ', 'Evidence is generated automatically and shared with Audit and Evidence.', 'Run preflight']
+IO - speech.speech.speak (21:01:57.183) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Execution health and planning metrics', 'button', 'collapsed']
+IO - speech.speech.speak (21:01:58.454) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:01:58.458) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:01:58.458) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:02:00.095) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'clickable', 'Skip to main content', 'same page', 'link']
+IO - speech.speech.speak (21:02:00.153) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'main landmark', 'Audit and Evidence', 'heading', 'level 1', 'IMMUTABLE EXECUTION RECORDS', 'Audit and Evidence', 'heading', 'level 2', 'Find a run by process, application, outcome, date, run ID, or executor—without navigating date folders.', 'Refresh', 'button', 'Audit summary', 'region', '1', ' Total runs', '1', ' Passed', '0', ' Failed', 'out of region', 'Evidence governance', 'region', 'Canonical evidence is owner-protected and redaction is enforced', 'Retention: until the workspace owner deletes it · credentials excluded · execution logs filtered', 'out of region', 'Filter audit runs', 'region', 'Search audit runs', 'edit', 'Search process, App ID, run ID, or executor', ' ', 'Filter audit runs by status', 'combo box', 'collapsed', 'All outcomes', 'Filter audit runs by mode', 'combo box', 'collapsed', 'All modes', 'Filter audit runs by date range', 'combo box', 'collapsed', 'All dates', 'out of region', '1 run', 'Newest first', 'Stable Route Test', 'heading', 'level 3', 'PASSEDJul 29, 2026, 1:30 PM GMT+5:301schainrouteApproute-owner@example.invalidStable Route Test', 'route-audit-run', 'View record', 'button', 'Evidence PDF']
+IO - speech.speech.speak (21:02:01.356) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Refresh', 'button']
+IO - speech.speech.speak (21:02:03.027) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.046) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.051) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'application', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.058) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.136) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.138) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.139) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'application', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.144) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.154) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.164) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'frame', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.167) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:03.171) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+INFO - watchdog.waitForFreezeRecovery (21:02:03.436) - watchdog (73044):
+Starting freeze recovery after 0.5002659999299794 seconds.
+DEBUGWARNING - watchdog.waitForFreezeRecovery (21:02:03.442) - watchdog (73044):
+Listing stacks for Python threads:
+Python stack for thread 103172 (Dummy-136):
+  File "comtypes\_vtbl.pyc", line 176, in call_without_this
+  File "UIAHandler\__init__.pyc", line 808, in IUIAutomationEventHandler_HandleAutomationEvent
+  File "NVDAObjects\__init__.pyc", line 110, in __call__
+  File "NVDAObjects\UIA\__init__.pyc", line 1392, in findOverlayClasses
+
+Python stack for thread 46608 (Unknown):
+  File "synthDrivers\oneCore.pyc", line 479, in _callback
+  File "nvwave.pyc", line 345, in feed
+
+Python stack for thread 114372 (watchdog.CancellableCallThread.execute(<_FuncPtr object at 0x000001D62004F1E0>)):
+  File "threading.pyc", line 1015, in _bootstrap
+  File "threading.pyc", line 1044, in _bootstrap_inner
+  File "watchdog.pyc", line 393, in run
+  File "threading.pyc", line 660, in wait
+  File "threading.pyc", line 359, in wait
+
+Python stack for thread 73044 (watchdog):
+  File "threading.pyc", line 1015, in _bootstrap
+  File "threading.pyc", line 1044, in _bootstrap_inner
+  File "threading.pyc", line 995, in run
+  File "watchdog.pyc", line 168, in _watcher
+  File "watchdog.pyc", line 175, in waitForFreezeRecovery
+  File "logHandler.pyc", line 64, in getFormattedStacksForAllThreads
+
+Python stack for thread 117888 (winInputHook):
+  File "threading.pyc", line 1015, in _bootstrap
+  File "threading.pyc", line 1044, in _bootstrap_inner
+  File "threading.pyc", line 995, in run
+  File "winInputHook.pyc", line 123, in hookThreadFunc
+
+Python stack for thread 2528 (UIAHandler.UIAHandler.MTAThread):
+  File "threading.pyc", line 1015, in _bootstrap
+  File "threading.pyc", line 1044, in _bootstrap_inner
+  File "threading.pyc", line 995, in run
+  File "UIAHandler\__init__.pyc", line 552, in MTAThreadFunc
+  File "queue.pyc", line 199, in get
+  File "threading.pyc", line 359, in wait
+
+Python stack for thread 63800 (ThreadPoolExecutor-0_0):
+  File "threading.pyc", line 1015, in _bootstrap
+  File "threading.pyc", line 1044, in _bootstrap_inner
+  File "threading.pyc", line 995, in run
+  File "concurrent\futures\thread.pyc", line 90, in _worker
+
+Python stack for thread 120432 (hwIo.ioThread.IoThread):
+  File "threading.pyc", line 1015, in _bootstrap
+  File "threading.pyc", line 1044, in _bootstrap_inner
+  File "hwIo\ioThread.pyc", line 265, in run
+
+Python stack for thread 116032 (ScheduleThread):
+  File "threading.pyc", line 1015, in _bootstrap
+  File "threading.pyc", line 1044, in _bootstrap_inner
+  File "utils\schedule.pyc", line 90, in run
+
+Python stack for thread 107924 (MainThread):
+  File "nvda.pyw", line 309, in <module>
+  File "core.pyc", line 1066, in main
+  File "wx\core.pyc", line 2254, in MainLoop
+  File "wx\core.pyc", line 3425, in <lambda>
+  File "core.pyc", line 993, in processRequest
+  File "core.pyc", line 1009, in Notify
+  File "queueHandler.pyc", line 102, in pumpAll
+  File "queueHandler.pyc", line 67, in flushQueue
+  File "eventHandler.pyc", line 88, in _queueEventCallback
+  File "eventHandler.pyc", line 354, in executeEvent
+  File "eventHandler.pyc", line 120, in __init__
+  File "eventHandler.pyc", line 129, in next
+  File "browseMode.pyc", line 2038, in event_gainFocus
+  File "eventHandler.pyc", line 129, in next
+  File "NVDAObjects\behaviors.pyc", line 338, in event_gainFocus
+  File "NVDAObjects\__init__.pyc", line 1372, in event_gainFocus
+  File "NVDAObjects\__init__.pyc", line 1208, in reportFocus
+  File "speech\speech.pyc", line 816, in speakObject
+  File "speech\speech.pyc", line 876, in getObjectSpeech
+  File "speech\speech.pyc", line 804, in _getPlaceholderSpeechIfTextEmpty
+  File "baseObject.pyc", line 59, in __get__
+  File "baseObject.pyc", line 167, in _getPropertyViaCache
+  File "NVDAObjects\__init__.pyc", line 1473, in _get__isTextEmpty
+  File "NVDAObjects\IAccessible\ia2TextMozilla.pyc", line 738, in move
+  File "NVDAObjects\IAccessible\ia2TextMozilla.pyc", line 591, in _findUnitEndpoints
+  File "NVDAObjects\IAccessible\__init__.pyc", line 286, in expand
+  File "textInfos\offsets.pyc", line 565, in expand
+  File "textInfos\offsets.pyc", line 544, in _getUnitOffsets
+  File "NVDAObjects\IAccessible\__init__.pyc", line 406, in _getCharacterOffsets
+  File "comtypes\_memberspec.pyc", line 629, in __call__
+
+DEBUGWARNING - eventHandler.executeEvent (21:02:03.499) - MainThread (107924):
+error executing event: gainFocus on <NVDAObjects.Dynamic_EditorEditableTextWithAutoSelectDetectionEditorIa2WebIAccessible object at 0x000001D601965370> with extra args of {}
+Traceback (most recent call last):
+  File "eventHandler.pyc", line 354, in executeEvent
+  File "eventHandler.pyc", line 120, in __init__
+  File "eventHandler.pyc", line 129, in next
+  File "browseMode.pyc", line 2038, in event_gainFocus
+  File "eventHandler.pyc", line 129, in next
+  File "NVDAObjects\behaviors.pyc", line 338, in event_gainFocus
+  File "NVDAObjects\__init__.pyc", line 1372, in event_gainFocus
+  File "NVDAObjects\__init__.pyc", line 1208, in reportFocus
+  File "speech\speech.pyc", line 816, in speakObject
+  File "speech\speech.pyc", line 876, in getObjectSpeech
+  File "speech\speech.pyc", line 804, in _getPlaceholderSpeechIfTextEmpty
+  File "baseObject.pyc", line 59, in __get__
+  File "baseObject.pyc", line 167, in _getPropertyViaCache
+  File "NVDAObjects\__init__.pyc", line 1473, in _get__isTextEmpty
+  File "NVDAObjects\IAccessible\ia2TextMozilla.pyc", line 755, in move
+  File "compoundDocuments.pyc", line 64, in _normalizeStartAndEnd
+  File "NVDAObjects\IAccessible\ia2TextMozilla.pyc", line 640, in _findNextContent
+  File "NVDAObjects\IAccessible\ia2TextMozilla.pyc", line 239, in _getEmbedding
+  File "baseObject.pyc", line 59, in __get__
+  File "baseObject.pyc", line 167, in _getPropertyViaCache
+  File "NVDAObjects\IAccessible\__init__.pyc", line 1240, in _get_parent
+  File "NVDAObjects\__init__.pyc", line 92, in __call__
+  File "NVDAObjects\__init__.pyc", line 269, in findBestAPIClass
+  File "NVDAObjects\IAccessible\MSHTML.pyc", line 497, in kwargsFromSuper
+  File "NVDAObjects\IAccessible\MSHTML.pyc", line 190, in HTMLNodeFromIAccessible
+  File "comtypes\_post_coinit\misc.pyc", line 75, in QueryService
+  File "monkeyPatches\comtypesMonkeyPatches.pyc", line 40, in __call__
+exceptions.CallCancelled: COM call cancelled
+INFO - watchdog.waitForFreezeRecovery (21:02:03.547) - watchdog (73044):
+Recovered from freeze after 0.6105397997889668 seconds.
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IA2WindowHandle (21:02:04.269) - MainThread (107924):
+IAccessible2::windowHandle failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible.__init__ (21:02:04.270) - MainThread (107924):
+could not get IAccessible2::uniqueID to use as IA2UniqueID
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 821, in __init__
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IAccessibleRole (21:02:04.281) - MainThread (107924):
+accRole failed: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:02:04.338) - MainThread (107924):
+Unable to open process for processId 0
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+OSError: [WinError 87] The parameter is incorrect.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:02:04.341) - MainThread (107924):
+Unable to get process handle for process 0 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 0 to create process handle
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IA2States (21:02:04.352) - MainThread (107924):
+could not get IAccessible2 states
+Traceback (most recent call last):
+  File "NVDAObjects\IAccessible\__init__.pyc", line 2222, in _get_IA2States
+_ctypes.COMError: (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._get_IA2Attributes (21:02:04.353) - MainThread (107924):
+IAccessibleObject.attributes COMError (-2147467259, 'Unspecified error', (None, None, None, 0, None))
+DEBUGWARNING - appModuleHandler.AppModule._get_isAlive (21:02:04.433) - MainThread (107924):
+Process handle 0 for AppModule(appModuleHandler, appName='[system process]', processID=0) is invalid, assuming process is dead.
+IO - speech.speech.speak (21:02:04.549) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK - Google Chrome', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:04.584) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:04.687) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'same page', 'link', 'Skip to main content', CallbackCommand(name=say-all:lineReached)]
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:02:04.787) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+IO - speech.speech.speak (21:02:04.802) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Primary application navigation', 'complementary landmark', 'button', 'QA/4HANA Studio — go to Automation Overview']
+IO - speech.speech.speak (21:02:04.804) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:02:04.900) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:04.903) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:02:04.904) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:02:05.320) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:05.324) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:02:05.325) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:02:05.690) - MainThread (107924):
+Unable to open process for processId 0
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 207, in getProcessHandleFromProcessId
+OSError: [WinError 87] The parameter is incorrect.
+DEBUGWARNING - appModuleHandler.getProcessHandleFromProcessId (21:02:05.692) - MainThread (107924):
+Unable to get process handle for process 0 using window enumeration and subsequently getting process handle from that window
+Traceback (most recent call last):
+  File "appModuleHandler.pyc", line 220, in getProcessHandleFromProcessId
+RuntimeError: No window handle found for process 0 to create process handle
+DEBUGWARNING - NVDAObjects.IAccessible.IAccessible._getIA2RelationFirstTarget (21:02:05.710) - MainThread (107924):
+Unable to use _getIA2TargetsForRelationsOfType, fallback to _IA2Relations.
+DEBUGWARNING - appModuleHandler.AppModule._get_isAlive (21:02:05.737) - MainThread (107924):
+Process handle 0 for AppModule(appModuleHandler, appName='[system process]', processID=0) is invalid, assuming process is dead.
+IO - speech.speech.speak (21:02:05.786) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:05.787) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:02:05.788) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:02:06.091) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:06.095) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable']
+IO - speech.speech.speak (21:02:06.096) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:02:06.606) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'QA/4HANA Studio — AI ELK', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:06.616) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:lineReached), LangChangeCommand ('en_US'), 'clickable', 'main landmark', 'Loading workspace…']
+IO - speech.speech.speak (21:02:06.617) - MainThread (107924):
+Speaking [CallbackCommand(name=say-all:stop)]
+IO - speech.speech.speak (21:02:07.644) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.649) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.654) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'application', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.663) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.707) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'window', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.709) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'SAP-S4HANA-Studio-UI-Redesign - Visual Studio Code', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.712) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'application', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.713) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.716) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.719) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'frame', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.721) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Codex', 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.724) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'document', CancellableSpeech (still valid)]
+IO - speech.speech.speak (21:02:07.796) - MainThread (107924):
+Speaking [LangChangeCommand ('en_US'), 'Ask for follow-up changes', 'edit', 'multi line', CancellableSpeech (still valid), 'blank']
+INFO - core.main (21:02:24.353) - MainThread (107924):
+Exiting
+INFO - config.ConfigManager.save (21:02:24.362) - MainThread (107924):
+Base configuration saved
+INFO - NVDAHelperLocal (21:02:24.442) - MainThread (107924):
+Thread 107924, build\x86_64\localWin10\oneCoreSpeech.cpp, ocSpeech_terminate, 236:
+ocSpeech_terminate, token: 000001D62187F010
+
+INFO - NVDAHelperLocal (21:02:24.442) - MainThread (107924):
+Thread 107924, build\x86_64\localWin10\oneCoreSpeech.cpp, OcSpeechState::terminate, 106:
+Terminating
+
+INFO - __main__ (21:02:25.791) - MainThread (107924):
+NVDA exit

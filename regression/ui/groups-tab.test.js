@@ -21,13 +21,9 @@ test('Groups: create a group, save, reload, reopen (required Groups positive)', 
       await page.getByRole('button', { name: 'Save group' }).click();
 
       await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
+      assert.equal(new URL(page.url()).pathname, '/process-suites/regression-sample-group.json');
 
       await page.reload();
-      await page.getByRole('button', { name: /Process Suites/ }).first().click();
-      await page.getByRole('button', { name: 'Open group' }).click();
-      await page.getByText('(untagged)', { exact: true }).click();
-      await page.getByText('regression-sample-group.json', { exact: true }).last().click();
-
       await page.locator('li:has-text("cleanup-abandoned-drafts.json")').first().waitFor({ timeout: 5000 });
       const appIdValue = await page.locator('div:has(> label:text-is("App ID")) input').inputValue();
       assert.equal(appIdValue, 'createPurchaseOrder');

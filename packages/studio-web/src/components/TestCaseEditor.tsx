@@ -1,9 +1,11 @@
 import { Fragment, useEffect, useState } from 'react';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
 import type { ModuleCall, ModuleInfo, TestCase } from '../types';
 import { StepEditor } from './StepEditor';
 import { DomainTag } from './DomainTag';
 import { GroupedPicker } from './GroupedPicker';
+import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
 
 const UNTAGGED = '(untagged)';
 const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b));
@@ -35,10 +37,17 @@ function computeHandoffKeys(steps: ModuleCall[], uptoIndex: number, modules: Mod
 
 interface TestCaseEditorProps {
   selectedTxTemplate?: string | null;
+  initialFile?: string;
+  onSelectedFileChange?: (file: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEditorProps = {}) {
+export function TestCaseEditor({
+  selectedTxTemplate,
+  initialFile,
+  onSelectedFileChange,
+  onDirtyChange,
+}: TestCaseEditorProps = {}) {
   const [files, setFiles] = useState<string[]>([]);
   const [modules, setModules] = useState<ModuleInfo[]>([]);
   const [selectedFile, setSelectedFile] = useState('');
@@ -48,8 +57,12 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
   const [newFileName, setNewFileName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingArtifact, setLoadingArtifact] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [reorderAnnouncement, setReorderAnnouncement] = useState('');
   // Keys produced by whole test cases that run BEFORE this one when it's a later stage
   // in a saved Group (Chain mode shares runState across a Group's stages) — see BL-07.
   // computeHandoffKeys alone only sees steps within the currently open file, which
@@ -67,14 +80,32 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
   }
 
   useEffect(() => {
-    api.listTestCases().then(setFiles).catch((e) => setError(String(e)));
-    api.listModules().then(setModules).catch((e) => setError(String(e)));
+    Promise.all([api.listTestCases(), api.listModules()])
+      .then(([nextFiles, nextModules]) => {
+        setFiles(nextFiles);
+        setModules(nextModules);
+      })
+      .catch((reason) => setError(String(reason)))
+      .finally(() => setLoading(false));
     refreshTags();
   }, []);
 
   useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    if (!initialFile || initialFile === selectedFile) return;
+    setSelectedFile(initialFile);
+    setSavedAt(null);
+    setError(null);
+    setDirty(false);
+    setLoadingArtifact(true);
+    api.getTestCase(initialFile)
+      .then(setTestCase)
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoadingArtifact(false));
+  }, [initialFile, selectedFile]);
 
   useEffect(() => {
     if (!selectedFile || modules.length === 0) {
@@ -132,10 +163,13 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
     setSavedAt(null);
     setError(null);
     setDirty(false);
+    setLoadingArtifact(true);
     api
       .getTestCase(file)
       .then(setTestCase)
-      .catch((e) => setError(String(e)));
+      .catch((e) => setError(String(e)))
+      .finally(() => setLoadingArtifact(false));
+    onSelectedFileChange?.(file);
   }
 
   function createNew() {
@@ -147,6 +181,7 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
     setDirty(true);
     setNewFileName('');
     setSavedAt(null);
+    onSelectedFileChange?.(file);
   }
 
   function updateStep(index: number, call: ModuleCall) {
@@ -169,18 +204,23 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
     const [moved] = steps.splice(from, 1);
     steps.splice(to, 0, moved);
     updateTestCase({ ...testCase, steps });
+    setReorderAnnouncement(`${moved.module} moved to step ${to + 1}.`);
   }
 
   async function save() {
     if (!testCase || !selectedFile) return;
+    setSaving(true);
     try {
       await api.saveTestCase(selectedFile, testCase);
       setSavedAt(new Date().toLocaleTimeString());
       setDirty(false);
       setError(null);
       if (!files.includes(selectedFile)) setFiles([...files, selectedFile].sort());
+      onSelectedFileChange?.(selectedFile);
     } catch (e) {
       setError(String(e));
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -246,7 +286,10 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
         </div>
       </div>
 
-      {error && <p className="error-text" role="alert">{error}</p>}
+      {error && <AsyncFeedback state="error" message={error} />}
+      {loading && <AsyncFeedback state="loading" message="Loading Compose resources…" />}
+      {loadingArtifact && <AsyncFeedback state="loading" message={`Loading ${selectedFile}…`} compact />}
+      <span className="sr-only" role="status" aria-live="polite">{reorderAnnouncement}</span>
 
       {testCase && (
         <div className="panel stack">
@@ -265,8 +308,8 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
             <p className="section-title">
               Steps ({testCase.steps.length}){dirty && <span className="hint"> — unsaved changes</span>}
             </p>
-            <div className="table-wrap">
-              <table>
+            <TableFrame label="Test case steps">
+              <table className="responsive-table">
                 <thead>
                   <tr>
                     <th></th>
@@ -300,14 +343,30 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
                         }}
                         className={[dragIndex === i ? 'dragging' : '', dragOverIndex === i ? 'drag-over' : ''].filter(Boolean).join(' ')}
                       >
-                        <td className="drag-handle" title="Drag to reorder">
+                        <td className="drag-handle" title="Drag to reorder" data-label="Reorder">
                           ⠿
                         </td>
-                        <td className="step-index">{i + 1}</td>
-                        <td className="step-module">{step.module}</td>
-                        <td>{step.appId && <span className="badge running">{step.appId}</span>}</td>
-                        <td className="step-params">{summarizeParams(step.params)}</td>
-                        <td className="step-actions">
+                        <td className="step-index" data-label="Step">{i + 1}</td>
+                        <td className="step-module" data-label="Module">{step.module}</td>
+                        <td data-label="App ID">{step.appId && <span className="badge running">{step.appId}</span>}</td>
+                        <td className="step-params" data-label="Parameters">{summarizeParams(step.params)}</td>
+                        <td className="step-actions" data-label="Actions">
+                          <button
+                            className="ghost icon-only"
+                            aria-label={`Move step ${i + 1}: ${step.module} up`}
+                            onClick={() => reorderStep(i, i - 1)}
+                            disabled={i === 0}
+                          >
+                            <ArrowUp size={14} aria-hidden="true" />
+                          </button>
+                          <button
+                            className="ghost icon-only"
+                            aria-label={`Move step ${i + 1}: ${step.module} down`}
+                            onClick={() => reorderStep(i, i + 1)}
+                            disabled={i === testCase.steps.length - 1}
+                          >
+                            <ArrowDown size={14} aria-hidden="true" />
+                          </button>
                           <button className="ghost" aria-label={`${editingIndex === i ? 'Close editor for' : 'Edit'} step ${i + 1}: ${step.module}`} onClick={() => setEditingIndex(editingIndex === i ? null : i)}>
                             {editingIndex === i ? 'Close' : 'Edit'}
                           </button>
@@ -348,17 +407,17 @@ export function TestCaseEditor({ selectedTxTemplate, onDirtyChange }: TestCaseEd
                   )}
                 </tbody>
               </table>
-            </div>
+            </TableFrame>
           </div>
 
           <div className="row">
             <button onClick={() => setEditingIndex(testCase.steps.length)} disabled={editingIndex !== null}>
               + Add step
             </button>
-            <button className="primary" onClick={save}>
-              Save test case
+            <button className="primary" onClick={save} disabled={saving}>
+              {saving ? 'Saving…' : 'Save test case'}
             </button>
-            {savedAt && !dirty && <span className="hint">Saved at {savedAt}</span>}
+            {savedAt && !dirty && <AsyncFeedback state="success" message={`${selectedFile} — Saved at ${savedAt}`} compact />}
           </div>
         </div>
       )}

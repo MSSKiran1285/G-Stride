@@ -1,0 +1,48 @@
+[
+  {
+    "scenarioKey": "SO-DEMO-001",
+    "header": {
+      "orderType": "OR",
+      "salesOrg": "DEMO",
+      "soldToParty": "CUSTOMER-DEMO-01"
+    },
+    "items": [
+      {
+        "lineNumber": 10,
+        "product": "PRODUCT-A",
+        "quantity": 10
+      },
+      {
+        "lineNumber": 20,
+        "product": "PRODUCT-B",
+        "quantity": 5
+      }
+    ]
+  },
+  {
+    "scenarioKey": "SO-DEMO-002",
+    "header": {
+      "orderType": "OR",
+      "salesOrg": "DEMO",
+      "soldToParty": "CUSTOMER-DEMO-02"
+    },
+    "items": [
+      {
+        "lineNumber": 10,
+        "product": "PRODUCT-C",
+        "quantity": 3
+      },
+      {
+        "lineNumber": 20,
+        "product": "PRODUCT-D",
+        "quantity": 1
+      },
+      {
+        "lineNumber": 30,
+        "product": "PRODUCT-E",
+        "quantity": 8
+      }
+    ]
+  }
+]
+

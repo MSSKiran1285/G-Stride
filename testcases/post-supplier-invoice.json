@@ -13,13 +13,18 @@
     "Skipping Simulate before Post. Simulation surfaces account-determination and tax errors before they become a failed posting; always simulate first.",
     "An unexpected confirmation dialog (e.g. a duplicate-invoice warning) can block the flow if not dismissed. Check for and dismiss any warning dialog before assuming the next step failed."
   ],
+  "transaction": {
+    "creates": ["supplierInvoice"],
+    "failureDisposition": "retain-for-review",
+    "ownershipRequired": true
+  },
   "steps": [
     { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
     { "module": "NavigateToApp", "params": { "url": "${url}ui#SupplierInvoice-create" } },
     { "module": "DismissDialogIfPresent", "appId": "postSupplierInvoice", "params": { "buttonText": "No", "timeoutMs": "8000" } },
     { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "InvoicingPartyField", "value": "${supplier}" } },
     { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "InvoiceDateField", "value": "${today}" } },
-    { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "ReferenceField", "value": "${poNumber}" } },
+    { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "ReferenceField", "value": "${automationReference}" } },
     {
       "module": "AssignPurchaseOrderItems",
       "appId": "postSupplierInvoice",

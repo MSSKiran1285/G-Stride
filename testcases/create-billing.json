@@ -13,6 +13,11 @@
     "Forgetting to click \"Post Billing Document.\" A document with status \"To Be Posted\" has a real number but has not updated financial accounting. The process is not complete until status shows \"Completed.\"",
     "Billing a delivery that failed Proof of Delivery (POD). Some deliveries show \"POD report back not yet carried out or incomplete\" and cannot be billed until POD is confirmed — this is a data/configuration condition, not an automation error."
   ],
+  "transaction": {
+    "creates": ["billingDocument"],
+    "failureDisposition": "retain-for-review",
+    "ownershipRequired": true
+  },
   "steps": [
     {
       "module": "Login",

@@ -1,5 +1,10 @@
 # SAP S/4HANA Test Automation Studio — Product Backlog
 
+> **Superseded on 29 July 2026.** The authoritative backlog, implementation
+> coverage, release tranche and change log now live in the
+> [Product Backlog Tracker](./PRODUCT_BACKLOG_TRACKER.html). This Markdown file
+> is retained as a historical source and must not be updated independently.
+
 ## Purpose
 
 This backlog translates the UI/UX audit into user-centred, refinable stories that product, design, engineering, QA, security, and accessibility reviewers can use for delivery planning.

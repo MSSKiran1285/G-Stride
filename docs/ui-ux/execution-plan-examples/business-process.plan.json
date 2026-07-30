@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "planId": "o2c-business-process",
+  "name": "Order to Cash",
+  "target": {
+    "provider": "sap",
+    "profileRef": "default",
+    "contextId": "sap-qa"
+  },
+  "evidence": {
+    "enabled": true,
+    "canonical": true
+  },
+  "kind": "businessProcess",
+  "stages": [
+    {
+      "stageId": "createSalesOrder",
+      "test": {
+        "assetId": "create-sales-order",
+        "file": "testcases/create-so.json",
+        "name": "Create Sales Order - Happy Path",
+        "appId": "createSalesOrder",
+        "contentHash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "contractMode": "declared",
+        "contract": {
+          "version": 1,
+          "inputs": [
+            {
+              "name": "orderType",
+              "type": "string",
+              "required": true,
+              "sensitivity": "business"
+            },
+            {
+              "name": "salesOrg",
+              "type": "string",
+              "required": true,
+              "sensitivity": "business"
+            },
+            {
+              "name": "soldToParty",
+              "type": "string",
+              "required": true,
+              "sensitivity": "business"
+            },
+            {
+              "name": "items",
+              "type": "collection",
+              "required": true,
+              "sensitivity": "business"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "salesOrderNumber",
+              "type": "string",
+              "runtimeKey": "soNumber",
+              "producedByStep": "CaptureDocumentNumberFromSuccessDialog",
+              "sensitivity": "business"
+            }
+          ]
+        }
+      },
+      "inputBindings": {
+        "orderType": {
+          "source": "processData",
+          "bindingId": "orders",
+          "path": "header.orderType"
+        },
+        "salesOrg": {
+          "source": "processData",
+          "bindingId": "orders",
+          "path": "header.salesOrg"
+        },
+        "soldToParty": {
+          "source": "processData",
+          "bindingId": "orders",
+          "path": "header.soldToParty"
+        },
+        "items": {
+          "source": "processData",
+          "bindingId": "orders",
+          "path": "items"
+        }
+      }
+    },
+    {
+      "stageId": "createDelivery",
+      "test": {
+        "assetId": "create-delivery",
+        "file": "testcases/create-delivery.json",
+        "name": "Create Delivery and Post Goods Issue",
+        "appId": "createOutboundDelivery",
+        "contentHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "contractMode": "declared",
+        "contract": {
+          "version": 1,
+          "inputs": [
+            {
+              "name": "salesOrderNumber",
+              "type": "string",
+              "required": true,
+              "runtimeKey": "soNumber",
+              "sensitivity": "business"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "deliveryNumber",
+              "type": "string",
+              "producedByStep": "CaptureControlValue",
+              "sensitivity": "business"
+            },
+            {
+              "name": "materialDocumentNumber",
+              "type": "string",
+              "producedByStep": "CaptureControlValue",
+              "sensitivity": "business"
+            }
+          ]
+        }
+      },
+      "inputBindings": {
+        "salesOrderNumber": {
+          "source": "stageOutput",
+          "stageId": "createSalesOrder",
+          "output": "salesOrderNumber"
+        }
+      }
+    },
+    {
+      "stageId": "createBilling",
+      "test": {
+        "assetId": "create-billing",
+        "file": "testcases/create-billing.json",
+        "name": "Create and Post Billing Document",
+        "appId": "createBillingDocument",
+        "contentHash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "contractMode": "declared",
+        "contract": {
+          "version": 1,
+          "inputs": [
+            {
+              "name": "deliveryNumber",
+              "type": "string",
+              "required": true,
+              "sensitivity": "business"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "billingDocumentNumber",
+              "type": "string",
+              "producedByStep": "CaptureControlValue",
+              "sensitivity": "business"
+            }
+          ]
+        }
+      },
+      "inputBindings": {
+        "deliveryNumber": {
+          "source": "stageOutput",
+          "stageId": "createDelivery",
+          "output": "deliveryNumber"
+        }
+      }
+    }
+  ],
+  "dataBindings": [
+    {
+      "bindingId": "orders",
+      "scope": "process",
+      "source": {
+        "kind": "file",
+        "format": "json",
+        "files": [
+          "docs/ui-ux/execution-plan-examples/sales-orders.sample.json"
+        ]
+      }
+    }
+  ],
+  "iterationPolicy": {
+    "session": "fresh-per-iteration",
+    "onIterationFailure": "stop-execution",
+    "sequential": true
+  }
+}

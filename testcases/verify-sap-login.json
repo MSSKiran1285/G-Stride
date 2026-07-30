@@ -1,0 +1,15 @@
+{
+  "name": "Verify SAP Login - Read Only",
+  "objective": "Confirm that the configured non-production SAP target is reachable and that the saved credential profile can authenticate without opening or changing a business document.",
+  "preconditions": "The SAP connection is saved, classified as non-production, and live-verified.",
+  "steps": [
+    {
+      "module": "Login",
+      "params": {
+        "url": "${url}",
+        "username": "${username}",
+        "password": "${password}"
+      }
+    }
+  ]
+}

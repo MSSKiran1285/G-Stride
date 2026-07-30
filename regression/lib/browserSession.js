@@ -7,7 +7,13 @@ const fs = require('node:fs');
 const ARTIFACTS_DIR = path.join(__dirname, '..', '.artifacts');
 
 async function withBrowser(fn) {
-  const browser = await chromium.launch();
+  const headed = process.env.REGRESSION_HEADED === '1';
+  const browser = await chromium.launch({
+    headless: !headed,
+    ...(process.env.REGRESSION_BROWSER_PATH
+      ? { executablePath: process.env.REGRESSION_BROWSER_PATH }
+      : {}),
+  });
   try {
     await fn(browser);
   } finally {
@@ -23,7 +29,8 @@ async function withBrowser(fn) {
  * one dedicated test for the one historical incident.
  */
 async function withPage(browser, testName, fn) {
-  const page = await browser.newPage();
+  const context = await browser.newContext();
+  const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', (err) => pageErrors.push(err.message));
 
@@ -35,7 +42,7 @@ async function withPage(browser, testName, fn) {
     await page.screenshot({ path: shotPath, fullPage: true }).catch(() => undefined);
     throw err;
   } finally {
-    await page.close();
+    await context.close();
   }
 
   if (pageErrors.length > 0) {

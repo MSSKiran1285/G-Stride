@@ -178,6 +178,18 @@ export interface TrainingSupplement {
 
 export interface AuditEvidenceInput {
   runId: string;
+  executionId?: string;
+  planHash?: string;
+  snapshotHash?: string;
+  planSchemaVersion?: string | number;
+  snapshotSchemaVersion?: string | number;
+  dataVersions?: string[];
+  targetHostname?: string;
+  targetSafetyClass?: 'unknown' | 'non-production' | 'production-like';
+  targetVerifiedAt?: string;
+  redactionState?: 'enforced';
+  memberId?: string;
+  iterationId?: string;
   mode: 'chain' | 'suite' | 'batch';
   appId: string;
   status: 'passed' | 'failed';
@@ -408,17 +420,34 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
   const tenant = inferTenant(input.stages);
   const modeLabel = executionModeLabel(input);
   const testCaseId = input.testCaseId ?? '[Not assigned]';
-  const documentOutputs = outputKeys.filter((key) => !/count$/i.test(key));
+  const documentOutputs = outputKeys.filter(
+    (key) => !/count$/i.test(key) && !['automationReference', 'automationOwner', 'transactionFailureDisposition'].includes(key)
+  );
+  const automationReference = input.outputFields.automationReference;
+  const automationOwner = input.outputFields.automationOwner;
+  const retainsFailedState = input.outputFields.transactionFailureDisposition === 'retain-for-review';
   const brandLogo = imageToDataUriSafe(path.resolve(__dirname, '../../studio-web/public/ai-elk-logo-evidence.png'));
 
   const metadataRows = `
     <tr><td>Run ID</td><td><code>${escapeHtml(input.runId)}</code></td></tr>
+    ${input.executionId ? `<tr><td>Execution ID</td><td><code>${escapeHtml(input.executionId)}</code></td></tr>` : ''}
+    ${input.memberId ? `<tr><td>Plan Member</td><td><code>${escapeHtml(input.memberId)}</code></td></tr>` : ''}
+    ${input.iterationId ? `<tr><td>Transaction Iteration</td><td><code>${escapeHtml(input.iterationId)}</code></td></tr>` : ''}
+    ${input.planHash ? `<tr><td>Plan Hash</td><td><code>${escapeHtml(input.planHash)}</code></td></tr>` : ''}
+    ${input.snapshotHash ? `<tr><td>Snapshot Hash</td><td><code>${escapeHtml(input.snapshotHash)}</code></td></tr>` : ''}
+    ${input.planSchemaVersion ? `<tr><td>Plan Schema Version</td><td>${escapeHtml(input.planSchemaVersion)}</td></tr>` : ''}
+    ${input.snapshotSchemaVersion ? `<tr><td>Snapshot Schema Version</td><td>${escapeHtml(input.snapshotSchemaVersion)}</td></tr>` : ''}
+    ${input.dataVersions?.length ? `<tr><td>Data Versions</td><td>${input.dataVersions.map((value) => `<code>${escapeHtml(value)}</code>`).join('<br>')}</td></tr>` : ''}
     <tr><td>Execution Mode</td><td>${escapeHtml(modeLabel)}</td></tr>
     <tr><td>Started</td><td>${escapeHtml(formatTimestamp(input.startedAt))}</td></tr>
     <tr><td>Finished</td><td>${escapeHtml(formatTimestamp(input.finishedAt))}</td></tr>
     <tr><td>Total Duration</td><td>${escapeHtml(totalDuration)}</td></tr>
     <tr><td>Executed By</td><td>${escapeHtml(input.executedBy)}</td></tr>
-    <tr><td>Tenant / Environment</td><td>${escapeHtml(tenant)}</td></tr>
+    <tr><td>Time Zone</td><td>${escapeHtml(Intl.DateTimeFormat().resolvedOptions().timeZone || 'Runtime local time zone')}</td></tr>
+    <tr><td>Tenant / Environment</td><td>${escapeHtml(input.targetHostname ?? tenant)}</td></tr>
+    <tr><td>Target Safety Class</td><td>${escapeHtml(input.targetSafetyClass ?? 'Not captured')}</td></tr>
+    <tr><td>Target Verified At</td><td>${escapeHtml(input.targetVerifiedAt ? formatTimestamp(input.targetVerifiedAt) : 'Not captured')}</td></tr>
+    <tr><td>Redaction</td><td>${input.redactionState === 'enforced' ? 'Enforced — credentials excluded; execution logs filtered' : 'Not captured'}</td></tr>
     <tr><td>Test Case ID</td><td>${escapeHtml(testCaseId)}</td></tr>
   `;
 
@@ -495,6 +524,18 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
       <tbody>${metadataRows}</tbody>
     </table>
     ${input.startFailure ? `<p class="status-failed">Failed to start: ${escapeHtml(input.startFailure)}</p>` : ''}
+    ${
+      automationReference || automationOwner || retainsFailedState
+        ? `<div class="compliance-box">
+            <b>Transactional compliance disposition</b>
+            ${automationReference ? `<p>Automation reference: <code>${escapeHtml(String(automationReference))}</code></p>` : ''}
+            ${automationOwner ? `<p>Accountable run owner: ${escapeHtml(String(automationOwner))}</p>` : ''}
+            <p>${input.status === 'failed'
+              ? 'Execution stopped at the failed step. Created SAP documents and the failed system state were retained unchanged for compliance review; no automatic reversal was performed.'
+              : 'If a transactional step fails, execution stops and the resulting SAP state is retained unchanged for compliance review; no automatic reversal is performed.'}</p>
+          </div>`
+        : ''
+    }
     ${keyResultsSection}
   `;
 
@@ -724,6 +765,8 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
       .obj-box ul { margin: 6px 0 0 18px; padding: 0; }
       .errors-box { background: #fff8ec; border-left: 5px solid #d68910; padding: 8px 12px; margin: 10px 0; border-radius: 3px; }
       .errors-box ol { margin: 4px 0 0 16px; padding: 0; }
+      .compliance-box { background: #fff8ec; border: 1px solid #e7bd74; border-left: 5px solid #d68910; padding: 10px 14px; margin: 12px 0 20px; border-radius: 3px; }
+      .compliance-box p { margin: 5px 0 0; }
       .errors-box li { margin-bottom: 5px; }
       .common-errors-section h3 { margin-top: 0; }
       .common-errors-section h3 i { color: #687078; font-size: 9pt; font-weight: 400; }

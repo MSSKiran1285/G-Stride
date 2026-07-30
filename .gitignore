@@ -6,6 +6,7 @@ dist/
 .wrangler/
 apps/test-operations/.artifacts/
 apps/test-operations/out/
+regression/results/raw/
 .claude/
 *.tsbuildinfo
 .env
@@ -15,6 +16,8 @@ regression/.artifacts/
 regression/run-log-*.txt
 tmp/
 studio-*.log
+.studio-server*.log
+debug.log
 *.db
 *.db-shm
 *.db-wal

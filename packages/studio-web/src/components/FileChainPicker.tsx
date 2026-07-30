@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { ArrowDown, ArrowUp, Plus, X } from 'lucide-react';
+import { useId, useState } from 'react';
 
 interface FileChainPickerProps {
   availableLabel: string;
@@ -8,66 +9,78 @@ interface FileChainPickerProps {
   onChange: (next: string[]) => void;
 }
 
-/** Two-column picker: filterable available list on the left, ordered selection with move/remove on the right. */
+/** Filterable ordered transfer list with keyboard controls and live announcements. */
 export function FileChainPicker({ availableLabel, selectedLabel, items, selected, onChange }: FileChainPickerProps) {
   const [filter, setFilter] = useState('');
-  const filteredItems = items.filter((f) => f.toLowerCase().includes(filter.toLowerCase()));
+  const [announcement, setAnnouncement] = useState('');
+  const statusId = useId();
+  const filteredItems = items.filter((file) => file.toLowerCase().includes(filter.toLowerCase()));
 
   function add(item: string) {
     if (selected.includes(item)) return;
     onChange([...selected, item]);
+    setAnnouncement(`${item} added as item ${selected.length + 1}.`);
   }
 
   function remove(item: string) {
-    onChange(selected.filter((f) => f !== item));
+    onChange(selected.filter((file) => file !== item));
+    setAnnouncement(`${item} removed.`);
   }
 
-  function move(index: number, dir: -1 | 1) {
-    const target = index + dir;
+  function move(index: number, direction: -1 | 1) {
+    const target = index + direction;
     if (target < 0 || target >= selected.length) return;
     const next = [...selected];
     [next[index], next[target]] = [next[target], next[index]];
     onChange(next);
+    setAnnouncement(`${selected[index]} moved to position ${target + 1}.`);
   }
 
   return (
-    <div className="row">
-      <div style={{ flex: 1 }}>
+    <div className="file-chain-picker" aria-describedby={statusId}>
+      <div className="file-chain-column">
         <label>{availableLabel}</label>
-        <input aria-label={`Filter ${availableLabel.toLowerCase()}`} type="text" placeholder="Filter…" value={filter} onChange={(e) => setFilter(e.target.value)} style={{ marginBottom: '0.4rem' }} />
+        <input
+          aria-label={`Filter ${availableLabel.toLowerCase()}`}
+          type="search"
+          placeholder="Filter…"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+        />
         <ul className="chain-list">
-          {filteredItems.map((f) => (
-            <li key={f}>
-              <span style={{ flex: 1 }}>{f}</span>
-              <button className="ghost" aria-label={`Add ${f} to ${selectedLabel}`} onClick={() => add(f)} disabled={selected.includes(f)}>
-                + Add
+          {filteredItems.map((file) => (
+            <li key={file}>
+              <span>{file}</span>
+              <button className="ghost" aria-label={`Add ${file} to ${selectedLabel}`} onClick={() => add(file)} disabled={selected.includes(file)}>
+                <Plus size={14} aria-hidden="true" /> + Add
               </button>
             </li>
           ))}
           {filteredItems.length === 0 && <li className="hint">No matches.</li>}
         </ul>
       </div>
-      <div style={{ flex: 1 }}>
+      <div className="file-chain-column">
         <label>{selectedLabel}</label>
         <ul className="chain-list">
-          {selected.map((f, i) => (
-            <li key={f}>
-              <span className="step-index">{i + 1}</span>
-              <span style={{ flex: 1 }}>{f}</span>
-              <button className="ghost" aria-label={`Move ${f} up`} onClick={() => move(i, -1)} disabled={i === 0}>
-                ↑
+          {selected.map((file, index) => (
+            <li key={file}>
+              <span className="step-index">{index + 1}</span>
+              <span>{file}</span>
+              <button className="ghost" aria-label={`Move ${file} up`} onClick={() => move(index, -1)} disabled={index === 0}>
+                <ArrowUp size={14} aria-hidden="true" />
               </button>
-              <button className="ghost" aria-label={`Move ${f} down`} onClick={() => move(i, 1)} disabled={i === selected.length - 1}>
-                ↓
+              <button className="ghost" aria-label={`Move ${file} down`} onClick={() => move(index, 1)} disabled={index === selected.length - 1}>
+                <ArrowDown size={14} aria-hidden="true" />
               </button>
-              <button className="ghost danger" aria-label={`Remove ${f} from ${selectedLabel}`} onClick={() => remove(f)}>
-                ✕
+              <button className="ghost danger" aria-label={`Remove ${file} from ${selectedLabel}`} onClick={() => remove(file)}>
+                <X size={14} aria-hidden="true" />
               </button>
             </li>
           ))}
           {selected.length === 0 && <li className="hint">Nothing selected yet.</li>}
         </ul>
       </div>
+      <span id={statusId} className="sr-only" role="status" aria-live="polite">{announcement}</span>
     </div>
   );
 }

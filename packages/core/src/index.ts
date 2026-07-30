@@ -1,4 +1,6 @@
 export * from './domain/testCase';
+export * from './domain/testContract';
+export * from './domain/executionPlan';
 export * from './domain/runResult';
 export * from './domain/objectRepository';
 export * from './domain/documentLog';

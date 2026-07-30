@@ -55,3 +55,26 @@ test('unsaved new group is protected from shell navigation', async () => {
     });
   });
 });
+
+test('browser Back cannot discard an unsaved route-selected artifact without confirmation', async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'unsaved-browser-back-guard', async (page) => {
+      await page.goto(BASE_URL);
+      await page.getByRole('button', { name: /Compose/ }).first().click();
+      await page.getByLabel('New test case file name').fill('unsaved-back-route');
+      await page.getByRole('button', { name: 'Create' }).click();
+      assert.equal(new URL(page.url()).pathname, '/compose/tests/unsaved-back-route.json');
+      await page.getByText(/unsaved changes/i).waitFor();
+
+      const dialogPromise = page.waitForEvent('dialog');
+      const backAttempt = page.goBack({ timeout: 3000 }).catch(() => null);
+      const dialog = await dialogPromise;
+      assert.match(dialog.message(), /unsaved changes/i);
+      await dialog.dismiss();
+      await backAttempt;
+      await page.waitForURL('**/compose/tests/unsaved-back-route.json');
+      assert.equal(new URL(page.url()).pathname, '/compose/tests/unsaved-back-route.json');
+      await page.getByLabel('Test case name').waitFor();
+    });
+  });
+});

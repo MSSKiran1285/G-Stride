@@ -1,0 +1,7 @@
+{
+  "name": "Cleanup Abandoned Purchase Order Drafts",
+  "appId": "createPurchaseOrder",
+  "testCaseFiles": [
+    "cleanup-abandoned-drafts.json"
+  ]
+}

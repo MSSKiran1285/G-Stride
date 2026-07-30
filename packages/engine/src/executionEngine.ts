@@ -2,6 +2,7 @@ import { performance } from 'node:perf_hooks';
 import { ObjectRepository, TestCase, RunResult, RunStage, StepResult, FieldEvidence, resolveParams } from '@taf/core';
 import { IAutomationAdapter } from './adapter';
 import { ModuleRegistry } from './moduleRegistry';
+import { ChildWorkProgress } from './module';
 
 export interface ExecutionOptions {
   appId: string;
@@ -21,6 +22,7 @@ export interface ExecutionProgress {
   currentStage: string;
   currentStep: string;
   latestStepStatus?: 'passed' | 'failed';
+  childWork?: ChildWorkProgress;
 }
 
 interface ProgressTracker {
@@ -84,6 +86,12 @@ async function runSteps(
         params: resolvedParams,
         runState,
         evidenceDir: options.evidenceDir,
+        onChildProgress: (childWork) =>
+          emitProgress(progressTracker, {
+            currentStage,
+            currentStep: describeStep(module, resolvedParams, runState),
+            childWork,
+          }),
       });
       steps.push({
         module: call.module,

@@ -1,0 +1,21 @@
+{
+  "name": "Verify Procurement Navigation - Read Only",
+  "objective": "Confirm independently that the configured SAP account can authenticate and open the Manage Purchase Orders application without changing business data.",
+  "preconditions": "The SAP connection is saved, classified as non-production, and live-verified.",
+  "steps": [
+    {
+      "module": "Login",
+      "params": {
+        "url": "${url}",
+        "username": "${username}",
+        "password": "${password}"
+      }
+    },
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#PurchaseOrder-manage"
+      }
+    }
+  ]
+}

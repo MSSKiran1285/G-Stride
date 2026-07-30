@@ -24,6 +24,8 @@ import { ClickTableCell } from './modules/clickTableCell';
 import { FillTableCell } from './modules/fillTableCell';
 import { CallControlMethod } from './modules/callControlMethod';
 import { SelectTableRow } from './modules/selectTableRow';
+import { CreateAutomationRunReference } from './modules/createAutomationRunReference';
+import { AssertDocumentCreationBlocked } from './modules/assertDocumentCreationBlocked';
 
 const builtInModules: Module[] = [
   Login,
@@ -51,6 +53,8 @@ const builtInModules: Module[] = [
   FillTableCell,
   CallControlMethod,
   SelectTableRow,
+  CreateAutomationRunReference,
+  AssertDocumentCreationBlocked,
 ];
 
 export class ModuleRegistry {

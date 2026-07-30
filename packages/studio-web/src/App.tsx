@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,7 +14,6 @@ import {
   Play,
   Scan,
   Sliders,
-  X,
   Zap,
 } from 'lucide-react';
 import { api } from './api';
@@ -29,9 +28,12 @@ import { ObjectScanner } from './components/ObjectScanner';
 import { RunPanel } from './components/RunPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { TestCaseEditor } from './components/TestCaseEditor';
-import type { AuthState, IntegrationSettings, SapIntegrationStatus } from './types';
+import { AsyncFeedback, DrawerHeader } from './components/WorkspacePrimitives';
+import type { AuthState, IntegrationSettings, SapIntegrationStatus, WorkspaceContext } from './types';
+import { parseStudioRoute, studioRoutes, VIEW_PATHS } from './routes';
+import type { WorkspaceView } from './routes';
 
-export type View = 'launchpad' | 'objects' | 'editor' | 'data' | 'groups' | 'run' | 'documents';
+export type View = WorkspaceView;
 
 interface NavStep {
   id: View;
@@ -93,7 +95,9 @@ const navSteps: NavStep[] = [
 ];
 
 export function App() {
-  const [view, setView] = useState<View>('launchpad');
+  const [routePath, setRoutePath] = useState(window.location.pathname);
+  const routePathRef = useRef(window.location.pathname);
+  const [view, setView] = useState<View>(() => parseStudioRoute(window.location.pathname).view);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => localStorage.getItem('qa4hana.theme') === 'dark' ? 'dark' : 'light');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [helperDrawerOpen, setHelperDrawerOpen] = useState(false);
@@ -103,6 +107,7 @@ export function App() {
   const [auth, setAuth] = useState<AuthState | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [integrationSettings, setIntegrationSettings] = useState<IntegrationSettings | null>(null);
+  const [workspaceContext, setWorkspaceContext] = useState<WorkspaceContext | null>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -114,29 +119,74 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    const handlePopState = () => {
+      const nextPath = window.location.pathname;
+      const nextView = parseStudioRoute(nextPath).view;
+      if (activeViewDirty && !window.confirm('You have unsaved changes. Discard them and leave this page?')) {
+        window.history.pushState({}, '', routePathRef.current);
+        return;
+      }
+      setActiveViewDirty(false);
+      routePathRef.current = nextPath;
+      setRoutePath(nextPath);
+      setView(nextView);
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeViewDirty, routePath]);
+
+  useEffect(() => {
     if (!auth?.authenticated) return;
     api.getIntegrationSettings().then(setIntegrationSettings).catch(() => setIntegrationSettings(null));
+    api.getWorkspaceContext().then(setWorkspaceContext).catch(() => setWorkspaceContext(null));
   }, [auth?.authenticated]);
 
   if (authError) {
     return <main className="login-screen"><section className="login-card"><h1>Studio could not start</h1><p className="error-text">{authError}</p></section></main>;
   }
   if (!auth) {
-    return <main className="login-screen"><section className="login-card"><p>Loading workspace…</p></section></main>;
+    return <main className="login-screen"><section className="login-card"><AsyncFeedback state="loading" message="Loading workspace…" /></section></main>;
   }
   if (!auth.authenticated) {
     return <LoginScreen auth={auth} onAuthenticated={setAuth} />;
   }
 
   const pipelineSteps = navSteps.filter((step) => step.num !== undefined);
+  const route = parseStudioRoute(routePath);
   const currentPipelineIdx = pipelineSteps.findIndex((step) => step.id === view);
   const currentStep = navSteps.find((step) => step.id === view) ?? navSteps[0];
 
   const navigateTo = (nextView: View) => {
-    if (nextView === view) return;
+    if (nextView === view && routePath === VIEW_PATHS[nextView]) return;
     if (activeViewDirty && !window.confirm('You have unsaved changes. Discard them and leave this page?')) return;
     setActiveViewDirty(false);
+    const nextPath = VIEW_PATHS[nextView];
+    window.history.pushState({}, '', nextPath);
+    routePathRef.current = nextPath;
+    setRoutePath(nextPath);
     setView(nextView);
+  };
+
+  const navigateToPath = (nextPath: string, respectDirty = true) => {
+    if (nextPath === routePath) return;
+    if (respectDirty && activeViewDirty && !window.confirm('You have unsaved changes. Discard them and leave this page?')) return;
+    setActiveViewDirty(false);
+    window.history.pushState({}, '', nextPath);
+    routePathRef.current = nextPath;
+    setRoutePath(nextPath);
+    setView(parseStudioRoute(nextPath).view);
+  };
+
+  const updateDetailPath = (nextPath: string) => {
+    if (nextPath === routePath) return;
+    window.history.pushState({}, '', nextPath);
+    routePathRef.current = nextPath;
+    setRoutePath(nextPath);
+    setView(parseStudioRoute(nextPath).view);
+  };
+
+  const openRunRoute = (runId: string) => {
+    navigateToPath(studioRoutes.run(runId), false);
   };
 
   const goToNextStep = () => {
@@ -156,16 +206,21 @@ export function App() {
   };
 
   const targetLabel = (() => {
-    if (!integrationSettings?.sap.configured) return 'No SAP target configured';
-    try {
-      return `SAP · ${new URL(integrationSettings.sap.url).hostname}`;
-    } catch {
-      return 'SAP target configured';
-    }
+    if (!workspaceContext?.target.configured) return 'No SAP target configured';
+    const classLabel = workspaceContext.target.safetyClass === 'non-production'
+      ? 'Non-production'
+      : workspaceContext.target.safetyClass === 'production-like'
+        ? 'Production-like'
+        : 'Unclassified';
+    const verification = workspaceContext.target.verificationStatus === 'live-verified'
+      ? 'Verified'
+      : 'Verification required';
+    return `SAP · ${workspaceContext.target.hostname ?? 'configured'} · ${classLabel} · ${verification}`;
   })();
 
   const handleSapSaved = (sap: SapIntegrationStatus) => {
     setIntegrationSettings((current) => current ? { ...current, sap } : null);
+    api.getWorkspaceContext().then(setWorkspaceContext).catch(() => setWorkspaceContext(null));
   };
 
   const signOut = async () => {
@@ -224,7 +279,7 @@ export function App() {
                 onClick={() => navigateTo(step.id)}
                 title={sidebarCollapsed ? step.label : step.desc}
                 aria-current={isActive ? 'page' : undefined}
-                aria-label={sidebarCollapsed ? step.label : undefined}
+                aria-label={step.label}
               >
                 <span className="nav-item-icon-wrap" aria-hidden="true">{step.icon}</span>
                 {!sidebarCollapsed && <span className="nav-item-label">{step.label}</span>}
@@ -260,7 +315,7 @@ export function App() {
           <div className="workspace-header-right">
             <button
               type="button"
-              className={`context-target${integrationSettings?.sap.configured ? ' configured' : ''}`}
+              className={`context-target${workspaceContext?.target.configured ? ' configured' : ''}`}
               onClick={() => openSettings('sap')}
               title="Open SAP target settings"
             >
@@ -292,19 +347,45 @@ export function App() {
             <ErrorBoundary key={view}>
               <div className="view-transition-wrapper">
                 {view === 'launchpad' ? (
-                  <AutomationOverview onNavigate={navigateTo} />
+                  <AutomationOverview onNavigate={navigateTo} workspaceContext={workspaceContext} />
                 ) : view === 'objects' ? (
-                  <ObjectScanner />
+                  <ObjectScanner
+                    initialAppId={route.objectAppId}
+                    initialObjectName={route.objectName}
+                    onSelectionChange={(appId, objectName) => updateDetailPath(studioRoutes.object(appId, objectName))}
+                  />
                 ) : view === 'editor' ? (
-                  <TestCaseEditor selectedTxTemplate={null} onDirtyChange={setActiveViewDirty} />
+                  <TestCaseEditor
+                    selectedTxTemplate={null}
+                    initialFile={route.testFile}
+                    onSelectedFileChange={(file) => updateDetailPath(studioRoutes.test(file))}
+                    onDirtyChange={setActiveViewDirty}
+                  />
                 ) : view === 'data' ? (
-                  <DataEditor onDirtyChange={setActiveViewDirty} />
+                  <DataEditor
+                    initialFile={route.dataFile}
+                    onSelectedFileChange={(file) => updateDetailPath(studioRoutes.data(file))}
+                    onDirtyChange={setActiveViewDirty}
+                  />
                 ) : view === 'groups' ? (
-                  <GroupEditor onDirtyChange={setActiveViewDirty} />
+                  <GroupEditor
+                    initialFile={route.processFile}
+                    onSelectedFileChange={(file) => updateDetailPath(studioRoutes.process(file))}
+                    onDirtyChange={setActiveViewDirty}
+                  />
                 ) : view === 'documents' ? (
-                  <DocumentsPanel />
+                  <DocumentsPanel
+                    selectedRunId={route.auditRunId}
+                    onSelectedRunChange={(runId) => updateDetailPath(runId ? studioRoutes.auditRun(runId) : VIEW_PATHS.documents)}
+                  />
                 ) : (
-                  <RunPanel />
+                  <RunPanel
+                    initialRunId={route.runId}
+                    onRunStarted={openRunRoute}
+                    onNavigateToRoute={(path) => navigateToPath(path)}
+                    onOpenSapSettings={() => openSettings('sap')}
+                    onDirtyChange={setActiveViewDirty}
+                  />
                 )}
               </div>
             </ErrorBoundary>
@@ -312,12 +393,12 @@ export function App() {
 
           {helperDrawerOpen && (
             <aside id="authoring-reference" className="engineer-side-drawer" aria-label="Help and authoring reference">
-              <div className="drawer-header">
-                <h3><BookOpen size={18} aria-hidden="true" /> Help and reference</h3>
-                <button type="button" className="ghost" onClick={() => setHelperDrawerOpen(false)} aria-label="Close help">
-                  <X size={16} aria-hidden="true" />
-                </button>
-              </div>
+              <DrawerHeader
+                title="Help and reference"
+                icon={<BookOpen size={18} aria-hidden="true" />}
+                closeLabel="Close help"
+                onClose={() => setHelperDrawerOpen(false)}
+              />
 
               <div className="drawer-body">
                 <section className="drawer-section">

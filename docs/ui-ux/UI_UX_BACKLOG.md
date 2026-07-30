@@ -1,5 +1,10 @@
 # SAP S/4HANA Test Automation Studio — Prioritised UI/UX Backlog
 
+> **Superseded on 29 July 2026.** All work packages and their legacy IDs are
+> consolidated in the authoritative
+> [Product Backlog Tracker](./PRODUCT_BACKLOG_TRACKER.html). This file is retained
+> for historical detail and must not be updated independently.
+
 ## Backlog rules
 
 - No item authorises implementation; each becomes a reviewed work package.

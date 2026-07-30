@@ -1,0 +1,13 @@
+{
+  "name": "Open Manage Purchase Orders - Read Only",
+  "objective": "Confirm that an authenticated session can open the Manage Purchase Orders application without creating or changing a purchase order.",
+  "preconditions": "An authenticated SAP browser session is available from the preceding Business Process stage.",
+  "steps": [
+    {
+      "module": "NavigateToApp",
+      "params": {
+        "url": "${urlBase}/ui#PurchaseOrder-manage"
+      }
+    }
+  ]
+}

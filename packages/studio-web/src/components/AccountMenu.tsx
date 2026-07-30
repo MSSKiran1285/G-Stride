@@ -1,5 +1,5 @@
 import { ChevronUp, CircleHelp, LogOut, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { StudioUser } from '../types';
 
 function initials(name: string) {
@@ -22,9 +22,43 @@ export function AccountMenu({
   onSignOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const firstItem = menuRef.current?.querySelector<HTMLButtonElement>('[role="menuitem"]:not(:disabled)');
+    firstItem?.focus();
+  }, [open]);
+
+  function handleMenuKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    const items = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]:not(:disabled)') ?? []);
+    const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setOpen(false);
+      menuRef.current?.querySelector<HTMLButtonElement>('.account-trigger')?.focus();
+    } else if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && items.length > 0) {
+      event.preventDefault();
+      const direction = event.key === 'ArrowDown' ? 1 : -1;
+      items[(currentIndex + direction + items.length) % items.length].focus();
+    } else if (event.key === 'Home' && items.length > 0) {
+      event.preventDefault();
+      items[0].focus();
+    } else if (event.key === 'End' && items.length > 0) {
+      event.preventDefault();
+      items[items.length - 1].focus();
+    }
+  }
 
   return (
-    <div className={`account-menu-wrap${collapsed ? ' collapsed' : ''}`}>
+    <div
+      ref={menuRef}
+      className={`account-menu-wrap${collapsed ? ' collapsed' : ''}`}
+      onKeyDown={handleMenuKeyDown}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
+      }}
+    >
       {open && (
         <div className="account-popover" role="menu">
           <button type="button" role="menuitem" onClick={() => { setOpen(false); onSettings(); }}>

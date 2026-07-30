@@ -11,7 +11,7 @@ import type { ObjectControl, ObjectKind } from '../types';
  * click). Purely a studio-web display concern — doesn't need to match the engine's own
  * classification 1:1, just needs to steer a human toward the right object.
  */
-export function classifyObjectKind(o: Pick<ObjectControl, 'controlType' | 'tableId'>): ObjectKind {
+function classifyObjectKind(o: Pick<ObjectControl, 'controlType' | 'tableId'>): ObjectKind {
   if (o.tableId) return 'tableColumn';
   const t = o.controlType ?? '';
   if (/Button|Link|GenericTile|Card|IconTabFilter/.test(t)) return 'clickable';

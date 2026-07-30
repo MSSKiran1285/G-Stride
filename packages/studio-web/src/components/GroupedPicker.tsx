@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Check, ChevronDown, ChevronRight, Search } from 'lucide-react';
 
 interface GroupedPickerProps<T> {
   value: string;
@@ -13,38 +14,66 @@ interface GroupedPickerProps<T> {
 }
 
 /**
- * A collapsible grouped dropdown: each group starts collapsed (name + count only),
- * so opening the picker doesn't dump every item across every group on screen at
- * once — you expand only the group you're looking in. The group containing the
- * current selection starts expanded, so re-opening an already-selected item doesn't
- * require re-discovering which group it's under. Generic over T so the same tree UI
- * serves both file pickers (test cases/groups/datasets, grouped by BL-10's
- * processArea tag) and the module picker (grouped by each module's own category).
+ * Searchable grouped listbox. The search field owns the active option so Arrow
+ * keys, Home/End, Enter and Escape work without moving focus through every row.
  */
-export function GroupedPicker<T>({ value, onChange, items, getKey, getLabel, getGroup, sortGroups, placeholder, ariaLabel }: GroupedPickerProps<T>) {
+export function GroupedPicker<T>({
+  value,
+  onChange,
+  items,
+  getKey,
+  getLabel,
+  getGroup,
+  sortGroups,
+  placeholder,
+  ariaLabel,
+}: GroupedPickerProps<T>) {
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [activeKey, setActiveKey] = useState('');
   const selectedItem = items.find((item) => getKey(item) === value);
-  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(selectedItem ? [getGroup(selectedItem)] : []));
+  const [expanded, setExpanded] = useState<Set<string>>(
+    () => new Set(selectedItem ? [getGroup(selectedItem)] : []),
+  );
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const listboxId = useId();
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) setOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const groups = items.reduce<Record<string, T[]>>((acc, item) => {
-    const g = getGroup(item);
-    (acc[g] ??= []).push(item);
-    return acc;
-  }, {});
+  useEffect(() => {
+    if (!open) return;
+    setQuery('');
+    setActiveKey(value);
+    window.requestAnimationFrame(() => searchRef.current?.focus());
+  }, [open, value]);
+
+  const groups = useMemo(() => items.reduce<Record<string, T[]>>((result, item) => {
+    const group = getGroup(item);
+    (result[group] ??= []).push(item);
+    return result;
+  }, {}), [items, getGroup]);
   const groupNames = Object.keys(groups).sort(sortGroups);
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleGroups = groupNames
+    .map((group) => ({
+      group,
+      items: groups[group].filter((item) => getLabel(item).toLowerCase().includes(normalizedQuery)),
+    }))
+    .filter(({ items: groupItems }) => groupItems.length > 0);
+  const visibleItems = visibleGroups.flatMap(({ group, items: groupItems }) => (
+    normalizedQuery || expanded.has(group) ? groupItems : []
+  ));
 
   function toggle(group: string) {
-    setExpanded((prev) => {
-      const next = new Set(prev);
+    setExpanded((current) => {
+      const next = new Set(current);
       if (next.has(group)) next.delete(group);
       else next.add(group);
       return next;
@@ -56,57 +85,112 @@ export function GroupedPicker<T>({ value, onChange, items, getKey, getLabel, get
     setOpen(false);
   }
 
+  function moveActive(direction: -1 | 1) {
+    if (visibleItems.length === 0) return;
+    const currentIndex = visibleItems.findIndex((item) => getKey(item) === activeKey);
+    const nextIndex = currentIndex === -1
+      ? (direction === 1 ? 0 : visibleItems.length - 1)
+      : (currentIndex + direction + visibleItems.length) % visibleItems.length;
+    setActiveKey(getKey(visibleItems[nextIndex]));
+  }
+
+  function handleSearchKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      moveActive(event.key === 'ArrowDown' ? 1 : -1);
+    } else if (event.key === 'Home' && visibleItems.length > 0) {
+      event.preventDefault();
+      setActiveKey(getKey(visibleItems[0]));
+    } else if (event.key === 'End' && visibleItems.length > 0) {
+      event.preventDefault();
+      setActiveKey(getKey(visibleItems[visibleItems.length - 1]));
+    } else if (event.key === 'Enter' && activeKey && visibleItems.some((item) => getKey(item) === activeKey)) {
+      event.preventDefault();
+      select(activeKey);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      setOpen(false);
+    }
+  }
+
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef} className="grouped-picker">
       <button
         type="button"
-        className="ghost"
-        style={{ width: '100%', textAlign: 'left', border: '1px solid var(--border)' }}
-        onClick={() => setOpen((o) => !o)}
+        className="grouped-picker-trigger"
+        onClick={() => setOpen((current) => !current)}
         aria-label={ariaLabel}
         aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={listboxId}
       >
-        {selectedItem ? getLabel(selectedItem) : placeholder || '— select —'}
+        <span>{selectedItem ? getLabel(selectedItem) : placeholder || '— select —'}</span>
+        <ChevronDown size={15} aria-hidden="true" />
       </button>
       {open && (
-        <div
-          className="panel"
-          style={{ position: 'absolute', top: 'calc(100% + 0.2rem)', left: 0, right: 0, zIndex: 20, maxHeight: '20rem', overflowY: 'auto', padding: '0.3rem' }}
-        >
-          {groupNames.length === 0 && <p className="hint" style={{ margin: '0.3rem 0.5rem' }}>Nothing here yet.</p>}
-          {groupNames.map((group) => (
-            <div key={group}>
+        <div className="grouped-picker-popover">
+          <label className="grouped-picker-search">
+            <Search size={14} aria-hidden="true" />
+            <input
+              ref={searchRef}
+              role="combobox"
+              aria-label={`Search ${ariaLabel?.toLowerCase() || 'options'}`}
+              aria-autocomplete="list"
+              aria-controls={listboxId}
+              aria-expanded="true"
+              aria-activedescendant={activeKey ? `${listboxId}-${encodeURIComponent(activeKey)}` : undefined}
+              type="search"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.currentTarget.value);
+                setActiveKey('');
+              }}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search…"
+            />
+          </label>
+          <div id={listboxId} className="grouped-picker-listbox" role="listbox" aria-label={ariaLabel}>
+            {visibleGroups.length === 0 && <p className="grouped-picker-empty">No matching options.</p>}
+            {visibleGroups.map(({ group, items: groupItems }) => (
               <div
-                className="row"
-                style={{ padding: '0.3rem 0.4rem', cursor: 'pointer', alignItems: 'center', gap: '0.4rem', fontWeight: 600, borderRadius: '4px' }}
-                onClick={() => toggle(group)}
+                key={group}
+                className="grouped-picker-group"
+                role="group"
+                aria-label={`${group}, ${groupItems.length} options`}
               >
-                <span style={{ width: '1rem', display: 'inline-block' }}>{expanded.has(group) ? '▾' : '▸'}</span>
-                <span style={{ flex: 1 }}>{group}</span>
-                <span className="hint">{groups[group].length}</span>
-              </div>
-              {expanded.has(group) &&
-                groups[group].map((item) => {
+                <button
+                  type="button"
+                  className="grouped-picker-group-toggle"
+                  onClick={() => toggle(group)}
+                  aria-expanded={normalizedQuery ? true : expanded.has(group)}
+                >
+                  {normalizedQuery || expanded.has(group)
+                    ? <ChevronDown size={14} aria-hidden="true" />
+                    : <ChevronRight size={14} aria-hidden="true" />}
+                  <span>{group}</span>
+                  <small>{groupItems.length}</small>
+                </button>
+                {(normalizedQuery || expanded.has(group)) && groupItems.map((item) => {
                   const key = getKey(item);
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={key}
-                      className="row"
-                      style={{
-                        padding: '0.3rem 0.4rem 0.3rem 2rem',
-                        cursor: 'pointer',
-                        borderRadius: '4px',
-                        background: key === value ? 'var(--accent-soft)' : undefined,
-                      }}
+                      id={`${listboxId}-${encodeURIComponent(key)}`}
+                      className={`grouped-picker-option${key === value ? ' selected' : ''}${key === activeKey ? ' active' : ''}`}
+                      role="option"
+                      aria-selected={key === value}
                       onClick={() => select(key)}
+                      onMouseEnter={() => setActiveKey(key)}
                     >
-                      {getLabel(item)}
-                    </div>
+                      <span>{getLabel(item)}</span>
+                      {key === value && <Check size={14} aria-hidden="true" />}
+                    </button>
                   );
                 })}
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

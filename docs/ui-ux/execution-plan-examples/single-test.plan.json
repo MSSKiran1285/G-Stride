@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "planId": "single-sales-order",
+  "name": "Create sales orders from selected records",
+  "target": {
+    "provider": "sap",
+    "profileRef": "default",
+    "contextId": "sap-qa"
+  },
+  "evidence": {
+    "enabled": true,
+    "canonical": true
+  },
+  "kind": "singleTest",
+  "testExecution": {
+    "test": {
+      "assetId": "create-sales-order",
+      "file": "testcases/create-so.json",
+      "name": "Create Sales Order - Happy Path",
+      "appId": "createSalesOrder",
+      "contentHash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "contractMode": "declared",
+      "contract": {
+        "version": 1,
+        "inputs": [
+          {
+            "name": "orderType",
+            "type": "string",
+            "required": true,
+            "description": "Sales document type",
+            "sensitivity": "business"
+          },
+          {
+            "name": "salesOrg",
+            "type": "string",
+            "required": true,
+            "description": "Sales organisation",
+            "sensitivity": "business"
+          },
+          {
+            "name": "soldToParty",
+            "type": "string",
+            "required": true,
+            "description": "Customer account",
+            "sensitivity": "business"
+          },
+          {
+            "name": "items",
+            "type": "collection",
+            "required": true,
+            "description": "Sales-order line items",
+            "sensitivity": "business"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "salesOrderNumber",
+            "type": "string",
+            "runtimeKey": "soNumber",
+            "description": "Created Sales Order number",
+            "producedByStep": "CaptureDocumentNumberFromSuccessDialog",
+            "sensitivity": "business"
+          }
+        ]
+      }
+    },
+    "inputBindings": {
+      "orderType": {
+        "source": "processData",
+        "bindingId": "orders",
+        "path": "header.orderType"
+      },
+      "salesOrg": {
+        "source": "processData",
+        "bindingId": "orders",
+        "path": "header.salesOrg"
+      },
+      "soldToParty": {
+        "source": "processData",
+        "bindingId": "orders",
+        "path": "header.soldToParty"
+      },
+      "items": {
+        "source": "processData",
+        "bindingId": "orders",
+        "path": "items"
+      }
+    }
+  },
+  "dataBindings": [
+    {
+      "bindingId": "orders",
+      "scope": "test",
+      "source": {
+        "kind": "file",
+        "format": "json",
+        "files": [
+          "docs/ui-ux/execution-plan-examples/sales-orders.sample.json"
+        ]
+      }
+    }
+  ],
+  "iterationPolicy": {
+    "session": "fresh-per-iteration",
+    "onIterationFailure": "stop-execution",
+    "sequential": true
+  }
+}

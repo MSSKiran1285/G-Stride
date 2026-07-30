@@ -1,4 +1,4 @@
-import { Check, Cloud, Database, Moon, Server, Sun, X } from 'lucide-react';
+import { Check, Cloud, Database, Moon, Server, ShieldCheck, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { AuthState, IntegrationSettings, SapIntegrationStatus } from '../types';
@@ -43,6 +43,9 @@ export function SettingsPanel({
   const [url, setUrl] = useState(integrationSettings?.sap.url ?? '');
   const [username, setUsername] = useState(integrationSettings?.sap.username ?? '');
   const [password, setPassword] = useState('');
+  const [safetyClass, setSafetyClass] = useState<'unknown' | 'non-production' | 'production-like'>(
+    integrationSettings?.sap.safetyClass ?? 'unknown'
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -54,6 +57,7 @@ export function SettingsPanel({
   useEffect(() => {
     setUrl(integrationSettings?.sap.url ?? '');
     setUsername(integrationSettings?.sap.username ?? '');
+    setSafetyClass(integrationSettings?.sap.safetyClass ?? 'unknown');
   }, [integrationSettings]);
 
   async function saveGoogleClientId() {
@@ -83,10 +87,27 @@ export function SettingsPanel({
     setError(null);
     setMessage(null);
     try {
-      const saved = await api.saveSapIntegration({ url, username, password });
+      if (safetyClass === 'unknown') throw new Error('Select a target classification before saving.');
+      const saved = await api.saveSapIntegration({ url, username, password, safetyClass });
       onSapSaved(saved);
       setPassword('');
-      setMessage('SAP target saved securely. Execution Login and Live Scan now use this URL.');
+      setMessage('SAP target saved securely. Verify the connection before running automation.');
+    } catch (reason) {
+      setError(String(reason));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function verifySap() {
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const result = await api.verifySapIntegration();
+      const current = integrationSettings?.sap;
+      if (current) onSapSaved({ ...current, ...result.target });
+      setMessage(result.message);
     } catch (reason) {
       setError(String(reason));
     } finally {
@@ -200,15 +221,46 @@ export function SettingsPanel({
                     disabled={!selectedAvailable}
                   />
                 </label>
+                <label>
+                  Target classification
+                  <select
+                    value={selected === 'sap' ? safetyClass : 'unknown'}
+                    onChange={(event) => selected === 'sap' && setSafetyClass(event.currentTarget.value as typeof safetyClass)}
+                    disabled={!selectedAvailable}
+                  >
+                    <option value="unknown">Select classification</option>
+                    <option value="non-production">Non-production</option>
+                    <option value="production-like">Production-like</option>
+                  </select>
+                </label>
                 {selectedAvailable ? (
                   <>
                     <p className="settings-note">
                       Credentials use the OS vault where available, with an encrypted local fallback for detached Windows server sessions. Passwords are never returned to this browser.
                       {integrationSettings?.sap.source === 'environment' ? ' This profile is currently controlled by server environment variables.' : ''}
                     </p>
-                    <button type="button" className="primary" onClick={saveSap} disabled={saving}>
-                      {saving ? 'Saving…' : 'Save SAP connection'}
-                    </button>
+                    <div className="settings-action-row">
+                      <button type="button" className="primary" onClick={saveSap} disabled={saving || safetyClass === 'unknown'}>
+                        {saving ? 'Working…' : 'Save SAP connection'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={verifySap}
+                        disabled={saving || !integrationSettings?.sap.configured || safetyClass === 'unknown'}
+                      >
+                        <ShieldCheck size={15} aria-hidden="true" /> Verify connection
+                      </button>
+                    </div>
+                    {integrationSettings?.sap.configured && (
+                      <div className={`settings-connected ${integrationSettings.sap.verificationStatus === 'live-verified' ? '' : 'pending'}`}>
+                        <ShieldCheck size={16} />
+                        {integrationSettings.sap.verificationStatus === 'live-verified'
+                          ? `Verified ${integrationSettings.sap.verifiedAt ? new Date(integrationSettings.sap.verifiedAt).toLocaleString() : ''}`
+                          : integrationSettings.sap.verifiedAt
+                            ? `Verification expired; last verified ${new Date(integrationSettings.sap.verifiedAt).toLocaleString()}`
+                            : 'Live verification required'}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <p className="fiori-message-strip info">Configuration UI is reserved; execution support will be enabled in a later release.</p>

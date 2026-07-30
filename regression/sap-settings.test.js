@@ -24,6 +24,7 @@ test('SAP Settings saves encrypted credentials and exposes only non-secret statu
     tagDbPath: path.join(root, 'tags.db'),
     runHistoryDbPath: path.join(root, 'run-history.db'),
     authConfigPath: path.join(root, 'auth.json'),
+    governancePath: path.join(root, 'workspace-governance.json'),
     webDistPath: path.resolve(__dirname, '../packages/studio-web/dist'),
     testCasesDir: path.join(root, 'testcases'),
     groupsDir: path.join(root, 'testgroups'),
@@ -50,12 +51,15 @@ test('SAP Settings saves encrypted credentials and exposes only non-secret statu
         url: 'https://example.invalid',
         username: 'tester@example.com',
         password: 'synthetic-secret',
+        safetyClass: 'non-production',
       }),
     });
     assert.equal(response.status, 200);
     const status = await response.json();
     assert.equal(status.configured, true);
     assert.equal(status.username, 'tester@example.com');
+    assert.equal(status.safetyClass, 'non-production');
+    assert.equal(status.verificationStatus, 'saved-not-live-verified');
     assert.equal(Object.hasOwn(status, 'password'), false);
 
     const credentials = await getCredentials('default');

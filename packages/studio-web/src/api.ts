@@ -3,7 +3,10 @@ import type {
   TestCase,
   ObjectControl,
   RunStatus,
+  RerunReview,
   Dataset,
+  DataPreview,
+  DataRelationDefinition,
   Group,
   ScanStatus,
   ScanSessionInfo,
@@ -16,6 +19,11 @@ import type {
   AuthState,
   IntegrationSettings,
   SapIntegrationStatus,
+  ExecutionDraft,
+  ExecutionHealthMetrics,
+  ExecutionPreflightResult,
+  WorkspaceContext,
+  EvidenceGovernance,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -44,11 +52,23 @@ export const api = {
       body: JSON.stringify({ clientId }),
     }),
   getIntegrationSettings: () => request<IntegrationSettings>('/api/settings/integrations'),
-  saveSapIntegration: (body: { url: string; username: string; password: string }) =>
+  getWorkspaceContext: () => request<WorkspaceContext>('/api/workspace-context'),
+  saveSapIntegration: (body: {
+    url: string;
+    username: string;
+    password: string;
+    safetyClass: 'non-production' | 'production-like';
+  }) =>
     request<SapIntegrationStatus>('/api/settings/integrations/sap', {
       method: 'PUT',
       body: JSON.stringify(body),
     }),
+  verifySapIntegration: () =>
+    request<{
+      target: Pick<SapIntegrationStatus, 'safetyClass' | 'verificationStatus' | 'verifiedAt' | 'verificationMessage'>;
+      message: string;
+    }>('/api/settings/integrations/sap/verify', { method: 'POST' }),
+  getEvidenceGovernance: () => request<EvidenceGovernance>('/api/evidence-governance'),
   listModules: () => request<ModuleInfo[]>('/api/modules'),
   listTestCases: () => request<string[]>('/api/testcases'),
   getTestCase: (file: string) => request<TestCase>(`/api/testcases/${encodeURIComponent(file)}`),
@@ -110,6 +130,27 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(dataset),
     }),
+  listDataRelations: () => request<string[]>('/api/data-relations'),
+  getDataRelation: (file: string) =>
+    request<DataRelationDefinition>(`/api/data-relations/${encodeURIComponent(file)}`),
+  saveDataRelation: (file: string, definition: DataRelationDefinition) =>
+    request<{ ok: true; preview: DataPreview }>(`/api/data-relations/${encodeURIComponent(file)}`, {
+      method: 'PUT',
+      body: JSON.stringify(definition),
+    }),
+  previewData: (body:
+    | { format: 'json'; records: Record<string, import('./types').JsonDataValue>[] }
+    | ({ format: 'relational-csv' } & DataRelationDefinition)
+  ) =>
+    request<DataPreview>('/api/data/preview', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  preflightExecution: (body: ExecutionDraft) =>
+    request<ExecutionPreflightResult>('/api/executions/preflight', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   startRun: (body: {
     testCaseFiles?: string[];
     groupFiles?: string[];
@@ -117,9 +158,40 @@ export const api = {
     dataFile?: string;
     headless?: boolean;
     mode?: 'chain' | 'suite' | 'batch';
+    executionKind?: ExecutionDraft['executionKind'];
+    preflightToken?: string;
+    planHash?: string;
+    acknowledgedWarnings?: string[];
+    sessionPolicy?: ExecutionDraft['sessionPolicy'];
+    iterationFailurePolicy?: ExecutionDraft['iterationFailurePolicy'];
+    maxRecords?: number;
+    dataFilter?: ExecutionDraft['dataFilter'];
+    dataMode?: ExecutionDraft['dataMode'];
+    childDataFile?: string;
+    headerKey?: string;
+    childForeignKey?: string;
+    collectionPath?: string;
   }) =>
     request<RunStatus>('/api/runs', { method: 'POST', body: JSON.stringify(body) }),
   getRun: (id: string) => request<RunStatus>(`/api/runs/${encodeURIComponent(id)}`),
+  getExecutionMetrics: () => request<ExecutionHealthMetrics>('/api/execution-metrics'),
+  cancelRun: (id: string) =>
+    request<RunStatus>(`/api/runs/${encodeURIComponent(id)}/cancel`, { method: 'POST' }),
+  reviewRerun: (id: string, body: { scope: 'full' | 'failed'; reason: string }) =>
+    request<RerunReview>(`/api/runs/${encodeURIComponent(id)}/rerun-review`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+  rerunRun: (id: string, body: {
+    scope: 'full' | 'failed';
+    reason: string;
+    requestKey: string;
+    reviewHash: string;
+  }) =>
+    request<RunStatus>(`/api/runs/${encodeURIComponent(id)}/rerun`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
   listDocuments: (filter: { appId?: string; key?: string } = {}) => {
     const query = new URLSearchParams();
     if (filter.appId) query.set('appId', filter.appId);

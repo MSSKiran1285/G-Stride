@@ -11,6 +11,19 @@ export interface ModuleContext {
   runState: Record<string, unknown>;
   /** When set, fill-related modules capture an annotated "field = value" evidence screenshot into this directory. */
   evidenceDir?: string;
+  /** Optional progress channel for bounded work inside one module step, such
+   * as the line items owned by one sales-order transaction. */
+  onChildProgress?: (progress: ChildWorkProgress) => void | Promise<void>;
+}
+
+export interface ChildWorkProgress {
+  label: string;
+  completed: number;
+  total: number;
+  currentIndex?: number;
+  currentKey?: string;
+  status: 'running' | 'passed' | 'failed';
+  error?: string;
 }
 
 /** One expected entry in a module's params bag — lets a UI generate a real form instead of a freeform key/value editor. */

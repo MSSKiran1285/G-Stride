@@ -50,7 +50,7 @@ export const AddLineItem: Module = {
       }
     },
   },
-  async execute({ adapter, objectRepository, appId, params, runState, evidenceDir }) {
+  async execute({ adapter, objectRepository, appId, params, runState, evidenceDir, onChildProgress }) {
     let rows: Record<string, string>[];
     try {
       rows = JSON.parse(params.rows);
@@ -70,12 +70,48 @@ export const AddLineItem: Module = {
     const clickAfter = params.addClickTiming === 'after';
     const evidence = { evidenceDir, runState };
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-      if (!clickAfter) await clickControl(adapter, objectRepository, appId, addButtonField);
-      for (const [fieldName, value] of Object.entries(rows[rowIndex])) {
-        if (!value) continue;
-        await fillTableCell(adapter, objectRepository, appId, fieldName, rowIndex, value, undefined, evidence);
+      const rowKey = String(
+        rows[rowIndex].lineNumber
+        ?? rows[rowIndex].itemNumber
+        ?? rows[rowIndex].product
+        ?? rowIndex + 1
+      );
+      await onChildProgress?.({
+        label: 'Line items',
+        completed: rowIndex,
+        total: rows.length,
+        currentIndex: rowIndex,
+        currentKey: rowKey,
+        status: 'running',
+      });
+      try {
+        if (!clickAfter) await clickControl(adapter, objectRepository, appId, addButtonField);
+        for (const [fieldName, value] of Object.entries(rows[rowIndex])) {
+          if (!value) continue;
+          await fillTableCell(adapter, objectRepository, appId, fieldName, rowIndex, value, undefined, evidence);
+        }
+        if (clickAfter) await clickControl(adapter, objectRepository, appId, addButtonField);
+        await onChildProgress?.({
+          label: 'Line items',
+          completed: rowIndex + 1,
+          total: rows.length,
+          currentIndex: rowIndex,
+          currentKey: rowKey,
+          status: 'passed',
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        await onChildProgress?.({
+          label: 'Line items',
+          completed: rowIndex,
+          total: rows.length,
+          currentIndex: rowIndex,
+          currentKey: rowKey,
+          status: 'failed',
+          error: message,
+        });
+        throw new Error(`AddLineItem failed at child row ${rowIndex + 1}${rowKey ? ` (${rowKey})` : ''}: ${message}`);
       }
-      if (clickAfter) await clickControl(adapter, objectRepository, appId, addButtonField);
     }
 
     runState[params.lineItemCountKey ?? 'lineItemCount'] = rows.length;

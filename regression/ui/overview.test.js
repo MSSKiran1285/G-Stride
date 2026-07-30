@@ -29,7 +29,7 @@ test('Canvas First Overview presents the approved shell and real workspace data'
       assert.match(summary[1], /^\d+\s+Process suites$/, 'expected a real process-suite count');
       await page.getByRole('heading', { name: 'Cleanup Abandoned Drafts' }).waitFor();
       await page.getByText('cleanup-abandoned-drafts.json', { exact: true }).last().waitFor();
-      await page.getByText('No SAP target configured', { exact: true }).waitFor();
+      await page.locator('.context-target').waitFor();
       await page.getByRole('heading', { name: 'Execution impact' }).waitFor();
       await page.locator('.impact-metric-label', { hasText: 'Total executions' }).waitFor();
       await page.locator('.impact-metric-label', { hasText: 'Plausible manual effort' }).waitFor();
@@ -67,6 +67,17 @@ test('Canvas First Overview presents the approved shell and real workspace data'
         await page.getByRole('menuitem', { name: 'Sign out' }).isDisabled(),
         true,
         'expected sign out to remain disabled until the local workspace is linked to Google',
+      );
+      await page.getByRole('menuitem', { name: 'Settings' }).click();
+      await page.getByRole('heading', { name: 'Settings', level: 2 }).waitFor();
+      assert.deepEqual(
+        await page.getByLabel('Target classification').locator('option').allTextContents(),
+        ['Select classification', 'Non-production', 'Production-like'],
+      );
+      assert.equal(
+        await page.getByRole('button', { name: 'Verify connection' }).isDisabled(),
+        false,
+        'expected the configured isolated non-production target to remain verifiable',
       );
     });
   });

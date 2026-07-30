@@ -2,6 +2,7 @@
 
 const path = require('node:path');
 const { createStudioServer } = require('../packages/studio-server/dist/server.js');
+const { createSyntheticRunService } = require('./synthetic-run-service');
 
 const tempRoot = process.env.ISOLATED_STUDIO_ROOT;
 const webDistPath = process.env.ISOLATED_STUDIO_WEB_DIST;
@@ -21,7 +22,14 @@ const app = createStudioServer({
   reportsDir: path.join(tempRoot, 'reports'),
   evidenceArchiveDir: path.join(tempRoot, 'audit-evidence'),
   authConfigPath: path.join(tempRoot, 'auth.json'),
-  executionEnabled: false,
+  governancePath: path.join(tempRoot, 'workspace-governance.json'),
+  executionEnabled: true,
+  runService: createSyntheticRunService(tempRoot),
+  verifySap: async () => ({
+    verified: true,
+    verifiedAt: new Date().toISOString(),
+    message: 'Synthetic isolated target verification passed.',
+  }),
 });
 
 const server = app.listen(0, '127.0.0.1', () => {

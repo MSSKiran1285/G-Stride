@@ -3,22 +3,30 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { userInfo } from 'node:os';
 import path from 'node:path';
-import { ObjectRepository, DocumentLog, RunHistoryStore, TestCase, getCredentials, loadDataSet } from '@taf/core';
-import { ModuleRegistry, executeGroup, GroupStageResult } from '@taf/engine';
-import { FioriPlaywrightAdapter } from '@taf/adapter-fiori';
-import { writeAuditEvidencePdf, GlossaryEntry, TrainingSupplement } from '@taf/reporting';
+import {
+  DocumentLog,
+  ObjectRepository,
+  RunHistoryStore,
+  TestCase,
+  getCredentials,
+  loadDataSet,
+} from '@taf/core';
+import {
+  ExecutionOrchestrationEvent,
+  ModuleRegistry,
+  translateLegacyBatch,
+} from '@taf/engine';
+import { GlossaryEntry, TrainingSupplement, writeAuditEvidencePdf } from '@taf/reporting';
+import { createExecutionEventRecorder, loadExecutionSnapshot, reportInputFields, runExecutionPlan } from '../executionPlanRuntime';
 
 interface GroupDefinition {
   name: string;
   appId: string;
   testCaseFiles: string[];
   dataFile?: string;
-  /** Hand-authored training/audit content for the whole group — see writeAuditEvidencePdf.
-   * Per-stage content (objective, preconditions, etc.) lives on each TestCase file instead. */
   narrative?: string;
   glossary?: GlossaryEntry[];
   trainingSupplement?: TrainingSupplement;
-  /** Optional evidence-document identity. */
   documentTitle?: string;
   documentSubtitle?: string;
   testCaseId?: string;
@@ -32,11 +40,10 @@ interface BatchGroupResult {
   failedTestCase: string | null;
   passPercent: number;
   durationMs: number;
-  /** Relative to --evidence-archive, e.g. "<run-id>/evidence.pdf". */
   evidenceArchivePath: string | null;
-  stages: GroupStageResult[];
-  /** Set when the group couldn't even start (bad file reference, malformed JSON, browser launch failure) —
-   *  distinct from a test case failing mid-run, but still just "this group failed", not a batch-wide crash. */
+  stages: unknown[];
+  iterationIndex: number;
+  iterationCount: number;
   error?: string;
 }
 
@@ -51,26 +58,32 @@ interface BatchProgressFile {
   currentStage: string;
   currentStep: string;
   percent: number;
+  childWork?: {
+    label: string;
+    completed: number;
+    total: number;
+    currentIndex?: number;
+    currentKey?: string;
+    status: 'running' | 'passed' | 'failed';
+    error?: string;
+  };
 }
 
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'group';
+function testStepCount(testCases: TestCase[]): number {
+  return testCases.reduce(
+    (total, testCase, index) =>
+      total + (index === 0
+        ? testCase.steps.length
+        : testCase.steps.filter((step) => step.module !== 'Login').length),
+    0
+  );
 }
 
-/**
- * Runs several named Groups (each a dependent chain of test cases with its
- * own data file) independently: a group that fails exits *that* group only —
- * the other groups still run, and each pass/fail is tracked on its own. This
- * is the "batch" concept — a suite whose members are whole chains, not
- * single test cases.
- */
+/** Legacy Batch now translates to a Regression Pack of Business Processes. */
 export function registerBatchCommand(program: Command): void {
   program
     .command('batch <groupFiles...>')
-    .description('Run named groups (each a dependent chain with its own data file) independently — a failing group does not stop the others')
+    .description('Run named Business Processes independently, once for every record in each Group dataset')
     .option('--profile <name>', 'credential profile name', 'default')
     .option('--object-db <path>', 'object repository SQLite path', 'object-repository.db')
     .option('--document-db <path>', 'captured document number log SQLite path', 'document-log.db')
@@ -78,108 +91,252 @@ export function registerBatchCommand(program: Command): void {
     .option('--evidence-archive <path>', 'permanent evidence archive directory (outside the disposable report dir)', 'audit-evidence')
     .option('--report-dir <path>', 'output directory for reports/screenshots', 'reports')
     .option('--headless <bool>', 'run headless', 'true')
+    .option('--session-policy <policy>', 'fresh-per-iteration or reuse-within-process')
+    .option('--iteration-failure <policy>', 'stop-execution or continue-next-iteration')
+    .option('--max-records <count>', 'maximum records per Business Process')
+    .option('--execution-snapshot <path>', 'immutable preflight-approved execution snapshot')
+    .option('--executed-by <identity>', 'authenticated Studio owner who initiated the execution')
+    .option('--target-hostname <hostname>', 'non-secret SAP target hostname captured at Start')
+    .option('--target-safety-class <classification>', 'SAP target safety classification captured at Start')
+    .option('--target-verified-at <timestamp>', 'SAP target verification timestamp captured at Start')
+    .option('--cancel-file <path>', 'cooperative cancellation signal file')
     .option('--evidence-doc', 'deprecated compatibility flag; canonical audit evidence PDFs are generated automatically')
     .action(async (groupFiles: string[], opts) => {
-      const now = new Date();
-      const today = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}/${now.getFullYear()}`;
-      const groups: GroupDefinition[] = groupFiles.map((f) => JSON.parse(readFileSync(f, 'utf-8')));
+      const groups: GroupDefinition[] = groupFiles.map((file) =>
+        JSON.parse(readFileSync(file, 'utf-8'))
+      );
+      const testAssetsByGroup = groups.map((group) =>
+        group.testCaseFiles.map((file) => {
+          const resolvedFile = path.join('testcases', file);
+          return {
+            file: resolvedFile,
+            testCase: JSON.parse(readFileSync(resolvedFile, 'utf-8')) as TestCase,
+            appId: group.appId,
+          };
+        })
+      );
+      const plannedIterations = groups.map((group) => {
+        if (!group.dataFile) return 1;
+        const count = loadDataSet(path.join('data', group.dataFile)).length;
+        return opts.maxRecords ? Math.min(count, Number(opts.maxRecords)) : count;
+      });
+      const totalIterations = plannedIterations.reduce((total, count) => total + count, 0);
+      const iterationStepCounts = testAssetsByGroup.map((assets) =>
+        testStepCount(assets.map(({ testCase }) => testCase))
+      );
+      const stageStepCounts = testAssetsByGroup.map((assets) =>
+        assets.map(({ testCase }, stageIndex) =>
+          stageIndex === 0
+            ? testCase.steps.length
+            : testCase.steps.filter((step) => step.module !== 'Login').length
+        )
+      );
+      const totalSteps = iterationStepCounts.reduce(
+        (total, steps, index) => total + steps * plannedIterations[index],
+        0
+      );
+      const totalStages = testAssetsByGroup.reduce(
+        (total, assets, index) => total + assets.length * plannedIterations[index],
+        0
+      );
+
       const objectRepository = new ObjectRepository(opts.objectDb);
       const documentLog = new DocumentLog(opts.documentDb);
       const runHistory = new RunHistoryStore(opts.runHistoryDb);
       const registry = new ModuleRegistry();
       const credentials = await getCredentials(opts.profile);
-      const executedBy = userInfo().username;
-
+      const executedBy = typeof opts.executedBy === 'string' && opts.executedBy.trim()
+        ? opts.executedBy.trim().slice(0, 256)
+        : userInfo().username;
       mkdirSync(opts.reportDir, { recursive: true });
+
       const progressPath = path.join(opts.reportDir, 'progress.json');
-      const writeProgress = (progress: BatchProgressFile) => {
+      let completedIterations = 0;
+      let completedSteps = 0;
+      let completedStages = 0;
+      let activeStepBase = 0;
+      let activeStageBase = 0;
+      let currentGroup = groups[0]?.name ?? '';
+      const writeProgress = (change: Partial<BatchProgressFile> = {}) => {
+        const progress: BatchProgressFile = {
+          completedGroups: completedIterations,
+          totalGroups: totalIterations,
+          completedSteps,
+          totalSteps,
+          completedStages,
+          totalStages,
+          currentGroup,
+          currentStage: '',
+          currentStep: 'Preparing execution',
+          percent: totalSteps > 0 ? Math.min(100, Math.round((completedSteps / totalSteps) * 100)) : 0,
+          ...change,
+        };
         writeFileSync(progressPath, JSON.stringify(progress, null, 2));
       };
+      writeProgress();
 
-      let anyGroupFailed = false;
-      const summaries: BatchGroupResult[] = [];
-      writeProgress({
-        completedGroups: 0,
-        totalGroups: groups.length,
-        completedSteps: 0,
-        totalSteps: 0,
-        completedStages: 0,
-        totalStages: 0,
-        currentGroup: groups[0]?.name ?? '',
-        currentStage: '',
-        currentStep: 'Preparing execution',
-        percent: 0,
+      const translatedPlan = translateLegacyBatch(
+        groups.map((group, index) => ({
+          name: group.name,
+          appId: group.appId,
+          tests: testAssetsByGroup[index],
+          dataFile: group.dataFile ? path.join('data', group.dataFile) : undefined,
+        })),
+        {
+          name: 'Legacy Batch',
+          profileRef: opts.profile,
+          sessionPolicy: opts.sessionPolicy,
+          iterationFailurePolicy: opts.iterationFailure,
+          maxRecords: opts.maxRecords ? Number(opts.maxRecords) : undefined,
+        }
+      );
+      const approved = opts.executionSnapshot ? loadExecutionSnapshot(opts.executionSnapshot) : undefined;
+      const plan = approved?.snapshot.plan ?? translatedPlan;
+      const tests = new Map<string, TestCase>();
+      for (const assets of testAssetsByGroup) {
+        for (const asset of assets) tests.set(asset.file.replace(/\\/g, '/'), asset.testCase);
+      }
+      const memberIndex = new Map(
+        plan.kind === 'regressionPack'
+          ? plan.members.map((member, index) => [member.memberId, index])
+          : []
+      );
+
+      const recordEvent = createExecutionEventRecorder(opts.reportDir);
+      const onEvent = (event: ExecutionOrchestrationEvent) => {
+        recordEvent(event);
+        if (event.type === 'iteration-started') {
+          const index = memberIndex.get(event.context.memberId) ?? 0;
+          currentGroup = groups[index]?.name ?? event.context.memberName;
+          activeStepBase = completedSteps;
+          activeStageBase = completedStages;
+          writeProgress({ currentGroup, currentStep: `Starting record ${event.context.iterationIndex + 1}` });
+        } else if (event.type === 'stage-progress') {
+          const index = memberIndex.get(event.context.memberId) ?? 0;
+          const executable = plan.kind === 'regressionPack'
+            ? plan.members[index]?.executable
+            : undefined;
+          const stageIndex = executable?.kind === 'businessProcess'
+            ? Math.max(0, executable.stages.findIndex((stage) => stage.stageId === event.stageId))
+            : 0;
+          const stageOffset = (stageStepCounts[index] ?? [])
+            .slice(0, stageIndex)
+            .reduce((total, count) => total + count, 0);
+          writeProgress({
+            completedSteps: activeStepBase + stageOffset + event.progress.completedSteps,
+            completedStages: activeStageBase + stageIndex + event.progress.completedStages,
+            currentGroup,
+            currentStage: event.progress.currentStage,
+            currentStep: event.progress.currentStep,
+            childWork: event.progress.childWork,
+            percent: totalSteps > 0
+              ? Math.min(99, Math.round(((activeStepBase + stageOffset + event.progress.completedSteps) / totalSteps) * 100))
+              : 0,
+          });
+        } else if (event.type === 'iteration-completed') {
+          completedIterations++;
+          completedSteps = activeStepBase + event.completedSteps;
+          completedStages = activeStageBase + event.completedStages;
+          writeProgress({
+            completedGroups: completedIterations,
+            completedSteps,
+            completedStages,
+            currentGroup,
+            currentStep: event.status === 'passed' ? 'Record completed' : 'Record failed',
+            percent: totalIterations > 0
+              ? Math.min(99, Math.round((completedIterations / totalIterations) * 100))
+              : 0,
+          });
+        }
+      };
+
+      const execution = await runExecutionPlan({
+        plan,
+        tests,
+        objectRepository,
+        registry,
+        reportDir: opts.reportDir,
+        headless: opts.headless === 'true',
+        credentials,
+        dataSnapshots: approved?.dataSnapshots,
+        cancellationFile: opts.cancelFile,
+        onEvent,
       });
 
-      for (const [groupIndex, group] of groups.entries()) {
-        const slug = slugify(group.name);
-        const groupDir = path.join(opts.reportDir, slug);
-        mkdirSync(groupDir, { recursive: true });
-        const groupStart = Date.now();
-        const runId = randomUUID();
-        const runStartedAt = new Date().toISOString();
-        let adapter: FioriPlaywrightAdapter | undefined;
-
-        try {
-          // Always capture annotated field evidence for the group's canonical audit PDF.
-          const evidenceDir = path.join(groupDir, 'evidence');
-          mkdirSync(evidenceDir, { recursive: true });
-
-          // Group files store bare test case / data file names (as saved by the Groups tab), the
-          // same way testCaseFiles/dataFile arrive from studio-server for chain/suite mode — resolve
-          // them relative to the CLI's cwd (the repo root), not relative to the group file itself.
-          const testCases: TestCase[] = group.testCaseFiles.map((f) => JSON.parse(readFileSync(path.join('testcases', f), 'utf-8')));
-          const dataRows = group.dataFile ? loadDataSet(path.join('data', group.dataFile)) : [{}];
-          const dataRow = dataRows[0] ?? {};
-          const runDataRow = {
-            ...dataRow,
-            url: credentials.url,
-            urlBase: credentials.url.replace(/\/+$/, ''),
-            username: credentials.username,
-            password: credentials.password,
-            today,
-          };
-
-          adapter = new FioriPlaywrightAdapter({ headless: opts.headless === 'true' });
-          const result = await executeGroup(testCases, adapter, objectRepository, registry, {
-            appId: group.appId,
-            dataRow: runDataRow,
-            screenshotDir: groupDir,
-            evidenceDir,
-            onProgress: (progress) => {
-              const groupFraction = progress.totalSteps > 0 ? progress.completedSteps / progress.totalSteps : 0;
-              writeProgress({
-                completedGroups: groupIndex,
-                totalGroups: groups.length,
-                completedSteps: progress.completedSteps,
-                totalSteps: progress.totalSteps,
-                completedStages: progress.completedStages,
-                totalStages: progress.totalStages,
-                currentGroup: group.name,
-                currentStage: progress.currentStage,
-                currentStep: progress.currentStep,
-                percent: Math.min(99, Math.round(((groupIndex + groupFraction) / groups.length) * 100)),
-              });
-            },
+      const summaries: BatchGroupResult[] = [];
+      if (plan.kind !== 'regressionPack') throw new Error('Batch compatibility translation did not produce a Regression Pack.');
+      for (const [groupIndex, member] of execution.members.entries()) {
+        const group = groups[groupIndex];
+        const iterationCount = member.plannedIterations || plannedIterations[groupIndex] || 1;
+        if (member.iterations.length === 0) {
+          summaries.push({
+            name: group.name,
+            status: 'failed',
+            totalTestCases: group.testCaseFiles.length,
+            passedCount: 0,
+            failedTestCase: null,
+            passPercent: 0,
+            durationMs: 0,
+            evidenceArchivePath: null,
+            stages: [],
+            iterationIndex: 0,
+            iterationCount,
+            error: member.error ?? 'The Business Process could not start.',
           });
+          continue;
+        }
 
-          documentLog.recordAll(group.appId, group.name, result.capturedValues, groupDir, runId);
+        for (const iteration of member.iterations) {
+          const result = iteration.result;
+          const displayName = iterationCount > 1
+            ? `${group.name} Â· Record ${iteration.iterationIndex + 1}`
+            : group.name;
+          if (!result) {
+            summaries.push({
+              name: displayName,
+              status: 'failed',
+              totalTestCases: group.testCaseFiles.length,
+              passedCount: 0,
+              failedTestCase: null,
+              passPercent: 0,
+              durationMs: 0,
+              evidenceArchivePath: null,
+              stages: [],
+              iterationIndex: iteration.iterationIndex,
+              iterationCount,
+              error: iteration.error ?? 'The iteration could not start.',
+            });
+            continue;
+          }
 
-          const auditFinishedAt = new Date().toISOString();
-          const auditEvidencePdfPath = path.join(opts.evidenceArchive, runId, 'evidence.pdf');
-          mkdirSync(path.dirname(auditEvidencePdfPath), { recursive: true });
+          const runId = randomUUID();
+          const finishedAt = new Date().toISOString();
+          const evidencePdfPath = path.join(opts.evidenceArchive, runId, 'evidence.pdf');
+          mkdirSync(path.dirname(evidencePdfPath), { recursive: true });
           await writeAuditEvidencePdf(
             {
               runId,
+              executionId: approved?.snapshot.executionId,
+              planHash: approved?.snapshot.planHash,
+              snapshotHash: approved?.snapshot.snapshotHash,
+              planSchemaVersion: approved?.snapshot.plan.schemaVersion,
+              snapshotSchemaVersion: approved?.snapshot.schemaVersion,
+              dataVersions: approved?.snapshot.data.map((entry) => `${entry.bindingId}: ${entry.contentHash}`),
+              targetHostname: opts.targetHostname,
+              targetSafetyClass: opts.targetSafetyClass,
+              targetVerifiedAt: opts.targetVerifiedAt,
+              redactionState: 'enforced',
+              memberId: member.memberId,
+              iterationId: iteration.iterationId,
               mode: 'batch',
               appId: group.appId,
               status: result.status,
               executedBy,
-              startedAt: runStartedAt,
-              finishedAt: auditFinishedAt,
+              startedAt: result.startedAt,
+              finishedAt,
               stages: result.stages,
               fieldEvidence: result.fieldEvidence,
-              inputFields: dataRow,
+              inputFields: reportInputFields(iteration.inputRecord),
               outputFields: result.capturedValues,
               narrative: group.narrative,
               glossary: group.glossary,
@@ -188,106 +345,59 @@ export function registerBatchCommand(program: Command): void {
               documentSubtitle: group.documentSubtitle,
               testCaseId: group.testCaseId,
             },
-            auditEvidencePdfPath
+            evidencePdfPath
           );
-
+          documentLog.recordAll(group.appId, displayName, result.capturedValues, opts.reportDir, runId);
           runHistory.record({
             id: runId,
-            startedAt: runStartedAt,
-            finishedAt: auditFinishedAt,
+            startedAt: result.startedAt,
+            finishedAt,
             status: result.status,
             executedBy,
             mode: 'batch',
             appId: group.appId,
-            testCaseNames: result.stages.map((s) => s.testCaseName),
+            testCaseNames: result.stages.map((stage) => stage.testCaseName),
             dataFile: group.dataFile,
             result,
-            evidencePdfPath: auditEvidencePdfPath,
+            evidencePdfPath,
           });
 
-          const passedCount = result.stages.filter((s) => s.status === 'passed').length;
-          const failedStage = result.stages.find((s) => s.status === 'failed');
+          const passedCount = result.stages.filter((stage) => stage.status === 'passed').length;
+          const failedStage = result.stages.find((stage) => stage.status === 'failed');
           summaries.push({
-            name: group.name,
+            name: displayName,
             status: result.status,
-            totalTestCases: result.totalTestCases,
+            totalTestCases: group.testCaseFiles.length,
             passedCount,
             failedTestCase: failedStage?.testCaseName ?? null,
-            passPercent: Math.round((passedCount / result.totalTestCases) * 100),
+            passPercent: Math.round((passedCount / Math.max(1, group.testCaseFiles.length)) * 100),
             durationMs: result.durationMs,
             evidenceArchivePath: path.join(runId, 'evidence.pdf'),
             stages: result.stages,
+            iterationIndex: iteration.iterationIndex,
+            iterationCount,
           });
-          writeProgress({
-            completedGroups: summaries.length,
-            totalGroups: groups.length,
-            completedSteps: result.stages.reduce((total, stage) => total + stage.steps.length, 0),
-            totalSteps: result.stages.reduce((total, stage) => total + stage.steps.length, 0),
-            completedStages: result.stages.length,
-            totalStages: result.totalTestCases,
-            currentGroup: group.name,
-            currentStage: result.stages[result.stages.length - 1]?.testCaseName ?? '',
-            currentStep: result.status === 'passed' ? 'Group completed' : 'Group failed',
-            percent: Math.round((summaries.length / groups.length) * 100),
-          });
-
           console.log(
-            `Batch group "${group.name}": ${result.status.toUpperCase()} (${passedCount}/${result.totalTestCases} test cases passed)`
+            `Batch "${displayName}": ${result.status.toUpperCase()} (${passedCount}/${group.testCaseFiles.length} stages passed)`
           );
-          if (result.status === 'failed') anyGroupFailed = true;
-        } catch (err) {
-          // A group that can't even start (bad file reference, malformed JSON, browser launch
-          // failure) is still just "this group failed" — it must not take the other groups down with it.
-          const message = err instanceof Error ? err.message : String(err);
-          summaries.push({
-            name: group.name,
-            status: 'failed',
-            totalTestCases: group.testCaseFiles.length,
-            passedCount: 0,
-            failedTestCase: null,
-            passPercent: 0,
-            durationMs: Date.now() - groupStart,
-            evidenceArchivePath: null,
-            stages: [],
-            error: message,
-          });
-          writeProgress({
-            completedGroups: summaries.length,
-            totalGroups: groups.length,
-            completedSteps: 0,
-            totalSteps: 0,
-            completedStages: 0,
-            totalStages: group.testCaseFiles.length,
-            currentGroup: group.name,
-            currentStage: '',
-            currentStep: `Group failed to start: ${message}`,
-            percent: Math.round((summaries.length / groups.length) * 100),
-          });
-          console.log(`Batch group "${group.name}": FAILED to start — ${message}`);
-          anyGroupFailed = true;
-          runHistory.record({
-            id: runId,
-            startedAt: runStartedAt,
-            finishedAt: new Date().toISOString(),
-            status: 'failed',
-            executedBy,
-            mode: 'batch',
-            appId: group.appId,
-            testCaseNames: group.testCaseFiles,
-            dataFile: group.dataFile,
-            result: { error: message },
-          });
-        } finally {
-          if (adapter) await adapter.close().catch(() => undefined);
         }
       }
+
+      writeFileSync(
+        path.join(opts.reportDir, 'summary.json'),
+        JSON.stringify({ groups: summaries }, null, 2)
+      );
+      writeProgress({
+        completedGroups: totalIterations,
+        completedSteps: totalSteps,
+        completedStages: totalStages,
+        currentStep: execution.status === 'passed' ? 'Execution completed' : 'Execution completed with failures',
+        percent: 100,
+      });
 
       objectRepository.close();
       documentLog.close();
       runHistory.close();
-
-      writeFileSync(path.join(opts.reportDir, 'summary.json'), JSON.stringify({ groups: summaries }, null, 2));
-
-      process.exitCode = anyGroupFailed ? 1 : 0;
+      process.exitCode = execution.status === 'cancelled' ? 2 : execution.status === 'failed' ? 1 : 0;
     });
 }

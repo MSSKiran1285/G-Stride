@@ -10,16 +10,16 @@ test('GET /api/groups lists known fixtures', async () => {
   const { status, body } = await api.get('/api/groups');
   assert.equal(status, 200);
   assert.ok(Array.isArray(body));
-  assert.ok(body.includes('cleanup-drafts.json'));
+  assert.ok(body.includes('o2c-e2e.json'));
   assert.ok(body.includes('po-gr-invoice.json'));
 });
 
 test('GET /api/groups/:file returns the parsed group', async () => {
-  const { status, body } = await api.get('/api/groups/cleanup-drafts.json');
+  const { status, body } = await api.get('/api/groups/po-gr-invoice.json');
   assert.equal(status, 200);
-  assert.equal(body.name, 'Cleanup Drafts');
+  assert.equal(body.name, 'Create PO - GR - Invoice');
   assert.equal(body.appId, 'createPurchaseOrder');
-  assert.deepEqual(body.testCaseFiles, ['cleanup-abandoned-drafts.json']);
+  assert.deepEqual(body.testCaseFiles, ['create-po.json', 'post-goods-receipt.json', 'post-supplier-invoice.json']);
 });
 
 test('GET /api/groups/:file 404s for an unknown file', async () => {

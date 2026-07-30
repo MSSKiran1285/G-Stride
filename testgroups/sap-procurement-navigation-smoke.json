@@ -1,0 +1,7 @@
+{
+  "name": "SAP Procurement Navigation Smoke - Read Only",
+  "appId": "createPurchaseOrder",
+  "testCaseFiles": [
+    "verify-procurement-navigation.json"
+  ]
+}

@@ -13,7 +13,20 @@
     "Selecting the wrong Plant. Line item defaults may not match the intended receiving location; double-check Plant against the storage location you intend to receive into.",
     "A typed material code that doesn't match a real master record can leave the row incomplete. Use the value-help dropdown result rather than assuming free-text entry always resolves."
   ],
+  "transaction": {
+    "creates": ["purchaseOrderDraft", "purchaseOrder"],
+    "failureDisposition": "retain-for-review",
+    "ownershipRequired": true
+  },
   "steps": [
+    {
+      "module": "CreateAutomationRunReference",
+      "params": {
+        "prefix": "${automationReferencePrefix}",
+        "owner": "${automationOwner}",
+        "maxLength": "16"
+      }
+    },
     {
       "module": "Login",
       "params": {

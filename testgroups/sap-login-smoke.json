@@ -1,0 +1,7 @@
+{
+  "name": "SAP Login Smoke - Read Only",
+  "appId": "login",
+  "testCaseFiles": [
+    "verify-sap-login.json"
+  ]
+}

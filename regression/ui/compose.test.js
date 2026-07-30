@@ -25,14 +25,10 @@ test('Compose: create a test case, add a step, save, reload, reopen (required Co
       await page.getByRole('button', { name: 'Save test case' }).click();
 
       await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
+      assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
 
       // Reload to prove it actually persisted server-side, not just in React state.
       await page.reload();
-      await page.getByRole('button', { name: /Compose/ }).first().click();
-      await page.getByRole('button', { name: 'Open test case' }).click();
-      await page.getByText('(untagged)', { exact: true }).click();
-      await page.getByText('regression-sample.json', { exact: true }).last().click();
-
       await page.locator('.step-module', { hasText: 'Wait' }).waitFor({ timeout: 5000 });
       const stepParams = await page.locator('.step-params').first().innerText();
       assert.ok(stepParams.includes('ms=250'), `expected "ms=250" in step params, got "${stepParams}"`);
