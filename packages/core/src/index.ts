@@ -5,6 +5,7 @@ export * from './domain/runResult';
 export * from './domain/objectRepository';
 export * from './domain/documentLog';
 export * from './domain/dataSet';
+export * from './domain/dataColumnSchema';
 export * from './domain/tagStore';
 export * from './domain/runHistoryStore';
 export * from './credentials';

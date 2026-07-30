@@ -20,7 +20,9 @@ test('artifact detail routes restore Compose, Data, Process, Object, and Audit c
         {
           path: '/data/regression-sample.csv',
           ready: () => page.getByRole('button', { name: 'Save dataset' }),
-          value: async () => page.locator('tbody tr').first().locator('input').first().inputValue(),
+          // Scoped to the dataset's own table region — BL-025's Test Data Library results
+          // table above it also renders "tbody tr", including an empty-state row with no input.
+          value: async () => page.getByRole('region', { name: 'regression-sample.csv dataset' }).locator('tbody tr').first().locator('input').first().inputValue(),
           expected: 'a',
         },
         {

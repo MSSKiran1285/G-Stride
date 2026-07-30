@@ -1,6 +1,6 @@
 import express, { Express } from 'express';
 import path from 'node:path';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import {
   ExecutionPlanSnapshot,
   ObjectRepository,
@@ -18,6 +18,9 @@ import {
   validateTestContract,
   isLikelyUnstableId,
   findLikelyDuplicates,
+  DataColumnSchemaStore,
+  TestValueType,
+  DataSensitivity,
 } from '@taf/core';
 import { ModuleRegistry, capturesForStep, inferLegacyTestContract } from '@taf/engine';
 import {
@@ -140,6 +143,7 @@ export interface StudioServerOptions {
   objectDbPath?: string;
   documentDbPath?: string;
   tagDbPath?: string;
+  dataSchemaDbPath?: string;
   runHistoryDbPath?: string;
   webDistPath?: string;
   testCasesDir?: string;
@@ -185,6 +189,8 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   const documentLog = new DocumentLog(documentDbPath);
   const tagDbPath = options.tagDbPath ?? path.join(REPO_ROOT, 'tags.db');
   const tagStore = new TagStore(tagDbPath);
+  const dataSchemaDbPath = options.dataSchemaDbPath ?? path.join(REPO_ROOT, 'data-column-schema.db');
+  const dataColumnSchemaStore = new DataColumnSchemaStore(dataSchemaDbPath);
   // Studio never writes to the audit ledger itself — only the CLI (the real execution path,
   // see Section 6's architecture note) calls .record(); Studio only ever reads it back, the
   // same relationship it already has with reports/ (spawn CLI, read its output).
@@ -427,6 +433,7 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     objectRepository.close();
     documentLog.close();
     tagStore.close();
+    dataColumnSchemaStore.close();
     runHistory.close();
   };
   app.use(express.json());
@@ -1087,6 +1094,179 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
     return changed;
   }
+
+  /** Every Process (Group), Regression Pack and relational-CSV definition that references a
+   *  dataset file — BL-025 AC3 ("Rename/removal shows affected Tests and Processes"). A Test
+   *  itself never binds a data file directly (only a Group or a Pack member does — see
+   *  ContextualCapturePanel's object-usage sibling for the analogous BL-022 scan), so those
+   *  two directories plus the relation-definitions folder are the complete set of places to look. */
+  function findDataFileUsage(file: string): { groups: string[]; packs: string[]; relations: string[] } {
+    const groups: string[] = [];
+    const packs: string[] = [];
+    const relations: string[] = [];
+    if (existsSync(groupsDir)) {
+      for (const groupFile of readdirSync(groupsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const group = JSON.parse(readFileSync(path.join(groupsDir, groupFile), 'utf-8'));
+          if (group.dataFile === file) groups.push(groupFile);
+        } catch {
+          // skip an unreadable/malformed file rather than fail the whole scan
+        }
+      }
+    }
+    if (existsSync(packsDir)) {
+      for (const packFile of readdirSync(packsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const pack = JSON.parse(readFileSync(path.join(packsDir, packFile), 'utf-8'));
+          if (Array.isArray(pack.members) && pack.members.some((m: any) => m?.dataFile === file)) packs.push(packFile);
+        } catch {
+          // skip
+        }
+      }
+    }
+    if (existsSync(dataRelationsDir)) {
+      for (const relFile of readdirSync(dataRelationsDir).filter((f) => f.endsWith('.json'))) {
+        try {
+          const relation = JSON.parse(readFileSync(path.join(dataRelationsDir, relFile), 'utf-8'));
+          if (relation.headerFile === file || relation.childFile === file) relations.push(relFile);
+        } catch {
+          // skip
+        }
+      }
+    }
+    return { groups, packs, relations };
+  }
+
+  app.get('/api/data/library', (_req, res) => {
+    if (!existsSync(dataDir)) return res.json([]);
+    const tags = tagStore.listTags('dataFile');
+    const items = readdirSync(dataDir)
+      .filter((file) => file.endsWith('.csv') || file.endsWith('.json'))
+      .sort()
+      .map((file) => {
+        const format: 'csv' | 'json' = file.endsWith('.json') ? 'json' : 'csv';
+        let rowCount = 0;
+        try {
+          const full = path.join(dataDir, file);
+          if (format === 'json') {
+            const records = JSON.parse(readFileSync(full, 'utf-8'));
+            rowCount = Array.isArray(records) ? records.length : 0;
+          } else {
+            rowCount = parseCsv(readFileSync(full, 'utf-8')).rows.length;
+          }
+        } catch {
+          rowCount = 0; // malformed file — still listed, just without a row count
+        }
+        return { file, format, processArea: tags[file] ?? '', rowCount };
+      });
+    res.json(items);
+  });
+
+  app.get('/api/data/:file/usage', (req, res) => {
+    try {
+      res.json(findDataFileUsage(safeDataFileName(req.params.file)));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/data/:file/schema', (req, res) => {
+    try {
+      res.json(dataColumnSchemaStore.listForFile(safeDataFileName(req.params.file)));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/data/:file/schema/:column', (req, res) => {
+    try {
+      const file = safeDataFileName(req.params.file);
+      const { type, sensitivity, example } = req.body ?? {};
+      if (typeof type !== 'string' || typeof sensitivity !== 'string') {
+        return res.status(400).json({ error: 'Body must include type: string and sensitivity: string' });
+      }
+      dataColumnSchemaStore.setColumn(file, req.params.column, { type: type as TestValueType, sensitivity: sensitivity as DataSensitivity, example });
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/data/:file', (req, res) => {
+    try {
+      const file = safeDataFileName(req.params.file);
+      const usage = findDataFileUsage(file);
+      const usedBy = [...usage.groups, ...usage.packs, ...usage.relations];
+      if (usedBy.length > 0 && req.query.force !== 'true') {
+        return res.status(409).json({
+          error: `"${file}" is referenced by ${usedBy.length} artifact${usedBy.length === 1 ? '' : 's'}. Pass force=true to delete anyway.`,
+          usage,
+        });
+      }
+      const full = path.join(dataDir, file);
+      if (existsSync(full)) rmSync(full);
+      dataColumnSchemaStore.removeFile(file);
+      tagStore.setTag('dataFile', file, '');
+      res.json({ ok: true, usage });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/data/:file/rename', (req, res) => {
+    try {
+      const file = safeDataFileName(req.params.file);
+      const { newName } = req.body ?? {};
+      if (typeof newName !== 'string' || !newName.trim()) {
+        return res.status(400).json({ error: 'Body must include newName: string' });
+      }
+      const newFile = safeDataFileName(newName.trim());
+      if (path.extname(newFile) !== path.extname(file)) {
+        return res.status(400).json({ error: 'A dataset can only be renamed to the same file extension.' });
+      }
+      const oldFull = path.join(dataDir, file);
+      const newFull = path.join(dataDir, newFile);
+      if (!existsSync(oldFull)) return res.status(404).json({ error: `Dataset "${file}" does not exist.` });
+      if (existsSync(newFull)) return res.status(409).json({ error: `Dataset "${newFile}" already exists.` });
+
+      // Rename is a same-dataset identity change, not a delete — propagate it into every
+      // referencing Process/Pack/relation (an IDE-style symbol rename), mirroring BL-022's
+      // object rename rather than leaving those artifacts pointing at a file that no longer exists.
+      const usage = findDataFileUsage(file);
+      for (const groupFile of usage.groups) {
+        const groupPath = path.join(groupsDir, groupFile);
+        const group = JSON.parse(readFileSync(groupPath, 'utf-8'));
+        group.dataFile = newFile;
+        writeFileSync(groupPath, JSON.stringify(group, null, 2) + '\n');
+      }
+      for (const packFile of usage.packs) {
+        const packPath = path.join(packsDir, packFile);
+        const pack = JSON.parse(readFileSync(packPath, 'utf-8'));
+        for (const member of pack.members ?? []) {
+          if (member?.dataFile === file) member.dataFile = newFile;
+        }
+        writeFileSync(packPath, JSON.stringify(pack, null, 2) + '\n');
+      }
+      for (const relFile of usage.relations) {
+        const relPath = path.join(dataRelationsDir, relFile);
+        const relation = JSON.parse(readFileSync(relPath, 'utf-8'));
+        if (relation.headerFile === file) relation.headerFile = newFile;
+        if (relation.childFile === file) relation.childFile = newFile;
+        writeFileSync(relPath, JSON.stringify(relation, null, 2) + '\n');
+      }
+
+      renameSync(oldFull, newFull);
+      dataColumnSchemaStore.renameFile(file, newFile);
+      const processArea = tagStore.getTag('dataFile', file);
+      if (processArea) {
+        tagStore.setTag('dataFile', newFile, processArea);
+        tagStore.setTag('dataFile', file, '');
+      }
+      res.json({ ok: true, updatedGroups: usage.groups, updatedPacks: usage.packs, updatedRelations: usage.relations });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
 
   app.get('/api/objects/:appId', (req, res) => {
     const controls = objectRepository.listByApp(req.params.appId);

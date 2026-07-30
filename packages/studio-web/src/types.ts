@@ -194,6 +194,33 @@ export interface DataPreview {
   sample?: Record<string, JsonDataValue>[];
 }
 
+/** One row of the routeable Test Data Library (BL-025 AC1) — search/format/process-area
+ *  facets over every dataset file, without loading its full contents. */
+export interface DataLibraryItem {
+  file: string;
+  format: 'csv' | 'json';
+  processArea: string;
+  rowCount: number;
+}
+
+/** A dataset column's declared shape (BL-025 AC2) — reuses the same type/sensitivity
+ *  vocabulary as a Test's own contract inputs/outputs. */
+export interface DataColumnSchema {
+  file: string;
+  column: string;
+  type: TestValueType;
+  sensitivity: DataSensitivity;
+  example?: string;
+}
+
+/** Every Process, Regression Pack and relational-CSV definition that references a dataset
+ *  file — BL-025 AC3's dependency-impact view, mirroring ObjectControl's usage scan. */
+export interface DataFileUsage {
+  groups: string[];
+  packs: string[];
+  relations: string[];
+}
+
 export interface Group {
   name: string;
   appId: string;

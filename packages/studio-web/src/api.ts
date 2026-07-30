@@ -29,6 +29,11 @@ import type {
   TestContract,
   TestLibraryItem,
   TestValidationIssue,
+  DataLibraryItem,
+  DataColumnSchema,
+  DataFileUsage,
+  TestValueType,
+  DataSensitivity,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -162,11 +167,30 @@ export const api = {
   cancelPick: () => request<{ ok: true }>('/api/scan/pick/cancel', { method: 'POST' }),
   dismissPick: (controlId: string) => request<PickResult>('/api/scan/pick/dismiss', { method: 'POST', body: JSON.stringify({ controlId }) }),
   listData: () => request<string[]>('/api/data'),
+  listDataLibrary: () => request<DataLibraryItem[]>('/api/data/library'),
   getDataset: (file: string) => request<Dataset>(`/api/data/${encodeURIComponent(file)}`),
   saveDataset: (file: string, dataset: Dataset) =>
     request<{ ok: true }>(`/api/data/${encodeURIComponent(file)}`, {
       method: 'PUT',
       body: JSON.stringify(dataset),
+    }),
+  /** Blocked with a 409 (thrown error's message includes the reference count) unless force is
+   *  true — see server's dependency-aware delete, mirroring BL-022's object delete. */
+  deleteData: (file: string, force = false) =>
+    request<{ ok: true; usage: DataFileUsage }>(`/api/data/${encodeURIComponent(file)}${force ? '?force=true' : ''}`, {
+      method: 'DELETE',
+    }),
+  renameData: (file: string, newName: string) =>
+    request<{ ok: true; updatedGroups: string[]; updatedPacks: string[]; updatedRelations: string[] }>(
+      `/api/data/${encodeURIComponent(file)}/rename`,
+      { method: 'PUT', body: JSON.stringify({ newName }) }
+    ),
+  getDataUsage: (file: string) => request<DataFileUsage>(`/api/data/${encodeURIComponent(file)}/usage`),
+  getDataSchema: (file: string) => request<DataColumnSchema[]>(`/api/data/${encodeURIComponent(file)}/schema`),
+  saveDataColumn: (file: string, column: string, patch: { type: TestValueType; sensitivity: DataSensitivity; example?: string }) =>
+    request<{ ok: true }>(`/api/data/${encodeURIComponent(file)}/schema/${encodeURIComponent(column)}`, {
+      method: 'PUT',
+      body: JSON.stringify(patch),
     }),
   listDataRelations: () => request<string[]>('/api/data-relations'),
   getDataRelation: (file: string) =>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import type { DataPreview, DataRelationDefinition, Dataset, JsonDataValue } from '../types';
+import type { DataColumnSchema, DataLibraryItem, DataPreview, DataRelationDefinition, Dataset, DataSensitivity, JsonDataValue, TestValueType } from '../types';
 import { ListCell } from './ListCell';
 import { DomainTag } from './DomainTag';
+import { DataLibrary } from './DataLibrary';
 import { GroupedPicker } from './GroupedPicker';
 import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
 
@@ -15,6 +16,8 @@ const EMPTY_RELATION: DataRelationDefinition = {
   childForeignKey: '',
   collectionPath: 'items',
 };
+const VALUE_TYPES: TestValueType[] = ['string', 'number', 'boolean', 'date', 'object', 'collection'];
+const SENSITIVITIES: DataSensitivity[] = ['public', 'business', 'personal', 'secret'];
 
 interface DataEditorProps {
   initialFile?: string;
@@ -47,10 +50,34 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
   // BL-10: processArea tag per data file, grouping "Open dataset" the same way Compose does.
   const [fileTags, setFileTags] = useState<Record<string, string>>({});
   const [processAreas, setProcessAreas] = useState<string[]>([]);
+  // BL-025 AC2: declared name/type/example/sensitivity per CSV column, keyed by column name.
+  const [columnSchema, setColumnSchema] = useState<Record<string, DataColumnSchema>>({});
+  // BL-025 AC1/AC3: search/format/process-area facets and dependency-safe rename/removal.
+  const [libraryItems, setLibraryItems] = useState<DataLibraryItem[]>([]);
 
   function refreshTags() {
     api.listTags('dataFile').then(setFileTags).catch(() => undefined);
     api.listProcessAreas().then(setProcessAreas).catch(() => undefined);
+  }
+
+  function refreshLibrary() {
+    api.listDataLibrary().then(setLibraryItems).catch(() => undefined);
+  }
+
+  function refreshColumnSchema(file: string) {
+    api.getDataSchema(file)
+      .then((rows) => setColumnSchema(Object.fromEntries(rows.map((r) => [r.column, r]))))
+      .catch(() => setColumnSchema({}));
+  }
+
+  async function saveColumnSchema(column: string, patch: { type: TestValueType; sensitivity: DataSensitivity; example?: string }) {
+    if (!selectedFile) return;
+    try {
+      await api.saveDataColumn(selectedFile, column, patch);
+      setColumnSchema((prev) => ({ ...prev, [column]: { file: selectedFile, column, ...patch } }));
+    } catch (e) {
+      setError(String(e));
+    }
   }
 
   function refreshRelations() {
@@ -63,14 +90,20 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
     if (next.format === 'json') setJsonText(JSON.stringify(next.records, null, 2));
   }
 
-  useEffect(() => {
+  function refreshFiles() {
+    setLoading(true);
     api
       .listData()
       .then((all) => setFiles(all.filter((f) => f.endsWith('.csv') || f.endsWith('.json'))))
       .catch((e) => setError(String(e)))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    refreshFiles();
     refreshTags();
     refreshRelations();
+    refreshLibrary();
   }, []);
 
   useEffect(() => {
@@ -84,6 +117,7 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
     setError(null);
     setDirty(false);
     setLoadingArtifact(true);
+    refreshColumnSchema(initialFile);
     api.getDataset(initialFile)
       .then(applyDataset)
       .catch((e) => setError(String(e)))
@@ -112,6 +146,7 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
     setError(null);
     setDirty(false);
     setLoadingArtifact(true);
+    refreshColumnSchema(file);
     api
       .getDataset(file)
       .then(applyDataset)
@@ -137,6 +172,7 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
     applyDataset(newFormat === 'json'
       ? { format: 'json', records: [] }
       : { format: 'csv', headers, rows: [] });
+    setColumnSchema({});
     setNewFileName('');
     setNewHeaders('');
     setSavedAt(null);
@@ -180,6 +216,7 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
       setDirty(false);
       setError(null);
       if (!files.includes(selectedFile)) setFiles([...files, selectedFile].sort());
+      refreshLibrary();
       onSelectedFileChange?.(selectedFile);
     } catch (e) {
       setError(String(e));
@@ -268,6 +305,22 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
 
   return (
     <div className="stack">
+      <DataLibrary
+        items={libraryItems}
+        onOpen={openFile}
+        onChanged={(event) => {
+          if (event.kind === 'renamed') {
+            if (selectedFile === event.oldFile) openFile(event.newFile);
+          } else if (selectedFile === event.file) {
+            setSelectedFile('');
+            setDataset(null);
+          }
+          refreshFiles();
+          refreshTags();
+          refreshLibrary();
+        }}
+      />
+
       <div className="panel row">
         <div style={{ flex: 1 }}>
           <label>Open dataset</label>
@@ -361,7 +414,33 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
                 </tbody>
               </table>
             </TableFrame>
-          ) : (
+          ) : null}
+
+          {dataset.format === 'csv' && (
+            <details className="stack">
+              <summary>Column schema ({dataset.headers.length} column{dataset.headers.length === 1 ? '' : 's'})</summary>
+              <p className="hint">Declare each column's type, sensitivity and an example value — reused wherever this dataset feeds a Test's contract inputs.</p>
+              <TableFrame label={`${selectedFile} column schema`}>
+                <table className="responsive-table">
+                  <thead>
+                    <tr><th>Column</th><th>Type</th><th>Sensitivity</th><th>Example</th></tr>
+                  </thead>
+                  <tbody>
+                    {dataset.headers.map((header) => (
+                      <ColumnSchemaRow
+                        key={header}
+                        column={header}
+                        schema={columnSchema[header]}
+                        onSave={(patch) => saveColumnSchema(header, patch)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </TableFrame>
+            </details>
+          )}
+
+          {dataset.format === 'json' && (
             <div className="stack">
               <label htmlFor="nested-json-editor">Nested transaction JSON</label>
               <textarea
@@ -475,6 +554,50 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
         )}
       </section>
     </div>
+  );
+}
+
+interface ColumnSchemaRowProps {
+  column: string;
+  schema?: DataColumnSchema;
+  onSave: (patch: { type: TestValueType; sensitivity: DataSensitivity; example?: string }) => void;
+}
+
+/** One column's schema editor row — the example field commits on blur (not per keystroke)
+ *  since it's backed by its own API call rather than the dataset's own save button. */
+function ColumnSchemaRow({ column, schema, onSave }: ColumnSchemaRowProps) {
+  const [example, setExample] = useState(schema?.example ?? '');
+
+  useEffect(() => {
+    setExample(schema?.example ?? '');
+  }, [schema?.example]);
+
+  const type = schema?.type ?? 'string';
+  const sensitivity = schema?.sensitivity ?? 'public';
+
+  return (
+    <tr>
+      <td data-label="Column"><strong>{column}</strong></td>
+      <td data-label="Type">
+        <select aria-label={`${column} type`} value={type} onChange={(e) => onSave({ type: e.target.value as TestValueType, sensitivity, example })}>
+          {VALUE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </td>
+      <td data-label="Sensitivity">
+        <select aria-label={`${column} sensitivity`} value={sensitivity} onChange={(e) => onSave({ type, sensitivity: e.target.value as DataSensitivity, example })}>
+          {SENSITIVITIES.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </td>
+      <td data-label="Example">
+        <input
+          aria-label={`${column} example`}
+          value={example}
+          onChange={(e) => setExample(e.target.value)}
+          onBlur={() => onSave({ type, sensitivity, example: example.trim() || undefined })}
+          placeholder="e.g. 1000000123"
+        />
+      </td>
+    </tr>
   );
 }
 

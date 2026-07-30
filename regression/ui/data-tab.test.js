@@ -17,8 +17,12 @@ test('Data: create a dataset, add a row, save, reload, reopen (required Data pos
       await page.locator('input[placeholder*="columns, e.g."]').fill('col1,col2');
       await page.getByRole('button', { name: 'Create' }).click();
 
+      // Scoped to the dataset's own table region (BL-025 added a Test Data Library results
+      // table above it, which also renders "tbody tr" — an unscoped locator would match that
+      // table's empty-state row instead, which has no input at all).
+      const datasetRegion = page.getByRole('region', { name: 'regression-sample.csv dataset' });
       await page.getByRole('button', { name: '+ Add row' }).click();
-      const firstRow = page.locator('tbody tr').first().locator('input');
+      const firstRow = datasetRegion.locator('tbody tr').first().locator('input');
       await firstRow.nth(0).fill('a');
       await firstRow.nth(1).fill('b');
       await page.getByRole('button', { name: 'Save dataset' }).click();
@@ -27,7 +31,7 @@ test('Data: create a dataset, add a row, save, reload, reopen (required Data pos
       assert.equal(new URL(page.url()).pathname, '/data/regression-sample.csv');
 
       await page.reload();
-      const reopenedRow = page.locator('tbody tr').first().locator('input');
+      const reopenedRow = page.getByRole('region', { name: 'regression-sample.csv dataset' }).locator('tbody tr').first().locator('input');
       await reopenedRow.first().waitFor({ timeout: 5000 });
       assert.equal(await reopenedRow.nth(0).inputValue(), 'a');
       assert.equal(await reopenedRow.nth(1).inputValue(), 'b');

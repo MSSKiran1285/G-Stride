@@ -14,6 +14,7 @@ const app = createStudioServer({
   objectDbPath: path.join(tempRoot, 'objects.db'),
   documentDbPath: path.join(tempRoot, 'documents.db'),
   tagDbPath: path.join(tempRoot, 'tags.db'),
+  dataSchemaDbPath: path.join(tempRoot, 'data-column-schema.db'),
   runHistoryDbPath: path.join(tempRoot, 'run-history.db'),
   webDistPath,
   testCasesDir: path.join(tempRoot, 'testcases'),
