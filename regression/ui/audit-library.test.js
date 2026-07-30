@@ -4,8 +4,15 @@ const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
 const { assertServerReachable, BASE_URL } = require('../lib/apiClient');
 const { withBrowser, withPage } = require('../lib/browserSession');
+const { RunHistoryStore } = require('../../packages/core/dist');
 
 before(assertServerReachable);
+
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value) throw new Error(`${name} is required — run this file through regression/run-isolated-ui.js, not node --test directly.`);
+  return value;
+}
 
 test('Audit and Evidence uses a searchable run library instead of date accordions', async () => {
   await withBrowser(async (browser) => {
@@ -27,4 +34,78 @@ test('Audit and Evidence uses a searchable run library instead of date accordion
       );
     });
   });
+});
+
+test('Audit and Evidence: environment filter, rerun lineage, and a source-artifact link (BL-035 AC1/AC3/AC4)', async () => {
+  const store = new RunHistoryStore(requireEnv('REGRESSION_RUN_HISTORY_DB'));
+  try {
+    store.record({
+      id: 'lineage-source-run',
+      startedAt: '2026-01-01T00:00:00.000Z',
+      finishedAt: '2026-01-01T00:00:03.000Z',
+      status: 'failed',
+      executedBy: 'lineage-executor',
+      mode: 'chain',
+      appId: 'lineageApp',
+      testCaseNames: ['Lineage Source Test'],
+      testCaseFiles: ['cleanup-abandoned-drafts.json'],
+      result: { status: 'failed' },
+      studioRunId: 'lineage-exec-source',
+      targetHostname: 'lineage-source.sap.example.invalid',
+      targetSafetyClass: 'non-production',
+    });
+    store.record({
+      id: 'lineage-rerun-run',
+      startedAt: '2026-01-02T00:00:00.000Z',
+      finishedAt: '2026-01-02T00:00:03.000Z',
+      status: 'passed',
+      executedBy: 'lineage-executor',
+      mode: 'chain',
+      appId: 'lineageApp',
+      testCaseNames: ['Lineage Source Test'],
+      testCaseFiles: ['cleanup-abandoned-drafts.json'],
+      result: { status: 'passed' },
+      studioRunId: 'lineage-exec-rerun',
+      parentStudioRunId: 'lineage-exec-source',
+      targetHostname: 'lineage-rerun.sap.example.invalid',
+      targetSafetyClass: 'non-production',
+    });
+
+    await withBrowser(async (browser) => {
+      await withPage(browser, 'audit-lineage-and-links', async (page) => {
+        await page.goto(BASE_URL);
+        await page.getByRole('button', { name: /Audit and Evidence/ }).first().click();
+
+        await page.locator('.audit-run-card', { hasText: 'lineage-rerun-run' }).waitFor();
+        await page.getByLabel('Filter audit runs by environment').fill('lineage-source');
+        // Wait for a card that should be filtered OUT to actually leave the DOM — the matching
+        // card can already be visible in the unfiltered list, so its mere presence doesn't prove
+        // the filter has taken effect yet.
+        await page.locator('.audit-run-card', { hasText: 'lineage-rerun-run' }).waitFor({ state: 'detached' });
+        await page.locator('.audit-run-card', { hasText: 'lineage-source-run' }).waitFor();
+        assert.equal(await page.locator('.audit-run-card').count(), 1, 'environment filter should narrow to only the matching run');
+
+        await page.getByLabel('Filter audit runs by environment').fill('');
+        await page.locator('.audit-run-card', { hasText: 'lineage-rerun-run' }).getByRole('button', { name: 'View record' }).click();
+
+        const detail = page.locator('.audit-detail-panel');
+        await detail.getByRole('button', { name: "View source execution (this was a rerun)" }).click();
+
+        await page.locator('.audit-lineage-strip', { hasText: 'lineage-exec-source' }).waitFor();
+        // The lineage banner appears as soon as the filter state is set, independently of the
+        // (async) refetch it triggers — wait for the stale rerun card to actually leave the DOM
+        // rather than just for the source card to be present (which was already true before the
+        // filtered fetch resolved, since both runs show in the unfiltered list too).
+        await page.locator('.audit-run-card', { hasText: 'lineage-rerun-run' }).waitFor({ state: 'detached' });
+        await page.locator('.audit-run-card', { hasText: 'lineage-source-run' }).waitFor();
+        assert.equal(await page.locator('.audit-run-card').count(), 1, 'lineage filter should show only the source execution\'s own runs');
+
+        await page.locator('.audit-run-card', { hasText: 'lineage-source-run' }).getByRole('button', { name: 'View record' }).click();
+        await page.locator('.audit-detail-panel .chip-link', { hasText: 'Lineage Source Test' }).click();
+        assert.equal(new URL(page.url()).pathname, '/compose/tests/cleanup-abandoned-drafts.json');
+      });
+    });
+  } finally {
+    store.close();
+  }
 });

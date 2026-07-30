@@ -426,6 +426,8 @@ export function startRun(opts: StartRunOptions): RunRecord {
   if (opts.targetContext?.hostname) args.push('--target-hostname', opts.targetContext.hostname);
   if (opts.targetContext?.safetyClass) args.push('--target-safety-class', opts.targetContext.safetyClass);
   if (opts.targetContext?.verifiedAt) args.push('--target-verified-at', opts.targetContext.verifiedAt);
+  args.push('--studio-run-id', id);
+  if (opts.parentRunId) args.push('--parent-studio-run-id', opts.parentRunId);
   args.push('--cancel-file', cancellationPath);
 
   const record: RunRecord = {

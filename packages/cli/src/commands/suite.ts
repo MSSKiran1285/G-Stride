@@ -45,6 +45,8 @@ export function registerSuiteCommand(program: Command): void {
     .option('--target-hostname <hostname>', 'non-secret SAP target hostname captured at Start')
     .option('--target-safety-class <classification>', 'SAP target safety classification captured at Start')
     .option('--target-verified-at <timestamp>', 'SAP target verification timestamp captured at Start')
+    .option('--studio-run-id <id>', 'the Studio execution this run belongs to, for audit-ledger lineage')
+    .option('--parent-studio-run-id <id>', 'the Studio execution this run was rerun from, if any')
     .option('--cancel-file <path>', 'cooperative cancellation signal file')
     .option(
       '--evidence-doc [path]',
@@ -95,6 +97,7 @@ export function registerSuiteCommand(program: Command): void {
           dataSnapshots: approved?.dataSnapshots,
         }),
       });
+      const fileByTestName = new Map(testAssets.map(({ file, testCase }) => [testCase.name, file]));
       const iterations = execution.members.flatMap((member) =>
         member.iterations.map((iteration) => ({ member, iteration }))
       );
@@ -154,9 +157,17 @@ export function registerSuiteCommand(program: Command): void {
             mode: 'suite',
             appId: opts.appId,
             testCaseNames: result.stages.map((stage) => stage.testCaseName),
+            testCaseFiles: result.stages.flatMap((stage) => {
+              const file = fileByTestName.get(stage.testCaseName);
+              return file ? [path.basename(file)] : [];
+            }),
             dataFile: opts.data ? path.basename(opts.data) : undefined,
             result,
             evidencePdfPath,
+            studioRunId: opts.studioRunId,
+            parentStudioRunId: opts.parentStudioRunId,
+            targetHostname: opts.targetHostname,
+            targetSafetyClass: opts.targetSafetyClass,
           });
           evidenceManifest.push({
             runId,

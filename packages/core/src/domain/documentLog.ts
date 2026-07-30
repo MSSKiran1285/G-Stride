@@ -16,6 +16,10 @@ export interface CapturedDocument {
 export interface DocumentListFilter {
   appId?: string;
   key?: string;
+  /** Every business document value captured by one specific run — BL-035 AC4's "evidence
+   *  types... linked from the run record" (a run's captured document numbers alongside its
+   *  canonical PDF). */
+  runId?: string;
   limit?: number;
 }
 
@@ -83,6 +87,10 @@ export class DocumentLog {
     if (filter.key) {
       clauses.push('key LIKE @key');
       params.key = `%${filter.key}%`;
+    }
+    if (filter.runId) {
+      clauses.push('run_id = @runId');
+      params.runId = filter.runId;
     }
     const where = clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '';
     params.limit = filter.limit ?? 500;

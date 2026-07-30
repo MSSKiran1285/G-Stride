@@ -227,6 +227,11 @@ async function main() {
             ...process.env,
             REGRESSION_BASE_URL: baseUrl,
             REGRESSION_ISOLATED: '1',
+            // Lets a regression test seed the audit ledger directly (there is no HTTP write
+            // path into it) and then exercise the isolated server's own Audit and Evidence UI
+            // against those exact rows.
+            REGRESSION_RUN_HISTORY_DB: path.join(tempRoot, 'run-history.db'),
+            REGRESSION_DOCUMENT_LOG_DB: path.join(tempRoot, 'documents.db'),
           },
           stdio: 'inherit',
         },

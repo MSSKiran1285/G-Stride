@@ -99,6 +99,8 @@ export function registerBatchCommand(program: Command): void {
     .option('--target-hostname <hostname>', 'non-secret SAP target hostname captured at Start')
     .option('--target-safety-class <classification>', 'SAP target safety classification captured at Start')
     .option('--target-verified-at <timestamp>', 'SAP target verification timestamp captured at Start')
+    .option('--studio-run-id <id>', 'the Studio execution this run belongs to, for audit-ledger lineage')
+    .option('--parent-studio-run-id <id>', 'the Studio execution this run was rerun from, if any')
     .option('--cancel-file <path>', 'cooperative cancellation signal file')
     .option('--evidence-doc', 'deprecated compatibility flag; canonical audit evidence PDFs are generated automatically')
     .action(async (groupFiles: string[], opts) => {
@@ -389,9 +391,14 @@ export function registerBatchCommand(program: Command): void {
             mode: 'batch',
             appId: group.appId,
             testCaseNames: result.stages.map((stage) => stage.testCaseName),
+            testCaseFiles: group.testCaseFiles.map((file) => path.basename(file)),
             dataFile: group.dataFile,
             result,
             evidencePdfPath,
+            studioRunId: opts.studioRunId,
+            parentStudioRunId: opts.parentStudioRunId,
+            targetHostname: opts.targetHostname,
+            targetSafetyClass: opts.targetSafetyClass,
           });
 
           const passedCount = result.stages.filter((stage) => stage.status === 'passed').length;

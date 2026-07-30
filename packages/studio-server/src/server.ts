@@ -1853,23 +1853,59 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   });
 
   // BL-12/13's audit ledger — read-only from Studio's side; see runHistory's own comment above.
+  // BL-035 AC1/AC2: every filter and pagination/sort control the query understands.
   app.get('/api/audit/runs', (req, res) => {
-    const { appId, status } = req.query;
+    const { appId, status, mode, runId, executedBy, artifact, environment, dateFrom, dateTo, studioRunId, query, limit, offset, sortBy, sortDirection } = req.query;
     if (status !== undefined && status !== 'passed' && status !== 'failed') {
       return res.status(400).json({ error: 'status must be "passed" or "failed" if given' });
     }
-    res.json(
-      runHistory.list({
-        appId: typeof appId === 'string' && appId ? appId : undefined,
-        status,
-      })
-    );
+    if (mode !== undefined && mode !== 'chain' && mode !== 'suite' && mode !== 'batch') {
+      return res.status(400).json({ error: 'mode must be "chain", "suite" or "batch" if given' });
+    }
+    if (sortBy !== undefined && sortBy !== 'startedAt' && sortBy !== 'durationMs' && sortBy !== 'status') {
+      return res.status(400).json({ error: 'sortBy must be "startedAt", "durationMs" or "status" if given' });
+    }
+    if (sortDirection !== undefined && sortDirection !== 'asc' && sortDirection !== 'desc') {
+      return res.status(400).json({ error: 'sortDirection must be "asc" or "desc" if given' });
+    }
+    const str = (value: unknown) => (typeof value === 'string' && value ? value : undefined);
+    const num = (value: unknown) => {
+      const parsed = typeof value === 'string' ? Number(value) : NaN;
+      return Number.isFinite(parsed) ? parsed : undefined;
+    };
+    const page = runHistory.list({
+      appId: str(appId),
+      status,
+      mode,
+      runId: str(runId),
+      executedBy: str(executedBy),
+      artifact: str(artifact),
+      environment: str(environment),
+      dateFrom: str(dateFrom),
+      dateTo: str(dateTo),
+      studioRunId: str(studioRunId),
+      query: str(query),
+      limit: num(limit),
+      offset: num(offset),
+      sortBy,
+      sortDirection,
+    });
+    // A header, not a body-shape change — AutomationOverview and other existing consumers
+    // still get the plain RunHistorySummary[] they always have; only a pagination-aware
+    // caller needs to read this.
+    res.setHeader('X-Total-Count', String(page.total));
+    res.json(page.items);
   });
 
   app.get('/api/audit/runs/:id', (req, res) => {
     const entry = runHistory.get(req.params.id);
     if (!entry) return res.status(404).json({ error: 'Unknown run id' });
     res.json(entry);
+  });
+
+  // BL-035 AC4: a run's captured business-document evidence, alongside its canonical PDF.
+  app.get('/api/audit/runs/:id/documents', (req, res) => {
+    res.json(documentLog.list({ runId: req.params.id }));
   });
 
   const webDist = options.webDistPath ?? path.join(REPO_ROOT, 'packages/studio-web/dist');

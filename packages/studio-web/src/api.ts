@@ -18,6 +18,7 @@ import type {
   ArtifactKind,
   RunHistorySummary,
   RunHistoryEntry,
+  RunHistoryFilter,
   AuthState,
   IntegrationSettings,
   SapIntegrationStatus,
@@ -262,12 +263,21 @@ export const api = {
     const qs = query.toString();
     return request<CapturedDocument[]>(`/api/documents${qs ? `?${qs}` : ''}`);
   },
-  listAuditRuns: (filter: { appId?: string; status?: 'passed' | 'failed' } = {}) => {
+  listAuditRuns: async (filter: RunHistoryFilter = {}): Promise<{ items: RunHistorySummary[]; total: number }> => {
     const query = new URLSearchParams();
-    if (filter.appId) query.set('appId', filter.appId);
-    if (filter.status) query.set('status', filter.status);
+    for (const [key, value] of Object.entries(filter)) {
+      if (value !== undefined && value !== '') query.set(key, String(value));
+    }
     const qs = query.toString();
-    return request<RunHistorySummary[]>(`/api/audit/runs${qs ? `?${qs}` : ''}`);
+    const res = await fetch(`/api/audit/runs${qs ? `?${qs}` : ''}`);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(body.error ?? `Request to /api/audit/runs failed (${res.status})`);
+    }
+    const items = (await res.json()) as RunHistorySummary[];
+    const total = Number(res.headers.get('X-Total-Count') ?? items.length);
+    return { items, total: Number.isFinite(total) ? total : items.length };
   },
   getAuditRun: (id: string) => request<RunHistoryEntry>(`/api/audit/runs/${encodeURIComponent(id)}`),
+  getAuditRunDocuments: (id: string) => request<CapturedDocument[]>(`/api/audit/runs/${encodeURIComponent(id)}/documents`),
 };

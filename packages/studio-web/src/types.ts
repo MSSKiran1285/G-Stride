@@ -461,14 +461,44 @@ export interface RunHistorySummary {
   id: string;
   startedAt: string;
   finishedAt: string;
+  /** Always present — BL-035 AC2's sort key. */
+  durationMs: number;
   status: 'passed' | 'failed';
   executedBy: string;
   mode: RunMode;
   appId: string;
   testCaseNames: string[];
+  /** File names backing each entry in testCaseNames, in the same order, when known — BL-035
+   *  AC4's "source artifacts are linked from the run record". */
+  testCaseFiles?: string[];
   dataFile?: string;
   /** Path to this run's compiled evidence PDF (module-by-module status, screenshots, input/output). */
   evidencePdfPath?: string;
+  /** The Studio execution this run belongs to — every iteration of one Chain/Suite/Batch shares
+   *  the same value (BL-035 AC3's lineage). */
+  studioRunId?: string;
+  /** studioRunId of the execution this run was rerun from, if any. */
+  parentStudioRunId?: string;
+  targetHostname?: string;
+  targetSafetyClass?: string;
+}
+
+export interface RunHistoryFilter {
+  appId?: string;
+  status?: 'passed' | 'failed';
+  mode?: RunMode;
+  runId?: string;
+  executedBy?: string;
+  artifact?: string;
+  environment?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  studioRunId?: string;
+  query?: string;
+  limit?: number;
+  offset?: number;
+  sortBy?: 'startedAt' | 'durationMs' | 'status';
+  sortDirection?: 'asc' | 'desc';
 }
 
 /** Full audit ledger record, including the verbatim RunResult/GroupResult. */

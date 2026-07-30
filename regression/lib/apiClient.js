@@ -16,7 +16,7 @@ async function request(path, init) {
   }
   const text = await res.text();
   const body = text ? JSON.parse(text) : undefined;
-  return { status: res.status, ok: res.ok, body };
+  return { status: res.status, ok: res.ok, body, headers: res.headers };
 }
 
 /** Fails fast with a clear message instead of every test in the file failing individually. */

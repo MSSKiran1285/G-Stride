@@ -386,6 +386,7 @@ export function App() {
                   <DocumentsPanel
                     selectedRunId={route.auditRunId}
                     onSelectedRunChange={(runId) => updateDetailPath(runId ? studioRoutes.auditRun(runId) : VIEW_PATHS.documents)}
+                    onNavigateToRoute={(path) => navigateToPath(path)}
                   />
                 ) : (
                   <RunPanel

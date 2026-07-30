@@ -287,7 +287,7 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
         unavailable = true;
       }
 
-      if (runsResult.status === 'fulfilled') setRecentRuns(runsResult.value);
+      if (runsResult.status === 'fulfilled') setRecentRuns(runsResult.value.items);
       else {
         setRecentRuns([]);
         unavailable = true;
