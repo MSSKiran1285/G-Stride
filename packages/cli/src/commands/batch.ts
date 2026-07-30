@@ -82,7 +82,7 @@ function testStepCount(testCases: TestCase[]): number {
 /** Legacy Batch now translates to a Regression Pack of Business Processes. */
 export function registerBatchCommand(program: Command): void {
   program
-    .command('batch <groupFiles...>')
+    .command('batch [groupFiles...]')
     .description('Run named Business Processes independently, once for every record in each Group dataset')
     .option('--profile <name>', 'credential profile name', 'default')
     .option('--object-db <path>', 'object repository SQLite path', 'object-repository.db')
@@ -102,12 +102,38 @@ export function registerBatchCommand(program: Command): void {
     .option('--cancel-file <path>', 'cooperative cancellation signal file')
     .option('--evidence-doc', 'deprecated compatibility flag; canonical audit evidence PDFs are generated automatically')
     .action(async (groupFiles: string[], opts) => {
-      const groups: GroupDefinition[] = groupFiles.map((file) =>
-        JSON.parse(readFileSync(file, 'utf-8'))
-      );
+      const approved = opts.executionSnapshot ? loadExecutionSnapshot(opts.executionSnapshot) : undefined;
+      if (groupFiles.length === 0 && !approved) {
+        throw new Error('Batch requires at least one Business Process or an approved execution snapshot.');
+      }
+      if (approved && approved.snapshot.plan.kind !== 'regressionPack') {
+        throw new Error('Batch execution snapshots must contain a Regression Pack.');
+      }
+      const approvedPlan = approved?.snapshot.plan.kind === 'regressionPack'
+        ? approved.snapshot.plan
+        : undefined;
+      const groups: GroupDefinition[] = groupFiles.length > 0
+        ? groupFiles.map((file) => JSON.parse(readFileSync(file, 'utf-8')))
+        : approvedPlan!.members.map((member) => {
+            const executions = member.executable.kind === 'singleTest'
+              ? [member.executable.testExecution]
+              : member.executable.stages;
+            const firstBinding = member.executable.dataBindings[0];
+            return {
+              name: member.name,
+              appId: executions[0]?.test.appId ?? 'default',
+              testCaseFiles: executions.map((execution) => execution.test.file),
+              dataFile: firstBinding?.source.files[0]
+                ? path.basename(firstBinding.source.files[0])
+                : undefined,
+            };
+          });
       const testAssetsByGroup = groups.map((group) =>
         group.testCaseFiles.map((file) => {
-          const resolvedFile = path.join('testcases', file);
+          const normalized = file.replace(/\\/g, '/');
+          const resolvedFile = normalized.startsWith('testcases/')
+            ? normalized
+            : path.join('testcases', file);
           return {
             file: resolvedFile,
             testCase: JSON.parse(readFileSync(resolvedFile, 'utf-8')) as TestCase,
@@ -115,7 +141,15 @@ export function registerBatchCommand(program: Command): void {
           };
         })
       );
-      const plannedIterations = groups.map((group) => {
+      const plannedIterations = groups.map((group, index) => {
+        if (approvedPlan) {
+          const memberId = approvedPlan.members[index]?.memberId;
+          if (!memberId) return 1;
+          const snapshotRecords = approved!.snapshot.data
+            .filter((entry) => entry.bindingId.startsWith(`${memberId}:`))
+            .reduce((total, entry) => total + entry.recordCount, 0);
+          return snapshotRecords || 1;
+        }
         if (!group.dataFile) return 1;
         const count = loadDataSet(path.join('data', group.dataFile)).length;
         return opts.maxRecords ? Math.min(count, Number(opts.maxRecords)) : count;
@@ -175,23 +209,21 @@ export function registerBatchCommand(program: Command): void {
       };
       writeProgress();
 
-      const translatedPlan = translateLegacyBatch(
-        groups.map((group, index) => ({
-          name: group.name,
-          appId: group.appId,
-          tests: testAssetsByGroup[index],
-          dataFile: group.dataFile ? path.join('data', group.dataFile) : undefined,
-        })),
-        {
-          name: 'Legacy Batch',
-          profileRef: opts.profile,
-          sessionPolicy: opts.sessionPolicy,
-          iterationFailurePolicy: opts.iterationFailure,
-          maxRecords: opts.maxRecords ? Number(opts.maxRecords) : undefined,
-        }
-      );
-      const approved = opts.executionSnapshot ? loadExecutionSnapshot(opts.executionSnapshot) : undefined;
-      const plan = approved?.snapshot.plan ?? translatedPlan;
+      const plan = approvedPlan ?? translateLegacyBatch(
+          groups.map((group, index) => ({
+            name: group.name,
+            appId: group.appId,
+            tests: testAssetsByGroup[index],
+            dataFile: group.dataFile ? path.join('data', group.dataFile) : undefined,
+          })),
+          {
+            name: 'Legacy Batch',
+            profileRef: opts.profile,
+            sessionPolicy: opts.sessionPolicy,
+            iterationFailurePolicy: opts.iterationFailure,
+            maxRecords: opts.maxRecords ? Number(opts.maxRecords) : undefined,
+          }
+        );
       const tests = new Map<string, TestCase>();
       for (const assets of testAssetsByGroup) {
         for (const asset of assets) tests.set(asset.file.replace(/\\/g, '/'), asset.testCase);

@@ -364,7 +364,7 @@ export function AutomationOverview({ onNavigate, workspaceContext }: AutomationO
         </button>
         <button type="button" onClick={() => onNavigate('groups')}>
           <Layers size={17} aria-hidden="true" />
-          <span><strong>{loading ? '—' : groups.length}</strong> Process suites</span>
+          <span><strong>{loading ? '—' : groups.length}</strong> Business Processes</span>
         </button>
         <button type="button" onClick={() => onNavigate('objects')}>
           <Scan size={17} aria-hidden="true" />

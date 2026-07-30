@@ -8,14 +8,16 @@ import {
   TagStore,
   ArtifactKind,
   JsonValue,
+  TestCase,
   TransactionDataValidationError,
   RunHistoryStore,
   getCredentials,
   getCredentialStatus,
   loadTransactionData,
   setCredentials,
+  validateTestContract,
 } from '@taf/core';
-import { ModuleRegistry } from '@taf/engine';
+import { ModuleRegistry, capturesForStep, inferLegacyTestContract } from '@taf/engine';
 import {
   cancelRun,
   getExecutionHealthMetrics,
@@ -39,6 +41,7 @@ import {
 const REPO_ROOT = path.resolve(__dirname, '../../..');
 const DEFAULT_TESTCASES_DIR = path.join(REPO_ROOT, 'testcases');
 const DEFAULT_GROUPS_DIR = path.join(REPO_ROOT, 'testgroups');
+const DEFAULT_PACKS_DIR = path.join(REPO_ROOT, 'testpacks');
 const DEFAULT_DATA_DIR = path.join(REPO_ROOT, 'data');
 const DEFAULT_REPORTS_DIR = path.join(REPO_ROOT, 'reports');
 const DEFAULT_EVIDENCE_ARCHIVE_DIR = path.join(REPO_ROOT, 'audit-evidence');
@@ -59,6 +62,15 @@ function safeGroupFileName(name: string): string {
   const base = path.basename(name);
   if (!base.endsWith('.json') || base !== name) {
     throw Object.assign(new Error(`Invalid group file name "${name}"`), { status: 400 });
+  }
+  return base;
+}
+
+/** A pack file name must be a plain "*.json" basename — never a path. */
+function safePackFileName(name: string): string {
+  const base = path.basename(name);
+  if (!base.endsWith('.json') || base !== name) {
+    throw Object.assign(new Error(`Invalid pack file name "${name}"`), { status: 400 });
   }
   return base;
 }
@@ -130,6 +142,7 @@ export interface StudioServerOptions {
   webDistPath?: string;
   testCasesDir?: string;
   groupsDir?: string;
+  packsDir?: string;
   dataDir?: string;
   reportsDir?: string;
   evidenceArchiveDir?: string;
@@ -157,6 +170,7 @@ export interface StudioServerOptions {
 export function createStudioServer(options: StudioServerOptions = {}): Express {
   const testCasesDir = options.testCasesDir ?? DEFAULT_TESTCASES_DIR;
   const groupsDir = options.groupsDir ?? DEFAULT_GROUPS_DIR;
+  const packsDir = options.packsDir ?? DEFAULT_PACKS_DIR;
   const dataDir = options.dataDir ?? DEFAULT_DATA_DIR;
   const dataRelationsDir = path.join(dataDir, '.relations');
   const reportsDir = options.reportsDir ?? DEFAULT_REPORTS_DIR;
@@ -176,7 +190,7 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   const runHistory = new RunHistoryStore(runHistoryDbPath);
   const registry = new ModuleRegistry();
   const executionPreflight = new ExecutionPreflightService(
-    { testCasesDir, groupsDir, dataDir },
+    { testCasesDir, groupsDir, packsDir, dataDir },
     objectRepository,
     registry
   );
@@ -191,6 +205,102 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   const currentTargetContext = async () => {
     const status = await getCredentialStatus('default');
     return executionTargetContext(status, governance.getSap(status));
+  };
+
+  const validateTestForPublishing = (testCase: TestCase) => {
+    const issues: Array<{ code: string; path: string; message: string }> = [];
+    if (!testCase.contract) {
+      issues.push({ code: 'missing-test-contract', path: 'contract', message: 'Declare typed Test inputs and outputs before publishing.' });
+      return issues;
+    }
+    issues.push(...validateTestContract(testCase.contract));
+    if (!Array.isArray(testCase.steps) || testCase.steps.length === 0) {
+      issues.push({ code: 'missing-test-steps', path: 'steps', message: 'Add at least one executable step before publishing.' });
+      return issues;
+    }
+
+    const inputKeys = new Set<string>();
+    for (const input of testCase.contract.inputs ?? []) {
+      inputKeys.add(input.name);
+      inputKeys.add(input.runtimeKey ?? input.name);
+    }
+    const systemKeys = new Set(['url', 'urlBase', 'username', 'password', 'today']);
+    const systemContextKeys = new Set(['sap.url', 'sap.urlBase', 'sap.username', 'sap.password', 'runtime.today']);
+    const availableOutputs = new Set<string>();
+    const defaultAppId = testCase.steps.find((step) => typeof step?.appId === 'string' && step.appId.trim())?.appId?.trim() ?? '';
+
+    testCase.steps.forEach((step, stepIndex) => {
+      const stepPath = `steps[${stepIndex}]`;
+      let moduleInfo;
+      try {
+        moduleInfo = registry.get(step?.module);
+      } catch {
+        issues.push({ code: 'unknown-module', path: `${stepPath}.module`, message: `Module "${String(step?.module)}" is not registered.` });
+        return;
+      }
+      if (!step.params || typeof step.params !== 'object' || Array.isArray(step.params)) {
+        issues.push({ code: 'invalid-step-params', path: `${stepPath}.params`, message: 'Step parameters must be a key/value object.' });
+        return;
+      }
+
+      const descriptors = moduleInfo.describe?.params ?? [];
+      for (const descriptor of descriptors) {
+        const value = step.params[descriptor.key];
+        if (descriptor.required && (typeof value !== 'string' || !value.trim())) {
+          issues.push({ code: 'missing-required-parameter', path: `${stepPath}.params.${descriptor.key}`, message: `Required parameter "${descriptor.label}" is empty.` });
+          continue;
+        }
+        if (descriptor.objectKind && typeof value === 'string' && value.trim()) {
+          const appId = step.appId?.trim() || defaultAppId;
+          if (!appId) {
+            issues.push({ code: 'missing-object-app-id', path: `${stepPath}.appId`, message: `Set an App ID before using object "${value}".` });
+          } else if (/\$\{[^}]+\}/.test(value)) {
+            issues.push({ code: 'dynamic-object-reference', path: `${stepPath}.params.${descriptor.key}`, message: 'Object Repository references must resolve to a saved object before publishing.' });
+          } else {
+            try {
+              objectRepository.get(appId, value.trim());
+            } catch {
+              issues.push({ code: 'missing-object-reference', path: `${stepPath}.params.${descriptor.key}`, message: `Object "${value}" does not exist under App ID "${appId}".` });
+            }
+          }
+        }
+      }
+
+      for (const [paramKey, value] of Object.entries(step.params)) {
+        if (typeof value !== 'string') {
+          issues.push({ code: 'invalid-parameter-value', path: `${stepPath}.params.${paramKey}`, message: 'Executable parameter values must be strings.' });
+          continue;
+        }
+        for (const match of value.matchAll(/\$\{([^}]+)\}/g)) {
+          const key = match[1];
+          if (!inputKeys.has(key) && !systemKeys.has(key) && !availableOutputs.has(key)) {
+            issues.push({ code: 'unresolved-step-value', path: `${stepPath}.params.${paramKey}`, message: `Value "${key}" is not a declared input, system context value or prior output.` });
+          }
+        }
+      }
+
+      for (const [paramKey, binding] of Object.entries(step.valueBindings ?? {})) {
+        if (!binding || typeof binding !== 'object' || !('source' in binding)) {
+          issues.push({ code: 'invalid-value-binding', path: `${stepPath}.valueBindings.${paramKey}`, message: 'Value binding is invalid.' });
+        } else if (binding.source === 'dataset' && (!binding.key || !inputKeys.has(binding.key))) {
+          issues.push({ code: 'unresolved-dataset-binding', path: `${stepPath}.valueBindings.${paramKey}`, message: `Dataset value "${binding.key ?? ''}" is not declared by the Test contract.` });
+        } else if (binding.source === 'systemContext' && !systemContextKeys.has(binding.key)) {
+          issues.push({ code: 'invalid-system-binding', path: `${stepPath}.valueBindings.${paramKey}`, message: 'Choose a supported system context value.' });
+        } else if (binding.source === 'priorOutput' && (!binding.output || !availableOutputs.has(binding.output))) {
+          issues.push({ code: 'unresolved-prior-output', path: `${stepPath}.valueBindings.${paramKey}`, message: `Prior output "${binding.output ?? ''}" is unavailable before this step.` });
+        }
+      }
+
+      for (const output of capturesForStep(step.module, step.params)) availableOutputs.add(output);
+    });
+
+    for (const output of testCase.contract.outputs ?? []) {
+      const runtimeKey = output.runtimeKey ?? output.name;
+      if (!availableOutputs.has(runtimeKey)) {
+        issues.push({ code: 'unproduced-contract-output', path: `contract.outputs.${output.name}`, message: `Output "${output.name}" maps to "${runtimeKey}", but no step produces that value.` });
+      }
+    }
+    return issues;
   };
 
   const executionDraftFromBody = (body: any): ExecutionDraft => {
@@ -223,6 +333,9 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
           return safeGroupFileName(file);
         })
       : [];
+    const packFile = body?.packFile === undefined || body?.packFile === null || body?.packFile === ''
+      ? undefined
+      : safePackFileName(String(body.packFile));
     const sessionPolicy = body?.sessionPolicy ?? 'fresh-per-iteration';
     if (!['fresh-per-iteration', 'reuse-within-process'].includes(sessionPolicy)) {
       throw Object.assign(new Error('Invalid sessionPolicy.'), { status: 400 });
@@ -280,6 +393,7 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       kind,
       testCaseFiles,
       groupFiles,
+      packFile,
       appId: typeof body?.appId === 'string' ? body.appId : '',
       dataFile: typeof body?.dataFile === 'string' && body.dataFile
         ? safeDataFileName(body.dataFile)
@@ -501,7 +615,40 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
 
   app.get('/api/testcases', (_req, res) => {
     if (!existsSync(testCasesDir)) return res.json([]);
-    res.json(readdirSync(testCasesDir).filter((f) => f.endsWith('.json')));
+    res.json(readdirSync(testCasesDir).filter((f) => f.endsWith('.json')).sort());
+  });
+
+  app.get('/api/testcases/library', (_req, res) => {
+    if (!existsSync(testCasesDir)) return res.json([]);
+    const tags = tagStore.listTags('testCase');
+    const items = readdirSync(testCasesDir)
+      .filter((file) => file.endsWith('.json'))
+      .sort()
+      .map((file) => {
+        const testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
+        const steps = Array.isArray(testCase.steps) ? testCase.steps : [];
+        const application = ['SAP', 'Salesforce', 'Oracle', 'ServiceNow'].includes(testCase.application)
+          ? testCase.application
+          : 'SAP';
+        return {
+          file,
+          name: typeof testCase.name === 'string' && testCase.name.trim() ? testCase.name : file.replace(/\.json$/i, ''),
+          application,
+          processArea: tags[file] ?? '',
+          status: testCase.lifecycle === 'published' ? 'published' : testCase.lifecycle === 'draft' || steps.length === 0 ? 'draft' : 'ready',
+          stepCount: steps.length,
+        };
+      });
+    res.json(items);
+  });
+
+  app.post('/api/testcases/validate', (req, res) => {
+    const testCase = req.body?.testCase ?? req.body;
+    if (typeof testCase?.name !== 'string' || !Array.isArray(testCase?.steps)) {
+      return res.status(400).json({ error: 'Body must include a Test with name and steps.' });
+    }
+    const issues = validateTestForPublishing(testCase);
+    res.json({ valid: issues.length === 0, issues });
   });
 
   app.get('/api/testcases/:file', (req, res) => {
@@ -515,12 +662,68 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  app.get('/api/testcases/:file/contract', (req, res) => {
+    try {
+      const file = safeTestCaseName(req.params.file);
+      const full = path.join(testCasesDir, file);
+      if (!existsSync(full)) return res.status(404).json({ error: 'Not found' });
+      const testCase = JSON.parse(readFileSync(full, 'utf-8'));
+      res.json(inferLegacyTestContract(testCase));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/testcases/:file', (req, res) => {
+    try {
+      const file = safeTestCaseName(req.params.file);
+      const body = req.body?.testCase ?? req.body;
+      const processArea = req.body?.testCase ? req.body.processArea : '';
+      if (typeof body?.name !== 'string' || !Array.isArray(body?.steps)) {
+        return res.status(400).json({ error: 'Body must be { name: string, steps: ModuleCall[] }' });
+      }
+      if (typeof processArea !== 'string') {
+        return res.status(400).json({ error: 'processArea must be a string.' });
+      }
+      if (body.application !== undefined && !['SAP', 'Salesforce', 'Oracle', 'ServiceNow'].includes(body.application)) {
+        return res.status(400).json({ error: 'application must be SAP, Salesforce, Oracle or ServiceNow.' });
+      }
+      if (body.version !== undefined && body.version !== 1) return res.status(400).json({ error: 'Test version must be 1.' });
+      if (body.lifecycle !== undefined && body.lifecycle !== 'draft' && body.lifecycle !== 'published') {
+        return res.status(400).json({ error: 'Test lifecycle must be draft or published.' });
+      }
+      if (body.lifecycle === 'published') {
+        const issues = validateTestForPublishing(body);
+        if (issues.length > 0) return res.status(400).json({ error: 'Test is not ready to publish.', issues });
+      }
+      mkdirSync(testCasesDir, { recursive: true });
+      const full = path.join(testCasesDir, file);
+      if (existsSync(full)) return res.status(409).json({ error: `Test "${file}" already exists.` });
+      writeFileSync(full, JSON.stringify(body, null, 2) + '\n');
+      if (processArea.trim()) tagStore.setTag('testCase', file, processArea.trim());
+      res.status(201).json({ ok: true });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
   app.put('/api/testcases/:file', (req, res) => {
     try {
       const file = safeTestCaseName(req.params.file);
       const body = req.body;
       if (typeof body?.name !== 'string' || !Array.isArray(body?.steps)) {
         return res.status(400).json({ error: 'Body must be { name: string, steps: ModuleCall[] }' });
+      }
+      if (body.application !== undefined && !['SAP', 'Salesforce', 'Oracle', 'ServiceNow'].includes(body.application)) {
+        return res.status(400).json({ error: 'application must be SAP, Salesforce, Oracle or ServiceNow.' });
+      }
+      if (body.version !== undefined && body.version !== 1) return res.status(400).json({ error: 'Test version must be 1.' });
+      if (body.lifecycle !== undefined && body.lifecycle !== 'draft' && body.lifecycle !== 'published') {
+        return res.status(400).json({ error: 'Test lifecycle must be draft or published.' });
+      }
+      if (body.lifecycle === 'published') {
+        const issues = validateTestForPublishing(body);
+        if (issues.length > 0) return res.status(400).json({ error: 'Test is not ready to publish.', issues });
       }
       mkdirSync(testCasesDir, { recursive: true });
       writeFileSync(path.join(testCasesDir, file), JSON.stringify(body, null, 2) + '\n');
@@ -558,8 +761,182 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       ) {
         return res.status(400).json({ error: 'Body must be { name: string, appId: string, testCaseFiles: string[], dataFile?: string }' });
       }
+      if (body.stages !== undefined) {
+        if (
+          body.version !== 1
+          || (body.lifecycle !== 'draft' && body.lifecycle !== 'published')
+          || !Array.isArray(body.stages)
+          || body.stages.length !== body.testCaseFiles.length
+        ) {
+          return res.status(400).json({ error: 'A version 1 Business Process requires lifecycle and one stage per Test.' });
+        }
+        const stageIds = new Set<string>();
+        const priorOutputs = new Map<string, Map<string, { type: string }>>();
+        const outputOwners = new Map<string, string>();
+        for (const [index, stage] of body.stages.entries()) {
+          if (
+            typeof stage?.stageId !== 'string'
+            || !/^[A-Za-z][A-Za-z0-9_-]*$/.test(stage.stageId)
+            || stageIds.has(stage.stageId)
+            || stage.testCaseFile !== body.testCaseFiles[index]
+            || typeof stage.inputBindings !== 'object'
+            || stage.inputBindings === null
+          ) {
+            return res.status(400).json({ error: `Business Process stage ${index + 1} has an invalid ID, Test reference, or binding map.` });
+          }
+          const testFile = safeTestCaseName(stage.testCaseFile);
+          const testPath = path.join(testCasesDir, testFile);
+          if (!existsSync(testPath)) {
+            return res.status(400).json({ error: `Business Process stage "${stage.stageId}" references missing Test "${testFile}".` });
+          }
+          const contract = inferLegacyTestContract(JSON.parse(readFileSync(testPath, 'utf8')));
+          for (const input of contract.inputs) {
+            const binding = stage.inputBindings[input.name];
+            if (input.required && !binding) {
+              return res.status(400).json({ error: `Required input "${stage.stageId}.${input.name}" has no binding.` });
+            }
+            if (!binding) continue;
+            if (!['literal', 'processData', 'stageOutput', 'systemContext'].includes(binding.source)) {
+              return res.status(400).json({ error: `Input "${stage.stageId}.${input.name}" has an unsupported binding source.` });
+            }
+            if (binding.source === 'literal' && input.required && binding.value === '') {
+              return res.status(400).json({ error: `Required input "${stage.stageId}.${input.name}" cannot use an empty literal.` });
+            }
+            if (binding.source === 'processData' && (typeof binding.path !== 'string' || !binding.path.trim())) {
+              return res.status(400).json({ error: `Input "${stage.stageId}.${input.name}" requires a data property.` });
+            }
+            if (binding.source === 'stageOutput') {
+              const producer = priorOutputs.get(binding.stageId);
+              if (!producer) {
+                return res.status(400).json({ error: `Input "${stage.stageId}.${input.name}" creates a forward reference or cycle.` });
+              }
+              const output = producer.get(binding.output);
+              if (!output) {
+                return res.status(400).json({ error: `Input "${stage.stageId}.${input.name}" references unknown output "${binding.output}".` });
+              }
+              if (output.type !== input.type) {
+                return res.status(400).json({ error: `Input "${stage.stageId}.${input.name}" expects ${input.type}, but the selected output produces ${output.type}.` });
+              }
+            }
+          }
+          const outputs = new Map<string, { type: string }>();
+          for (const output of contract.outputs) {
+            const owner = outputOwners.get(output.name);
+            if (owner) {
+              return res.status(400).json({ error: `Output "${output.name}" is declared by both "${owner}" and "${stage.stageId}".` });
+            }
+            outputOwners.set(output.name, stage.stageId);
+            outputs.set(output.name, { type: output.type });
+          }
+          priorOutputs.set(stage.stageId, outputs);
+          stageIds.add(stage.stageId);
+        }
+      }
       mkdirSync(groupsDir, { recursive: true });
       writeFileSync(path.join(groupsDir, file), JSON.stringify(body, null, 2) + '\n');
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/packs', (_req, res) => {
+    if (!existsSync(packsDir)) return res.json([]);
+    res.json(readdirSync(packsDir).filter((f) => f.endsWith('.json')).sort());
+  });
+
+  app.get('/api/packs/:file', (req, res) => {
+    try {
+      const file = safePackFileName(req.params.file);
+      const full = path.join(packsDir, file);
+      if (!existsSync(full)) return res.status(404).json({ error: 'Not found' });
+      res.json(JSON.parse(readFileSync(full, 'utf-8')));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/packs/:file', (req, res) => {
+    try {
+      const file = safePackFileName(req.params.file);
+      const body = req.body;
+      const members = Array.isArray(body?.members) ? body.members : [];
+      const ids = members.map((member: any) => member?.id);
+      const validMember = (member: any) =>
+        typeof member?.id === 'string' &&
+        member.id.trim().length > 0 &&
+        (member.kind === 'test' || member.kind === 'process') &&
+        typeof member.file === 'string' &&
+        member.file.endsWith('.json') &&
+        path.basename(member.file) === member.file &&
+        (member.sessionPolicy === 'fresh-per-iteration' || member.sessionPolicy === 'reuse-within-process') &&
+        (member.iterationFailurePolicy === 'stop-execution' || member.iterationFailurePolicy === 'continue-next-iteration');
+      if (
+        body?.version !== 1 ||
+        typeof body?.name !== 'string' ||
+        body.name.trim().length === 0 ||
+        (body.description !== undefined && typeof body.description !== 'string') ||
+        (body.lifecycle !== 'draft' && body.lifecycle !== 'published') ||
+        members.length === 0 ||
+        !members.every(validMember) ||
+        new Set(ids).size !== ids.length
+      ) {
+        return res.status(400).json({
+          error: 'Body must be a version 1 Regression Pack with a name, lifecycle, and uniquely identified test or process members.',
+        });
+      }
+      for (const member of members) {
+        const artifactFile = member.kind === 'test'
+          ? path.join(testCasesDir, safeTestCaseName(member.file))
+          : path.join(groupsDir, safeGroupFileName(member.file));
+        if (!existsSync(artifactFile)) {
+          return res.status(400).json({ error: `Pack member "${member.id}" references missing ${member.kind} artifact "${member.file}".` });
+        }
+        if (member.appId !== undefined && typeof member.appId !== 'string') {
+          return res.status(400).json({ error: `Pack member "${member.id}" has an invalid App ID override.` });
+        }
+        if (member.kind === 'test' && member.sessionPolicy === 'reuse-within-process') {
+          return res.status(400).json({ error: `Pack Test member "${member.id}" cannot reuse a Process session; use a fresh session.` });
+        }
+        const memberTests = member.kind === 'test'
+          ? [JSON.parse(readFileSync(artifactFile, 'utf8'))]
+          : (() => {
+              const process = JSON.parse(readFileSync(artifactFile, 'utf8'));
+              if (body.lifecycle === 'published' && process.lifecycle === 'draft') {
+                throw Object.assign(
+                  new Error(`Published Pack member "${member.id}" references draft Business Process "${member.file}".`),
+                  { status: 400 }
+                );
+              }
+              return process.testCaseFiles.map((testFile: string) => {
+                const safe = safeTestCaseName(testFile);
+                const testPath = path.join(testCasesDir, safe);
+                if (!existsSync(testPath)) {
+                  throw Object.assign(new Error(`Pack member "${member.id}" references missing Test "${safe}".`), { status: 400 });
+                }
+                return JSON.parse(readFileSync(testPath, 'utf8'));
+              });
+            })();
+        if (
+          member.iterationFailurePolicy !== 'stop-execution'
+          && memberTests.some((testCase: any) => Array.isArray(testCase.transaction?.creates) && testCase.transaction.creates.length > 0)
+        ) {
+          return res.status(400).json({
+            error: `Transactional Pack member "${member.id}" must stop execution after an iteration failure.`,
+          });
+        }
+        if (member.dataFile !== undefined) {
+          if (typeof member.dataFile !== 'string') {
+            return res.status(400).json({ error: `Pack member "${member.id}" has an invalid data binding.` });
+          }
+          const dataFile = path.join(dataDir, safeDataFileName(member.dataFile));
+          if (!existsSync(dataFile)) {
+            return res.status(400).json({ error: `Pack member "${member.id}" references missing dataset "${member.dataFile}".` });
+          }
+        }
+      }
+      mkdirSync(packsDir, { recursive: true });
+      writeFileSync(path.join(packsDir, file), JSON.stringify(body, null, 2) + '\n');
       res.json({ ok: true });
     } catch (err: any) {
       res.status(err.status ?? 500).json({ error: err.message });
@@ -923,6 +1300,7 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     const {
       testCaseFiles,
       groupFiles,
+      packFile,
       appId,
       dataFile,
       headless,
@@ -941,8 +1319,8 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       return res.status(err.status ?? 400).json({ error: err.message });
     }
     if (mode === 'batch') {
-      if (!Array.isArray(groupFiles) || groupFiles.length === 0) {
-        return res.status(400).json({ error: 'Body must include groupFiles: string[] when mode is "batch"' });
+      if ((!Array.isArray(groupFiles) || groupFiles.length === 0) && typeof packFile !== 'string') {
+        return res.status(400).json({ error: 'Body must include groupFiles: string[] or a saved packFile when mode is "batch"' });
       }
     } else if (!Array.isArray(testCaseFiles) || testCaseFiles.length === 0 || typeof appId !== 'string') {
       return res.status(400).json({ error: 'Body must include testCaseFiles: string[] and appId: string' });
@@ -991,10 +1369,12 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     const initiatedBy = executionInitiator(initiatingUser);
 
     if (mode === 'batch') {
-      if (!Array.isArray(groupFiles) || groupFiles.length === 0) {
-        return res.status(400).json({ error: 'Body must include groupFiles: string[] when mode is "batch"' });
+      if ((!Array.isArray(groupFiles) || groupFiles.length === 0) && !requestedDraft.packFile) {
+        return res.status(400).json({ error: 'Body must include groupFiles: string[] or a saved packFile when mode is "batch"' });
       }
-      const resolvedGroups = groupFiles.map((f: string) => path.join('testgroups', safeGroupFileName(f)));
+      const resolvedGroups = Array.isArray(groupFiles)
+        ? groupFiles.map((f: string) => path.join('testgroups', safeGroupFileName(f)))
+        : [];
       const record = runService.start({
         testCaseFiles: [],
         groupFiles: resolvedGroups,

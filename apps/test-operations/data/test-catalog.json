@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-30T02:28:46.387Z",
+  "generatedAt": "2026-07-30T06:08:28.710Z",
   "source": "Repository regression inventory and recorded Node test-run output",
   "tests": [
     {
@@ -172,6 +172,126 @@
     },
     {
       "id": "Q4H-015",
+      "name": "GET inferred Test contract exposes typed authoring metadata",
+      "feature": "Studio API Contracts",
+      "area": "Test Data",
+      "mode": "API",
+      "source": "regression/api/groups.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-016",
+      "name": "versioned Business Process persists a typed prior-stage hand-off",
+      "feature": "Studio API Contracts",
+      "area": "Process Suites",
+      "mode": "API",
+      "source": "regression/api/groups.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-017",
+      "name": "Business Process rejects forward references and cycles",
+      "feature": "Studio API Contracts",
+      "area": "Process Suites",
+      "mode": "API",
+      "source": "regression/api/groups.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-018",
+      "name": "GET /api/packs lists the published isolated Pack fixture",
+      "feature": "Studio API Contracts",
+      "area": "Execution Center",
+      "mode": "API",
+      "source": "regression/api/packs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-019",
+      "name": "PUT then GET /api/packs/:file persists independent member bindings",
+      "feature": "Studio API Contracts",
+      "area": "Execution Center",
+      "mode": "API",
+      "source": "regression/api/packs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-020",
+      "name": "PUT /api/packs/:file rejects duplicate member IDs",
+      "feature": "Studio API Contracts",
+      "area": "Execution Center",
+      "mode": "API",
+      "source": "regression/api/packs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-021",
+      "name": "PUT /api/packs/:file rejects sequential or unknown member types",
+      "feature": "Studio API Contracts",
+      "area": "Execution Center",
+      "mode": "API",
+      "source": "regression/api/packs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-022",
+      "name": "PUT /api/packs/:file rejects incompatible Test session policies",
+      "feature": "Studio API Contracts",
+      "area": "Execution Center",
+      "mode": "API",
+      "source": "regression/api/packs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-023",
+      "name": "PUT /api/packs/:file rejects orphaned artifact and data references",
+      "feature": "Studio API Contracts",
+      "area": "Test Data",
+      "mode": "API",
+      "source": "regression/api/packs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-024",
+      "name": "GET /api/packs/:file rejects traversal and missing artifacts safely",
+      "feature": "Studio API Contracts",
+      "area": "Execution Center",
+      "mode": "API",
+      "source": "regression/api/packs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-025",
       "name": "POST /api/runs rejects an invalid mode",
       "feature": "Studio API Contracts",
       "area": "Execution Center",
@@ -183,7 +303,7 @@
       "executionNote": "Passed in T1.3.1 live read-only API matrix."
     },
     {
-      "id": "Q4H-016",
+      "id": "Q4H-026",
       "name": "POST /api/runs (chain) rejects a missing testCaseFiles/appId",
       "feature": "Studio API Contracts",
       "area": "Execution Center",
@@ -195,7 +315,7 @@
       "executionNote": "Passed in T1.3.1 live read-only API matrix."
     },
     {
-      "id": "Q4H-017",
+      "id": "Q4H-027",
       "name": "POST /api/runs (batch) rejects a missing groupFiles",
       "feature": "Studio API Contracts",
       "area": "Process Suites",
@@ -207,7 +327,7 @@
       "executionNote": "Passed in T1.3.1 live read-only API matrix."
     },
     {
-      "id": "Q4H-018",
+      "id": "Q4H-028",
       "name": "GET /api/runs/:id 404s for an unknown run",
       "feature": "Studio API Contracts",
       "area": "Execution Center",
@@ -219,7 +339,7 @@
       "executionNote": "Passed in T1.3.1 live read-only API matrix."
     },
     {
-      "id": "Q4H-019",
+      "id": "Q4H-029",
       "name": "POST /api/runs completes a synthetic headless Chain",
       "feature": "Studio API Contracts",
       "area": "Execution Center",
@@ -231,7 +351,7 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-020",
+      "id": "Q4H-030",
       "name": "POST /api/runs completes a synthetic headless Suite",
       "feature": "Studio API Contracts",
       "area": "Execution Center",
@@ -243,7 +363,7 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-021",
+      "id": "Q4H-031",
       "name": "POST /api/runs completes a synthetic headless multi-group Batch",
       "feature": "Studio API Contracts",
       "area": "Process Suites",
@@ -255,7 +375,19 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-022",
+      "id": "Q4H-032",
+      "name": "POST /api/runs executes a published mixed saved Regression Pack",
+      "feature": "Studio API Contracts",
+      "area": "Execution Center",
+      "mode": "API",
+      "source": "regression/api/runs.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-033",
       "name": "rerun requires an explicit difference review and records immutable lineage",
       "feature": "Studio API Contracts",
       "area": "Execution Center",
@@ -267,7 +399,7 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-023",
+      "id": "Q4H-034",
       "name": "live: read-only Chain authenticates and opens Manage Purchase Orders, with evidence PDF",
       "feature": "Studio API Contracts",
       "area": "Audit & Evidence",
@@ -279,7 +411,7 @@
       "executionNote": "Passed in T1.3.1 live read-only API matrix."
     },
     {
-      "id": "Q4H-024",
+      "id": "Q4H-035",
       "name": "live: read-only Suite runs independent login and procurement navigation tests",
       "feature": "Studio API Contracts",
       "area": "Application Shell",
@@ -291,7 +423,7 @@
       "executionNote": "Passed in T1.3.1 live read-only API matrix."
     },
     {
-      "id": "Q4H-025",
+      "id": "Q4H-036",
       "name": "live: read-only Batch runs two independent SAP smoke groups",
       "feature": "Studio API Contracts",
       "area": "Process Suites",
@@ -303,7 +435,7 @@
       "executionNote": "Passed in T1.3.1 live read-only API matrix."
     },
     {
-      "id": "Q4H-026",
+      "id": "Q4H-037",
       "name": "live transactional: negative test — create PO is blocked without a line item",
       "feature": "Studio API Contracts",
       "area": "Execution Center",
@@ -315,7 +447,7 @@
       "executionNote": "Passed in BL-041 controlled negative remediation."
     },
     {
-      "id": "Q4H-027",
+      "id": "Q4H-038",
       "name": "GET /api/testcases lists known fixtures",
       "feature": "Studio API Contracts",
       "area": "Compose",
@@ -327,7 +459,67 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-028",
+      "id": "Q4H-039",
+      "name": "GET /api/testcases/library returns filterable business metadata for legacy Tests",
+      "feature": "Studio API Contracts",
+      "area": "Compose",
+      "mode": "API",
+      "source": "regression/api/testcases.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-040",
+      "name": "POST /api/testcases/:file creates metadata without overwriting an existing Test",
+      "feature": "Studio API Contracts",
+      "area": "Compose",
+      "mode": "API",
+      "source": "regression/api/testcases.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-041",
+      "name": "Test publishing validation reports unresolved values, objects and output collisions",
+      "feature": "Studio API Contracts",
+      "area": "Compose",
+      "mode": "API",
+      "source": "regression/api/testcases.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-042",
+      "name": "published typed Test round-trips visual value bindings without changing executable params",
+      "feature": "Studio API Contracts",
+      "area": "Compose",
+      "mode": "API",
+      "source": "regression/api/testcases.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-043",
+      "name": "system-context and prior-output bindings validate against their canonical placeholders",
+      "feature": "Studio API Contracts",
+      "area": "Compose",
+      "mode": "API",
+      "source": "regression/api/testcases.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-044",
       "name": "GET /api/testcases/:file returns the parsed test case",
       "feature": "Studio API Contracts",
       "area": "Compose",
@@ -339,7 +531,7 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-029",
+      "id": "Q4H-045",
       "name": "GET /api/testcases/:file 404s for an unknown file",
       "feature": "Studio API Contracts",
       "area": "Compose",
@@ -351,7 +543,7 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-030",
+      "id": "Q4H-046",
       "name": "PUT /api/testcases/:file rejects a non-.json file name",
       "feature": "Studio API Contracts",
       "area": "Compose",
@@ -363,7 +555,7 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-031",
+      "id": "Q4H-047",
       "name": "PUT /api/testcases/:file rejects a body missing required fields",
       "feature": "Studio API Contracts",
       "area": "Compose",
@@ -375,7 +567,7 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-032",
+      "id": "Q4H-048",
       "name": "PUT then GET /api/testcases/:file round-trips (Compose positive)",
       "feature": "Studio API Contracts",
       "area": "Compose",
@@ -387,7 +579,7 @@
       "executionNote": "Passed in T1.3.1 isolated API matrix final."
     },
     {
-      "id": "Q4H-033",
+      "id": "Q4H-049",
       "name": "automation run reference is short, unique, owner-linked, and retains failed state for review",
       "feature": "Execution Engine",
       "area": "Security & Settings",
@@ -399,7 +591,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-034",
+      "id": "Q4H-050",
       "name": "encrypted credential fallback persists securely across server and CLI processes",
       "feature": "Security & Configuration",
       "area": "Process Suites",
@@ -411,7 +603,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-035",
+      "id": "Q4H-051",
       "name": "Execution Center resolves the same canonical evidence URLs as Audit and Evidence",
       "feature": "Audit & Evidence",
       "area": "Audit & Evidence",
@@ -423,7 +615,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-036",
+      "id": "Q4H-052",
       "name": "canonical evidence URL mapping rejects absolute and traversal paths",
       "feature": "Audit & Evidence",
       "area": "Audit & Evidence",
@@ -435,7 +627,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-037",
+      "id": "Q4H-053",
       "name": "AddLineItem reports bounded child progress for every owned line item",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -447,7 +639,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-038",
+      "id": "Q4H-054",
       "name": "AddLineItem identifies the failing child index and does not overstate completion",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -459,7 +651,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-039",
+      "id": "Q4H-055",
       "name": "nested JSON preserves one header with many line items as one transaction",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -471,7 +663,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-040",
+      "id": "Q4H-056",
       "name": "nested JSON preserves many headers with owned line items as separate transactions",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -483,7 +675,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-041",
+      "id": "Q4H-057",
       "name": "relational CSV joins child rows to their owning header without creating duplicate headers",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -495,7 +687,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-042",
+      "id": "Q4H-058",
       "name": "relational CSV rejects duplicate headers and orphan child rows with actionable issues",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -507,7 +699,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-043",
+      "id": "Q4H-059",
       "name": "Execution Plan validation requires explicit relational join metadata",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -519,7 +711,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-044",
+      "id": "Q4H-060",
       "name": "Business Process runs every transaction in isolation and maps stage outputs explicitly",
       "feature": "Execution Engine",
       "area": "Process Suites",
@@ -531,7 +723,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-045",
+      "id": "Q4H-061",
       "name": "runtime applies the same filter-before-limit selection used by preflight",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -543,7 +735,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-046",
+      "id": "Q4H-062",
       "name": "Business Process stops later transaction iterations after a failed iteration by default",
       "feature": "Execution Engine",
       "area": "Process Suites",
@@ -555,7 +747,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-047",
+      "id": "Q4H-063",
       "name": "Business Process stops at the failed stage and retains earlier captured values for review",
       "feature": "Execution Engine",
       "area": "Process Suites",
@@ -567,7 +759,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-048",
+      "id": "Q4H-064",
       "name": "cooperative cancellation finishes the active transaction and starts no later iteration",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -579,7 +771,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-049",
+      "id": "Q4H-065",
       "name": "Regression Pack isolates members and continues after a failed member",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -591,7 +783,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-050",
+      "id": "Q4H-066",
       "name": "Regression Pack continues when one member dataset cannot be loaded",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -603,7 +795,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-051",
+      "id": "Q4H-067",
       "name": "Legacy compatibility translators preserve Chain, Suite, and multi-row Batch semantics",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -615,7 +807,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-052",
+      "id": "Q4H-068",
       "name": "Translated Batch executes every Group data row instead of only the first",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -627,7 +819,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-053",
+      "id": "Q4H-069",
       "name": "Stage 1 example plans satisfy the versioned execution contract",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -639,7 +831,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-054",
+      "id": "Q4H-070",
       "name": "Business Process hand-offs are ordered and namespaced",
       "feature": "Execution Engine",
       "area": "Process Suites",
@@ -651,7 +843,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-055",
+      "id": "Q4H-071",
       "name": "Execution snapshots clone, freeze, and hash plan plus transaction data",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -663,7 +855,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-056",
+      "id": "Q4H-072",
       "name": "data selection applies nested filters before the immutable record limit",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -675,7 +867,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-057",
+      "id": "Q4H-073",
       "name": "Regression Pack snapshots namespace member data bindings",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -687,7 +879,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-058",
+      "id": "Q4H-074",
       "name": "Credential values are rejected from plans and data snapshots",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -699,7 +891,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-059",
+      "id": "Q4H-075",
       "name": "Snapshot creation rejects missing and unknown data bindings",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -711,7 +903,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-060",
+      "id": "Q4H-076",
       "name": "preflight calculates a Single Test matrix without opening SAP",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -723,7 +915,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-061",
+      "id": "Q4H-077",
       "name": "preflight filters the exact effective data, previews mappings, and seals filter identity",
       "feature": "Execution Engine",
       "area": "Test Data",
@@ -735,7 +927,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-062",
+      "id": "Q4H-078",
       "name": "Start claim enforces warning acknowledgement, plan hash, and configuration freshness",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -747,7 +939,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-063",
+      "id": "Q4H-079",
       "name": "preflight blocks missing target and missing assets with safe correction findings",
       "feature": "Execution Engine",
       "area": "Security & Settings",
@@ -759,7 +951,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-064",
+      "id": "Q4H-080",
       "name": "preflight blocks unclassified or stale SAP target context with recovery guidance",
       "feature": "Execution Engine",
       "area": "Security & Settings",
@@ -771,7 +963,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-065",
+      "id": "Q4H-081",
       "name": "preflight blocks required inputs that are absent from selected records",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -783,7 +975,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-066",
+      "id": "Q4H-082",
       "name": "transactional preflight enforces non-production, fail-stop, owner reference, and retained state",
       "feature": "Execution Engine",
       "area": "Security & Settings",
@@ -795,7 +987,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-067",
+      "id": "Q4H-083",
       "name": "preflight joins relational CSV into transaction snapshots with owned child rows",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -807,7 +999,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-068",
+      "id": "Q4H-084",
       "name": "single batch group reports determinate step and stage progress",
       "feature": "Execution Engine",
       "area": "Process Suites",
@@ -819,7 +1011,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-069",
+      "id": "Q4H-085",
       "name": "failed-scope rerun creates a new immutable snapshot containing only eligible transactions",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -831,7 +1023,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-070",
+      "id": "Q4H-086",
       "name": "full rerun preserves all source records while creating new execution lineage",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -843,7 +1035,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-071",
+      "id": "Q4H-087",
       "name": "failed-only Pack rerun excludes passed transaction records inside a failed member",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -855,7 +1047,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-072",
+      "id": "Q4H-088",
       "name": "transactional rerun blocks started retained state but permits an unattempted transaction",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -867,7 +1059,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-073",
+      "id": "Q4H-089",
       "name": "execution logs redact known credentials and generic authorization secrets",
       "feature": "Execution Engine",
       "area": "Security & Settings",
@@ -879,7 +1071,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-074",
+      "id": "Q4H-090",
       "name": "execution APIs require preflight and return no-store security headers plus retention policy",
       "feature": "Execution Engine",
       "area": "Security & Settings",
@@ -891,7 +1083,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-075",
+      "id": "Q4H-091",
       "name": "every persisted legacy Test translates without source mutation",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -903,7 +1095,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-076",
+      "id": "Q4H-092",
       "name": "every persisted legacy Group translates to a Business Process and combined Batch Pack",
       "feature": "Execution Engine",
       "area": "Process Suites",
@@ -915,7 +1107,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-077",
+      "id": "Q4H-093",
       "name": "legacy Suite translation preserves selected order and independent executable identity",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -927,7 +1119,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-078",
+      "id": "Q4H-094",
       "name": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -939,7 +1131,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-079",
+      "id": "Q4H-095",
       "name": "Test Operations failure ledger preserves every recorded failure and remediation link",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -951,7 +1143,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-080",
+      "id": "Q4H-096",
       "name": "SAP Settings saves encrypted credentials and exposes only non-secret status",
       "feature": "Security & Configuration",
       "area": "Security & Settings",
@@ -963,7 +1155,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-081",
+      "id": "Q4H-097",
       "name": "local bootstrap owner can access protected artifacts and safe workspace context",
       "feature": "Security & Configuration",
       "area": "Security & Settings",
@@ -975,7 +1167,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-082",
+      "id": "Q4H-098",
       "name": "registered workspace denies anonymous artifact and audit access without revealing existence",
       "feature": "Security & Configuration",
       "area": "Audit & Evidence",
@@ -987,7 +1179,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-083",
+      "id": "Q4H-099",
       "name": "execution context captures owner and non-secret target metadata",
       "feature": "Security & Configuration",
       "area": "Test Data",
@@ -999,7 +1191,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-084",
+      "id": "Q4H-100",
       "name": "owner classifies and safely verifies SAP without returning credentials",
       "feature": "Security & Configuration",
       "area": "Security & Settings",
@@ -1011,7 +1203,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-085",
+      "id": "Q4H-101",
       "name": "evidence governance exposes retention and enforced redaction without secrets",
       "feature": "Security & Configuration",
       "area": "Audit & Evidence",
@@ -1023,7 +1215,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-086",
+      "id": "Q4H-102",
       "name": "SAP test cases derive navigation URLs from the configured credential profile",
       "feature": "Security & Configuration",
       "area": "Application Shell",
@@ -1035,7 +1227,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-087",
+      "id": "Q4H-103",
       "name": "negative transaction passes only when title stays unsaved and SAP validation is present",
       "feature": "Execution Engine",
       "area": "Application Shell",
@@ -1047,7 +1239,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-088",
+      "id": "Q4H-104",
       "name": "negative transaction fails and stops when SAP unexpectedly assigns a document",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -1059,7 +1251,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-089",
+      "id": "Q4H-105",
       "name": "negative transaction does not treat an unchanged title without validation as a pass",
       "feature": "Execution Engine",
       "area": "Execution Center",
@@ -1071,7 +1263,7 @@
       "executionNote": "Passed in Core regression."
     },
     {
-      "id": "Q4H-090",
+      "id": "Q4H-106",
       "name": "Axe reports no serious or critical violations in every primary workspace",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1083,7 +1275,7 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-091",
+      "id": "Q4H-107",
       "name": "skip navigation and keyboard focus enter every primary workspace",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -1095,7 +1287,7 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-092",
+      "id": "Q4H-108",
       "name": "primary workspaces reflow at 320 CSS pixels (640px viewport at 200% zoom equivalent)",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1107,7 +1299,7 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-093",
+      "id": "Q4H-109",
       "name": "Audit and Evidence uses a searchable run library instead of date accordions",
       "feature": "Workspace Experience",
       "area": "Audit & Evidence",
@@ -1119,7 +1311,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-094",
+      "id": "Q4H-110",
       "name": "Compose: create a test case, add a step, save, reload, reopen (required Compose positive)",
       "feature": "Workspace Experience",
       "area": "Compose",
@@ -1131,7 +1323,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-095",
+      "id": "Q4H-111",
       "name": "Data: create a dataset, add a row, save, reload, reopen (required Data positive)",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -1143,7 +1335,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-096",
+      "id": "Q4H-112",
       "name": "Data: author and preview nested JSON transactions before save",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -1155,7 +1347,7 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-097",
+      "id": "Q4H-113",
       "name": "Data: relate header and child CSVs, preview counts, and persist the relationship",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -1167,19 +1359,31 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-098",
-      "name": "Groups: create a group, save, reload, reopen (required Groups positive)",
+      "id": "Q4H-114",
+      "name": "Business Processes: create, save, reload and reopen a process",
       "feature": "Workspace Experience",
       "area": "Process Suites",
       "mode": "Headless UI",
       "source": "regression/ui/groups-tab.test.js",
-      "latestStatus": "Passed",
-      "lastExecutedAt": "2026-07-29T09:57:43.266Z",
-      "durationMs": 1330.5253,
-      "executionNote": "Passed in T1.3.1 isolated Studio UI final."
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-099",
+      "id": "Q4H-115",
+      "name": "Business Process canvas authors and restores a typed stage hand-off",
+      "feature": "Workspace Experience",
+      "area": "Process Suites",
+      "mode": "Headless UI",
+      "source": "regression/ui/groups-tab.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-116",
       "name": "Canvas First Overview presents the approved shell and real workspace data",
       "feature": "Workspace Experience",
       "area": "Automation Overview",
@@ -1191,7 +1395,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-100",
+      "id": "Q4H-117",
       "name": "Canvas First Overview primary action opens Compose without execution",
       "feature": "Workspace Experience",
       "area": "Automation Overview",
@@ -1203,7 +1407,31 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-101",
+      "id": "Q4H-118",
+      "name": "Regression Packs: create, bind independent members, save, reload and reopen",
+      "feature": "Workspace Experience",
+      "area": "Execution Center",
+      "mode": "Headless UI",
+      "source": "regression/ui/packs-tab.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-119",
+      "name": "unsaved Regression Pack changes are protected from shell navigation",
+      "feature": "Workspace Experience",
+      "area": "Application Shell",
+      "mode": "Headless UI",
+      "source": "regression/ui/packs-tab.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-120",
       "name": "Run tab: execution type switching renders the approved business language",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1215,7 +1443,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-102",
+      "id": "Q4H-121",
       "name": "Run tab: the file/group filter box narrows the available list",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -1227,7 +1455,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-103",
+      "id": "Q4H-122",
       "name": "Run tab: preflight impact review can be opened and cancelled without execution",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1239,7 +1467,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-104",
+      "id": "Q4H-123",
       "name": "Run tab: filter recalculates and previews the exact approved data snapshot",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -1251,7 +1479,7 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-105",
+      "id": "Q4H-124",
       "name": "Run tab: a preflight data finding opens the exact dataset route",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -1263,7 +1491,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-106",
+      "id": "Q4H-125",
       "name": "Run tab: configuration remains usable at 320 CSS pixels and exposes keyboard focus",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1275,7 +1503,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-107",
+      "id": "Q4H-126",
       "name": "Run tab: Business Process completes a synthetic multi-stage Chain",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -1287,7 +1515,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-108",
+      "id": "Q4H-127",
       "name": "Run tab: Pack Tests completes a synthetic independent Suite",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1299,7 +1527,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-109",
+      "id": "Q4H-128",
       "name": "Run tab: Batch mode runs \"Cleanup Drafts\" to completion (execution opt-in)",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1311,7 +1539,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-110",
+      "id": "Q4H-129",
       "name": "Run tab: Pack Processes completes a synthetic multi-group Batch",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -1323,7 +1551,19 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-111",
+      "id": "Q4H-130",
+      "name": "Run tab: published Saved Pack preflights and executes mixed Test and Process members",
+      "feature": "Workspace Experience",
+      "area": "Process Suites",
+      "mode": "Headless UI",
+      "source": "regression/ui/run-tab.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-131",
       "name": "Run tab: rerun review compares immutable inputs before creating lineage",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1335,7 +1575,7 @@
       "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-112",
+      "id": "Q4H-132",
       "name": "live: Run tab read-only Chain authenticates and opens Manage Purchase Orders",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1347,7 +1587,7 @@
       "executionNote": "Passed in T1.3.1 live read-only Studio UI matrix final."
     },
     {
-      "id": "Q4H-113",
+      "id": "Q4H-133",
       "name": "live: Run tab read-only Suite runs two independent SAP smoke tests",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1359,7 +1599,7 @@
       "executionNote": "Passed in T1.3.1 live read-only Studio UI matrix final."
     },
     {
-      "id": "Q4H-114",
+      "id": "Q4H-134",
       "name": "live: Run tab read-only Batch runs two independent SAP smoke groups",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -1371,7 +1611,7 @@
       "executionNote": "Passed in T1.3.1 live read-only Studio UI matrix final."
     },
     {
-      "id": "Q4H-115",
+      "id": "Q4H-135",
       "name": "live transactional: Run tab full PO -> GR -> Invoice via the UI",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1383,7 +1623,7 @@
       "executionNote": "set REGRESSION_LIVE_TRANSACTIONAL=1 only after test-data ownership and reversal controls are approved"
     },
     {
-      "id": "Q4H-116",
+      "id": "Q4H-136",
       "name": "artifact detail routes restore Compose, Data, Process, Object, and Audit context after refresh",
       "feature": "Workspace Experience",
       "area": "Compose",
@@ -1395,7 +1635,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-117",
+      "id": "Q4H-137",
       "name": "browser back and forward restore route-selected artifacts",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -1407,7 +1647,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-118",
+      "id": "Q4H-138",
       "name": "T1.3 grouped picker supports search and selection without leaving the keyboard",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -1419,7 +1659,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-119",
+      "id": "Q4H-139",
       "name": "T1.3 ordered transfer controls announce keyboard reorder operations",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1431,7 +1671,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-120",
+      "id": "Q4H-140",
       "name": "T1.3 shell and responsive tables remain operable at narrow widths",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -1443,7 +1683,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-121",
+      "id": "Q4H-141",
       "name": "T1.3 primary text and controls meet normal-text contrast in both themes",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -1455,7 +1695,55 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-122",
+      "id": "Q4H-142",
+      "name": "Test Library filters by name, process area, application and readiness",
+      "feature": "Workspace Experience",
+      "area": "Process Suites",
+      "mode": "Headless UI",
+      "source": "regression/ui/test-library.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-143",
+      "name": "guided creation copies a template and restores the stable Test route",
+      "feature": "Workspace Experience",
+      "area": "Application Shell",
+      "mode": "Headless UI",
+      "source": "regression/ui/test-library.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-144",
+      "name": "typed Test publishes with a dataset binding and round-trips executable ModuleCall JSON",
+      "feature": "Workspace Experience",
+      "area": "Test Data",
+      "mode": "Headless UI",
+      "source": "regression/ui/typed-test-authoring.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-145",
+      "name": "publishing is blocked by required parameters, missing objects and output collisions",
+      "feature": "Workspace Experience",
+      "area": "Object Repository",
+      "mode": "Headless UI",
+      "source": "regression/ui/typed-test-authoring.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-146",
       "name": "unsaved new test case is protected from shell navigation",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -1467,7 +1755,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-123",
+      "id": "Q4H-147",
       "name": "unsaved new dataset is protected from shell navigation",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -1479,7 +1767,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-124",
+      "id": "Q4H-148",
       "name": "unsaved new group is protected from shell navigation",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -1491,7 +1779,7 @@
       "executionNote": "Passed in T1.3.1 isolated Studio UI final."
     },
     {
-      "id": "Q4H-125",
+      "id": "Q4H-149",
       "name": "browser Back cannot discard an unsaved route-selected artifact without confirmation",
       "feature": "Workspace Experience",
       "area": "Application Shell",

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
-import type { ModuleCall, ModuleInfo, ModuleParamDescriptor, ObjectControl } from '../types';
+import type { ModuleCall, ModuleInfo, ModuleParamDescriptor, ObjectControl, TestStepValueBinding, TestSystemContextKey } from '../types';
 import { TableRowsEditor } from './TableRowsEditor';
 import { ObjectPicker } from './ObjectPicker';
 import { GroupedPicker } from './GroupedPicker';
@@ -10,6 +10,20 @@ import { GroupedPicker } from './GroupedPicker';
 // param schema; everything else (object-name overrides) still renders generically.
 const TABLE_ROWS_MODULES = new Set(['AddLineItem']);
 const TABLE_ROWS_KEY = 'rows';
+const SYSTEM_CONTEXT_RUNTIME: Record<TestSystemContextKey, string> = {
+  'sap.url': 'url',
+  'sap.urlBase': 'urlBase',
+  'sap.username': 'username',
+  'sap.password': 'password',
+  'runtime.today': 'today',
+};
+const SYSTEM_CONTEXT_LABELS: Record<TestSystemContextKey, string> = {
+  'sap.url': 'SAP target URL',
+  'sap.urlBase': 'SAP base URL',
+  'sap.username': 'SAP username',
+  'sap.password': 'SAP password',
+  'runtime.today': 'Current date',
+};
 
 function sortModuleCategories(a: string, b: string): number {
   if (a === 'Uncategorized') return 1;
@@ -25,6 +39,7 @@ interface Props {
   defaultAppId: string;
   /** runState keys produced by earlier steps in this same test case — see BL-07/TestCaseEditor.computeHandoffKeys. */
   handoffKeys: Set<string>;
+  contractInputKeys?: string[];
   onSave: (call: ModuleCall) => void;
   onCancel: () => void;
 }
@@ -34,10 +49,20 @@ function extractPlaceholderKeys(value: string): string[] {
   return [...value.matchAll(/\$\{([^}]+)\}/g)].map((m) => m[1]);
 }
 
-export function StepEditor({ modules, initial, defaultAppId, handoffKeys, onSave, onCancel }: Props) {
+function inferValueBinding(value: string, handoffKeys: Set<string>): TestStepValueBinding {
+  const exact = value.match(/^\$\{([^}]+)\}$/)?.[1];
+  if (!exact) return { source: 'literal' };
+  const system = (Object.entries(SYSTEM_CONTEXT_RUNTIME) as Array<[TestSystemContextKey, string]>).find(([, runtime]) => runtime === exact)?.[0];
+  if (system) return { source: 'systemContext', key: system };
+  if (handoffKeys.has(exact)) return { source: 'priorOutput', output: exact };
+  return { source: 'dataset', key: exact };
+}
+
+export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contractInputKeys = [], onSave, onCancel }: Props) {
   const [moduleName, setModuleName] = useState(initial?.module ?? modules[0]?.name ?? '');
   const [appId, setAppId] = useState(initial?.appId ?? '');
   const [params, setParams] = useState<Record<string, string>>(initial?.params ?? {});
+  const [valueBindings, setValueBindings] = useState<Record<string, TestStepValueBinding>>(initial?.valueBindings ?? {});
   const [genericKey, setGenericKey] = useState('');
   const [objectControls, setObjectControls] = useState<ObjectControl[]>([]);
 
@@ -62,10 +87,88 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, onSave
       delete next[key];
       return next;
     });
+    setValueBindings((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
   function save() {
-    onSave({ module: moduleName, appId: appId || undefined, params });
+    onSave({ module: moduleName, appId: appId || undefined, params, ...(Object.keys(valueBindings).length ? { valueBindings } : {}) });
+  }
+
+  function bindingFor(key: string, value: string): TestStepValueBinding {
+    return valueBindings[key] ?? inferValueBinding(value, handoffKeys);
+  }
+
+  function updateBinding(key: string, binding: TestStepValueBinding) {
+    setValueBindings((prev) => ({ ...prev, [key]: binding }));
+    if (binding.source === 'literal') setParam(key, '');
+    if (binding.source === 'dataset') setParam(key, binding.key ? `\${${binding.key}}` : '');
+    if (binding.source === 'systemContext') setParam(key, `\${${SYSTEM_CONTEXT_RUNTIME[binding.key]}}`);
+    if (binding.source === 'priorOutput') setParam(key, binding.output ? `\${${binding.output}}` : '');
+  }
+
+  function renderValueField(p: ModuleParamDescriptor, value: string) {
+    const binding = bindingFor(p.key, value);
+    return (
+      <div className="step-value-authoring">
+        <label htmlFor={`source-${p.key}`}>Value source</label>
+        <select
+          id={`source-${p.key}`}
+          aria-label={`Value source for ${p.label}`}
+          value={binding.source}
+          onChange={(event) => {
+            const source = event.target.value as TestStepValueBinding['source'];
+            if (source === 'literal') updateBinding(p.key, { source });
+            if (source === 'dataset') updateBinding(p.key, { source, key: contractInputKeys[0] ?? '' });
+            if (source === 'systemContext') updateBinding(p.key, { source, key: 'sap.url' });
+            if (source === 'priorOutput') updateBinding(p.key, { source, output: [...handoffKeys][0] ?? '' });
+          }}
+        >
+          <option value="literal">Literal value</option>
+          <option value="dataset">Dataset input</option>
+          <option value="systemContext">System context</option>
+          <option value="priorOutput">Prior step output</option>
+        </select>
+
+        {binding.source === 'literal' && (
+          <input aria-label={p.label} type="text" value={value} placeholder={p.placeholder} onChange={(event) => setParam(p.key, event.target.value)} />
+        )}
+        {binding.source === 'dataset' && (
+          <>
+            <input
+              aria-label={`Dataset input for ${p.label}`}
+              list={`contract-inputs-${p.key}`}
+              value={binding.key}
+              placeholder="Declared input name"
+              onChange={(event) => updateBinding(p.key, { source: 'dataset', key: event.target.value })}
+            />
+            <datalist id={`contract-inputs-${p.key}`}>{contractInputKeys.map((key) => <option key={key} value={key} />)}</datalist>
+          </>
+        )}
+        {binding.source === 'systemContext' && (
+          <select
+            aria-label={`System context for ${p.label}`}
+            value={binding.key}
+            onChange={(event) => updateBinding(p.key, { source: 'systemContext', key: event.target.value as TestSystemContextKey })}
+          >
+            {(Object.keys(SYSTEM_CONTEXT_LABELS) as TestSystemContextKey[]).map((key) => <option key={key} value={key}>{SYSTEM_CONTEXT_LABELS[key]}</option>)}
+          </select>
+        )}
+        {binding.source === 'priorOutput' && (
+          <select
+            aria-label={`Prior output for ${p.label}`}
+            value={binding.output}
+            onChange={(event) => updateBinding(p.key, { source: 'priorOutput', output: event.target.value })}
+          >
+            <option value="">— choose an earlier output —</option>
+            {[...handoffKeys].sort().map((key) => <option key={key} value={key}>{key}</option>)}
+          </select>
+        )}
+      </div>
+    );
   }
 
   function renderField(p: ModuleParamDescriptor) {
@@ -87,9 +190,7 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, onSave
             module={moduleName}
             paramKey={p.key}
           />
-        ) : (
-          <input aria-label={p.label} type="text" value={value} placeholder={p.placeholder} onChange={(e) => setParam(p.key, e.target.value)} />
-        )}
+        ) : renderValueField(p, value)}
         {handoff.length > 0 && (
           <p className="hint" style={{ margin: '0.2rem 0 0' }} title="Resolved from an earlier step in this test case, not a data file column">
             ↩ captured earlier: {handoff.join(', ')}
@@ -110,6 +211,7 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, onSave
             onChange={(name) => {
               setModuleName(name);
               setParams({});
+              setValueBindings({});
             }}
             items={modules}
             getKey={(m) => m.name}

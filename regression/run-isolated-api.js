@@ -15,10 +15,11 @@ async function main() {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'sap-studio-api-'));
   const testCasesDir = path.join(tempRoot, 'testcases');
   const groupsDir = path.join(tempRoot, 'testgroups');
+  const packsDir = path.join(tempRoot, 'testpacks');
   const dataDir = path.join(tempRoot, 'data');
   const reportsDir = path.join(tempRoot, 'reports');
   const evidenceArchiveDir = path.join(tempRoot, 'audit-evidence');
-  for (const directory of [testCasesDir, groupsDir, dataDir, reportsDir, evidenceArchiveDir]) {
+  for (const directory of [testCasesDir, groupsDir, packsDir, dataDir, reportsDir, evidenceArchiveDir]) {
     fs.mkdirSync(directory, { recursive: true });
   }
 
@@ -28,6 +29,24 @@ async function main() {
   });
   writeJson(path.join(testCasesDir, 'synthetic-second-stage.json'), {
     name: 'Synthetic second stage',
+    steps: [{ module: 'Wait', params: { ms: '1' } }],
+  });
+  writeJson(path.join(testCasesDir, 'contract-producer.json'), {
+    name: 'Contract Producer',
+    contract: {
+      version: 1,
+      inputs: [],
+      outputs: [{ name: 'documentId', type: 'string' }],
+    },
+    steps: [{ module: 'Wait', params: { ms: '1' } }],
+  });
+  writeJson(path.join(testCasesDir, 'contract-consumer.json'), {
+    name: 'Contract Consumer',
+    contract: {
+      version: 1,
+      inputs: [{ name: 'documentId', type: 'string', required: true, sensitivity: 'business' }],
+      outputs: [],
+    },
     steps: [{ module: 'Wait', params: { ms: '1' } }],
   });
   writeJson(path.join(testCasesDir, 'create-po.json'), {
@@ -53,6 +72,28 @@ async function main() {
     name: 'Synthetic O2C baseline',
     appId: 'syntheticApp',
     testCaseFiles: ['cleanup-abandoned-drafts.json'],
+  });
+  writeJson(path.join(packsDir, 'published-mixed-pack.json'), {
+    version: 1,
+    name: 'Published Mixed Pack',
+    lifecycle: 'published',
+    members: [
+      {
+        id: 'standalone-test',
+        kind: 'test',
+        file: 'cleanup-abandoned-drafts.json',
+        appId: 'syntheticApp',
+        sessionPolicy: 'fresh-per-iteration',
+        iterationFailurePolicy: 'continue-next-iteration',
+      },
+      {
+        id: 'business-process',
+        kind: 'process',
+        file: 'synthetic-process.json',
+        sessionPolicy: 'fresh-per-iteration',
+        iterationFailurePolicy: 'stop-execution',
+      },
+    ],
   });
   fs.writeFileSync(path.join(dataDir, 'synthetic.csv'), 'value\nexample\n', 'utf8');
   fs.writeFileSync(path.join(dataDir, 'p2p-e2e.csv'), 'supplier\n10000001\n', 'utf8');

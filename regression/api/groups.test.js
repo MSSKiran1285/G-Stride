@@ -58,3 +58,58 @@ test('PUT then GET /api/groups/:file round-trips (Groups positive)', async () =>
   assert.equal(get.status, 200);
   assert.deepEqual(get.body, group);
 });
+
+test('GET inferred Test contract exposes typed authoring metadata', async () => {
+  const { status, body } = await api.get('/api/testcases/contract-consumer.json/contract');
+  assert.equal(status, 200);
+  assert.deepEqual(body.inputs, [
+    { name: 'documentId', type: 'string', required: true, sensitivity: 'business' },
+  ]);
+});
+
+test('versioned Business Process persists a typed prior-stage hand-off', async () => {
+  const process = {
+    version: 1,
+    lifecycle: 'published',
+    name: 'Contract hand-off process',
+    appId: 'syntheticApp',
+    testCaseFiles: ['contract-producer.json', 'contract-consumer.json'],
+    stages: [
+      { stageId: 'produce-document', testCaseFile: 'contract-producer.json', inputBindings: {} },
+      {
+        stageId: 'consume-document',
+        testCaseFile: 'contract-consumer.json',
+        inputBindings: {
+          documentId: { source: 'stageOutput', stageId: 'produce-document', output: 'documentId' },
+        },
+      },
+    ],
+  };
+  const put = await api.put('/api/groups/contract-handoff.json', process);
+  assert.equal(put.status, 200);
+  const get = await api.get('/api/groups/contract-handoff.json');
+  assert.deepEqual(get.body, process);
+});
+
+test('Business Process rejects forward references and cycles', async () => {
+  const invalid = {
+    version: 1,
+    lifecycle: 'draft',
+    name: 'Invalid forward reference',
+    appId: 'syntheticApp',
+    testCaseFiles: ['contract-consumer.json', 'contract-producer.json'],
+    stages: [
+      {
+        stageId: 'consume-first',
+        testCaseFile: 'contract-consumer.json',
+        inputBindings: {
+          documentId: { source: 'stageOutput', stageId: 'produce-later', output: 'documentId' },
+        },
+      },
+      { stageId: 'produce-later', testCaseFile: 'contract-producer.json', inputBindings: {} },
+    ],
+  };
+  const { status, body } = await api.put('/api/groups/invalid-cycle.json', invalid);
+  assert.equal(status, 400);
+  assert.match(body.error, /forward reference or cycle/i);
+});

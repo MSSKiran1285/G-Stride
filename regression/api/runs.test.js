@@ -122,6 +122,21 @@ test('POST /api/runs completes a synthetic headless multi-group Batch', EXECUTIO
   assert.equal(final.groupResults.length, 2);
 });
 
+test('POST /api/runs executes a published mixed saved Regression Pack', EXECUTION, async () => {
+  const started = await startApprovedRun({
+    mode: 'batch',
+    packFile: 'published-mixed-pack.json',
+    headless: true,
+    iterationFailurePolicy: 'stop-execution',
+  });
+  assert.equal(started.status, 201);
+
+  const final = await pollRun(started.body.id, 30_000);
+  assert.equal(final.status, 'passed');
+  assert.equal(final.groupResults.length, 2);
+  assert.deepEqual(final.groupResults.map((result) => result.name), ['Synthetic wait test', 'Synthetic Process']);
+});
+
 test('rerun requires an explicit difference review and records immutable lineage', EXECUTION, async () => {
   const started = await startApprovedRun({
     mode: 'chain',

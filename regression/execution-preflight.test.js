@@ -13,8 +13,9 @@ function fixture() {
   const root = mkdtempSync(path.join(tmpdir(), 'qa4-preflight-'));
   const testCasesDir = path.join(root, 'testcases');
   const groupsDir = path.join(root, 'testgroups');
+  const packsDir = path.join(root, 'testpacks');
   const dataDir = path.join(root, 'data');
-  for (const directory of [testCasesDir, groupsDir, dataDir]) mkdirSync(directory, { recursive: true });
+  for (const directory of [testCasesDir, groupsDir, packsDir, dataDir]) mkdirSync(directory, { recursive: true });
   writeFileSync(
     path.join(testCasesDir, 'wait.json'),
     JSON.stringify({ name: 'Synthetic wait', steps: [{ module: 'Wait', params: { ms: '1' } }] })
@@ -22,7 +23,7 @@ function fixture() {
   writeFileSync(path.join(dataDir, 'records.csv'), 'order\n100\n200\n');
   const repository = new ObjectRepository(path.join(root, 'objects.db'));
   const service = new ExecutionPreflightService(
-    { testCasesDir, groupsDir, dataDir },
+    { testCasesDir, groupsDir, packsDir, dataDir },
     repository,
     new ModuleRegistry()
   );

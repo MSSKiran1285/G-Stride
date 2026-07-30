@@ -48,7 +48,7 @@ test('T1.3 ordered transfer controls announce keyboard reorder operations', asyn
   await withBrowser(async (browser) => {
     await withPage(browser, 't1-transfer-reorder', async (page) => {
       await page.goto(`${BASE_URL}/process-suites/cleanup-drafts.json`);
-      await page.getByRole('button', { name: 'Add route-mapped.json to Group order' }).click();
+      await page.getByRole('button', { name: 'Add route-mapped.json to Business Process order' }).click();
       await page.getByRole('button', { name: 'Move route-mapped.json up' }).click();
       await page.getByRole('status').filter({ hasText: 'route-mapped.json moved to position 1.' }).waitFor();
 
@@ -69,7 +69,7 @@ test('T1.3 shell and responsive tables remain operable at narrow widths', async 
         'Control Object Repository',
         'Compose',
         'Test Data',
-        'Process Suites',
+        'Processes & Packs',
         'Execution Center',
         'Audit and Evidence',
       ]) {

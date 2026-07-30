@@ -5,7 +5,19 @@ export interface ModuleCall {
   /** Overrides the test case's default appId for this step — needed when a test case spans multiple apps/screens (e.g. Create PO, then Post Goods Receipt). */
   appId?: string;
   params: Record<string, string>;
+  /** Optional visual-authoring metadata. Params remain the executable source of truth so legacy JSON and CLI execution stay compatible. */
+  valueBindings?: Record<string, TestStepValueBinding>;
 }
+
+export type TestApplication = 'SAP' | 'Salesforce' | 'Oracle' | 'ServiceNow';
+export type TestLifecycle = 'draft' | 'published';
+export type TestSystemContextKey = 'sap.url' | 'sap.urlBase' | 'sap.username' | 'sap.password' | 'runtime.today';
+
+export type TestStepValueBinding =
+  | { source: 'literal' }
+  | { source: 'dataset'; key: string }
+  | { source: 'systemContext'; key: TestSystemContextKey }
+  | { source: 'priorOutput'; output: string };
 
 export type TransactionResource =
   | 'purchaseOrderDraft'
@@ -28,6 +40,9 @@ export interface TestTransactionPolicy {
 export interface TestCase {
   name: string;
   steps: ModuleCall[];
+  version?: 1;
+  lifecycle?: TestLifecycle;
+  application?: TestApplication;
   /** Declares transactional side effects for authoritative preflight. */
   transaction?: TestTransactionPolicy;
   /** Optional typed composition contract used by Execution Plan preflight.

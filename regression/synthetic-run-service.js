@@ -22,8 +22,11 @@ function createSyntheticRunService(root) {
     const files = entry.options.mode === 'batch'
       ? entry.options.groupFiles || []
       : entry.options.testCaseFiles;
+    const snapshotPackMembers = entry.options.executionSnapshot?.plan?.kind === 'regressionPack'
+      ? entry.options.executionSnapshot.plan.members
+      : [];
     const names = entry.options.mode === 'batch'
-      ? files.map(groupName)
+      ? (files.length > 0 ? files.map(groupName) : snapshotPackMembers.map((member) => member.name))
       : files.map((file) => path.basename(file, '.json'));
     const members = names.map((name, index) => ({
       memberId: `synthetic-member-${index + 1}`,
@@ -122,7 +125,7 @@ function createSyntheticRunService(root) {
         reportDirRel: path.join('reports', id),
         testCaseFiles: options.testCaseFiles,
         totalUnits: options.mode === 'batch'
-          ? Math.max(1, options.groupFiles?.length || 0)
+          ? Math.max(1, options.groupFiles?.length || options.executionSnapshot?.plan?.members?.length || 0)
           : options.mode === 'suite'
             ? Math.max(1, options.testCaseFiles.length)
             : 1,

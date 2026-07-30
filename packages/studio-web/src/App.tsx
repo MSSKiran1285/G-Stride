@@ -22,12 +22,12 @@ import { AccountMenu } from './components/AccountMenu';
 import { DataEditor } from './components/DataEditor';
 import { DocumentsPanel } from './components/DocumentsPanel';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { GroupEditor } from './components/GroupEditor';
+import { ProcessPacksWorkspace } from './components/ProcessPacksWorkspace';
 import { LoginScreen } from './components/LoginScreen';
 import { ObjectScanner } from './components/ObjectScanner';
 import { RunPanel } from './components/RunPanel';
 import { SettingsPanel } from './components/SettingsPanel';
-import { TestCaseEditor } from './components/TestCaseEditor';
+import { TestLibrary } from './components/TestLibrary';
 import { AsyncFeedback, DrawerHeader } from './components/WorkspacePrimitives';
 import type { AuthState, IntegrationSettings, SapIntegrationStatus, WorkspaceContext } from './types';
 import { parseStudioRoute, studioRoutes, VIEW_PATHS } from './routes';
@@ -73,10 +73,10 @@ const navSteps: NavStep[] = [
   },
   {
     id: 'groups',
-    label: 'Process Suites',
+    label: 'Processes & Packs',
     num: 4,
     icon: <Layers size={19} />,
-    desc: 'Organise test cases into process suites',
+    desc: 'Compose sequenced Business Processes and independent Regression Packs',
   },
   {
     id: 'run',
@@ -355,10 +355,9 @@ export function App() {
                     onSelectionChange={(appId, objectName) => updateDetailPath(studioRoutes.object(appId, objectName))}
                   />
                 ) : view === 'editor' ? (
-                  <TestCaseEditor
-                    selectedTxTemplate={null}
+                  <TestLibrary
                     initialFile={route.testFile}
-                    onSelectedFileChange={(file) => updateDetailPath(studioRoutes.test(file))}
+                    onSelectedFileChange={(file) => updateDetailPath(file ? studioRoutes.test(file) : VIEW_PATHS.editor)}
                     onDirtyChange={setActiveViewDirty}
                   />
                 ) : view === 'data' ? (
@@ -368,9 +367,13 @@ export function App() {
                     onDirtyChange={setActiveViewDirty}
                   />
                 ) : view === 'groups' ? (
-                  <GroupEditor
-                    initialFile={route.processFile}
-                    onSelectedFileChange={(file) => updateDetailPath(studioRoutes.process(file))}
+                  <ProcessPacksWorkspace
+                    initialSection={route.processWorkspace}
+                    initialProcessFile={route.processFile}
+                    initialPackFile={route.packFile}
+                    onProcessFileChange={(file) => updateDetailPath(studioRoutes.process(file))}
+                    onPackFileChange={(file) => updateDetailPath(studioRoutes.pack(file))}
+                    onSectionChange={(section) => updateDetailPath(section === 'packs' ? studioRoutes.packs() : VIEW_PATHS.groups)}
                     onDirtyChange={setActiveViewDirty}
                   />
                 ) : view === 'documents' ? (

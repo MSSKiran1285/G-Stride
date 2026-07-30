@@ -32,6 +32,7 @@ export interface ExecutionDraft {
   kind: ExecutionDraftKind;
   testCaseFiles: string[];
   groupFiles: string[];
+  packFile?: string;
   appId: string;
   dataFile?: string;
   headless: boolean;
@@ -65,6 +66,9 @@ function correctionRoute(finding: PreflightFinding, draft: ExecutionDraft): stri
   if (finding.correction === 'scope') {
     const referencedTest = finding.reference?.match(/(?:^|[\\/])([^\\/]+\.json)(?:\s|$|·)/)?.[1];
     if (referencedTest) return `/compose/tests/${encodeURIComponent(referencedTest)}`;
+    if (draft.packFile) {
+      return `/process-suites/packs/${encodeURIComponent(draft.packFile)}`;
+    }
     if (draft.kind === 'regressionPack' && draft.groupFiles.length > 0) {
       return `/process-suites/${encodeURIComponent(draft.groupFiles[0])}`;
     }
@@ -125,6 +129,29 @@ interface GroupDefinition {
   appId: string;
   testCaseFiles: string[];
   dataFile?: string;
+  version?: 1;
+  lifecycle?: 'draft' | 'published';
+  stages?: Array<{
+    stageId: string;
+    testCaseFile: string;
+    inputBindings: Record<string, InputBinding | { source: 'processData'; path: string }>;
+  }>;
+}
+
+interface PackDefinition {
+  version: 1;
+  name: string;
+  description?: string;
+  lifecycle: 'draft' | 'published';
+  members: Array<{
+    id: string;
+    kind: 'test' | 'process';
+    file: string;
+    appId?: string;
+    dataFile?: string;
+    sessionPolicy: 'fresh-per-iteration' | 'reuse-within-process';
+    iterationFailurePolicy: 'stop-execution' | 'continue-next-iteration';
+  }>;
 }
 
 interface StoredPreflight {
@@ -177,6 +204,13 @@ function safeDataBasename(value: string): string {
   return base;
 }
 
+function stableArtifactId(value: string, fallback: string): string {
+  const normalized = value
+    .replace(/[^A-Za-z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return (normalized && /^[A-Za-z]/.test(normalized) ? normalized : `${fallback}-${normalized || 'item'}`).slice(0, 80);
+}
+
 function countChildren(records: Record<string, JsonValue>[]): number {
   let count = 0;
   const visit = (value: JsonValue) => {
@@ -221,6 +255,7 @@ export class ExecutionPreflightService {
     private readonly paths: {
       testCasesDir: string;
       groupsDir: string;
+      packsDir: string;
       dataDir: string;
     },
     private readonly objectRepository: ObjectRepository,
@@ -232,6 +267,7 @@ export class ExecutionPreflightService {
       kind: draft.kind,
       testCaseFiles: draft.testCaseFiles,
       groupFiles: draft.groupFiles,
+      packFile: draft.packFile ?? null,
       appId: draft.appId,
       dataFile: draft.dataFile ?? null,
       headless: draft.headless,
@@ -247,7 +283,7 @@ export class ExecutionPreflightService {
     });
   }
 
-  private loadTest(file: string, appId: string): LegacyTestAsset {
+  private loadTest(file: string, appId?: string): LegacyTestAsset {
     const safe = safeJsonBasename(file, 'Test');
     const fullPath = path.join(this.paths.testCasesDir, safe);
     if (!existsSync(fullPath)) throw new Error(`Test "${safe}" does not exist.`);
@@ -255,7 +291,11 @@ export class ExecutionPreflightService {
     if (!testCase.name || !Array.isArray(testCase.steps)) {
       throw new Error(`Test "${safe}" is not a valid Test definition.`);
     }
-    return { file: path.join('testcases', safe), testCase, appId };
+    return {
+      file: path.join('testcases', safe),
+      testCase,
+      ...(appId?.trim() ? { appId: appId.trim() } : {}),
+    };
   }
 
   private loadGroup(file: string): { definition: GroupDefinition; asset: LegacyGroupAsset } {
@@ -271,14 +311,143 @@ export class ExecutionPreflightService {
     ) {
       throw new Error(`Business Process "${safe}" is not a valid Group definition.`);
     }
+    const orderedFiles = definition.stages?.length
+      ? definition.stages.map((stage) => stage.testCaseFile)
+      : definition.testCaseFiles;
     return {
       definition,
       asset: {
         name: definition.name,
         appId: definition.appId,
-        tests: definition.testCaseFiles.map((test) => this.loadTest(test, definition.appId)),
+        tests: orderedFiles.map((test) => this.loadTest(test, definition.appId)),
         dataFile: definition.dataFile ? path.join('data', safeDataBasename(definition.dataFile)) : undefined,
       },
+    };
+  }
+
+  private loadPack(file: string): PackDefinition {
+    const safe = safeJsonBasename(file, 'Regression Pack');
+    const fullPath = path.join(this.paths.packsDir, safe);
+    if (!existsSync(fullPath)) throw new Error(`Regression Pack "${safe}" does not exist.`);
+    const definition = JSON.parse(readFileSync(fullPath, 'utf8')) as PackDefinition;
+    if (
+      definition.version !== 1
+      || !definition.name
+      || !Array.isArray(definition.members)
+      || definition.members.length === 0
+    ) {
+      throw new Error(`Regression Pack "${safe}" is not a valid version 1 Pack definition.`);
+    }
+    if (definition.lifecycle !== 'published') {
+      throw new Error(`Regression Pack "${safe}" is still a draft. Publish it before execution.`);
+    }
+    return definition;
+  }
+
+  private applyStoredProcessBindings(
+    executable: Extract<ExecutionPlan, { kind: 'businessProcess' }>,
+    definition: GroupDefinition
+  ): Extract<ExecutionPlan, { kind: 'businessProcess' }> {
+    if (!definition.stages?.length) return executable;
+    return {
+      ...executable,
+      stages: executable.stages.map((stage, index) => {
+        const stored = definition.stages?.[index];
+        if (!stored) return stage;
+        const inputBindings = Object.fromEntries(
+          Object.entries(stored.inputBindings ?? {}).map(([input, binding]) => [
+            input,
+            binding.source === 'processData'
+              ? { ...binding, bindingId: 'data' }
+              : binding,
+          ])
+        ) as typeof stage.inputBindings;
+        return {
+          ...stage,
+          stageId: stored.stageId,
+          inputBindings,
+        };
+      }),
+    };
+  }
+
+  private buildPersistedPack(file: string): {
+    plan: ExecutionPlan;
+    tests: LegacyTestAsset[];
+    matrix: ExecutionMatrix;
+  } {
+    const definition = this.loadPack(file);
+    const members: Extract<ExecutionPlan, { kind: 'regressionPack' }>['members'] = [];
+    const allTests: LegacyTestAsset[] = [];
+    const matrix: ExecutionMatrix = {
+      members: definition.members.length,
+      iterations: 0,
+      stages: 0,
+      steps: 0,
+      knownChildRecords: 0,
+    };
+
+    for (const member of definition.members) {
+      if (member.kind === 'test') {
+        const asset = this.loadTest(member.file, member.appId);
+        const source = this.sourceForFile(member.dataFile);
+        const records = this.loadRecords(source);
+        const translated = translateLegacySingleTest(asset, {
+          name: asset.testCase.name,
+          profileRef: 'default',
+          dataFile: member.dataFile ? path.join('data', safeDataBasename(member.dataFile)) : undefined,
+          dataSource: source,
+          sessionPolicy: member.sessionPolicy,
+          iterationFailurePolicy: member.iterationFailurePolicy,
+        });
+        if (translated.kind !== 'singleTest') throw new Error(`Pack member "${member.id}" did not produce a Single Test.`);
+        members.push({ memberId: member.id, name: asset.testCase.name, executable: translated });
+        allTests.push(asset);
+        matrix.iterations += records.length;
+        matrix.stages += records.length;
+        matrix.steps += asset.testCase.steps.length * records.length;
+        matrix.knownChildRecords += countChildren(records);
+        continue;
+      }
+
+      const loaded = this.loadGroup(member.file);
+      const dataFile = member.dataFile ?? loaded.definition.dataFile;
+      const source = this.sourceForFile(dataFile);
+      const records = this.loadRecords(source);
+      const translated = translateLegacyChain(loaded.asset.tests, {
+        name: loaded.definition.name,
+        profileRef: 'default',
+        dataFile: dataFile ? path.join('data', safeDataBasename(dataFile)) : undefined,
+        dataSource: source,
+        sessionPolicy: member.sessionPolicy,
+        iterationFailurePolicy: member.iterationFailurePolicy,
+      });
+      if (translated.kind !== 'businessProcess') {
+        throw new Error(`Pack member "${member.id}" did not produce a Business Process.`);
+      }
+      const executable = this.applyStoredProcessBindings(translated, loaded.definition);
+      members.push({ memberId: member.id, name: loaded.definition.name, executable });
+      allTests.push(...loaded.asset.tests);
+      matrix.iterations += records.length;
+      matrix.stages += loaded.asset.tests.length * records.length;
+      matrix.steps += processStepCount(loaded.asset.tests.map(({ testCase }) => testCase)) * records.length;
+      matrix.knownChildRecords += countChildren(records);
+    }
+
+    return {
+      plan: {
+        schemaVersion: 1,
+        planId: stableArtifactId(`pack-${file.replace(/\.json$/i, '')}`, 'pack'),
+        name: definition.name,
+        target: { provider: 'sap', profileRef: 'default' },
+        evidence: { enabled: true, canonical: true },
+        kind: 'regressionPack',
+        members,
+        onMemberFailure: 'continue-next-member',
+        sequential: true,
+      },
+      tests: allTests,
+      matrix,
     };
   }
 
@@ -686,7 +855,15 @@ export class ExecutionPreflightService {
     try {
       const tests = draft.testCaseFiles.map((file) => this.loadTest(file, draft.appId));
       const groups = draft.groupFiles.map((file) => this.loadGroup(file));
-      if (draft.kind === 'singleTest') {
+      if (draft.kind === 'regressionPack' && draft.packFile) {
+        if (tests.length > 0 || groups.length > 0) {
+          throw new Error('A saved Regression Pack cannot be mixed with compatibility Test or Process selections.');
+        }
+        const persisted = this.buildPersistedPack(draft.packFile);
+        plan = persisted.plan;
+        allTests = persisted.tests;
+        Object.assign(matrix, persisted.matrix);
+      } else if (draft.kind === 'singleTest') {
         if (tests.length !== 1 || groups.length !== 0) {
           throw new Error('Single Test requires exactly one saved Test.');
         }

@@ -19,14 +19,14 @@ test('Canvas First Overview presents the approved shell and real workspace data'
         'Control Object Repository',
         'Compose',
         'Test Data',
-        'Process Suites',
+        'Processes & Packs',
         'Execution Center',
         'Audit and Evidence',
       ]);
 
       const summary = await page.locator('.canvas-summary button').allTextContents();
       assert.match(summary[0], /^\d+\s+Tests$/, 'expected a real test-case count');
-      assert.match(summary[1], /^\d+\s+Process suites$/, 'expected a real process-suite count');
+      assert.match(summary[1], /^\d+\s+Business Processes$/, 'expected a real Business Process count');
       await page.getByRole('heading', { name: 'Cleanup Abandoned Drafts' }).waitFor();
       await page.getByText('cleanup-abandoned-drafts.json', { exact: true }).last().waitFor();
       await page.locator('.context-target').waitFor();

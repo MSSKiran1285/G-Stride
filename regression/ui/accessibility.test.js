@@ -14,7 +14,7 @@ const workspaces = [
   { name: 'Control Object Repository', path: '/objects' },
   { name: 'Compose', path: '/compose' },
   { name: 'Test Data', path: '/data' },
-  { name: 'Process Suites', path: '/process-suites' },
+  { name: 'Processes & Packs', path: '/process-suites' },
   { name: 'Execution Center', path: '/execute/new' },
   { name: 'Audit and Evidence', path: '/audit-evidence' },
 ];

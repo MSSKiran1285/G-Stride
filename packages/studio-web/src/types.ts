@@ -97,11 +97,70 @@ export interface ModuleCall {
   module: string;
   appId?: string;
   params: Record<string, string>;
+  valueBindings?: Record<string, TestStepValueBinding>;
 }
+
+export type TestSystemContextKey = 'sap.url' | 'sap.urlBase' | 'sap.username' | 'sap.password' | 'runtime.today';
+export type TestStepValueBinding =
+  | { source: 'literal' }
+  | { source: 'dataset'; key: string }
+  | { source: 'systemContext'; key: TestSystemContextKey }
+  | { source: 'priorOutput'; output: string };
 
 export interface TestCase {
   name: string;
   steps: ModuleCall[];
+  contract?: TestContract;
+  application?: TestApplication;
+  version?: 1;
+  lifecycle?: TestLifecycle;
+}
+
+export type TestApplication = 'SAP' | 'Salesforce' | 'Oracle' | 'ServiceNow';
+export type TestLifecycle = 'draft' | 'published';
+export type TestLibraryStatus = 'draft' | 'ready' | 'published';
+
+export interface TestValidationIssue {
+  code: string;
+  path: string;
+  message: string;
+}
+
+export interface TestLibraryItem {
+  file: string;
+  name: string;
+  application: TestApplication;
+  processArea: string;
+  status: TestLibraryStatus;
+  stepCount: number;
+}
+
+export type TestValueType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'collection';
+export type DataSensitivity = 'public' | 'business' | 'personal' | 'secret';
+
+export interface TestContractInput {
+  name: string;
+  type: TestValueType;
+  required: boolean;
+  runtimeKey?: string;
+  description?: string;
+  example?: string;
+  sensitivity?: DataSensitivity;
+}
+
+export interface TestContractOutput {
+  name: string;
+  type: TestValueType;
+  runtimeKey?: string;
+  description?: string;
+  producedByStep?: string;
+  sensitivity?: DataSensitivity;
+}
+
+export interface TestContract {
+  version: 1;
+  inputs: TestContractInput[];
+  outputs: TestContractOutput[];
 }
 
 export interface CsvDataset {
@@ -140,6 +199,42 @@ export interface Group {
   appId: string;
   testCaseFiles: string[];
   dataFile?: string;
+  version?: 1;
+  lifecycle?: RegressionPackLifecycle;
+  stages?: BusinessProcessStageDefinition[];
+}
+
+export type ProcessInputBinding =
+  | { source: 'literal'; value: JsonDataValue }
+  | { source: 'processData'; path: string }
+  | { source: 'stageOutput'; stageId: string; output: string }
+  | { source: 'systemContext'; key: 'sap.url' | 'sap.urlBase' | 'sap.username' | 'sap.password' | 'runtime.today' };
+
+export interface BusinessProcessStageDefinition {
+  stageId: string;
+  testCaseFile: string;
+  inputBindings: Record<string, ProcessInputBinding>;
+}
+
+export type RegressionPackLifecycle = 'draft' | 'published';
+export type RegressionPackMemberKind = 'test' | 'process';
+
+export interface RegressionPackMember {
+  id: string;
+  kind: RegressionPackMemberKind;
+  file: string;
+  appId?: string;
+  dataFile?: string;
+  sessionPolicy: 'fresh-per-iteration' | 'reuse-within-process';
+  iterationFailurePolicy: 'stop-execution' | 'continue-next-iteration';
+}
+
+export interface RegressionPack {
+  version: 1;
+  name: string;
+  description?: string;
+  lifecycle: RegressionPackLifecycle;
+  members: RegressionPackMember[];
 }
 
 export interface ObjectControl {
@@ -225,6 +320,7 @@ export interface ExecutionDraft {
   executionKind: ExecutionDraftKind;
   testCaseFiles: string[];
   groupFiles: string[];
+  packFile?: string;
   appId: string;
   dataFile?: string;
   headless: boolean;

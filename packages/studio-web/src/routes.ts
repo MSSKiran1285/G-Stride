@@ -6,6 +6,8 @@ export interface StudioRoute {
   testFile?: string;
   dataFile?: string;
   processFile?: string;
+  packFile?: string;
+  processWorkspace?: 'processes' | 'packs';
   objectAppId?: string;
   objectName?: string;
   runId?: string;
@@ -38,8 +40,15 @@ export function parseStudioRoute(pathname: string): StudioRoute {
   match = pathname.match(/^\/data\/([^/]+)\/?$/);
   if (match) return { view: 'data', path: pathname, dataFile: decode(match[1]) };
 
+  match = pathname.match(/^\/process-suites\/packs\/([^/]+)\/?$/);
+  if (match) return { view: 'groups', path: pathname, packFile: decode(match[1]), processWorkspace: 'packs' };
+
+  if (/^\/process-suites\/packs\/?$/.test(pathname)) {
+    return { view: 'groups', path: pathname, processWorkspace: 'packs' };
+  }
+
   match = pathname.match(/^\/process-suites\/([^/]+)\/?$/);
-  if (match) return { view: 'groups', path: pathname, processFile: decode(match[1]) };
+  if (match) return { view: 'groups', path: pathname, processFile: decode(match[1]), processWorkspace: 'processes' };
 
   match = pathname.match(/^\/objects\/([^/]+)(?:\/([^/]+))?\/?$/);
   if (match) {
@@ -68,6 +77,8 @@ export const studioRoutes = {
   test: (file: string) => `/compose/tests/${encoded(file)}`,
   data: (file: string) => `/data/${encoded(file)}`,
   process: (file: string) => `/process-suites/${encoded(file)}`,
+  packs: () => '/process-suites/packs',
+  pack: (file: string) => `/process-suites/packs/${encoded(file)}`,
   object: (appId: string, name?: string) =>
     `/objects/${encoded(appId)}${name ? `/${encoded(name)}` : ''}`,
   run: (runId: string) => `/execute/runs/${encoded(runId)}`,

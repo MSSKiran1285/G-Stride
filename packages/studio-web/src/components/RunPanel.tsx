@@ -118,9 +118,10 @@ export function RunPanel({
 }) {
   const [files, setFiles] = useState<string[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
+  const [packs, setPacks] = useState<string[]>([]);
   const [dataFiles, setDataFiles] = useState<string[]>([]);
   const [chain, setChain] = useState<string[]>([]);
-  const [mode, setMode] = useState<'single' | 'chain' | 'suite' | 'batch'>('single');
+  const [mode, setMode] = useState<'single' | 'chain' | 'suite' | 'batch' | 'pack'>('single');
   const [appId, setAppId] = useState('createPurchaseOrder');
   const [dataFile, setDataFile] = useState('');
   const [headless, setHeadless] = useState(false);
@@ -166,6 +167,7 @@ export function RunPanel({
     mountedRef.current = true;
     api.listTestCases().then(setFiles).catch((e) => setError(String(e)));
     api.listGroups().then(setGroups).catch((e) => setError(String(e)));
+    api.listPacks().then(setPacks).catch((e) => setError(String(e)));
     api.listData().then(setDataFiles).catch((e) => setError(String(e)));
     api.getExecutionMetrics().then(setHealthMetrics).catch(() => undefined);
     return () => {
@@ -241,12 +243,12 @@ export function RunPanel({
 
   // Switching modes carries over a selection that means something different in the
   // new mode (a test case file isn't a group name) — start the composition over.
-  function switchMode(next: 'single' | 'chain' | 'suite' | 'batch') {
+  function switchMode(next: 'single' | 'chain' | 'suite' | 'batch' | 'pack') {
     setMode(next);
     setChain([]);
     setDataFile('');
     setChildDataFile('');
-    setIterationFailurePolicy(next === 'chain' ? 'stop-execution' : 'continue-next-iteration');
+    setIterationFailurePolicy(next === 'chain' || next === 'pack' ? 'stop-execution' : 'continue-next-iteration');
     invalidatePreflight();
   }
 
@@ -263,17 +265,18 @@ export function RunPanel({
 
   function legacyMode(): 'chain' | 'suite' | 'batch' {
     if (mode === 'chain') return 'chain';
-    if (mode === 'batch') return 'batch';
+    if (mode === 'batch' || mode === 'pack') return 'batch';
     return 'suite';
   }
 
   function draft(): ExecutionDraft {
     return {
       executionKind: executionKind(),
-      testCaseFiles: mode === 'batch' ? [] : chain,
+      testCaseFiles: mode === 'batch' || mode === 'pack' ? [] : chain,
       groupFiles: mode === 'batch' ? chain : [],
+      packFile: mode === 'pack' ? chain[0] : undefined,
       appId,
-      dataFile: mode === 'batch' ? undefined : dataFile || undefined,
+      dataFile: mode === 'batch' || mode === 'pack' ? undefined : dataFile || undefined,
       headless,
       mode: legacyMode(),
       sessionPolicy,
@@ -286,17 +289,17 @@ export function RunPanel({
             value: ['is-empty', 'is-not-empty'].includes(filterOperator) ? undefined : filterValue,
           }
         : undefined,
-      dataMode: mode === 'batch' ? 'file' : dataMode,
-      childDataFile: mode !== 'batch' && dataMode === 'relational-csv' ? childDataFile || undefined : undefined,
-      headerKey: mode !== 'batch' && dataMode === 'relational-csv' ? headerKey : undefined,
-      childForeignKey: mode !== 'batch' && dataMode === 'relational-csv' ? childForeignKey : undefined,
-      collectionPath: mode !== 'batch' && dataMode === 'relational-csv' ? collectionPath : undefined,
+      dataMode: mode === 'batch' || mode === 'pack' ? 'file' : dataMode,
+      childDataFile: mode !== 'batch' && mode !== 'pack' && dataMode === 'relational-csv' ? childDataFile || undefined : undefined,
+      headerKey: mode !== 'batch' && mode !== 'pack' && dataMode === 'relational-csv' ? headerKey : undefined,
+      childForeignKey: mode !== 'batch' && mode !== 'pack' && dataMode === 'relational-csv' ? childForeignKey : undefined,
+      collectionPath: mode !== 'batch' && mode !== 'pack' && dataMode === 'relational-csv' ? collectionPath : undefined,
     };
   }
 
   async function reviewRun() {
     if (chain.length === 0) {
-      setError(`Select at least one ${mode === 'batch' ? 'Business Process' : 'Test'} before preflight.`);
+      setError(`Select at least one ${mode === 'pack' ? 'saved Regression Pack' : mode === 'batch' ? 'Business Process' : 'Test'} before preflight.`);
       return;
     }
     if (mode === 'single' && chain.length !== 1) {
@@ -495,6 +498,9 @@ export function RunPanel({
             <button className={mode === 'batch' ? 'active' : ''} onClick={() => switchMode('batch')}>
               <Boxes size={15} aria-hidden="true" /> Pack · Processes
             </button>
+            <button className={mode === 'pack' ? 'active' : ''} onClick={() => switchMode('pack')}>
+              <Boxes size={15} aria-hidden="true" /> Saved Pack
+            </button>
           </div>
         </div>
         <p className="hint" style={{ margin: '-0.4rem 0 0.2rem' }}>
@@ -504,19 +510,21 @@ export function RunPanel({
             ? 'A dependent, multi-stage business process (e.g. Create PO → Goods Receipt → Invoice) — one shared session, later steps can use values earlier ones captured. Loops every row of the data file: each row is one full pass through the whole chain. Stops at the first failure.'
             : mode === 'suite'
             ? 'Independent scenarios that shouldn\'t affect each other (a regression pack: happy path, negative path, edge cases) — each its own fresh session. Loops every row × every test case. A failure in one does not stop the others.'
-            : 'Independent, named business scenarios (Groups) run as one regression pack — each has its own App ID and data file. Every data row creates an isolated process iteration, and a failure in one Group does not prevent the next Group from running.'}
+            : mode === 'batch'
+            ? 'Independent, named business scenarios (Groups) run as one regression pack — each has its own App ID and data file. Every data row creates an isolated process iteration, and a failure in one Group does not prevent the next Group from running.'
+            : 'Run a published Regression Pack exactly as authored, including mixed independent Tests and Business Processes with member-specific data and policies.'}
         </p>
 
         <FileChainPicker
-          availableLabel={mode === 'batch' ? 'Available Business Processes' : 'Available Tests'}
-          selectedLabel={mode === 'single' ? 'Selected Test' : mode === 'chain' ? 'Stage order' : 'Pack members'}
-          items={mode === 'batch' ? groups : files}
+          availableLabel={mode === 'pack' ? 'Available saved Packs' : mode === 'batch' ? 'Available Business Processes' : 'Available Tests'}
+          selectedLabel={mode === 'pack' ? 'Selected saved Pack' : mode === 'single' ? 'Selected Test' : mode === 'chain' ? 'Stage order' : 'Pack members'}
+          items={mode === 'pack' ? packs : mode === 'batch' ? groups : files}
           selected={chain}
-          onChange={(next) => setChain(mode === 'single' ? next.slice(-1) : next)}
+          onChange={(next) => setChain(mode === 'single' || mode === 'pack' ? next.slice(-1) : next)}
         />
 
         <div className="param-grid">
-          {mode !== 'batch' && (
+          {mode !== 'batch' && mode !== 'pack' && (
             <>
               <div>
                 <label>App ID</label>
@@ -580,6 +588,13 @@ export function RunPanel({
               Headless
             </label>
           </div>
+          {mode === 'pack' && (
+            <div>
+              <span className="hint">Data, application, session and failure policies come from the published Pack definition.</span>
+            </div>
+          )}
+          {mode !== 'pack' && (
+            <>
           <div>
             <label htmlFor="execution-session-policy">Session policy</label>
             <select
@@ -650,6 +665,8 @@ export function RunPanel({
               placeholder={['is-empty', 'is-not-empty'].includes(filterOperator) ? 'Not required' : 'Exact or partial value'}
             />
           </div>
+            </>
+          )}
           <div>
             <span className="hint">
               Evidence is generated automatically and shared with Audit and Evidence.
@@ -691,9 +708,9 @@ export function RunPanel({
           </div>
           <dl className="run-review-summary">
             <div><dt>Execution type</dt><dd>{executionKind() === 'singleTest' ? 'Single Test' : executionKind() === 'businessProcess' ? 'Business Process' : 'Regression Pack'}</dd></div>
-            <div><dt>{mode === 'batch' ? 'Business Processes' : 'Tests'}</dt><dd>{chain.join(' → ')}</dd></div>
-            {mode !== 'batch' && <div><dt>App ID</dt><dd>{appId || 'Not provided'}</dd></div>}
-            {mode !== 'batch' && <div><dt>Data file</dt><dd>{dataFile || 'None'}</dd></div>}
+            <div><dt>{mode === 'pack' ? 'Saved Pack' : mode === 'batch' ? 'Business Processes' : 'Tests'}</dt><dd>{chain.join(' → ')}</dd></div>
+            {mode !== 'batch' && mode !== 'pack' && <div><dt>App ID</dt><dd>{appId || 'Not provided'}</dd></div>}
+            {mode !== 'batch' && mode !== 'pack' && <div><dt>Data file</dt><dd>{dataFile || 'None'}</dd></div>}
             <div><dt>SAP target</dt><dd>{preflight?.target.hostname ?? 'Not configured'}</dd></div>
             <div><dt>Target class</dt><dd>{preflight?.target.safetyClass === 'non-production' ? 'Non-production' : preflight?.target.safetyClass === 'production-like' ? 'Production-like' : 'Unclassified'}</dd></div>
             <div><dt>Target verification</dt><dd>{preflight?.target.verificationStatus === 'live-verified' && preflight.target.verifiedAt ? `Verified ${new Date(preflight.target.verifiedAt).toLocaleString()}` : 'Verification required'}</dd></div>

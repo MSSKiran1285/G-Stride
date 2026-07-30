@@ -18,6 +18,7 @@ const app = createStudioServer({
   webDistPath,
   testCasesDir: path.join(tempRoot, 'testcases'),
   groupsDir: path.join(tempRoot, 'testgroups'),
+  packsDir: path.join(tempRoot, 'testpacks'),
   dataDir: path.join(tempRoot, 'data'),
   reportsDir: path.join(tempRoot, 'reports'),
   evidenceArchiveDir: path.join(tempRoot, 'audit-evidence'),

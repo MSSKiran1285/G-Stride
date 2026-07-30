@@ -181,7 +181,7 @@
           <h1 id="pageTitle">One backlog. Every workspace.</h1>
           <p>This tracker consolidates the product, UI/UX, and Execution Center backlogs, including the Control Object Repository stocktake and cross-workspace requirements identified during design consolidation.</p>
           <div class="hero-meta">
-            <span class="meta-pill">Last updated: 29 July 2026</span>
+            <span class="meta-pill">Last updated: 30 July 2026</span>
             <span class="meta-pill">Owner: QA/4HANA Studio</span>
             <span class="meta-pill">Canonical source: this HTML file</span>
           </div>
@@ -367,10 +367,10 @@
         description: "Give every workspace, artifact and run a recoverable URL with navigation guards.",
         story: "As a user, I want stable URLs so that refresh, bookmarks and correction links preserve context.",
         criteria: ["Workspace routes survive refresh and browser navigation.", "Tests, datasets, processes, packs and audit records have stable detail routes.", "Dirty-state guards apply to route changes."],
-        workspace: ["Shell", "All workspaces"], release: "T1 · 2.0 Alpha", priority: "P1", status: "Partial",
-        deliveryState: "Blocked", acceptanceProgress: "2/3",
-        coverage: "Canonical routes now restore Tests, datasets, Business Processes, object selections, execution runs and audit records across refresh and browser back/forward. Preflight findings open the exact dataset/source or SAP setting, with dirty-state protection. The remaining criterion is a persisted Regression Pack detail route; Pack authoring/persistence does not yet exist and is owned by BL-029.",
-        evidence: ["routes.ts", "App.tsx route orchestration", "editor initialFile contracts", "DocumentsPanel audit detail", "executionPreflight.ts correctionRoute", "stable-routes.test.js", "run-tab.test.js correction journey"], updated: "2026-07-29"
+        workspace: ["Shell", "All workspaces"], release: "T1 · 2.0 Alpha", priority: "P1", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
+        coverage: "Canonical routes restore Tests, datasets, Business Processes, Regression Packs, object selections, execution runs and audit records across refresh and browser back/forward. Preflight findings open the exact dataset/source or SAP setting, and shell, tab, browser-history and unload navigation protect unsaved work.",
+        evidence: ["routes.ts", "App.tsx route orchestration", "ProcessPacksWorkspace.tsx", "PackEditor.tsx", "DocumentsPanel audit detail", "executionPreflight.ts correctionRoute", "stable-routes.test.js", "packs-tab.test.js", "unsaved-guards.test.js"], updated: "2026-07-30"
       },
       {
         id: "BL-013", legacy: "PB-013 · FND-04", title: "Complete the responsive application shell",
@@ -447,10 +447,10 @@
         description: "Find, create, duplicate, archive and open tests using business metadata rather than file-first controls.",
         story: "As a test author, I want a searchable Test Library so that I avoid duplicates and resume exact work.",
         criteria: ["List supports name, process area, application and status filters.", "New Test captures business name, application, domain and blank/template choice.", "Opening or creating uses a stable test route while preserving JSON compatibility."],
-        workspace: ["Compose"], release: "T2 · 2.0 Beta", priority: "P1", status: "Partial",
-        deliveryState: "In progress", acceptanceProgress: "1/3",
-        coverage: "Create/open, domain grouping, JSON compatibility and stable Test detail routes exist. Searchable inventory, application/status filters and blank-versus-template creation remain.",
-        evidence: ["TestCaseEditor.tsx"], updated: "2026-07-29"
+        workspace: ["Compose"], release: "T2 · 2.0 Beta", priority: "P1", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "3/3",
+        coverage: "Compose now opens a responsive Test Library with name/file search plus process-area, application and readiness filters. Guided creation captures the business name, generated or edited file name, application, process area and blank-versus-existing-Test starting point. Creation is server-persisted, conflict-safe and immediately opens a refresh-stable detail route; legacy Tests without application metadata remain valid and default to SAP in the library index.",
+        evidence: ["TestLibrary.tsx", "TestCaseEditor.tsx application metadata", "server.ts /api/testcases/library and POST /api/testcases/:file", "api.ts listTestLibrary/createTestCase", "testcases.test.js", "test-library.test.js", "compose.test.js", "stable-routes.test.js", "unsaved-guards.test.js"], updated: "2026-07-30"
       },
       {
         id: "BL-021", legacy: "PB-019 · TEST-02 · EXC-006 · EXC-007 · EXC2-003 · SC-01 · SC-02 · SC-03", title: "Build typed, validated Single Tests",
@@ -527,20 +527,20 @@
         description: "Replace ambiguous Group/Suite concepts with two explicit reusable artifact types.",
         story: "As a test manager, I want dependency and isolation semantics in business language so that I choose the correct composition.",
         criteria: ["Business Process means ordered dependent Tests with explicit hand-offs.", "Regression Pack means independent Tests or Processes with isolated contexts.", "Legacy Group, Chain, Suite and Batch inputs translate without behavior loss.", "The user-facing workspace is named Processes & Packs after approval."],
-        workspace: ["Processes & Packs"], release: "T3 · 2.0 RC", priority: "P1", status: "Partial",
-        deliveryState: "In progress", acceptanceProgress: "3/4",
-        coverage: "Group ordering and execution translation exist; the editor still exposes one undifferentiated Group model and legacy terminology.",
-        evidence: ["GroupEditor.tsx", "legacyExecutionPlans.ts"], updated: "2026-07-29"
+        workspace: ["Processes & Packs"], release: "T3 · 2.0 RC", priority: "P1", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "4/4",
+        coverage: "The user-facing Processes & Packs workspace now separates ordered Business Processes from persisted Regression Packs. Packs accept independent Test or Business Process members with isolated member data, application, session and failure-policy bindings. Existing Group, Chain, Suite and Batch translation remains backward-compatible.",
+        evidence: ["ProcessPacksWorkspace.tsx", "PackEditor.tsx", "GroupEditor.tsx", "server.ts /api/packs", "legacyExecutionPlans.ts", "packs.test.js", "packs-tab.test.js"], updated: "2026-07-30"
       },
       {
         id: "BL-029", legacy: "EXC-018 · EXC2-003", title: "Build Processes and Packs visually",
         description: "Compose sequence, independence, contracts, hand-offs, policies and member bindings without editing plan JSON.",
         story: "As a process author, I want a visual canvas so that execution topology and data movement are obvious.",
         criteria: ["Process canvas shows stages and typed output-to-input hand-offs.", "Pack canvas shows independent member lanes and member-specific bindings.", "Validation identifies unresolved inputs, cycles, duplicate outputs and incompatible policies.", "Keyboard composition, version status and publishing are supported."],
-        workspace: ["Processes & Packs", "Compose"], release: "T3 · 2.0 RC", priority: "P1", status: "Not started",
-        deliveryState: "Backlog", acceptanceProgress: "0/4",
-        coverage: "Ordered file selection is present, but there is no visual topology, typed hand-off, member binding, policy or publishing canvas.",
-        evidence: ["GroupEditor.tsx", "EXC2-003"], updated: "2026-07-29"
+        workspace: ["Processes & Packs", "Compose"], release: "T3 · 2.0 RC", priority: "P1", status: "Implemented",
+        deliveryState: "Done", acceptanceProgress: "4/4",
+        coverage: "The visual Business Process canvas now persists ordered stages, typed Test contracts and explicit process-data, literal, system-context or prior-stage output bindings. Validation rejects unresolved required inputs, forward or cyclic references, unknown and duplicate outputs, type mismatches and incompatible Pack session policies. Keyboard-native Process and Pack composition, versioned draft/published lifecycles, stable routes and direct mixed Saved Pack execution are covered by isolated API and browser journeys.",
+        evidence: ["GroupEditor.tsx visual topology and typed hand-offs", "PackEditor.tsx", "ProcessPacksWorkspace.tsx", "server.ts /api/groups and /api/packs validation", "executionPreflight.ts saved Pack planning", "packages/cli/src/commands/batch.ts", "groups.test.js", "packs.test.js", "runs.test.js", "groups-tab.test.js", "packs-tab.test.js", "run-tab.test.js"], updated: "2026-07-30"
       },
       {
         id: "BL-030", legacy: "PB-024 · EXE-01 · EXC-017 · EXC-020 · EXC-021", title: "Complete authoritative preflight and execution review",
@@ -680,6 +680,9 @@
     });
 
     const changes = [
+      { date: "30 Jul 2026", title: "Completed BL-020 · Routeable Test Library", detail: "Replaced file-first Compose entry with a searchable Test Library, process-area/application/readiness filters and guided blank-or-template creation. New Tests persist business metadata through an overwrite-safe server endpoint and open immediately on stable routes while legacy JSON stays compatible. BL-020 is 3/3 Implemented. Build and typecheck, 57 core tests, 41 eligible isolated API tests, 38 eligible isolated UI tests and the 257-file secret scan passed; eight live-SAP cases remained deliberately gated." },
+      { date: "30 Jul 2026", title: "Completed BL-029 · Visual Processes and executable Saved Packs", detail: "Added a visual ordered-stage Business Process canvas, typed Test contracts and explicit data hand-offs with validation for unresolved inputs, forward or cyclic references, unknown and duplicate outputs, type mismatches and incompatible Pack policies. Published mixed Saved Packs now preflight and execute directly from Execution Center while legacy Batch remains compatible. BL-029 is 4/4 Implemented. The final source passed build and typecheck, 57 core tests, 44 isolated API tests, 40 isolated UI tests and the 259-file secret scan; the 149-test operations catalogue was regenerated and eight live-SAP cases remained deliberately gated." },
+      { date: "30 Jul 2026", title: "Started 2.1 Pack foundation · Closed BL-012 and BL-028; advanced BL-029", detail: "Added a persisted version-1 Regression Pack contract, independent Test and Business Process member lanes, member-specific data/application/session/failure bindings, draft/published lifecycle, referential validation, stable Pack routes and dirty-state protection. BL-012 is now 3/3 Implemented, BL-028 is 4/4 Implemented, and BL-029 is 2/4 Partial. Build, 34 isolated API and 34 isolated UI tests passed; four live-SAP cases in each suite remained intentionally gated." },
       { date: "30 Jul 2026", title: "QA/4HANA Studio 2.0 approved for General Availability", detail: "Workspace owner Sathyanarayanan Kiran explicitly approved QA/4HANA Studio 2.0 for GA. The final isolated gate passed build, typecheck, the 256-file pre-cleanup secret scan, 57 core tests, 28 isolated API tests and 32 isolated UI tests; the frozen 251-file release set was rescanned successfully. All P0 items are complete, BL-038 and BL-041 are 4/4, and version 2.0.0 is frozen for release." },
       { date: "30 Jul 2026", title: "Completed BL-041 and BL-038 · Authorised negative remediation passed", detail: "After explicit workspace-owner authorisation, executed exactly one controlled non-production remediation. Immutable run 299669f8-75b6-471d-9c56-ed0375011fc5 passed all six steps under Q4HP2P2607309366: New Purchase Order remained unsaved, SAP's \"Document contains no items\" validation was matched, no downstream action or reversal occurred, and canonical evidence was retained. The 1/1 recorded result is ingested into the 125-test Test Operations catalogue. BL-041 and BL-038 are both Implemented at 4/4; the technical GA hold is resolved and the release is ready for the owner's final GA decision." },
       { date: "29 Jul 2026", title: "Advanced BL-041 · Negative fail-stop evidence retained; remediation awaits authorisation", detail: "Added the missing negative Test asset and a two-factor assertion that requires both an unsaved document title and an SAP business-validation message. The first controlled non-production attempt stopped safely under owner reference Q4HP2P260729A553 and retained immutable run eb060bc6-673b-4e65-8919-6ccf66b6a645. SAP displayed \"Document contains no items\"; the assertion vocabulary was corrected and 13 focused checks pass. No document-number assignment, downstream step, cleanup or reversal occurred. A separate live remediation rerun is required before BL-041 and the GA hold can close." },

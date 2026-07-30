@@ -8,6 +8,7 @@ import type {
   DataPreview,
   DataRelationDefinition,
   Group,
+  RegressionPack,
   ScanStatus,
   ScanSessionInfo,
   ScanCaptureResult,
@@ -24,6 +25,9 @@ import type {
   ExecutionPreflightResult,
   WorkspaceContext,
   EvidenceGovernance,
+  TestContract,
+  TestLibraryItem,
+  TestValidationIssue,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -71,11 +75,23 @@ export const api = {
   getEvidenceGovernance: () => request<EvidenceGovernance>('/api/evidence-governance'),
   listModules: () => request<ModuleInfo[]>('/api/modules'),
   listTestCases: () => request<string[]>('/api/testcases'),
+  listTestLibrary: () => request<TestLibraryItem[]>('/api/testcases/library'),
   getTestCase: (file: string) => request<TestCase>(`/api/testcases/${encodeURIComponent(file)}`),
+  getTestContract: (file: string) => request<TestContract>(`/api/testcases/${encodeURIComponent(file)}/contract`),
   saveTestCase: (file: string, testCase: TestCase) =>
     request<{ ok: true }>(`/api/testcases/${encodeURIComponent(file)}`, {
       method: 'PUT',
       body: JSON.stringify(testCase),
+    }),
+  createTestCase: (file: string, testCase: TestCase, processArea = '') =>
+    request<{ ok: true }>(`/api/testcases/${encodeURIComponent(file)}`, {
+      method: 'POST',
+      body: JSON.stringify({ testCase, processArea }),
+    }),
+  validateTestCase: (testCase: TestCase) =>
+    request<{ valid: boolean; issues: TestValidationIssue[] }>('/api/testcases/validate', {
+      method: 'POST',
+      body: JSON.stringify({ testCase }),
     }),
   listAppIds: () => request<string[]>('/api/app-ids'),
   getModuleUsage: (module: string, paramKey: string) =>
@@ -112,6 +128,13 @@ export const api = {
     request<{ ok: true }>(`/api/groups/${encodeURIComponent(file)}`, {
       method: 'PUT',
       body: JSON.stringify(group),
+    }),
+  listPacks: () => request<string[]>('/api/packs'),
+  getPack: (file: string) => request<RegressionPack>(`/api/packs/${encodeURIComponent(file)}`),
+  savePack: (file: string, pack: RegressionPack) =>
+    request<{ ok: true }>(`/api/packs/${encodeURIComponent(file)}`, {
+      method: 'PUT',
+      body: JSON.stringify(pack),
     }),
   openScanSession: (url: string) => request<ScanSessionInfo>('/api/scan/open', { method: 'POST', body: JSON.stringify({ url }) }),
   getScanStatus: () => request<ScanStatus>('/api/scan/status'),
@@ -154,6 +177,7 @@ export const api = {
   startRun: (body: {
     testCaseFiles?: string[];
     groupFiles?: string[];
+    packFile?: string;
     appId?: string;
     dataFile?: string;
     headless?: boolean;

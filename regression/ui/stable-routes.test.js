@@ -15,7 +15,7 @@ test('artifact detail routes restore Compose, Data, Process, Object, and Audit c
           path: '/compose/tests/regression-sample.json',
           ready: () => page.getByLabel('Test case name'),
           value: async () => page.getByLabel('Test case name').inputValue(),
-          expected: 'regression-sample',
+          expected: 'Regression Sample',
         },
         {
           path: '/data/regression-sample.csv',
@@ -25,9 +25,15 @@ test('artifact detail routes restore Compose, Data, Process, Object, and Audit c
         },
         {
           path: '/process-suites/regression-sample-group.json',
-          ready: () => page.getByLabel('Group name'),
-          value: async () => page.getByLabel('Group name').inputValue(),
+          ready: () => page.getByLabel('Business Process name'),
+          value: async () => page.getByLabel('Business Process name').inputValue(),
           expected: 'regression-sample-group',
+        },
+        {
+          path: '/process-suites/packs/regression-sample-pack.json',
+          ready: () => page.getByLabel('Pack name'),
+          value: async () => page.getByLabel('Pack name').inputValue(),
+          expected: 'Release Regression Pack',
         },
       ];
 
@@ -65,9 +71,8 @@ test('browser back and forward restore route-selected artifacts', async () => {
     await withPage(browser, 'stable-route-history', async (page) => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Compose/ }).first().click();
-      await page.getByRole('button', { name: 'Open test case' }).click();
-      await page.getByText('(untagged)', { exact: true }).click();
-      await page.getByText('regression-sample.json', { exact: true }).last().click();
+      const regressionTestRow = page.locator('tr', { hasText: 'regression-sample.json' });
+      await regressionTestRow.getByRole('button', { name: 'Open Test' }).click();
       assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
 
       await page.getByRole('button', { name: /Test Data/ }).first().click();

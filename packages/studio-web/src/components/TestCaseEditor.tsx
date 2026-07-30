@@ -1,11 +1,12 @@
 import { Fragment, useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
-import type { ModuleCall, ModuleInfo, TestCase } from '../types';
+import type { ModuleCall, ModuleInfo, TestApplication, TestCase, TestContract, TestValidationIssue } from '../types';
 import { StepEditor } from './StepEditor';
 import { DomainTag } from './DomainTag';
 import { GroupedPicker } from './GroupedPicker';
 import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
+import { TestContractEditor } from './TestContractEditor';
 
 const UNTAGGED = '(untagged)';
 const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b));
@@ -40,6 +41,7 @@ interface TestCaseEditorProps {
   initialFile?: string;
   onSelectedFileChange?: (file: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  showLibraryControls?: boolean;
 }
 
 export function TestCaseEditor({
@@ -47,6 +49,7 @@ export function TestCaseEditor({
   initialFile,
   onSelectedFileChange,
   onDirtyChange,
+  showLibraryControls = true,
 }: TestCaseEditorProps = {}) {
   const [files, setFiles] = useState<string[]>([]);
   const [modules, setModules] = useState<ModuleInfo[]>([]);
@@ -60,6 +63,8 @@ export function TestCaseEditor({
   const [loading, setLoading] = useState(true);
   const [loadingArtifact, setLoadingArtifact] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [validationIssues, setValidationIssues] = useState<TestValidationIssue[]>([]);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [reorderAnnouncement, setReorderAnnouncement] = useState('');
@@ -153,8 +158,9 @@ export function TestCaseEditor({
   }
 
   function updateTestCase(next: TestCase) {
-    setTestCase(next);
+    setTestCase(next.lifecycle === 'published' ? { ...next, lifecycle: 'draft' } : next);
     setDirty(true);
+    setValidationIssues([]);
   }
 
   function openFile(file: string) {
@@ -207,16 +213,18 @@ export function TestCaseEditor({
     setReorderAnnouncement(`${moved.module} moved to step ${to + 1}.`);
   }
 
-  async function save() {
-    if (!testCase || !selectedFile) return;
+  async function persist(candidate: TestCase, successLabel: string) {
     setSaving(true);
     try {
-      await api.saveTestCase(selectedFile, testCase);
+      await api.saveTestCase(selectedFile, candidate);
+      setTestCase(candidate);
       setSavedAt(new Date().toLocaleTimeString());
       setDirty(false);
       setError(null);
+      setValidationIssues([]);
       if (!files.includes(selectedFile)) setFiles([...files, selectedFile].sort());
       onSelectedFileChange?.(selectedFile);
+      return successLabel;
     } catch (e) {
       setError(String(e));
     } finally {
@@ -224,7 +232,39 @@ export function TestCaseEditor({
     }
   }
 
+  async function save() {
+    if (!testCase || !selectedFile) return;
+    await persist({ ...testCase, version: 1, lifecycle: testCase.lifecycle ?? 'draft' }, 'saved');
+  }
+
+  async function publish() {
+    if (!testCase || !selectedFile) return;
+    const candidate: TestCase = { ...testCase, version: 1, lifecycle: 'published' };
+    setPublishing(true);
+    setError(null);
+    try {
+      const result = await api.validateTestCase(candidate);
+      setValidationIssues(result.issues);
+      if (!result.valid) return;
+      await persist(candidate, 'published');
+    } catch (reason) {
+      setError(String(reason));
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function declareContract() {
+    if (!testCase) return;
+    let contract: TestContract = { version: 1, inputs: [], outputs: [] };
+    if (selectedFile && files.includes(selectedFile)) {
+      contract = await api.getTestContract(selectedFile).catch(() => contract);
+    }
+    updateTestCase({ ...testCase, version: 1, lifecycle: 'draft', contract });
+  }
+
   const defaultAppId = testCase?.steps.find((s) => s.appId)?.appId ?? '';
+  const contractInputKeys = (testCase?.contract?.inputs ?? []).map((input) => input.runtimeKey ?? input.name);
 
   return (
     <div className="stack">
@@ -263,7 +303,7 @@ export function TestCaseEditor({
         </div>
       )}
 
-      <div className="panel row">
+      {showLibraryControls && <div className="panel row">
         <div style={{ flex: 1 }}>
           <label>Open test case</label>
           <GroupedPicker
@@ -284,7 +324,7 @@ export function TestCaseEditor({
             <button onClick={createNew}>Create</button>
           </div>
         </div>
-      </div>
+      </div>}
 
       {error && <AsyncFeedback state="error" message={error} />}
       {loading && <AsyncFeedback state="loading" message="Loading Compose resources…" />}
@@ -293,16 +333,54 @@ export function TestCaseEditor({
 
       {testCase && (
         <div className="panel stack">
+          <div className="test-lifecycle-bar">
+            <div>
+              <span className="eyebrow">Test lifecycle</span>
+              <strong>{testCase.lifecycle === 'published' ? 'Published' : testCase.lifecycle === 'draft' ? 'Draft' : 'Legacy ready'}</strong>
+              <span className="hint">{testCase.lifecycle === 'published' ? 'Available for governed composition.' : 'Publishing requires a valid contract, parameters and objects.'}</span>
+            </div>
+            <span className={`badge ${testCase.lifecycle === 'published' ? 'passed' : 'running'}`}>{testCase.lifecycle === 'published' ? 'Published' : 'Draft'}</span>
+          </div>
+
           <div className="row" style={{ alignItems: 'flex-start', gap: '1rem' }}>
             <div style={{ flex: 1 }}>
               <label>Test case name</label>
               <input aria-label="Test case name" type="text" value={testCase.name} onChange={(e) => updateTestCase({ ...testCase, name: e.target.value })} />
             </div>
             <div style={{ flex: 1, maxWidth: '20rem' }}>
+              <label>Application</label>
+              <select aria-label="Test application" value={testCase.application ?? 'SAP'} onChange={(e) => updateTestCase({ ...testCase, application: e.target.value as TestApplication })}>
+                <option value="SAP">SAP</option>
+                <option value="Salesforce">Salesforce</option>
+                <option value="Oracle">Oracle</option>
+                <option value="ServiceNow">ServiceNow</option>
+              </select>
+            </div>
+            <div style={{ flex: 1, maxWidth: '20rem' }}>
               <label>Domain</label>
               <DomainTag kind="testCase" name={selectedFile} value={fileTags[selectedFile] ?? ''} knownDomains={processAreas} onSaved={refreshTags} />
             </div>
           </div>
+
+          {testCase.contract ? (
+            <TestContractEditor
+              contract={testCase.contract}
+              stepNames={testCase.steps.map((step) => step.module)}
+              onChange={(contract) => updateTestCase({ ...testCase, contract })}
+            />
+          ) : (
+            <div className="contract-empty-state">
+              <div><strong>No declared Test contract</strong><p className="hint">Legacy inference keeps this Test executable, but publishing requires reviewed typed inputs and outputs.</p></div>
+              <button type="button" onClick={() => void declareContract()}>Use inferred contract</button>
+            </div>
+          )}
+
+          {validationIssues.length > 0 && (
+            <div className="publish-validation-panel" role="alert" aria-labelledby="publishIssuesHeading">
+              <strong id="publishIssuesHeading">Resolve {validationIssues.length} publishing issue{validationIssues.length === 1 ? '' : 's'}</strong>
+              <ul>{validationIssues.map((issue, index) => <li key={`${issue.path}-${index}`}><code>{issue.path}</code> — {issue.message}</li>)}</ul>
+            </div>
+          )}
 
           <div>
             <p className="section-title">
@@ -383,6 +461,7 @@ export function TestCaseEditor({
                               initial={step}
                               defaultAppId={defaultAppId}
                               handoffKeys={new Set([...computeHandoffKeys(testCase.steps, i, modules), ...crossFileHandoffKeys])}
+                              contractInputKeys={contractInputKeys}
                               onSave={(call) => updateStep(i, call)}
                               onCancel={() => setEditingIndex(null)}
                             />
@@ -399,6 +478,7 @@ export function TestCaseEditor({
                           initial={null}
                           defaultAppId={defaultAppId}
                           handoffKeys={new Set([...computeHandoffKeys(testCase.steps, testCase.steps.length, modules), ...crossFileHandoffKeys])}
+                          contractInputKeys={contractInputKeys}
                           onSave={(call) => updateStep(editingIndex, call)}
                           onCancel={() => setEditingIndex(null)}
                         />
@@ -416,6 +496,9 @@ export function TestCaseEditor({
             </button>
             <button className="primary" onClick={save} disabled={saving}>
               {saving ? 'Saving…' : 'Save test case'}
+            </button>
+            <button onClick={() => void publish()} disabled={saving || publishing}>
+              {publishing ? 'Checking…' : 'Publish Test'}
             </button>
             {savedAt && !dirty && <AsyncFeedback state="success" message={`${selectedFile} — Saved at ${savedAt}`} compact />}
           </div>

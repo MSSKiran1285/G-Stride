@@ -63,6 +63,7 @@ export function validateTestContract(contract: TestContract, path = 'contract'):
     kind: 'inputs' | 'outputs'
   ) => {
     const names = new Set<string>();
+    const runtimeKeys = new Set<string>();
     items.forEach((item, index) => {
       const itemPath = `${path}.${kind}[${index}]`;
       if (!CONTRACT_NAME_PATTERN.test(item.name)) {
@@ -101,6 +102,15 @@ export function validateTestContract(contract: TestContract, path = 'contract'):
           message: 'Runtime keys must start with a letter and contain only letters, numbers, and underscores.',
         });
       }
+      const runtimeKey = item.runtimeKey ?? item.name;
+      if (runtimeKeys.has(runtimeKey)) {
+        issues.push({
+          code: 'duplicate-contract-runtime-key',
+          path: `${itemPath}.runtimeKey`,
+          message: `Runtime key "${runtimeKey}" is used by more than one ${kind === 'inputs' ? 'input' : 'output'}.`,
+        });
+      }
+      runtimeKeys.add(runtimeKey);
     });
   };
 

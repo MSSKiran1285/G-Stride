@@ -264,6 +264,30 @@ test('Run tab: Pack Processes completes a synthetic multi-group Batch', EXECUTIO
   });
 });
 
+test('Run tab: published Saved Pack preflights and executes mixed Test and Process members', EXECUTION, async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'run-saved-mixed-pack', async (page) => {
+      await page.goto(BASE_URL);
+      await page.getByRole('button', { name: /Execution Center/ }).first().click();
+      await page.getByRole('button', { name: 'Saved Pack', exact: true }).click();
+      const packRow = page.getByText('published-mixed-pack.json', { exact: true }).first().locator('xpath=ancestor::li');
+      await packRow.waitFor();
+      await packRow.getByRole('button').click();
+      await page.getByText(/policies come from the published Pack definition/).waitFor();
+      await page.getByLabel(/headless/i).check();
+      await page.getByRole('button', { name: 'Run preflight' }).click();
+      await page.getByRole('heading', { name: 'Preflight and impact review' }).waitFor();
+      const matrix = page.getByLabel('Calculated execution matrix');
+      await matrix.getByText('2', { exact: true }).first().waitFor();
+      await confirmApprovedPreflight(page);
+      const bannerText = await pollCompletionBanner(page, 30000);
+      assert.match(bannerText, /All 2 .* passed/i, 'expected the saved Pack to pass');
+      await page.locator('tr', { hasText: 'Synthetic wait test' }).waitFor();
+      await page.locator('tr', { hasText: 'Synthetic Process' }).waitFor();
+    });
+  });
+});
+
 test('Run tab: rerun review compares immutable inputs before creating lineage', EXECUTION, async () => {
   await withBrowser(async (browser) => {
     await withPage(browser, 'run-rerun-difference-review', async (page) => {

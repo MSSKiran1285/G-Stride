@@ -67,7 +67,7 @@ function placeholders(value: string): string[] {
   return names;
 }
 
-function capturesForStep(module: string, params: Record<string, string>): string[] {
+export function capturesForStep(module: string, params: Record<string, string>): string[] {
   switch (module) {
     case 'SaveAndCaptureDocumentNumber':
       return [params.captureAs || 'poNumber'];
