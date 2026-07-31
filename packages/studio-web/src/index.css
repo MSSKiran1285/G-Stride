@@ -2034,9 +2034,18 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   font-size: 1.05rem;
 }
 
-.audit-toolbar {
+/* HC-003/HC-032: two bugs stacked here. First, .workspace-toolbar (the shared <Toolbar>
+   wrapper every filter bar uses) sets display:flex, and at equal specificity it was winning
+   the cascade over this rule's display:grid regardless of source order — the grid-template
+   below was never actually being applied, so search/environment fell back to flexbox
+   min-content sizing (a near-invisible search box). ".workspace-toolbar.audit-toolbar" raises
+   specificity so this rule always wins. Second, the grid itself only ever defined four column
+   tracks for six controls (search, environment, status, mode, date range, sort) — environment
+   and sort silently wrapped onto a second row reusing a track sized for a <select>, truncating
+   the environment placeholder to the point of being unusable. One explicit track per control now. */
+.workspace-toolbar.audit-toolbar {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(130px, auto));
+  grid-template-columns: minmax(220px, 1.4fr) minmax(220px, 1.4fr) minmax(140px, 1fr) minmax(120px, 1fr) minmax(130px, 1fr) minmax(150px, 1fr);
   gap: 0.65rem;
 }
 
@@ -2212,7 +2221,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
 
 @media (max-width: 900px) {
   .integration-layout,
-  .audit-toolbar {
+  .workspace-toolbar.audit-toolbar {
     grid-template-columns: 1fr;
   }
 

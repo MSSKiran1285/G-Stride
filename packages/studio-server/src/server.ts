@@ -645,27 +645,38 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   });
 
   app.get('/api/testcases/library', (_req, res) => {
-    if (!existsSync(testCasesDir)) return res.json([]);
-    const tags = tagStore.listTags('testCase');
-    const items = readdirSync(testCasesDir)
-      .filter((file) => file.endsWith('.json'))
-      .sort()
-      .map((file) => {
-        const testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
-        const steps = Array.isArray(testCase.steps) ? testCase.steps : [];
-        const application = ['SAP', 'Salesforce', 'Oracle', 'ServiceNow'].includes(testCase.application)
-          ? testCase.application
-          : 'SAP';
-        return {
-          file,
-          name: typeof testCase.name === 'string' && testCase.name.trim() ? testCase.name : file.replace(/\.json$/i, ''),
-          application,
-          processArea: tags[file] ?? '',
-          status: testCase.lifecycle === 'published' ? 'published' : testCase.lifecycle === 'draft' || steps.length === 0 ? 'draft' : 'ready',
-          stepCount: steps.length,
-        };
-      });
-    res.json(items);
+    // Same HC-023-class gap as /api/data/library: no top-level try/catch, and per-file
+    // JSON.parse wasn't even individually guarded — one malformed Test file used to take down
+    // the entire Test Library instead of being skipped like every other file-scanning route.
+    try {
+      if (!existsSync(testCasesDir)) return res.json([]);
+      const tags = tagStore.listTags('testCase');
+      const items = readdirSync(testCasesDir)
+        .filter((file) => file.endsWith('.json'))
+        .sort()
+        .flatMap((file) => {
+          try {
+            const testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
+            const steps = Array.isArray(testCase.steps) ? testCase.steps : [];
+            const application = ['SAP', 'Salesforce', 'Oracle', 'ServiceNow'].includes(testCase.application)
+              ? testCase.application
+              : 'SAP';
+            return [{
+              file,
+              name: typeof testCase.name === 'string' && testCase.name.trim() ? testCase.name : file.replace(/\.json$/i, ''),
+              application,
+              processArea: tags[file] ?? '',
+              status: testCase.lifecycle === 'published' ? 'published' : testCase.lifecycle === 'draft' || steps.length === 0 ? 'draft' : 'ready',
+              stepCount: steps.length,
+            }];
+          } catch {
+            return []; // skip an unreadable/malformed file rather than fail the whole library
+          }
+        });
+      res.json(items);
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
   });
 
   app.post('/api/testcases/validate', (req, res) => {
@@ -1270,129 +1281,137 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   // it. Runs behind the same blanket app.use('/api', auth.requireAuthenticated) as everything
   // else (AC4) — no separate authorization check needed here.
   app.get('/api/search', (req, res) => {
-    const raw = req.query.q;
-    const q = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
-    if (!q) return res.json([]);
-    const results: Array<{
-      kind: 'test' | 'object' | 'dataset' | 'process' | 'pack' | 'run';
-      id: string;
-      label: string;
-      domain: string;
-      application: string;
-      lifecycle: string;
-      route: string;
-    }> = [];
-
-    if (existsSync(testCasesDir)) {
-      const tags = tagStore.listTags('testCase');
-      for (const file of readdirSync(testCasesDir).filter((f) => f.endsWith('.json'))) {
-        try {
-          const testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
-          const name = typeof testCase.name === 'string' && testCase.name.trim() ? testCase.name : file;
-          if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
-          const steps = Array.isArray(testCase.steps) ? testCase.steps : [];
-          results.push({
-            kind: 'test',
-            id: file,
-            label: name,
-            domain: tags[file] ?? '',
-            application: steps.find((s: any) => s?.appId)?.appId ?? '',
-            lifecycle: testCase.lifecycle === 'published' ? 'published' : testCase.lifecycle === 'draft' || steps.length === 0 ? 'draft' : 'ready',
-            route: `/compose/tests/${encodeURIComponent(file)}`,
-          });
-        } catch {
-          // skip an unreadable/malformed file rather than fail the whole search
+    // HC-007: unlike every other route in this file, this one had no top-level try/catch — a
+    // single malformed row anywhere it scans (Tests, Objects, the run ledger, ...) took down
+    // every search request with an uncaught exception, which Express's default handler renders
+    // as an HTML error page (the exact "Unexpected token '<'" the client used to crash on).
+    try {
+      const raw = req.query.q;
+      const q = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+      if (!q) return res.json([]);
+      const results: Array<{
+        kind: 'test' | 'object' | 'dataset' | 'process' | 'pack' | 'run';
+        id: string;
+        label: string;
+        domain: string;
+        application: string;
+        lifecycle: string;
+        route: string;
+      }> = [];
+  
+      if (existsSync(testCasesDir)) {
+        const tags = tagStore.listTags('testCase');
+        for (const file of readdirSync(testCasesDir).filter((f) => f.endsWith('.json'))) {
+          try {
+            const testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
+            const name = typeof testCase.name === 'string' && testCase.name.trim() ? testCase.name : file;
+            if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
+            const steps = Array.isArray(testCase.steps) ? testCase.steps : [];
+            results.push({
+              kind: 'test',
+              id: file,
+              label: name,
+              domain: tags[file] ?? '',
+              application: steps.find((s: any) => s?.appId)?.appId ?? '',
+              lifecycle: testCase.lifecycle === 'published' ? 'published' : testCase.lifecycle === 'draft' || steps.length === 0 ? 'draft' : 'ready',
+              route: `/compose/tests/${encodeURIComponent(file)}`,
+            });
+          } catch {
+            // skip an unreadable/malformed file rather than fail the whole search
+          }
         }
       }
-    }
-
-    for (const appId of objectRepository.listAppIds()) {
-      for (const control of objectRepository.listByApp(appId)) {
-        if (!`${control.name} ${control.label ?? ''} ${control.controlType ?? ''}`.toLowerCase().includes(q)) continue;
-        results.push({
-          kind: 'object',
-          id: `${appId}/${control.name}`,
-          label: control.label || control.name,
-          domain: '',
-          application: appId,
-          lifecycle: control.verificationStatus ?? 'never',
-          route: `/objects/${encodeURIComponent(appId)}/${encodeURIComponent(control.name)}`,
-        });
-      }
-    }
-
-    if (existsSync(dataDir)) {
-      const tags = tagStore.listTags('dataFile');
-      for (const file of readdirSync(dataDir).filter((f) => f.endsWith('.csv') || f.endsWith('.json'))) {
-        if (!file.toLowerCase().includes(q)) continue;
-        results.push({
-          kind: 'dataset',
-          id: file,
-          label: file,
-          domain: tags[file] ?? '',
-          application: '',
-          lifecycle: '',
-          route: `/data/${encodeURIComponent(file)}`,
-        });
-      }
-    }
-
-    if (existsSync(groupsDir)) {
-      const tags = tagStore.listTags('group');
-      for (const file of readdirSync(groupsDir).filter((f) => f.endsWith('.json'))) {
-        try {
-          const group = JSON.parse(readFileSync(path.join(groupsDir, file), 'utf-8'));
-          const name = typeof group.name === 'string' && group.name.trim() ? group.name : file;
-          if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
+  
+      for (const appId of objectRepository.listAppIds()) {
+        for (const control of objectRepository.listByApp(appId)) {
+          if (!`${control.name} ${control.label ?? ''} ${control.controlType ?? ''}`.toLowerCase().includes(q)) continue;
           results.push({
-            kind: 'process',
-            id: file,
-            label: name,
-            domain: tags[file] ?? '',
-            application: typeof group.appId === 'string' ? group.appId : '',
-            lifecycle: group.lifecycle ?? '',
-            route: `/process-suites/${encodeURIComponent(file)}`,
-          });
-        } catch {
-          // skip
-        }
-      }
-    }
-
-    if (existsSync(packsDir)) {
-      for (const file of readdirSync(packsDir).filter((f) => f.endsWith('.json'))) {
-        try {
-          const pack = JSON.parse(readFileSync(path.join(packsDir, file), 'utf-8'));
-          const name = typeof pack.name === 'string' && pack.name.trim() ? pack.name : file;
-          if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
-          results.push({
-            kind: 'pack',
-            id: file,
-            label: name,
+            kind: 'object',
+            id: `${appId}/${control.name}`,
+            label: control.label || control.name,
             domain: '',
-            application: '',
-            lifecycle: pack.lifecycle ?? '',
-            route: `/process-suites/packs/${encodeURIComponent(file)}`,
+            application: appId,
+            lifecycle: control.verificationStatus ?? 'never',
+            route: `/objects/${encodeURIComponent(appId)}/${encodeURIComponent(control.name)}`,
           });
-        } catch {
-          // skip
         }
       }
-    }
+  
+      if (existsSync(dataDir)) {
+        const tags = tagStore.listTags('dataFile');
+        for (const file of readdirSync(dataDir).filter((f) => f.endsWith('.csv') || f.endsWith('.json'))) {
+          if (!file.toLowerCase().includes(q)) continue;
+          results.push({
+            kind: 'dataset',
+            id: file,
+            label: file,
+            domain: tags[file] ?? '',
+            application: '',
+            lifecycle: '',
+            route: `/data/${encodeURIComponent(file)}`,
+          });
+        }
+      }
+  
+      if (existsSync(groupsDir)) {
+        const tags = tagStore.listTags('group');
+        for (const file of readdirSync(groupsDir).filter((f) => f.endsWith('.json'))) {
+          try {
+            const group = JSON.parse(readFileSync(path.join(groupsDir, file), 'utf-8'));
+            const name = typeof group.name === 'string' && group.name.trim() ? group.name : file;
+            if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
+            results.push({
+              kind: 'process',
+              id: file,
+              label: name,
+              domain: tags[file] ?? '',
+              application: typeof group.appId === 'string' ? group.appId : '',
+              lifecycle: group.lifecycle ?? '',
+              route: `/process-suites/${encodeURIComponent(file)}`,
+            });
+          } catch {
+            // skip
+          }
+        }
+      }
+  
+      if (existsSync(packsDir)) {
+        for (const file of readdirSync(packsDir).filter((f) => f.endsWith('.json'))) {
+          try {
+            const pack = JSON.parse(readFileSync(path.join(packsDir, file), 'utf-8'));
+            const name = typeof pack.name === 'string' && pack.name.trim() ? pack.name : file;
+            if (!`${name} ${file}`.toLowerCase().includes(q)) continue;
+            results.push({
+              kind: 'pack',
+              id: file,
+              label: name,
+              domain: '',
+              application: '',
+              lifecycle: pack.lifecycle ?? '',
+              route: `/process-suites/packs/${encodeURIComponent(file)}`,
+            });
+          } catch {
+            // skip
+          }
+        }
+      }
+  
+      for (const run of runHistory.list({ query: q, limit: 25, sortBy: 'startedAt', sortDirection: 'desc' }).items) {
+        results.push({
+          kind: 'run',
+          id: run.id,
+          label: run.testCaseNames[0] || run.id,
+          domain: '',
+          application: run.appId,
+          lifecycle: run.status,
+          route: `/audit/runs/${encodeURIComponent(run.id)}`,
+        });
+      }
 
-    for (const run of runHistory.list({ query: q, limit: 25, sortBy: 'startedAt', sortDirection: 'desc' }).items) {
-      results.push({
-        kind: 'run',
-        id: run.id,
-        label: run.testCaseNames[0] || run.id,
-        domain: '',
-        application: run.appId,
-        lifecycle: run.status,
-        route: `/audit/runs/${encodeURIComponent(run.id)}`,
-      });
+      res.json(results.slice(0, 200));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
     }
-
-    res.json(results.slice(0, 200));
   });
 
   // BL-10's processArea tag, generalized across every artifact kind (test cases, groups,
@@ -1552,28 +1571,36 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   }
 
   app.get('/api/data/library', (_req, res) => {
-    if (!existsSync(dataDir)) return res.json([]);
-    const tags = tagStore.listTags('dataFile');
-    const items = readdirSync(dataDir)
-      .filter((file) => file.endsWith('.csv') || file.endsWith('.json'))
-      .sort()
-      .map((file) => {
-        const format: 'csv' | 'json' = file.endsWith('.json') ? 'json' : 'csv';
-        let rowCount = 0;
-        try {
-          const full = path.join(dataDir, file);
-          if (format === 'json') {
-            const records = JSON.parse(readFileSync(full, 'utf-8'));
-            rowCount = Array.isArray(records) ? records.length : 0;
-          } else {
-            rowCount = parseCsv(readFileSync(full, 'utf-8')).rows.length;
+    // HC-023: this had no top-level try/catch — if tagStore.listTags() ever threw (a locked
+    // tags.db, for instance), the whole Dataset Library silently came back empty ("0 of 0")
+    // because the client's own refreshLibrary() swallows a failed fetch, making a server-side
+    // exception look exactly like "the search found nothing" instead of "nothing loaded."
+    try {
+      if (!existsSync(dataDir)) return res.json([]);
+      const tags = tagStore.listTags('dataFile');
+      const items = readdirSync(dataDir)
+        .filter((file) => file.endsWith('.csv') || file.endsWith('.json'))
+        .sort()
+        .map((file) => {
+          const format: 'csv' | 'json' = file.endsWith('.json') ? 'json' : 'csv';
+          let rowCount = 0;
+          try {
+            const full = path.join(dataDir, file);
+            if (format === 'json') {
+              const records = JSON.parse(readFileSync(full, 'utf-8'));
+              rowCount = Array.isArray(records) ? records.length : 0;
+            } else {
+              rowCount = parseCsv(readFileSync(full, 'utf-8')).rows.length;
+            }
+          } catch {
+            rowCount = 0; // malformed file — still listed, just without a row count
           }
-        } catch {
-          rowCount = 0; // malformed file — still listed, just without a row count
-        }
-        return { file, format, processArea: tags[file] ?? '', rowCount };
-      });
-    res.json(items);
+          return { file, format, processArea: tags[file] ?? '', rowCount };
+        });
+      res.json(items);
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
   });
 
   app.get('/api/data/:file/usage', (req, res) => {
@@ -2257,69 +2284,85 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   });
 
   app.get('/api/documents', (req, res) => {
-    const { appId, key } = req.query;
-    res.json(
-      documentLog.list({
-        appId: typeof appId === 'string' && appId ? appId : undefined,
-        key: typeof key === 'string' && key ? key : undefined,
-      })
-    );
+    try {
+      const { appId, key } = req.query;
+      res.json(
+        documentLog.list({
+          appId: typeof appId === 'string' && appId ? appId : undefined,
+          key: typeof key === 'string' && key ? key : undefined,
+        })
+      );
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
   });
 
   // BL-12/13's audit ledger — read-only from Studio's side; see runHistory's own comment above.
   // BL-035 AC1/AC2: every filter and pagination/sort control the query understands.
   app.get('/api/audit/runs', (req, res) => {
-    const { appId, status, mode, runId, executedBy, artifact, environment, dateFrom, dateTo, studioRunId, query, limit, offset, sortBy, sortDirection } = req.query;
-    if (status !== undefined && status !== 'passed' && status !== 'failed') {
-      return res.status(400).json({ error: 'status must be "passed" or "failed" if given' });
+    try {
+      const { appId, status, mode, runId, executedBy, artifact, environment, dateFrom, dateTo, studioRunId, query, limit, offset, sortBy, sortDirection } = req.query;
+      if (status !== undefined && status !== 'passed' && status !== 'failed') {
+        return res.status(400).json({ error: 'status must be "passed" or "failed" if given' });
+      }
+      if (mode !== undefined && mode !== 'chain' && mode !== 'suite' && mode !== 'batch') {
+        return res.status(400).json({ error: 'mode must be "chain", "suite" or "batch" if given' });
+      }
+      if (sortBy !== undefined && sortBy !== 'startedAt' && sortBy !== 'durationMs' && sortBy !== 'status') {
+        return res.status(400).json({ error: 'sortBy must be "startedAt", "durationMs" or "status" if given' });
+      }
+      if (sortDirection !== undefined && sortDirection !== 'asc' && sortDirection !== 'desc') {
+        return res.status(400).json({ error: 'sortDirection must be "asc" or "desc" if given' });
+      }
+      const str = (value: unknown) => (typeof value === 'string' && value ? value : undefined);
+      const num = (value: unknown) => {
+        const parsed = typeof value === 'string' ? Number(value) : NaN;
+        return Number.isFinite(parsed) ? parsed : undefined;
+      };
+      const page = runHistory.list({
+        appId: str(appId),
+        status,
+        mode,
+        runId: str(runId),
+        executedBy: str(executedBy),
+        artifact: str(artifact),
+        environment: str(environment),
+        dateFrom: str(dateFrom),
+        dateTo: str(dateTo),
+        studioRunId: str(studioRunId),
+        query: str(query),
+        limit: num(limit),
+        offset: num(offset),
+        sortBy,
+        sortDirection,
+      });
+      // A header, not a body-shape change — AutomationOverview and other existing consumers
+      // still get the plain RunHistorySummary[] they always have; only a pagination-aware
+      // caller needs to read this.
+      res.setHeader('X-Total-Count', String(page.total));
+      res.json(page.items);
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
     }
-    if (mode !== undefined && mode !== 'chain' && mode !== 'suite' && mode !== 'batch') {
-      return res.status(400).json({ error: 'mode must be "chain", "suite" or "batch" if given' });
-    }
-    if (sortBy !== undefined && sortBy !== 'startedAt' && sortBy !== 'durationMs' && sortBy !== 'status') {
-      return res.status(400).json({ error: 'sortBy must be "startedAt", "durationMs" or "status" if given' });
-    }
-    if (sortDirection !== undefined && sortDirection !== 'asc' && sortDirection !== 'desc') {
-      return res.status(400).json({ error: 'sortDirection must be "asc" or "desc" if given' });
-    }
-    const str = (value: unknown) => (typeof value === 'string' && value ? value : undefined);
-    const num = (value: unknown) => {
-      const parsed = typeof value === 'string' ? Number(value) : NaN;
-      return Number.isFinite(parsed) ? parsed : undefined;
-    };
-    const page = runHistory.list({
-      appId: str(appId),
-      status,
-      mode,
-      runId: str(runId),
-      executedBy: str(executedBy),
-      artifact: str(artifact),
-      environment: str(environment),
-      dateFrom: str(dateFrom),
-      dateTo: str(dateTo),
-      studioRunId: str(studioRunId),
-      query: str(query),
-      limit: num(limit),
-      offset: num(offset),
-      sortBy,
-      sortDirection,
-    });
-    // A header, not a body-shape change — AutomationOverview and other existing consumers
-    // still get the plain RunHistorySummary[] they always have; only a pagination-aware
-    // caller needs to read this.
-    res.setHeader('X-Total-Count', String(page.total));
-    res.json(page.items);
   });
 
   app.get('/api/audit/runs/:id', (req, res) => {
-    const entry = runHistory.get(req.params.id);
-    if (!entry) return res.status(404).json({ error: 'Unknown run id' });
-    res.json(entry);
+    try {
+      const entry = runHistory.get(req.params.id);
+      if (!entry) return res.status(404).json({ error: 'Unknown run id' });
+      res.json(entry);
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
   });
 
   // BL-035 AC4: a run's captured business-document evidence, alongside its canonical PDF.
   app.get('/api/audit/runs/:id/documents', (req, res) => {
-    res.json(documentLog.list({ runId: req.params.id }));
+    try {
+      res.json(documentLog.list({ runId: req.params.id }));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
   });
 
   const webDist = options.webDistPath ?? path.join(REPO_ROOT, 'packages/studio-web/dist');

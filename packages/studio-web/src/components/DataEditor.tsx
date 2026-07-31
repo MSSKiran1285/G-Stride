@@ -61,7 +61,9 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
   }
 
   function refreshLibrary() {
-    api.listDataLibrary().then(setLibraryItems).catch(() => undefined);
+    // HC-023: a swallowed failure here used to render as an indistinguishable "0 of 0 datasets"
+    // empty state — the same shape as a search that legitimately found nothing.
+    api.listDataLibrary().then(setLibraryItems).catch((e) => setError(String(e)));
   }
 
   function refreshColumnSchema(file: string) {

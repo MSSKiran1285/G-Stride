@@ -118,3 +118,31 @@ test('Data: relate header and child CSVs, preview counts, and persist the relati
     });
   });
 });
+
+test('Dataset Library search actually filters by file name and does not silently look like a load failure (HC-023)', async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'data-library-search', async (page) => {
+      await page.goto(`${BASE_URL}/data`);
+      await page.getByRole('heading', { name: 'Dataset Library' }).waitFor();
+
+      // Baseline: the library must actually load real rows before search is exercised — a
+      // "0 of 0" here would mean nothing loaded at all, not that a search found nothing.
+      await page.getByText(/^\d+ of \d+ datasets$/).waitFor();
+      const baseline = await page.getByText(/^\d+ of \d+ datasets$/).textContent();
+      const totalBefore = Number(baseline.match(/^\d+ of (\d+) datasets$/)[1]);
+      assert.ok(totalBefore > 0, `expected the Dataset Library to load at least one real dataset, got "${baseline}"`);
+
+      const search = page.getByLabel('Search', { exact: true });
+      await search.fill('synthetic');
+      await page.locator('tbody tr', { hasText: 'synthetic.csv' }).waitFor();
+      await page.locator('tbody tr', { hasText: 'p2p-e2e.csv' }).waitFor({ state: 'detached' });
+
+      await search.fill('this-file-does-not-exist');
+      await page.getByText('No datasets match the current filters.').waitFor();
+      // Distinguish "found nothing" from "loaded nothing": the denominator must still reflect
+      // every real dataset, not have collapsed to 0 the way a failed load would.
+      const afterMiss = await page.getByText(/^0 of \d+ datasets$/).textContent();
+      assert.notEqual(afterMiss, '0 of 0 datasets', 'a no-match search must not look identical to a failed load');
+    });
+  });
+});

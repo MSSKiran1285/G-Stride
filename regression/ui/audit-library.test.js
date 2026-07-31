@@ -36,6 +36,35 @@ test('Audit and Evidence uses a searchable run library instead of date accordion
   });
 });
 
+test('Audit and Evidence toolbar gives every filter a genuinely usable width, not a collapsed sliver (HC-003/HC-032)', async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'audit-toolbar-widths', async (page) => {
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await page.goto(BASE_URL);
+      await page.getByRole('button', { name: /Audit and Evidence/ }).first().click();
+      await page.getByRole('heading', { name: 'Audit and Evidence', level: 2 }).waitFor();
+
+      // .workspace-toolbar (display:flex, shared by every <Toolbar>) used to silently win the
+      // cascade over .audit-toolbar's own display:grid, collapsing the search box to an
+      // icon-only sliver — this asserts real, usable widths, not just that the fields exist.
+      const searchBox = await page.getByPlaceholder('Search process, App ID, run ID, or executor').boundingBox();
+      const envBox = await page.getByLabel('Filter audit runs by environment').boundingBox();
+      const sortBox = await page.getByLabel('Sort audit runs').boundingBox();
+      assert.ok(searchBox.width > 150, `expected the search box to be a usable width, got ${searchBox.width}px`);
+      assert.ok(envBox.width > 150, `expected the environment field to be a usable width, got ${envBox.width}px`);
+      assert.ok(sortBox.width > 100, `expected the sort control to be a usable width, got ${sortBox.width}px`);
+
+      // All six controls must fit on one row at desktop width rather than wrapping onto a
+      // second row — a wrap would show up as a large (tens of pixels) difference, well beyond
+      // the few pixels of intrinsic height difference between an <input> and a <select>.
+      assert.ok(
+        Math.abs(searchBox.y - sortBox.y) < 20,
+        `expected every toolbar control to sit on the same row at desktop width, got search.y=${searchBox.y} sort.y=${sortBox.y}`,
+      );
+    });
+  });
+});
+
 test('Audit and Evidence: environment filter, rerun lineage, and a source-artifact link (BL-035 AC1/AC3/AC4)', async () => {
   const store = new RunHistoryStore(requireEnv('REGRESSION_RUN_HISTORY_DB'));
   try {

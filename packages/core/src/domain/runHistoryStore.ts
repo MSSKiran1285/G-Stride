@@ -65,6 +65,27 @@ export interface RunHistorySummary {
 
 export type RunHistorySortField = 'startedAt' | 'durationMs' | 'status';
 
+/** The ledger is append-only — a row with a malformed JSON array column (however that
+ *  happened) can never be corrected in place, so every reader must tolerate it rather than
+ *  throw. One bad historical row must not take down list()/get() for every other row, which
+ *  previously made a single corrupt entry break every search request (HC-007). */
+function safeJsonArray(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function safeJsonParse(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return { parseError: 'This run\'s stored result could not be parsed.' };
+  }
+}
+
 export interface RunHistoryFilter {
   appId?: string;
   status?: 'passed' | 'failed';
@@ -274,8 +295,8 @@ export class RunHistoryStore {
       total,
       items: rows.map((r) => ({
         ...r,
-        testCaseNames: JSON.parse(r.testCaseNames),
-        testCaseFiles: r.testCaseFiles ? JSON.parse(r.testCaseFiles) : undefined,
+        testCaseNames: safeJsonArray(r.testCaseNames),
+        testCaseFiles: r.testCaseFiles ? safeJsonArray(r.testCaseFiles) : undefined,
         dataFile: r.dataFile ?? undefined,
         evidencePdfPath: r.evidencePdfPath ?? undefined,
         // HC-030: same append-only-ledger fallback as get() below, for a row recorded before
@@ -317,10 +338,10 @@ export class RunHistoryStore {
     const { resultJson, ...rest } = row;
     return {
       ...rest,
-      testCaseNames: JSON.parse(rest.testCaseNames),
-      testCaseFiles: rest.testCaseFiles ? JSON.parse(rest.testCaseFiles) : undefined,
+      testCaseNames: safeJsonArray(rest.testCaseNames),
+      testCaseFiles: rest.testCaseFiles ? safeJsonArray(rest.testCaseFiles) : undefined,
       dataFile: rest.dataFile ?? undefined,
-      result: JSON.parse(resultJson),
+      result: safeJsonParse(resultJson),
       evidencePdfPath: rest.evidencePdfPath ?? undefined,
       // HC-030: a ledger row recorded before duration_ms existed (append-only — it can never
       // be backfilled in place) falls back to computing it from its own immutable timestamps

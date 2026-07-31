@@ -107,3 +107,31 @@ test('GET /api/search finds a Run by App ID, typed with its status as lifecycle 
     store.close();
   }
 });
+
+test('GET /api/search still succeeds when one run in the ledger has a malformed test_case_names column (HC-007)', async () => {
+  const store = new RunHistoryStore(requireEnv('REGRESSION_RUN_HISTORY_DB'));
+  try {
+    // The ledger is append-only, so a row can only ever be created this malformed shape via a
+    // raw insert (record() always writes valid JSON) — this simulates the real-world corrupt
+    // row that used to take down every /api/search request with an uncaught exception,
+    // regardless of what the caller actually searched for.
+    store.db.prepare(`
+      INSERT INTO runs (id, started_at, finished_at, status, executed_by, mode, app_id, test_case_names, result_json)
+      VALUES ('search-regression-corrupt-run', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:01.000Z', 'passed', 'alice', 'chain', 'corruptSearchApp', 'not valid json', '{}')
+    `).run();
+
+    const { status, body } = await api.get('/api/search?q=corruptSearchApp');
+    assert.equal(status, 200);
+    const runHit = body.find((r) => r.kind === 'run' && r.id === 'search-regression-corrupt-run');
+    assert.ok(runHit, 'expected the corrupt-named run to still surface in results');
+    assert.equal(runHit.label, 'search-regression-corrupt-run', 'falls back to the run id when testCaseNames cannot be parsed');
+
+    // A search unrelated to the corrupt row must also keep working, not just the exact query
+    // that touches it — proving the fix isn't scoped to one query shape.
+    const unrelated = await api.get('/api/search?q=create-po');
+    assert.equal(unrelated.status, 200);
+    assert.ok(Array.isArray(unrelated.body));
+  } finally {
+    store.close();
+  }
+});
