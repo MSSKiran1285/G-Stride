@@ -1,6 +1,39 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-07-31T06-11-26-685Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-31T06:11:29.021Z",
+      "finishedAt": "2026-07-31T06:13:18.459Z",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-31T06-11-03-484Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-31T06:11:04.651Z",
+      "finishedAt": "2026-07-31T06:11:25.794Z",
+      "passed": 72,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-31T06-10-53-590Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-31T06:10:53.665Z",
+      "finishedAt": "2026-07-31T06:11:02.685Z",
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-07-31T05-39-44-015Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-07-31T05:39:44.827Z",
@@ -181,39 +214,6 @@
       "label": "Core regression",
       "startedAt": "2026-07-30T14:48:29.422Z",
       "finishedAt": "2026-07-30T14:48:36.026Z",
-      "passed": 81,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T14-44-23-826Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T14:44:24.590Z",
-      "finishedAt": "2026-07-30T14:45:45.437Z",
-      "passed": 45,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-30T14-44-02-778Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-30T14:44:03.499Z",
-      "finishedAt": "2026-07-30T14:44:23.374Z",
-      "passed": 58,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T14-43-56-554Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T14:43:56.606Z",
-      "finishedAt": "2026-07-30T14:44:02.321Z",
       "passed": 81,
       "failed": 0,
       "skipped": 0,
