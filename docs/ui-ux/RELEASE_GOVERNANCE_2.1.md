@@ -136,3 +136,75 @@ mechanically:
   signed 2.0.0 evidence document.
 - Does not claim that existing pre-provenance quality runs qualify for 2.1.0; fresh recorded runs
   against the eventual candidate commit remain required.
+
+## 9. 2.1.0 release-qualification decision — 31 July 2026
+
+**Raised by:** Workspace owner Sathyanarayanan Kiran, on completion of BL-037 (the last non-deferred
+backlog item).
+
+### 9.1 BL-039 and BL-040 formally excluded from 2.1.0 scope
+
+Both items were already `Deferred` / `T5 · Post-2.0` / `P3` in the tracker, but that classification
+described *when they might start*, not a formal decision that they are out of the 2.1.0 candidate.
+This section is that decision:
+
+- **BL-039 (multi-user roles and capabilities)** — no multi-user deployment requirement has been
+  confirmed. The product continues to use one preserved owner identity through 2.1.0.
+- **BL-040 (scheduling, notification and controlled parallelism)** — isolation for parallel execution
+  has not been proven. 2.1.0 continues with the current sequential orchestration model.
+
+Neither item's absence blocks 2.1.0 GA. Their tracker `coverage` fields now reference this section
+directly.
+
+### 9.2 2.1.0 GA readiness status
+
+With BL-039/BL-040 excluded, every item in the active 2.1.0 scope is `Implemented`. That is
+deliberately a narrower claim than "the entire backlog is complete":
+
+| Statement | Status |
+|---|---|
+| Functional active backlog (every non-deferred item) | **Complete** |
+| Entire backlog, including deferred scope (BL-039/BL-040) | **Not complete** — by design, per §9.1 |
+| 2.1.0 release verification | **Not yet complete** — see §9.3 |
+| Ready to tag `v2.1.0` GA | **Not yet** |
+
+### 9.3 What is, and is not, refreshed for the 2.1.0 candidate
+
+BL-017's evidence (`ACCESSIBILITY_RELEASE_VERIFICATION.md`, `NVDA_PRIMARY_WORKSPACE_RESULTS.md`,
+`RELEASE_SIGN_OFF_2.0.md`) is frozen 2.0.0 evidence: it was recorded 29-30 Jul 2026 against the GA
+commit `fb4bd49`, and the tracker's `frozen20Implemented` set already attributes it to `actualRelease:
+"2.0.0"`, not 2.1.0. It has not been claimed as 2.1.0 evidence at any point and does not become 2.1.0
+evidence by the passage of time or by unrelated 2.1.0 features shipping.
+
+| Verification | Refreshed for the 2.1.0 candidate? | Evidence |
+|---|---|---|
+| Automated accessibility (Axe serious/critical, keyboard skip/focus, 320px reflow) | **Yes** — commit-matched, part of every recorded isolated-UI run | `regression/ui/accessibility.test.js`, `regression/results/quality-history.json` |
+| Isolated Core / API / UI regression | **Yes** — commit-matched, zero-failure, re-verified after every 2.1.0 item including BL-037 | `release-manifests/v2.1.0-dev.0.json` |
+| Manual NVDA screen-reader journeys | **No** — last recorded 29 Jul 2026 against `fb4bd49`; the 2.1.0 candidate adds Overview alerts/impact analytics (BL-018/019), the Object Repository workbench (BL-022/024), the Dataset Library (BL-025), Business Process/Pack canvases (BL-029), execution-hierarchy/diagnosis UI (BL-031/032), the Audit ledger UI (BL-035) and Global Search (BL-037) — none of which NVDA has verified | none yet for 2.1.0 |
+| Live-SAP verification (read-only + authorised transactional) | **No** — last recorded 30 Jul 2026 against `fb4bd49`; not re-run against the 2.1.0 candidate | none yet for 2.1.0 |
+| Workspace-owner sign-off of consolidated release evidence | **No** — the 30 Jul 2026 sign-off approved 2.0.0 GA specifically; no equivalent 2.1.0 sign-off has been given | none yet for 2.1.0 |
+
+### 9.4 Why this note does not perform the manual refresh itself
+
+The three outstanding items in §9.3 are deliberately not something an engineering agent can generate
+on its own behalf, and none were attempted here:
+
+- **NVDA re-verification** requires an actual NVDA installation and a human (or an equivalent
+  screen-reader-capture pipeline) to record real spoken output — not something a code-editing agent
+  can fabricate or approximate from Axe's static analysis, which already runs automatically and
+  passes but is not a substitute for a screen-reader journey.
+- **Live-SAP re-verification** requires a real, credentialed, owner-approved non-production SAP
+  target. The existing `REGRESSION_LIVE=1` / `REGRESSION_LIVE_TRANSACTIONAL=1` live-gated regression
+  suites already exist and are ready to run the moment such a target is configured and authorised for
+  the 2.1.0 candidate commit — they are not a design gap, only an un-run gate.
+- **Owner sign-off** is, by this product's own single-owner governance model, an act only the
+  workspace owner can perform — recording one on the owner's behalf would misrepresent who verified
+  the release.
+
+### 9.5 What this section does *not* do
+
+- Does not create or push a `v2.1.0` tag.
+- Does not claim 2.1.0 release approval.
+- Does not claim BL-017's frozen 2.0.0 evidence covers the 2.1.0 candidate.
+- Does not mark BL-039 or BL-040 `Implemented` — they remain `Deferred`, now with an explicit 2.1.0
+  scope-exclusion decision recorded against them.
