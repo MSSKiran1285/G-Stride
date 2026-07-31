@@ -51,6 +51,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const body = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(body.error ?? `Request to ${path} failed (${res.status})`);
   }
+  // HC-007: a 200 response that isn't JSON (e.g. an SPA-fallback index.html served because
+  // /api isn't actually reaching this server) must not surface as a raw JSON.parse
+  // SyntaxError — that told the user nothing about what actually went wrong.
+  if (!(res.headers.get('content-type') ?? '').includes('application/json')) {
+    throw new Error(`Request to ${path} did not return JSON — the API may be unreachable at this origin.`);
+  }
   return res.json();
 }
 

@@ -52,15 +52,19 @@ export function DocumentsPanel({
   selectedRunId,
   onSelectedRunChange,
   onNavigateToRoute,
+  initialStatusFilter,
 }: {
   selectedRunId?: string;
   onSelectedRunChange?: (runId: string | null) => void;
   onNavigateToRoute?: (path: string) => void;
+  /** HC-008: seeds the status filter on mount (e.g. Overview's "Needs attention" failed-runs
+   *  link) — read once at mount, not kept in sync with later prop changes. */
+  initialStatusFilter?: '' | 'passed' | 'failed';
 } = {}) {
   const [runs, setRuns] = useState<RunHistorySummary[]>([]);
   const [total, setTotal] = useState(0);
   const [query, setQuery] = useState('');
-  const [status, setStatus] = useState<'' | 'passed' | 'failed'>('');
+  const [status, setStatus] = useState<'' | 'passed' | 'failed'>(initialStatusFilter ?? '');
   const [mode, setMode] = useState<'' | RunMode>('');
   const [range, setRange] = useState<'all' | '7' | '30' | '90'>('all');
   const [environment, setEnvironment] = useState('');

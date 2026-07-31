@@ -1322,7 +1322,9 @@ button, input, select, textarea {
   margin: 0;
 }
 
-/* Buttons */
+/* Buttons — HC-011: one pill shape across every workspace, not a mix of pill and
+   rounded-rectangle. Segmented-control tabs and other non-button toggle controls are
+   unaffected since they don't use the <button> element's own border-radius. */
 button {
   cursor: pointer;
   display: inline-flex;
@@ -1332,7 +1334,7 @@ button {
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   padding: 0.5rem 0.95rem;
   font-size: 0.83rem;
   font-weight: 600;
@@ -4377,13 +4379,69 @@ button.template-card {
   flex: 0 0 min(340px, 90vw);
 }
 
-.drawer-section h4 {
+.drawer-section h4,
+.drawer-section > summary {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   margin: 0 0 0.45rem;
   color: var(--text);
   font-size: 0.78rem;
+}
+
+/* HC-010: every Help topic is now a <details> element instead of an always-open block. */
+.drawer-section > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.drawer-section > summary::-webkit-details-marker { display: none; }
+.drawer-section > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 0.7em;
+  color: var(--text-soft);
+  transition: transform 0.15s ease;
+}
+.drawer-section[open] > summary::before { transform: rotate(90deg); }
+.drawer-section > summary:hover { color: var(--accent); }
+
+.drawer-section[open] > summary { margin-bottom: 0.45rem; }
+.drawer-section:not([open]) { padding-bottom: 0.6rem; }
+
+.help-guide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.help-guide-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-subtle);
+}
+
+.help-guide-item summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.55rem 0.7rem;
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+.help-guide-item summary::-webkit-details-marker { display: none; }
+.help-guide-item summary::before {
+  content: '+ ';
+  color: var(--accent);
+}
+.help-guide-item[open] summary::before { content: '– '; }
+
+.help-guide-item p {
+  margin: 0;
+  padding: 0 0.7rem 0.65rem;
+  color: var(--text-soft);
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 .canvas-overview {

@@ -1,0 +1,38 @@
+﻿S.No.,Workspace,Category,Defects
+1,Automation Overview,Defect,Change all buttons to coral colour as per the attachment
+2,Automation Overview,Defect,Change all font color where it is currently showing as red to coral colour
+3,Automation Overview,Defect,Page scrolls beyond the page limit in Automation Overview page
+4,Automation Overview,Defect,Good Morning badge should be based on the time of the day
+5,Automation Overview,Defect,Pick up where you left: Clicking open in compose just navigates to compose tab but not actually opening the test case which was actually selected
+6,Automation Overview,Defect,"Recent Execution: Once again simply navigates to Audit and Evidence, doesn't open the actual evidence selected"
+7,Automation Overview,Defect,Global Search Syntax error
+8,Automation Overview,Defect,Needs Attention Section > Clicking open audit and evidence is not filtering just the failed test cases
+9,Automation Overview,Documentation,"Retry message ""Some workspace data is unavailable. You can retry without leaving this page."" What is not available?"
+10,Automation Overview,Defect,Help: Create each topic  as a collapsable sections
+11,All Workspaces,Defect,"Use consistent theme in button shapes, some are pills and some of rounded rectangle. Stick to pill across the board"
+12,Control Object Repository,Defect,"Not sure if this is a quirk - when I capture the logon screen, no controls are identified, see attached"
+13,Control Object Repository,New Feature,"Compose : Make the fields sortable, see attached"
+14,Control Object Repository,Documentation,Target: Non-production · verification required before execution > Add a note with a quick explanation
+15,Control Object Repository,Documentation,"No stable id — this control's identifier regenerates on every reload, so saving it would break on the next run. If you're trying to capture a value shown after an action (e.g. a generated document/order number), use ""Capture Document Number from Success Dialog"" in Compose instead — it reads the confirmation message directly, no capture needed
+
+Needs explanation"
+16,Control Object Repository,Documentation,What are the text boxes in capture screen
+17,Control Object Repository,Defect,Mass Capture results do not have an option to select the required controls to save them
+18,Compose,Documentation,Explain legacy test contract > Include details under help
+19,Compose,Documentation,Explain Use Inferred Contract> Include details under help
+20,Compose,Documentation,What does publish test do > Include details under help
+21,Compose,Defect,"Open Text > Domain > shows values under the field; It would be ideal to show the values under a drop down showing the current selected value. Provide option add new
+
+This has to be consistently fixed across the workspaces"
+22,Compose,Defect,"Looks like domain and test process area are used interchangeably, follow a consistent language"
+23,Test Data,Defect,Search is not working
+24,Test Data,Defect,The row data is very cluttered and the values are not clearly visible
+25,Test Data,Documentation,Explain how the column schema works
+26,Test Data,Documentation,A complete guide is required on how to use relational csv builder
+27,Test Data,Documentation,A complete guide is required on Stage topology and typed hand-offs
+28,Execution Center,Documentation,A complete how to guide is required for all execution types
+29,Audit and Evidence,Defect,Why is test case id showing as blank?
+30,Audit and Evidence,Defect,Duration is showing empty
+31,Audit and Evidence,Defect,"Passed, View Record, Evidence PDF are not aligned"
+32,Audit and Evidence,Defect,Search field is not fully visible. Not sure what the second field does
+33,Audit and Evidence,Defect,"Need a better way of organizing / grouping the evidence documents. As the volumes increase, user has to keep scrolling"

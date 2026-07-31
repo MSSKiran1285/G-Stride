@@ -108,6 +108,10 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsInitialIntegration, setSettingsInitialIntegration] = useState<'sap' | 'salesforce' | 'oracle' | 'servicenow'>('sap');
   const [activeViewDirty, setActiveViewDirty] = useState(false);
+  // HC-008: Overview's "Needs attention" failed-runs link seeds Audit and Evidence's status
+  // filter on the mount it triggers, then clears once the workspace is left — a plain sidebar
+  // click into Audit and Evidence must never inherit a stale filter from an earlier visit.
+  const [auditInitialStatusFilter, setAuditInitialStatusFilter] = useState<'' | 'passed' | 'failed'>('');
   // Rendered as a sibling overlay (like settingsOpen/SettingsPanel below), never a route
   // change — so a Compose field can launch a capture session without tripping the
   // activeViewDirty navigation guard or losing in-progress Test edits (BL-023 AC4).
@@ -151,6 +155,10 @@ export function App() {
     api.getIntegrationSettings().then(setIntegrationSettings).catch(() => setIntegrationSettings(null));
     api.getWorkspaceContext().then(setWorkspaceContext).catch(() => setWorkspaceContext(null));
   }, [auth?.authenticated]);
+
+  useEffect(() => {
+    if (view !== 'documents' && auditInitialStatusFilter) setAuditInitialStatusFilter('');
+  }, [view, auditInitialStatusFilter]);
 
   if (authError) {
     return <main className="login-screen"><section className="login-card"><h1>Studio could not start</h1><p className="error-text">{authError}</p></section></main>;
@@ -366,7 +374,15 @@ export function App() {
             <ErrorBoundary key={view}>
               <div className="view-transition-wrapper">
                 {view === 'launchpad' ? (
-                  <AutomationOverview onNavigate={navigateTo} onNavigateToRoute={(path) => navigateToPath(path)} workspaceContext={workspaceContext} />
+                  <AutomationOverview
+                    onNavigate={navigateTo}
+                    onNavigateToRoute={(path) => navigateToPath(path)}
+                    onOpenFailedRuns={() => {
+                      setAuditInitialStatusFilter('failed');
+                      navigateTo('documents');
+                    }}
+                    workspaceContext={workspaceContext}
+                  />
                 ) : view === 'objects' ? (
                   <ObjectScanner
                     initialAppId={route.objectAppId}
@@ -401,6 +417,7 @@ export function App() {
                     selectedRunId={route.auditRunId}
                     onSelectedRunChange={(runId) => updateDetailPath(runId ? studioRoutes.auditRun(runId) : VIEW_PATHS.documents)}
                     onNavigateToRoute={(path) => navigateToPath(path)}
+                    initialStatusFilter={auditInitialStatusFilter}
                   />
                 ) : (
                   <RunPanel
@@ -425,8 +442,8 @@ export function App() {
               />
 
               <div className="drawer-body">
-                <section className="drawer-section">
-                  <h4><Zap size={14} aria-hidden="true" /> Placeholder examples</h4>
+                <details className="drawer-section" open>
+                  <summary><Zap size={14} aria-hidden="true" /> Placeholder examples</summary>
                   <div className="token-chips-stack">
                     <div className="token-item">
                       <code>{'{{step1.capturedDocNumber}}'}</code>
@@ -437,10 +454,10 @@ export function App() {
                       <span>Dynamic value from the selected dataset</span>
                     </div>
                   </div>
-                </section>
+                </details>
 
-                <section className="drawer-section">
-                  <h4><HelpCircle size={14} aria-hidden="true" /> Response examples</h4>
+                <details className="drawer-section" open>
+                  <summary><HelpCircle size={14} aria-hidden="true" /> Response examples</summary>
                   <div className="sap-codes-list">
                     <div className="code-row">
                       <span className="code-badge success">200 OK</span>
@@ -455,10 +472,56 @@ export function App() {
                       <span>Supplier not maintained in Purchasing Org</span>
                     </div>
                   </div>
-                </section>
+                </details>
 
-                <section className="drawer-section release-notes-section">
-                  <h4><Tag size={14} aria-hidden="true" /> Release notes</h4>
+                <details className="drawer-section">
+                  <summary><HelpCircle size={14} aria-hidden="true" /> Guides</summary>
+                  <div className="help-guide-list">
+                    <details className="help-guide-item">
+                      <summary>What is a legacy Test contract?</summary>
+                      <p>A Test with no declared contract runs fine as raw ModuleCall JSON, but it can't be Published — Published status requires reviewed, typed inputs and outputs Studio can validate before execution and use to safely bind hand-offs between stages. "Legacy ready" just means it's executable but not yet contract-declared.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>What does "Use inferred contract" do?</summary>
+                      <p>It scans the Test's own steps and their value bindings (dataset columns, system-context values, prior-step outputs) and generates a starting contract — typed inputs and outputs — for you to review and adjust, instead of declaring one from scratch.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>What does publishing a Test do?</summary>
+                      <p>It moves the Test from Draft to Published once its contract is complete and valid: every input/output is typed, every object reference resolves, and every value binding resolves to a real source. Only Published Tests can be used as members of a Regression Pack.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>What does the target classification note mean?</summary>
+                      <p>"Non-production" vs "Production-like" records how safe this SAP target is to run transactional tests against — Studio applies stricter fail-stop and authorisation rules for production-like targets. "Verification required" means the connection details are saved but haven't been confirmed live yet; use "Verify connection" in Settings.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>Why does capturing a login/SSO screen find 0 controls?</summary>
+                      <p>A SAML or corporate SSO login page isn't part of the target SAP Fiori app — it's a separate identity-provider page with no UI5 control tree for Studio to scan, so 0 controls discovered there is expected, not an error. Capture the actual application screen after login instead.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>What are the text boxes on the capture screen for?</summary>
+                      <p>The URL field is the SAP page to scan (from your saved target, editable per capture). The App ID field groups everything you capture under one identifier so later Tests and the Object Repository can find it. The small field beside "Capture" lets you type an expected value to compare against, when the module you're curating supports it (e.g. a Read/assert control).</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>How does a dataset's column schema work?</summary>
+                      <p>Each column can declare a type (string, number, date…), a sensitivity level (public, business, credential) and an example value — the same vocabulary a Test's own typed contract inputs use. This lets Compose validate a dataset binding against what a Test actually expects, and keeps sensitive columns flagged wherever they're used.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>How do I use the Relational CSV builder?</summary>
+                      <p>Pick a header CSV and a child CSV, then declare the header key and the child's matching foreign key — this joins one header row to all of its owned child rows (e.g. a sales order to its line items) without flattening them into one file. Give the relationship a name and a child collection name, then Validate before Save; it blocks duplicate header keys, missing keys, and orphan child rows.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>What is stage topology and a typed hand-off?</summary>
+                      <p>A Business Process is an ordered list of stages, each running one Test. A typed hand-off lets a later stage's input be bound to an earlier stage's captured output (e.g. stage 2 uses the PO number stage 1 created) instead of hard-coding it — Studio blocks forward references and cycles so hand-offs always flow from an earlier stage to a later one.</p>
+                    </details>
+                    <details className="help-guide-item">
+                      <summary>What's the difference between Chain, Suite, Batch and Pack?</summary>
+                      <p><strong>Chain</strong> runs one Test once. <strong>Suite</strong> runs several independent Tests in one session. <strong>Batch</strong> runs one Business Process across every row of a dataset, each row an isolated transaction. A <strong>Regression Pack</strong> runs a saved, published mix of Tests and Processes together, each with its own data and session policy — the closest thing to a full regression cycle.</p>
+                    </details>
+                  </div>
+                </details>
+
+                <details className="drawer-section release-notes-section" open>
+                  <summary><Tag size={14} aria-hidden="true" /> Release notes</summary>
 
                   <article className="release-note-entry">
                     <div className="release-note-heading">
@@ -502,7 +565,7 @@ export function App() {
                     </p>
                     <p className="release-note-ref">Full detail: docs/ui-ux/RELEASE_NOTES_2.0.0.md</p>
                   </article>
-                </section>
+                </details>
               </div>
             </aside>
           )}

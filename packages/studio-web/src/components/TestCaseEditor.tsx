@@ -359,7 +359,7 @@ export function TestCaseEditor({
               </select>
             </div>
             <div style={{ flex: 1, maxWidth: '20rem' }}>
-              <label>Domain</label>
+              <label>Process area</label>
               <DomainTag kind="testCase" name={selectedFile} value={fileTags[selectedFile] ?? ''} knownDomains={processAreas} onSaved={refreshTags} />
             </div>
           </div>

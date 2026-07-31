@@ -6,6 +6,11 @@ export interface RunHistoryEntry {
   id: string;
   startedAt: string;
   finishedAt: string;
+  /** Not needed when calling record() — durationMs is always computed internally from
+   *  startedAt/finishedAt. Always present on a value returned by get() (computed from
+   *  startedAt/finishedAt if the stored value predates this field) — see get()'s HC-030
+   *  fallback. */
+  durationMs?: number;
   status: 'passed' | 'failed';
   /** OS username of whoever triggered the run — the only "who" available without a real auth
    * system (Studio is a single-user local tool today; see PROJECT_BRIEF_v2.0.md Section 7). */
@@ -254,11 +259,12 @@ export class RunHistoryStore {
          ORDER BY ${sortColumn} ${direction}, started_at DESC
          LIMIT @limit OFFSET @offset`
       )
-      .all(params) as (Omit<RunHistorySummary, 'testCaseNames' | 'testCaseFiles' | 'dataFile' | 'evidencePdfPath' | 'studioRunId' | 'parentStudioRunId' | 'targetHostname' | 'targetSafetyClass'> & {
+      .all(params) as (Omit<RunHistorySummary, 'testCaseNames' | 'testCaseFiles' | 'dataFile' | 'evidencePdfPath' | 'durationMs' | 'studioRunId' | 'parentStudioRunId' | 'targetHostname' | 'targetSafetyClass'> & {
       testCaseNames: string;
       testCaseFiles: string | null;
       dataFile: string | null;
       evidencePdfPath: string | null;
+      durationMs: number | null;
       studioRunId: string | null;
       parentStudioRunId: string | null;
       targetHostname: string | null;
@@ -272,6 +278,9 @@ export class RunHistoryStore {
         testCaseFiles: r.testCaseFiles ? JSON.parse(r.testCaseFiles) : undefined,
         dataFile: r.dataFile ?? undefined,
         evidencePdfPath: r.evidencePdfPath ?? undefined,
+        // HC-030: same append-only-ledger fallback as get() below, for a row recorded before
+        // duration_ms existed.
+        durationMs: r.durationMs ?? Math.max(0, Date.parse(r.finishedAt) - Date.parse(r.startedAt)),
         studioRunId: r.studioRunId ?? undefined,
         parentStudioRunId: r.parentStudioRunId ?? undefined,
         targetHostname: r.targetHostname ?? undefined,
@@ -285,8 +294,9 @@ export class RunHistoryStore {
       .prepare(
         `SELECT id, started_at as startedAt, finished_at as finishedAt, status, executed_by as executedBy, mode,
                 app_id as appId, test_case_names as testCaseNames, test_case_files as testCaseFiles, data_file as dataFile,
-                result_json as resultJson, evidence_pdf_path as evidencePdfPath, studio_run_id as studioRunId,
-                parent_studio_run_id as parentStudioRunId, target_hostname as targetHostname, target_safety_class as targetSafetyClass
+                result_json as resultJson, evidence_pdf_path as evidencePdfPath, duration_ms as durationMs,
+                studio_run_id as studioRunId, parent_studio_run_id as parentStudioRunId,
+                target_hostname as targetHostname, target_safety_class as targetSafetyClass
          FROM runs WHERE id = ?`
       )
       .get(id) as
@@ -296,6 +306,7 @@ export class RunHistoryStore {
           dataFile: string | null;
           resultJson: string;
           evidencePdfPath: string | null;
+          durationMs: number | null;
           studioRunId: string | null;
           parentStudioRunId: string | null;
           targetHostname: string | null;
@@ -311,6 +322,10 @@ export class RunHistoryStore {
       dataFile: rest.dataFile ?? undefined,
       result: JSON.parse(resultJson),
       evidencePdfPath: rest.evidencePdfPath ?? undefined,
+      // HC-030: a ledger row recorded before duration_ms existed (append-only — it can never
+      // be backfilled in place) falls back to computing it from its own immutable timestamps
+      // rather than showing a blank duration forever.
+      durationMs: rest.durationMs ?? Math.max(0, Date.parse(rest.finishedAt) - Date.parse(rest.startedAt)),
       studioRunId: rest.studioRunId ?? undefined,
       parentStudioRunId: rest.parentStudioRunId ?? undefined,
       targetHostname: rest.targetHostname ?? undefined,

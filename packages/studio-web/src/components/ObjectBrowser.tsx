@@ -309,12 +309,12 @@ export function ObjectBrowser({
     <div className="panel stack">
       <p className="section-title">Browse objects</p>
       <p className="hint" style={{ margin: 0 }}>
-        Every App ID with at least one saved object, grouped by domain — check here before
+        Every App ID with at least one saved object, grouped by process area — check here before
         capturing a screen again under a new name.
       </p>
       <div className="row">
         <select
-          aria-label="Object repository domain"
+          aria-label="Object repository process area"
           value={domain}
           onChange={(e) => {
             setDomain(e.target.value);
@@ -322,7 +322,7 @@ export function ObjectBrowser({
           }}
           style={{ maxWidth: '14rem' }}
         >
-          <option value="">— select a domain ({domains.length}) —</option>
+          <option value="">— select a process area ({domains.length}) —</option>
           {domains.map((d) => (
             <option key={d} value={d}>
               {d} ({appIds.filter((id) => domainOf(id) === d).length})

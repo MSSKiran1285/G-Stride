@@ -18,7 +18,7 @@ test('Canvas First Overview presents the approved shell and real workspace data'
   await withBrowser(async (browser) => {
     await withPage(browser, 'canvas-first-overview', async (page) => {
       await page.goto(BASE_URL);
-      await page.getByRole('heading', { name: 'Good morning' }).waitFor();
+      await page.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }).waitFor();
 
       const navigation = await page.locator('.lhs-nav-item .nav-item-label').allTextContents();
       assert.deepEqual(navigation, [
@@ -119,7 +119,7 @@ test('Automation Overview: Needs attention surfaces real alerts, recent runs and
     await withBrowser(async (browser) => {
       await withPage(browser, 'overview-attention-and-routes', async (page) => {
         await page.goto(BASE_URL);
-        await page.getByRole('heading', { name: 'Good morning' }).waitFor();
+        await page.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }).waitFor();
 
         const attention = page.locator('.canvas-attention');
         await attention.getByText(/execution.* failed in the last 7 days/).waitFor();
@@ -131,12 +131,65 @@ test('Automation Overview: Needs attention surfaces real alerts, recent runs and
         assert.equal(new URL(page.url()).pathname, '/audit/runs/overview-recent-failure');
 
         await page.goto(BASE_URL);
-        await page.getByRole('heading', { name: 'Good morning' }).waitFor();
+        await page.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }).waitFor();
 
         // Selecting a test case and opening it in Compose lands on that exact Test's route.
         await page.getByRole('heading', { name: 'Cleanup Abandoned Drafts' }).click();
         await page.getByRole('button', { name: 'Open in Compose' }).click();
         assert.equal(new URL(page.url()).pathname, '/compose/tests/cleanup-abandoned-drafts.json');
+      });
+    });
+  } finally {
+    store.close();
+  }
+});
+
+test('Automation Overview: Needs attention "failed executions" link opens Audit and Evidence pre-filtered to failed runs (HC-008)', async () => {
+  const store = new RunHistoryStore(requireEnv('REGRESSION_RUN_HISTORY_DB'));
+  try {
+    store.record({
+      id: 'hc008-failed-run',
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      status: 'failed',
+      executedBy: 'hc008-executor',
+      mode: 'chain',
+      appId: 'syntheticApp',
+      testCaseNames: ['HC-008 Failed Run'],
+      testCaseFiles: ['cleanup-abandoned-drafts.json'],
+      result: { status: 'failed' },
+    });
+    store.record({
+      id: 'hc008-passed-run',
+      startedAt: new Date().toISOString(),
+      finishedAt: new Date().toISOString(),
+      status: 'passed',
+      executedBy: 'hc008-executor',
+      mode: 'chain',
+      appId: 'syntheticApp',
+      testCaseNames: ['HC-008 Passed Run'],
+      testCaseFiles: ['cleanup-abandoned-drafts.json'],
+      result: { status: 'passed' },
+    });
+
+    await withBrowser(async (browser) => {
+      await withPage(browser, 'overview-hc008-failed-filter', async (page) => {
+        await page.goto(BASE_URL);
+        await page.getByRole('heading', { name: /^Good (morning|afternoon|evening)$/ }).waitFor();
+
+        const attention = page.locator('.canvas-attention');
+        await attention.getByText(/execution.* failed in the last 7 days/).click();
+
+        assert.equal(new URL(page.url()).pathname, '/audit-evidence');
+        assert.equal(await page.getByLabel('Filter audit runs by status').inputValue(), 'failed');
+        await page.locator('.audit-run-card', { hasText: 'HC-008 Failed Run' }).waitFor();
+        await page.locator('.audit-run-card', { hasText: 'HC-008 Passed Run' }).waitFor({ state: 'detached' });
+
+        // A plain sidebar visit afterward must not inherit the stale failed-only filter.
+        await page.getByRole('button', { name: /Automation Overview/ }).first().click();
+        await page.getByRole('button', { name: /Audit and Evidence/ }).first().click();
+        assert.equal(await page.getByLabel('Filter audit runs by status').inputValue(), '');
+        await page.locator('.audit-run-card', { hasText: 'HC-008 Passed Run' }).waitFor();
       });
     });
   } finally {

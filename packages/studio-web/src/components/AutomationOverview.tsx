@@ -24,7 +24,17 @@ import type { View } from '../App';
 interface AutomationOverviewProps {
   onNavigate: (view: View) => void;
   onNavigateToRoute: (path: string) => void;
+  /** HC-008: opens Audit and Evidence pre-filtered to failed runs, instead of the
+   *  unfiltered workspace onNavigate('documents') would land on. */
+  onOpenFailedRuns: () => void;
   workspaceContext: WorkspaceContext | null;
+}
+
+/** HC-004: the workspace greeting reflects the local time of day instead of always saying morning. */
+function timeOfDayGreeting(hour: number): string {
+  if (hour < 12) return 'Good morning';
+  if (hour < 17) return 'Good afternoon';
+  return 'Good evening';
 }
 
 function displayName(fileName: string) {
@@ -273,7 +283,7 @@ const DEFAULT_IMPACT_ASSUMPTIONS: ImpactAssumptions = {
   otherAutomationCost: 0,
 };
 
-export function AutomationOverview({ onNavigate, onNavigateToRoute, workspaceContext }: AutomationOverviewProps) {
+export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailedRuns, workspaceContext }: AutomationOverviewProps) {
   const [testCases, setTestCases] = useState<string[]>([]);
   const [testLibrary, setTestLibrary] = useState<TestLibraryItem[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
@@ -307,7 +317,9 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, workspaceCon
       ]);
 
       if (!active) return;
-      let unavailable = false;
+      // HC-009: name exactly which section failed instead of a blanket "some data is
+      // unavailable" that never said what "some" meant.
+      const unavailableSections: string[] = [];
 
       if (testCasesResult.status === 'fulfilled') {
         setTestCases(testCasesResult.value);
@@ -317,42 +329,42 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, workspaceCon
       } else {
         setTestCases([]);
         setSelectedTestCase(null);
-        unavailable = true;
+        unavailableSections.push('Tests');
       }
 
       if (testLibraryResult.status === 'fulfilled') setTestLibrary(testLibraryResult.value);
       else {
         setTestLibrary([]);
-        unavailable = true;
+        unavailableSections.push('Test Library');
       }
 
       if (groupsResult.status === 'fulfilled') setGroups(groupsResult.value);
       else {
         setGroups([]);
-        unavailable = true;
+        unavailableSections.push('Business Processes');
       }
 
       if (documentsResult.status === 'fulfilled') setDocuments(documentsResult.value);
       else {
         setDocuments([]);
-        unavailable = true;
+        unavailableSections.push('Captured Evidence');
       }
 
       if (runsResult.status === 'fulfilled') setAllRuns(runsResult.value.items);
       else {
         setAllRuns([]);
-        unavailable = true;
+        unavailableSections.push('Recent Runs');
       }
 
       if (assumptionsResult.status === 'fulfilled') setImpactAssumptions(assumptionsResult.value);
-      else unavailable = true;
+      else unavailableSections.push('Execution Impact Assumptions');
 
       if (appIdsResult.status === 'fulfilled') {
         const objectResults = await Promise.allSettled(appIdsResult.value.map((appId) => api.listObjects(appId)));
         if (!active) return;
         if (objectResults.some((result) => result.status === 'rejected')) {
           setObjectsCount(null);
-          unavailable = true;
+          unavailableSections.push('Controls');
         } else {
           setObjectsCount(objectResults.reduce(
             (total, result) => total + (result.status === 'fulfilled' ? result.value.length : 0),
@@ -361,10 +373,12 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, workspaceCon
         }
       } else {
         setObjectsCount(null);
-        unavailable = true;
+        unavailableSections.push('Controls');
       }
 
-      if (unavailable) setLoadError('Some workspace data is unavailable. You can retry without leaving this page.');
+      if (unavailableSections.length > 0) {
+        setLoadError(`${unavailableSections.join(', ')} could not be loaded. You can retry without leaving this page.`);
+      }
       setLoading(false);
       setRefreshedAt(new Date());
     }
@@ -437,7 +451,7 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, workspaceCon
       <header className="canvas-overview-intro">
         <div>
           <span className="canvas-eyebrow">Your automation workspace</span>
-          <h1>Good morning</h1>
+          <h1>{timeOfDayGreeting(new Date().getHours())}</h1>
           <p>Continue recent work, review executions, or start a new test.</p>
         </div>
         <div className="canvas-overview-actions">
@@ -486,7 +500,7 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, workspaceCon
           </div>
           <div className="canvas-attention-list">
             {recentFailureCount > 0 && (
-              <button type="button" className="canvas-attention-row" onClick={() => onNavigate('documents')}>
+              <button type="button" className="canvas-attention-row" onClick={onOpenFailedRuns}>
                 <span>{recentFailureCount} execution{recentFailureCount === 1 ? '' : 's'} failed in the last 7 days</span>
                 <span className="text-action">Open Audit and Evidence <ArrowRight size={14} aria-hidden="true" /></span>
               </button>

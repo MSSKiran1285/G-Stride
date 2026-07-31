@@ -37,7 +37,7 @@ export function DomainTag({ kind, name, value, knownDomains, onSaved }: DomainTa
   return (
     <div className="stack" style={{ gap: '0.3rem' }}>
       <div className="row" style={{ gap: '0.3rem' }}>
-        <input aria-label={`Domain for ${name}`} type="text" value={draft} placeholder="e.g. Procurement" onChange={(e) => setDraft(e.target.value)} style={{ flex: 1 }} />
+        <input aria-label={`Process area for ${name}`} type="text" value={draft} placeholder="e.g. Procurement" onChange={(e) => setDraft(e.target.value)} style={{ flex: 1 }} />
         <button className="ghost" disabled={saving || draft.trim() === value} onClick={() => save(draft.trim())}>
           {saving ? '…' : 'Save'}
         </button>

@@ -46,6 +46,29 @@ test('record computes durationMs and list/get round-trip every new field (BL-035
     const full = store.get('run-1');
     assert.equal(full.result.ok, true);
     assert.equal(full.studioRunId, 'exec-1');
+    // HC-030: get()'s own SQL query must select duration_ms too, not only list()'s.
+    assert.equal(full.durationMs, 5000);
+  } finally {
+    store.close();
+  }
+});
+
+test('get() and list() compute durationMs from timestamps for a ledger row recorded before that column existed (HC-030)', () => {
+  const store = freshStore();
+  try {
+    // The runs table is append-only (no UPDATE/DELETE) by design, so a pre-migration row with a
+    // NULL duration_ms can never be backfilled in place — insert one directly (record() cannot
+    // produce a NULL duration_ms) to simulate exactly that shape.
+    store.db.prepare(`
+      INSERT INTO runs (id, started_at, finished_at, status, executed_by, mode, app_id, test_case_names, result_json, duration_ms)
+      VALUES ('run-legacy-2', '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:07.000Z', 'passed', 'alice', 'chain', 'app1', '["Legacy Run"]', '{}', NULL)
+    `).run();
+
+    const fetched = store.get('run-legacy-2');
+    assert.equal(fetched.durationMs, 7000, 'expected get() to fall back to computing duration from timestamps');
+
+    const listed = store.list({ runId: 'run-legacy-2' }).items[0];
+    assert.equal(listed.durationMs, 7000, 'expected list() to fall back to computing duration from timestamps');
   } finally {
     store.close();
   }

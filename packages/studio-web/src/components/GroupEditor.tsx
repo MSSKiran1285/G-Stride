@@ -340,7 +340,7 @@ export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }
               <input aria-label="Business Process name" type="text" value={group.name} onChange={(e) => updateGroup({ ...group, name: e.target.value })} />
             </div>
             <div style={{ flex: 1, maxWidth: '20rem' }}>
-              <label>Domain</label>
+              <label>Process area</label>
               <DomainTag kind="group" name={selectedFile} value={fileTags[selectedFile] ?? ''} knownDomains={processAreas} onSaved={refreshTags} />
             </div>
             <div style={{ minWidth: '10rem' }}>
