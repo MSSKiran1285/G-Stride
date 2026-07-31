@@ -180,9 +180,9 @@ evidence by the passage of time or by unrelated 2.1.0 features shipping.
 |---|---|---|
 | Automated accessibility (Axe serious/critical, keyboard skip/focus, 320px reflow) | **Yes** — commit-matched, part of every recorded isolated-UI run | `regression/ui/accessibility.test.js`, `regression/results/quality-history.json` |
 | Isolated Core / API / UI regression | **Yes** — commit-matched, zero-failure, re-verified after every 2.1.0 item including BL-037 | `release-manifests/v2.1.0-dev.0.json` |
-| Manual NVDA screen-reader journeys | **No** — last recorded 29 Jul 2026 against `fb4bd49`; the 2.1.0 candidate adds Overview alerts/impact analytics (BL-018/019), the Object Repository workbench (BL-022/024), the Dataset Library (BL-025), Business Process/Pack canvases (BL-029), execution-hierarchy/diagnosis UI (BL-031/032), the Audit ledger UI (BL-035) and Global Search (BL-037) — none of which NVDA has verified | none yet for 2.1.0 |
-| Live-SAP verification (read-only + authorised transactional) | **No** — last recorded 30 Jul 2026 against `fb4bd49`; not re-run against the 2.1.0 candidate | none yet for 2.1.0 |
-| Workspace-owner sign-off of consolidated release evidence | **No** — the 30 Jul 2026 sign-off approved 2.0.0 GA specifically; no equivalent 2.1.0 sign-off has been given | none yet for 2.1.0 |
+| Manual NVDA screen-reader journeys | **No** — last recorded 29 Jul 2026 against `fb4bd49`; the 2.1.0 candidate adds Overview alerts/impact analytics (BL-018/019), the Object Repository workbench (BL-022/024), the Dataset Library (BL-025), Business Process/Pack canvases (BL-029), execution-hierarchy/diagnosis UI (BL-031/032), the Audit ledger UI (BL-035) and Global Search (BL-037) — none of which NVDA has verified | checklist prepared, not executed — `RELEASE_VERIFICATION_2.1_CHECKLIST.md` §2 |
+| Live-SAP verification (read-only + authorised transactional) | **No** — last recorded 30 Jul 2026 against `fb4bd49`; not re-run against the 2.1.0 candidate | checklist prepared, not executed — `RELEASE_VERIFICATION_2.1_CHECKLIST.md` §3 |
+| Workspace-owner sign-off of consolidated release evidence | **No** — the 30 Jul 2026 sign-off approved 2.0.0 GA specifically; no equivalent 2.1.0 sign-off has been given | checklist prepared, not executed — `RELEASE_VERIFICATION_2.1_CHECKLIST.md` §4 |
 
 ### 9.4 Why this note does not perform the manual refresh itself
 
@@ -200,6 +200,10 @@ on its own behalf, and none were attempted here:
 - **Owner sign-off** is, by this product's own single-owner governance model, an act only the
   workspace owner can perform — recording one on the owner's behalf would misrepresent who verified
   the release.
+
+`RELEASE_VERIFICATION_2.1_CHECKLIST.md` is the concrete, row-by-row checklist for all three items
+against the surfaces added since the 2.0.0 NVDA/live-SAP evidence — prepared now, execution deferred
+to whenever NVDA access, a live SAP target, and the owner's time are available.
 
 ### 9.5 What this section does *not* do
 
