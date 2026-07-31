@@ -1,6 +1,83 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-07-31T05-39-44-015Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-31T05:39:44.827Z",
+      "finishedAt": "2026-07-31T05:41:12.146Z",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-31T05-39-22-339Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-31T05:39:23.052Z",
+      "finishedAt": "2026-07-31T05:39:43.509Z",
+      "passed": 72,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-31T05-39-15-817Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-31T05:39:15.892Z",
+      "finishedAt": "2026-07-31T05:39:21.899Z",
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-07-31T05-36-16-282Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-07-31T05:36:17.051Z",
+      "finishedAt": "2026-07-31T05:37:41.130Z",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-07-31T05-35-54-938Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-07-31T05:35:55.658Z",
+      "finishedAt": "2026-07-31T05:36:15.845Z",
+      "passed": 72,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-31T05-35-48-306Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-31T05:35:48.377Z",
+      "finishedAt": "2026-07-31T05:35:54.531Z",
+      "passed": 82,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-07-31T05-34-56-771Z",
+      "label": "Core regression",
+      "startedAt": "2026-07-31T05:34:56.843Z",
+      "finishedAt": "2026-07-31T05:35:02.581Z",
+      "passed": 81,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-07-30T15-48-21-091Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-07-30T15:48:21.841Z",
@@ -142,86 +219,26 @@
       "skipped": 0,
       "mode": "Unit / Integration",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T14-43-27-534Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T14:43:27.586Z",
-      "finishedAt": "2026-07-30T14:43:33.219Z",
-      "passed": 80,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T14-35-37-502Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T14:35:38.243Z",
-      "finishedAt": "2026-07-30T14:36:56.866Z",
-      "passed": 43,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-30T14-35-10-379Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-30T14:35:11.123Z",
-      "finishedAt": "2026-07-30T14:35:30.821Z",
-      "passed": 56,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T14-13-16-680Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T14:13:17.476Z",
-      "finishedAt": "2026-07-30T14:14:35.044Z",
-      "passed": 43,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-30T14-12-55-817Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-30T14:12:56.583Z",
-      "finishedAt": "2026-07-30T14:13:16.240Z",
-      "passed": 56,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-30T14-12-49-681Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-30T14:12:49.746Z",
-      "finishedAt": "2026-07-30T14:12:55.302Z",
-      "passed": 78,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-30T14-09-42-212Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-30T14:09:43.178Z",
-      "finishedAt": "2026-07-30T14:11:00.757Z",
-      "passed": 43,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0034",
+      "runId": "CORE-2026-07-31T05-34-56-771Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-07-31T05:35:02.581Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'GET /api/audit/runs supports every AC1 filter and reports X-Total-Count for pagination (BL-035 AC1/AC2)',\n      source: 'regression/api/audit-runs.test.js'\n    },\n...\n    {\n-     name: 'get() and list() compute durationMs from timestamps for a ledger row recorded before that column existed (HC-030)',\n-     source: 'regression/run-history-store.test.js'\n-   },\n-   {\n      name: 'every AC1 filter narrows the result set independently',\n      source: 'regression/run-history-store.test.js'\n    },\n    {\n      name: 'pagination returns the correct slice and total across pages (BL-035 AC2)',\n...\n    {\n-     name: 'Help drawer shows 2.1.0 candidate and 2.0.0 GA release notes with the accessibility caveat',\n-     source: 'regression/ui/help-release-notes.test.js'\n-   },\n-   {\n-     name: 'Help topics are collapsible sections, closed by default for the new Guides topic (HC-010)',\n-     source: 'regression/ui/help-release-notes.test.js'\n-   },\n-   {\n      name: 'Canvas First Overview presents the approved shell and real workspace data',\n      source: 'regression/ui/overview.test.js'\n    },\n    {\n      name: 'Canvas First Overview primary action opens Compose without execution',\n...\n    {\n-     name: 'Automation Overview: Needs attention \"failed executions\" link opens Audit and Evidence pre-filtered to failed runs (HC-008)',\n-     source: 'regression/ui/overview.test.js'\n-   },\n-   {\n      name: 'Automation Overview: execution impact filters, scope disclosure and weekly trend reflect real data (BL-019 AC1/AC3)',\n      source: 'regression/ui/overview.test.js'\n    },\n    {\n      name: 'Regression Packs: create, bind independent members, save, reload and reopen',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-07-31T05:35:54.531Z",
+      "remediationRunId": "CORE-2026-07-31T05-35-48-306Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-07-31T05-35-48-306Z."
+    },
     {
       "id": "FL-0033",
       "runId": "CORE-2026-07-30T15-42-14-238Z",
