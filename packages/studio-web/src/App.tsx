@@ -15,6 +15,7 @@ import {
   Scan,
   Search,
   Sliders,
+  Tag,
   Zap,
 } from 'lucide-react';
 import { api } from './api';
@@ -454,6 +455,53 @@ export function App() {
                       <span>Supplier not maintained in Purchasing Org</span>
                     </div>
                   </div>
+                </section>
+
+                <section className="drawer-section release-notes-section">
+                  <h4><Tag size={14} aria-hidden="true" /> Release notes</h4>
+
+                  <article className="release-note-entry">
+                    <div className="release-note-heading">
+                      <strong>2.1.0</strong>
+                      <span className="badge warning">Candidate — not yet released</span>
+                    </div>
+                    <p className="release-note-summary">
+                      15 items shipped since 2.0.0: Automation Overview alerts and impact analytics,
+                      the Object Repository workbench and selector health, a routeable Test/Data
+                      Library, visual Business Processes and Regression Packs, hierarchical execution
+                      monitoring with focused failure diagnosis, searchable Audit and Evidence
+                      history with lineage, and global artifact search with dependency-aware
+                      rename/delete.
+                    </p>
+                    <p className="release-note-caveat">
+                      Automated accessibility checks (Axe, keyboard, reflow) are current for this
+                      candidate. <strong>Manual NVDA screen-reader verification and live-SAP
+                      re-verification have not been performed for 2.1.0</strong> — the accessibility
+                      sign-off on file remains the one recorded for 2.0.0. No workspace-owner sign-off
+                      or release tag exists yet for 2.1.0.
+                    </p>
+                    <p className="release-note-ref">Full detail: docs/ui-ux/RELEASE_NOTES_2.1.0.md</p>
+                  </article>
+
+                  <article className="release-note-entry">
+                    <div className="release-note-heading">
+                      <strong>2.0.0</strong>
+                      <span className="badge success">Released — General Availability</span>
+                    </div>
+                    <p className="release-note-summary">
+                      The signed GA baseline: verified execution context, protected artifacts,
+                      responsive shell, nested/relational transaction data, authoritative preflight
+                      and rerun lineage, canonical evidence, and secured identity/target
+                      administration across 24 backlog items.
+                    </p>
+                    <p className="release-note-caveat">
+                      Accessibility was fully verified for this release, including a completed
+                      manual NVDA 2026.1.1 screen-reader journey across all seven workspaces, live-SAP
+                      read-only and authorised transactional verification, and explicit
+                      workspace-owner sign-off.
+                    </p>
+                    <p className="release-note-ref">Full detail: docs/ui-ux/RELEASE_NOTES_2.0.0.md</p>
+                  </article>
                 </section>
               </div>
             </aside>

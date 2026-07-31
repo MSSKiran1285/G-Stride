@@ -3148,6 +3148,58 @@ button.neutral-solid {
   color: var(--accent);
 }
 
+.release-notes-section {
+  border-bottom: none;
+}
+
+.release-note-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-subtle);
+}
+
+.release-note-entry + .release-note-entry {
+  margin-top: 0.6rem;
+}
+
+.release-note-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.release-note-heading strong {
+  font-size: 0.9rem;
+}
+
+.release-note-summary {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.release-note-caveat {
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text-soft);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.release-note-ref {
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+}
+
 .context-unverified {
   display: inline-flex;
   align-items: center;
