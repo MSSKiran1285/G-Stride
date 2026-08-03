@@ -200,6 +200,8 @@ function buildTileSelectionPrompt(processDescription: string, tiles: CapturedCon
     ``,
     `SAP Fiori app tiles are usually named after the business object and a generic verb (Process, Manage, Post, Monitor, Track, ...) rather than the exact action requested — e.g. a request to "Create Purchase Requisition" is correctly handled by a tile named "Process Purchase Requisitions" or "Manage Purchase Requisitions", not only one that literally says "Create". Match on the business object and overall intent, not literal wording, but do not pick a tile for a clearly different object or a different lifecycle stage (e.g. do not pick "Monitor Purchase Requisition Items" or "Supplier Invoices List" for a Create request).`,
     ``,
+    `Some Launchpad screens show broad department/category tiles instead of specific app tiles — e.g. "Finance", "Procurement", "Sales" rather than any single named app. If none of the tiles is a specific app for this process, but one is the department/category that would normally contain it (e.g. "Procurement" for anything about purchase requisitions, purchase orders, goods receipt, or supplier invoices), pick that category tile — navigating into it first is a normal, expected step, not a failure. Only reply NONE when nothing visible, at either level, plausibly leads toward this process.`,
+    ``,
     `Reply with ONLY the number of the single tile that best matches this process, or reply with exactly NONE if no tile is a good match. Do not explain your answer.`,
   ].join('\n');
 }

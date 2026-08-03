@@ -276,6 +276,33 @@ test('Launchpad shell: matches "Process Purchase Requisitions" for a Create Purc
   assert.equal(decision.call.params.control, '__tile20');
 });
 
+// The exact real "My Home" landing screen this rule failed on next: broad department/category
+// tiles, not specific app tiles, so nothing literally or even loosely names the target
+// process — the model needs to be told picking "Procurement" to drill into is itself the
+// correct move, not a failure to find a match.
+const realHomeCategoryLaunchpadControls = [
+  { controlId: '__tile30', controlType: 'sap.f.Card', text: 'Finance', category: 'actionable' },
+  { controlId: '__tile31', controlType: 'sap.f.Card', text: 'Manufacturing and Supply Chain', category: 'actionable' },
+  { controlId: '__tile32', controlType: 'sap.f.Card', text: 'Procurement', category: 'actionable' },
+  { controlId: '__tile33', controlType: 'sap.f.Card', text: 'Project Management', category: 'actionable' },
+  { controlId: '__tile34', controlType: 'sap.f.Card', text: 'Sales', category: 'actionable' },
+  { controlId: '__tile35', controlType: 'sap.f.Card', text: 'Other', category: 'actionable' },
+];
+
+test('Launchpad shell: the tile-selection prompt tells the model a category tile is a valid pick when no specific app tile exists', async () => {
+  const resolver = fakeResolver('3');
+  await decideNextAction(realHomeCategoryLaunchpadControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.match(resolver.calls[0], /department\/category tiles/i);
+  assert.match(resolver.calls[0], /"Procurement" for anything about purchase requisitions/i);
+});
+
+test('Launchpad shell: picks the "Procurement" category tile to drill into for a Create Purchase Requisition request', async () => {
+  const resolver = fakeResolver('3');
+  const decision = await decideNextAction(realHomeCategoryLaunchpadControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.params.control, '__tile32');
+});
+
 test('Launchpad shell: needsFallback when no tile has visible text to match against', async () => {
   const resolver = fakeResolver('1');
   const decision = await decideNextAction(
