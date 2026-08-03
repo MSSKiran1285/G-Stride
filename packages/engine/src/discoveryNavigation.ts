@@ -28,6 +28,11 @@ export interface CapturedControl {
   bindingPath?: string;
   parentId?: string;
   category: 'actionable' | 'informational' | 'structural';
+  /** Set only for a captured table Column (sap.ui.table.Column/sap.m.Column) — its enclosing
+   *  table's own control id. SelectTableRow (packages/engine/src/modules/selectTableRow.ts)
+   *  needs a captured *column*, not the table control itself, to resolve which table to act
+   *  on; a table row can never be selected via the table control's own id. */
+  tableId?: string;
 }
 
 export type ScreenArchetype = 'list-report' | 'object-page' | 'dialog' | 'unknown';
@@ -53,7 +58,7 @@ export interface NavigationHistory {
 }
 
 export type NavigationDecision =
-  | { kind: 'action'; call: ModuleCall }
+  | { kind: 'action'; call: ModuleCall; historyKey: string }
   | { kind: 'done' }
   | { kind: 'needsFallback'; reason: string };
 
@@ -71,7 +76,9 @@ function decideListReportAction(
 ): NavigationDecision {
   const searchField = controls.find((c) => /SearchField|SDDocument|ReferenceDocument/i.test(c.controlId) && c.category !== 'structural');
   const goButton = controls.find((c) => /btnGo|GoButton/i.test(c.controlId));
-  const resultsTable = controls.find((c) => c.controlType === 'sap.m.Table' || c.controlType === 'sap.ui.table.Table');
+  // SelectTableRow needs a captured *column* (tableId set), never the table control itself —
+  // see CapturedControl.tableId.
+  const resultsColumn = controls.find((c) => Boolean(c.tableId));
   const primaryAction = controls.find(
     (c) =>
       c.category === 'actionable' &&
@@ -85,15 +92,24 @@ function decideListReportAction(
     return {
       kind: 'action',
       call: { module: 'EnterHeaderField', appId, params: { field: searchField.controlId, value: searchValue, pressKey: 'Enter' } },
+      historyKey: 'search',
     };
   }
-  if (resultsTable && !history.modulesRunOnThisScreen.includes('select-row')) {
-    return { kind: 'action', call: { module: 'SelectTableRow', appId, params: { field: resultsTable.controlId, rowIndex: '0' } } };
+  if (resultsColumn && !history.modulesRunOnThisScreen.includes('select-row')) {
+    return {
+      kind: 'action',
+      call: { module: 'SelectTableRow', appId, params: { field: resultsColumn.controlId, rowIndex: '0' } },
+      historyKey: 'select-row',
+    };
   }
   if (primaryAction) {
-    return { kind: 'action', call: { module: 'ClickButton', appId, params: { control: primaryAction.controlId } } };
+    return {
+      kind: 'action',
+      call: { module: 'ClickButton', appId, params: { control: primaryAction.controlId } },
+      historyKey: `click:${primaryAction.controlId}`,
+    };
   }
-  return { kind: 'needsFallback', reason: 'List Report screen: could not find a search field, results table, or an unexercised primary action.' };
+  return { kind: 'needsFallback', reason: 'List Report screen: could not find a search field, a captured results column, or an unexercised primary action.' };
 }
 
 /** Object Page screens: fill every fillable field this process context has a value for, then
@@ -115,6 +131,7 @@ function decideObjectPageAction(
       return {
         kind: 'action',
         call: { module: 'EnterHeaderField', appId, params: { field: input.controlId, value: processContext[matchingKey] } },
+        historyKey: fillKey,
       };
     }
   }
@@ -122,7 +139,11 @@ function decideObjectPageAction(
     (c) => c.category === 'actionable' && c.controlType === 'sap.m.Button' && /Save|Post|Create|Submit/i.test(c.text ?? c.controlId)
   );
   if (headerAction) {
-    return { kind: 'action', call: { module: 'ClickButton', appId, params: { control: headerAction.controlId } } };
+    return {
+      kind: 'action',
+      call: { module: 'ClickButton', appId, params: { control: headerAction.controlId } },
+      historyKey: `click:${headerAction.controlId}`,
+    };
   }
   return { kind: 'needsFallback', reason: 'Object Page screen: every process-context field is already filled, but no Save/Post/Create/Submit action was found.' };
 }
@@ -134,7 +155,11 @@ function decideObjectPageAction(
 function decideDialogAction(controls: CapturedControl[], appId: string): NavigationDecision {
   const primaryButton = controls.find((c) => c.controlType === 'sap.m.Button' && c.category === 'actionable');
   if (primaryButton) {
-    return { kind: 'action', call: { module: 'ClickButton', appId, params: { control: primaryButton.controlId } } };
+    return {
+      kind: 'action',
+      call: { module: 'ClickButton', appId, params: { control: primaryButton.controlId } },
+      historyKey: `click:${primaryButton.controlId}`,
+    };
   }
   return { kind: 'needsFallback', reason: 'Dialog screen: no actionable button found to dismiss or confirm it.' };
 }

@@ -27,6 +27,16 @@ const listReportControls = [
     category: 'structural',
   },
   {
+    // Real Fiori elements capture: a table's own columns are captured as their own controls,
+    // each carrying tableId back to the enclosing table (see ui5Inspector.ts's
+    // TABLE_CONTAINER_TYPES handling) — SelectTableRow needs one of these, never the table
+    // control itself (packages/engine/src/modules/selectTableRow.ts requires control.tableId).
+    controlId: 'i2d.le.st.delivery.create::sap.suite.ui.generic.template.ListReport.view.ListReport::C_OutboundDeliveryCreate--responsiveTable-DeliveryColumn',
+    controlType: 'sap.m.Column',
+    category: 'structural',
+    tableId: 'i2d.le.st.delivery.create::sap.suite.ui.generic.template.ListReport.view.ListReport::C_OutboundDeliveryCreate--responsiveTable',
+  },
+  {
     controlId: 'i2d.le.st.delivery.create::sap.suite.ui.generic.template.ListReport.view.ListReport::C_OutboundDeliveryCreate--createDelivery',
     controlType: 'sap.m.Button',
     text: 'Create Deliveries (1)',
@@ -79,13 +89,16 @@ test('List Report: searches first, using the first process-context value, when n
   assert.equal(decision.call.module, 'EnterHeaderField');
   assert.equal(decision.call.params.value, '4500009999');
   assert.match(decision.call.params.field, /SDDocument/);
+  assert.equal(decision.historyKey, 'search');
 });
 
-test('List Report: selects the first results row once a search has already run', () => {
+test('List Report: selects the first results row via a captured column (never the table itself) once a search has already run', () => {
   const decision = decideNextAction(listReportControls, { soNumber: '4500009999' }, { modulesRunOnThisScreen: ['search'] }, APP_ID);
   assert.equal(decision.kind, 'action');
   assert.equal(decision.call.module, 'SelectTableRow');
   assert.equal(decision.call.params.rowIndex, '0');
+  assert.match(decision.call.params.field, /DeliveryColumn$/);
+  assert.equal(decision.historyKey, 'select-row');
 });
 
 test('List Report: clicks the primary action once search and row selection have both run', () => {
@@ -93,6 +106,7 @@ test('List Report: clicks the primary action once search and row selection have 
   assert.equal(decision.kind, 'action');
   assert.equal(decision.call.module, 'ClickButton');
   assert.match(decision.call.params.control, /createDelivery$/);
+  assert.match(decision.historyKey, /^click:.*createDelivery$/);
 });
 
 test('List Report: needsFallback when no search field, table, or unexercised action can be found', () => {
@@ -112,6 +126,7 @@ test('Object Page: fills a field whose control id matches a process-context key'
   assert.equal(decision.call.module, 'EnterHeaderField');
   assert.equal(decision.call.params.value, 'USSU-TRL07');
   assert.match(decision.call.params.field, /SupplierField/);
+  assert.match(decision.historyKey, /^fill:.*SupplierField$/);
 });
 
 test('Object Page: clicks Save once the matching field is already filled', () => {
@@ -120,6 +135,7 @@ test('Object Page: clicks Save once the matching field is already filled', () =>
   assert.equal(decision.kind, 'action');
   assert.equal(decision.call.module, 'ClickButton');
   assert.match(decision.call.params.control, /SaveButton$/);
+  assert.match(decision.historyKey, /^click:.*SaveButton$/);
 });
 
 test('Object Page: needsFallback when nothing to fill and no recognisable commit action exists', () => {
@@ -138,6 +154,7 @@ test('Dialog: clicks the actionable button', () => {
   assert.equal(decision.kind, 'action');
   assert.equal(decision.call.module, 'ClickButton');
   assert.match(decision.call.params.control, /confirmButton$/);
+  assert.match(decision.historyKey, /^click:.*confirmButton$/);
 });
 
 test('Dialog: needsFallback when no actionable button is present', () => {

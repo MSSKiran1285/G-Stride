@@ -6,3 +6,4 @@ export * from './executionOrchestrator';
 export * from './legacyExecutionPlans';
 export * from './controlAccess';
 export * from './discoveryNavigation';
+export * from './discoveryRegistration';

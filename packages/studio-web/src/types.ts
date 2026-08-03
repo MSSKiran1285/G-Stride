@@ -367,6 +367,40 @@ export interface ObjectReconcileResult {
   }>;
 }
 
+/** BL-047 Phase 2: one step already taken by the autonomous discovery loop, in the exact
+ *  ModuleCall shape it will compose into a Test once the review gate exists. */
+export interface DiscoveredStep {
+  module: string;
+  appId: string;
+  params: Record<string, string>;
+  narrate?: string;
+}
+
+export interface DiscoveryRegisteredControl {
+  name: string;
+  controlId: string;
+  isNew: boolean;
+}
+
+export type NavigationDecision =
+  | { kind: 'action'; call: { module: string; appId?: string; params: Record<string, string> }; historyKey: string }
+  | { kind: 'done' }
+  | { kind: 'needsFallback'; reason: string };
+
+export interface DiscoveryStepResult {
+  decision: NavigationDecision;
+  registeredControl?: DiscoveryRegisteredControl;
+  step?: DiscoveredStep;
+}
+
+export interface DiscoveryState {
+  active: boolean;
+  appId?: string;
+  processContext?: Record<string, string>;
+  steps?: DiscoveredStep[];
+  startedAt?: string;
+}
+
 /** A Compose field's request to capture a brand-new object without leaving the Test editor
  * or losing its in-progress (possibly unsaved) work — see App.tsx's ContextualCapturePanel
  * overlay, which is a sibling panel (like SettingsPanel) rather than a route change, so it

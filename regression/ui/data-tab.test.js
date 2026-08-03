@@ -125,10 +125,15 @@ test('Dataset Library search actually filters by file name and does not silently
       await page.goto(`${BASE_URL}/data`);
       await page.getByRole('heading', { name: 'Dataset Library' }).waitFor();
 
-      // Baseline: the library must actually load real rows before search is exercised — a
-      // "0 of 0" here would mean nothing loaded at all, not that a search found nothing.
-      await page.getByText(/^\d+ of \d+ datasets$/).waitFor();
-      const baseline = await page.getByText(/^\d+ of \d+ datasets$/).textContent();
+      // Baseline: the library must actually load real rows before search is exercised. Before
+      // the async listDataLibrary() fetch resolves, libraryItems starts as [] and genuinely
+      // renders "0 of 0 datasets" for one frame — a plain /^\d+ of \d+ datasets$/ wait can
+      // match that transient state just as validly as the real one and read it right back with
+      // .textContent() before the re-render lands, especially under load (a real race caught
+      // here, not the fixture data): waiting specifically for a non-zero denominator only
+      // matches once the real fetch has actually settled.
+      await page.getByText(/^\d+ of [1-9]\d* datasets$/).waitFor();
+      const baseline = await page.getByText(/^\d+ of [1-9]\d* datasets$/).textContent();
       const totalBefore = Number(baseline.match(/^\d+ of (\d+) datasets$/)[1]);
       assert.ok(totalBefore > 0, `expected the Dataset Library to load at least one real dataset, got "${baseline}"`);
 

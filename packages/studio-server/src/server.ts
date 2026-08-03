@@ -34,6 +34,7 @@ import {
 } from './runs';
 import { parseCsv, serializeCsv } from './csv';
 import { openScanSession, getScanStatus, captureScan, closeScanSession, highlightControl, startPick, getPickResult, cancelPick, dismissPick, reverifyControl } from './scanSession';
+import { startDiscovery, getDiscoveryState, runDiscoveryStep, stopDiscovery } from './discoverySession';
 import { StudioAuth } from './auth';
 import { ExecutionDraft, ExecutionDraftKind, ExecutionPreflightService } from './executionPreflight';
 import { executionInitiator, executionTargetContext, workspaceContext } from './executionContext';
@@ -1933,6 +1934,43 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
     dismissPick(controlId);
     res.json(getPickResult());
+  });
+
+  // BL-047 Phase 2: the live autonomous-discovery loop, one step per request — the caller
+  // (Studio's UI) decides whether to take the next step, per the owner's explicit
+  // "human in the loop" decision. Requires the same open scan session the manual capture
+  // flow above uses; every discovered control is registered through objectRepository.upsert()
+  // before any Module acts on it, never a fabricated control definition.
+  app.post('/api/discovery/:appId/start', (req, res) => {
+    const processContext = req.body?.processContext;
+    if (!processContext || typeof processContext !== 'object' || Array.isArray(processContext)) {
+      return res.status(400).json({ error: 'Body must include processContext: Record<string,string>' });
+    }
+    try {
+      res.status(201).json(startDiscovery(req.params.appId, processContext));
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.get('/api/discovery/state', (_req, res) => {
+    const current = getDiscoveryState();
+    if (!current) return res.json({ active: false });
+    res.json({ active: true, ...current });
+  });
+
+  app.post('/api/discovery/step', async (req, res) => {
+    try {
+      const result = await runDiscoveryStep(objectRepository, registry, auth.state(req).user?.name);
+      res.json(result);
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/discovery/stop', (_req, res) => {
+    stopDiscovery();
+    res.json({ ok: true });
   });
 
   app.get('/api/data', (_req, res) => {

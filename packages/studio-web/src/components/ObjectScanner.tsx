@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import type { DiscoveredControl, SapIntegrationStatus, ScanSessionInfo } from '../types';
+import type { DiscoveredControl, DiscoveryState, DiscoveryStepResult, SapIntegrationStatus, ScanSessionInfo } from '../types';
 import { CurationList } from './CurationList';
 import type { CurationListHandle } from './CurationList';
 import { ObjectBrowser } from './ObjectBrowser';
@@ -39,6 +39,15 @@ export function ObjectScanner({
   // while picking is active) sees a just-cancelled control still sitting in the server's list,
   // reads that as "new" again, and re-adds it right back — Cancel would silently undo itself.
   const dismissedIdsRef = useRef(new Set<string>());
+
+  // BL-047 Phase 2: the live autonomous-discovery loop, one step per click — per the owner's
+  // explicit "human in the loop" decision, this never runs unattended; every step's outcome is
+  // shown before the next one can be taken.
+  const [processContextText, setProcessContextText] = useState('');
+  const [discovery, setDiscovery] = useState<DiscoveryState | null>(null);
+  const [lastStep, setLastStep] = useState<DiscoveryStepResult | null>(null);
+  const [discoveryBusy, setDiscoveryBusy] = useState(false);
+  const [discoveryError, setDiscoveryError] = useState<string | null>(null);
 
   function beginPolling() {
     if (pickPollRef.current) clearInterval(pickPollRef.current);
@@ -84,6 +93,11 @@ export function ObjectScanner({
         if (status.active && status.session) setSession(status.session);
       })
       .catch((e) => setError(String(e)));
+
+    api
+      .getDiscoveryState()
+      .then((state) => setDiscovery(state.active ? state : null))
+      .catch(() => undefined);
 
     api
       .getPickResult()
@@ -202,6 +216,69 @@ export function ObjectScanner({
     }
   }
 
+  function parseProcessContext(text: string): Record<string, string> {
+    const context: Record<string, string> = {};
+    for (const line of text.split('\n')) {
+      const eq = line.indexOf('=');
+      if (eq <= 0) continue;
+      const key = line.slice(0, eq).trim();
+      const value = line.slice(eq + 1).trim();
+      if (key && value) context[key] = value;
+    }
+    return context;
+  }
+
+  async function startDiscoveryRun() {
+    if (!appId.trim()) {
+      setDiscoveryError('Enter an App ID first — this is what discovered controls get registered under.');
+      return;
+    }
+    const processContext = parseProcessContext(processContextText);
+    if (Object.keys(processContext).length === 0) {
+      setDiscoveryError('Enter at least one reference value as key=value (one per line), e.g. soNumber=4500009999.');
+      return;
+    }
+    setDiscoveryError(null);
+    setDiscoveryBusy(true);
+    try {
+      const state = await api.startDiscovery(appId.trim(), processContext);
+      setDiscovery(state);
+      setLastStep(null);
+    } catch (e) {
+      setDiscoveryError(String(e));
+    } finally {
+      setDiscoveryBusy(false);
+    }
+  }
+
+  async function nextDiscoveryStep() {
+    setDiscoveryError(null);
+    setDiscoveryBusy(true);
+    try {
+      const result = await api.runDiscoveryStep();
+      setLastStep(result);
+      const state = await api.getDiscoveryState();
+      setDiscovery(state.active ? state : null);
+    } catch (e) {
+      setDiscoveryError(String(e));
+    } finally {
+      setDiscoveryBusy(false);
+    }
+  }
+
+  async function stopDiscoveryRun() {
+    setDiscoveryBusy(true);
+    try {
+      await api.stopDiscovery();
+      setDiscovery(null);
+      setLastStep(null);
+    } catch (e) {
+      setDiscoveryError(String(e));
+    } finally {
+      setDiscoveryBusy(false);
+    }
+  }
+
   return (
     <div className="stack">
       <div className="sticky-top stack">
@@ -284,6 +361,98 @@ export function ObjectScanner({
         {error && <p className="error-text">{error}</p>}
       </div>
       </div>
+
+      {session && (
+        <div className="panel stack">
+          <p className="section-title">Autonomous discovery (BL-047)</p>
+          <p className="hint">
+            Give it reference values it can search the live screen with — it decides each next action itself (search, select, fill, click) using
+            the current screen's Fiori elements shape, registering any control it touches into the Object Repository above before acting on it.
+            One step at a time: review what it did, then ask for the next step.
+          </p>
+
+          {!discovery ? (
+            <div className="stack">
+              <textarea
+                aria-label="Reference values for discovery, one key=value per line"
+                placeholder={'soNumber=4500009999\nsupplier=USSU-TRL07'}
+                value={processContextText}
+                onChange={(e) => setProcessContextText(e.target.value)}
+                rows={3}
+              />
+              <div className="row">
+                <button className="primary" onClick={startDiscoveryRun} disabled={discoveryBusy}>
+                  {discoveryBusy ? 'Starting…' : 'Start discovery'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="stack">
+              <div className="row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
+                <span className="badge running">running</span>
+                <span className="hint" style={{ flex: 1, minWidth: '10rem' }}>
+                  {discovery.appId} — started {discovery.startedAt ? new Date(discovery.startedAt).toLocaleTimeString() : ''} —{' '}
+                  {discovery.steps?.length ?? 0} step{(discovery.steps?.length ?? 0) === 1 ? '' : 's'} taken so far
+                </span>
+                <button className="primary" onClick={nextDiscoveryStep} disabled={discoveryBusy}>
+                  {discoveryBusy ? 'Working…' : 'Run next step'}
+                </button>
+                <button className="neutral-solid" onClick={stopDiscoveryRun} disabled={discoveryBusy}>
+                  Stop
+                </button>
+              </div>
+
+              {lastStep && (
+                <div
+                  className={`fiori-message-strip ${lastStep.decision.kind === 'needsFallback' ? 'warning' : lastStep.decision.kind === 'done' ? 'success' : 'success'}`}
+                  role="status"
+                >
+                  {lastStep.decision.kind === 'action' && lastStep.step && (
+                    <>
+                      Ran <strong>{lastStep.step.module}</strong>
+                      {lastStep.registeredControl && (
+                        <>
+                          {' '}
+                          on <strong>{lastStep.registeredControl.name}</strong>
+                          {lastStep.registeredControl.isNew ? ' (newly registered into the Object Repository)' : ' (already known)'}
+                        </>
+                      )}
+                      {lastStep.step.narrate && <> — {lastStep.step.narrate}</>}
+                    </>
+                  )}
+                  {lastStep.decision.kind === 'needsFallback' && <>Stopped: {lastStep.decision.reason} No model fallback is wired up yet — this needs a human to take over from here.</>}
+                  {lastStep.decision.kind === 'done' && <>The process reports itself complete.</>}
+                </div>
+              )}
+
+              {discovery.steps && discovery.steps.length > 0 && (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Module</th>
+                        <th>Params</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {discovery.steps.map((s, i) => (
+                        <tr key={i}>
+                          <td>{i + 1}</td>
+                          <td>{s.module}</td>
+                          <td className="hint">{Object.entries(s.params).map(([k, v]) => `${k}=${v}`).join(', ')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {discoveryError && <p className="error-text">{discoveryError}</p>}
+        </div>
+      )}
 
       <ObjectBrowser
         initialAppId={initialAppId}

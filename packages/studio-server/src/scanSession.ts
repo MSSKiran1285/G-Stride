@@ -80,6 +80,19 @@ export function getScanStatus(): { active: boolean; session?: ScanSessionInfo } 
   return { active: true, session: toInfo(session) };
 }
 
+/** The live Playwright Page behind the open scan session — for BL-047 Phase 2's discovery
+ *  orchestrator to drive real Module.execute() calls (via FioriPlaywrightAdapter.attach())
+ *  against the SAME window a human already has open, instead of spawning a second, unrelated
+ *  browser. Deliberately narrow: every other consumer of a scan session goes through this
+ *  file's own higher-level functions (captureScan, reverifyControl, ...); only the discovery
+ *  orchestrator needs the raw Page itself. */
+export function getActivePage(): Page {
+  if (!session) {
+    throw Object.assign(new Error('No active scan session — open one first.'), { status: 400 });
+  }
+  return session.page;
+}
+
 export async function captureScan(): Promise<{ controls: DiscoveredControl[]; capturedAt: string; pageUrl: string }> {
   if (!session) {
     throw Object.assign(new Error('No active scan session — open one first.'), { status: 400 });
