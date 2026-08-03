@@ -1,7 +1,8 @@
 # Natural-language-driven autonomous test authoring — design (BL-047)
 
 **Date:** 31 July 2026
-**Status:** Design for review — no implementation yet
+**Status:** Design reviewed by the workspace owner — four open decisions resolved (§8a). Still no
+implementation.
 **Raised by:** Workspace owner, in direct response to finding that the real Object Repository's
 P2P/O2C control set (login, Create Purchase Order, Create Sales Order, Create Outbound Delivery,
 Post Goods Receipt, Post Supplier Invoice, Create Billing Document — 53 controls total) was
@@ -101,10 +102,17 @@ Each stage below produces one real, auditable artifact — never an intermediate
 
 1. **Reference resolution.** Query the live SAP tenant for a prior business document of the matching
    type, using the already-configured, already-verified target connection (`workspaceContext.target`).
-   *Open dependency (§8): this needs a real SAP data-access path Studio doesn't have today* — either
-   an OData query against the relevant business-object service, or a UI-driven search flow (open the
-   relevant "Manage <Documents>" app, search, take the first/most-recent match) using the same
-   browser-driving infrastructure the execution engine already has.
+   **This pattern already exists** — `QueryValidLineItemData`
+   (`packages/engine/src/modules/queryValidLineItemData.ts`) queries `C_PurchaseOrderTP` /
+   `C_PurchaseOrderItemTP` via OData V2 (`/sap/opu/odata/sap/MM_PUR_PO_MAINT_V2_SRV`) through the
+   already-authenticated session's `adapter.apiGet()` — no separate OAuth client needed — and lands
+   Supplier/Material/Plant/Quantity into runtime state. It is real, working code, registered in
+   `moduleRegistry.ts`. It is also **dormant**: not called from any real Test case, and has zero
+   regression coverage of its own (`regression/execution-orchestrator.test.js`'s mock adapter stubs
+   `apiGet()` to `{}`, so even that file never actually exercises its query logic). Phase 1/2 work is
+   generalizing this one-service, one-entity pattern into a per-process OData service/entity lookup
+   table, and adding the regression coverage it never had — not building reference resolution from
+   nothing.
 2. **Master data extraction.** Pull structured field values off that reference document (material,
    plant, quantities, customer, dates — whatever the process needs) into a working *process context*.
    This is what step 6 turns into a Dataset — it is not thrown away.
@@ -115,73 +123,105 @@ Each stage below produces one real, auditable artifact — never an intermediate
    fields → header actions), confirmation dialog (read message → primary action). This is the same
    three-shape pattern `create-delivery.json`'s *real* intended flow already follows — the model
    already implicit in how these Tests are hand-written, made explicit and executable.
-4. **Object registration.** Every control the engine actually touches is captured from the live DOM
-   (reusing `ObjectScanner`'s existing capture mechanism) and written through
-   `ObjectRepository.upsert()` — real `createdAt`/`updatedAt`, real duplicate/unstable-id checks,
-   `verification_status` earned because the capture is genuinely live, not defaulted or scripted.
+4. **Object reconciliation, then registration.** Before capturing anything new on a screen, check
+   whether an Object already registered for this App ID resolves there — reusing the existing
+   `highlightControl` live-DOM lookup (`CurationList.tsx`'s "Highlight on screen": `POST` to
+   `api.highlightControl(controlId)`, returns `{ found: boolean }`) that a human already relies on for
+   exactly this kind of check during manual capture. A hit means "reuse, don't duplicate"; chain a
+   successful hit into the real `POST /api/objects/:appId/:name/reverify` flow (BL-024) so the
+   reconciliation earns genuine verification history, not just a same-session visual confirmation.
+   Only a miss triggers a genuinely new capture, which is written through `ObjectRepository.upsert()`
+   exactly as a fresh manual capture would be — real `createdAt`/`updatedAt`, real
+   duplicate/unstable-id checks, `verification_status` earned because the capture is genuinely live.
+   This applies everywhere the engine lands on a screen, not only when a Test is missing for an App ID
+   that already has some Objects — reconcile-first is the general rule, fresh capture is the fallback.
 5. **Test composition.** The actual sequence of ModuleCalls performed becomes the new Test's `steps`,
    in real execution order, saved through the normal `PUT /api/testcases/:file` path — typed-contract
    inference (BL-021) applies to it exactly as it would to a hand-composed Test.
 6. **Test Data generation + attachment.** The process context from step 2 becomes a new Dataset via
    the Data Library's existing create/save path (BL-025), bound to the new Test the same way a
    manually-created dataset would be.
-7. **Review gate (new UI, not explicitly requested but necessary).** Before anything from steps 4-6
-   is treated as done, present it — new Objects, the composed Test, the generated Dataset — in one
-   review screen (extending `CurationList`'s existing "review before Save all" pattern) for the owner
-   to accept, edit, or reject. This is the structural fix for "you went ahead and scripted it without
-   my input": the human is in the loop at the approval point, not at every click.
+7. **Review gate — mandatory for now, by explicit owner decision.** Before anything from steps 4-6
+   is treated as done, present it — new/reconciled Objects, the composed Test, the generated Dataset —
+   in one review screen (extending `CurationList`'s existing "review before Save all" pattern) for the
+   owner to accept, edit, or reject. This is the structural fix for "you went ahead and scripted it
+   without my input": the human is in the loop at the approval point, not at every click. The owner has
+   set the direction explicitly: **start human-in-the-loop, earn the right to remove the gate later**
+   once the engine's discovery accuracy is demonstrated over real use — not a permanent requirement,
+   but not optional for v1 either. See §6's Phase 5 for what "earning autonomy" should require.
 
-### 5.3 What's reuse vs. genuinely new
+### 5.3 What's reuse vs. exists-but-dormant vs. genuinely new
 
-| Reused as-is | New |
-|---|---|
-| Live-DOM capture mechanism (`ObjectScanner`) | Process Intent Router (NL → known/unknown) |
-| `ObjectRepository` schema + API + BL-022/024 dedup/verification | Reference-document lookup against the live tenant |
-| Test schema + API + typed contracts (BL-021) | Screen-archetype next-action decision policy |
-| Data Library create/save path (BL-025) | Review-and-approve UI for discovery output |
-| Chain/Suite/Batch execution engine (already drives a live browser against SAP) | — |
+| Reused as-is | Exists, needs generalizing/hardening | Genuinely new |
+|---|---|---|
+| Live-DOM capture mechanism (`ObjectScanner`) | `QueryValidLineItemData`'s OData reference-lookup pattern (one service/entity today, zero test coverage) | Process Intent Router (NL → known/unknown) |
+| `ObjectRepository` schema + API + BL-022/024 dedup/verification | `highlightControl` (session-scoped check) → chain into Reverify for audited reconciliation | Screen-archetype next-action decision policy |
+| Test schema + API + typed contracts (BL-021) | — | Review-and-approve UI for discovery output |
+| Data Library create/save path (BL-025) | — | — |
+| Chain/Suite/Batch execution engine (already drives a live browser against SAP) | — | — |
 
 ## 6. Phased delivery plan
 
-- **Phase 0 — trust remediation (do first, independent of the rest of this design).** The 53
-  existing unverified controls and the Tests built on them (`create-delivery.json`,
-  `post-goods-receipt.json`, `post-supplier-invoice.json`, `create-billing.json`, the login/PO/SO
-  App IDs) should not keep presenting as ordinary, trustworthy repository entries. Two options,
-  owner's call: (a) genuinely re-capture and verify each one against the live tenant, retiring the
-  scripted rows; (b) flag them in the UI (a visible "never captured live" badge, distinct from the
-  existing "never verified" status, which today can't tell these two situations apart) until (a)
-  happens. Either way, this needs a decision now, separate from BL-047's timeline.
-- **Phase 1 — routing only.** Process Intent Router + known-path routing. No new discovery
-  capability yet. Low risk: mostly UI/routing on top of what exists, and it's immediately useful
-  on its own (natural-language jump to an existing Test).
-- **Phase 2 — prove the loop once.** Build the full discovery loop (reference lookup → navigate →
-  capture → compose → data → review) for exactly one well-understood process end-to-end, live
-  against a real non-production tenant, before generalizing. Recommend Create Purchase Requisition
-  (the owner's own example) or the outbound delivery/PGI flow specifically, since remediating it in
-  Phase 0 means it will already have a *real* baseline to compare the engine's own discovery against.
-- **Phase 3 — generalize.** Broaden the screen-archetype policy to more Fiori patterns and add
-  reference-lookup strategies beyond whatever Phase 2 proved (OData where available, UI search
-  fallback otherwise).
+- **Phase 1 — routing + reconciliation.** Process Intent Router (known/unknown branching) and the
+  `highlightControl` → Reverify reconciliation check (§5.2 step 4), usable standalone even before any
+  discovery capability exists — e.g. Compose can offer "reconcile existing Objects for this App ID"
+  as a manual action immediately. Low risk: mostly wiring on top of what exists.
+- **Phase 2 — prove the loop once.** Generalize `QueryValidLineItemData`'s existing OData-lookup
+  pattern to one target process, and build the full loop (reference lookup → navigate → reconcile/
+  capture → compose → data → **mandatory review**) end-to-end, live against a real non-production
+  tenant, before generalizing further. Recommend Create Purchase Requisition (the owner's own
+  example) — it has no existing Objects at all, so it's a clean first proof with no reconciliation
+  ambiguity.
+- **Phase 3 — generalize.** Broaden the screen-archetype policy to more Fiori patterns and add a
+  per-process OData service/entity lookup table beyond the one Phase 2 proved.
 - **Phase 4 — parity and coverage.** Review/approval UX polish, verification-history parity with the
   manual path, and regression coverage matching the rest of the platform's rigor (this product does
   not ship a workspace without real API/UI regression tests — the discovery engine is no exception).
+  This phase also gives `QueryValidLineItemData` the dedicated test coverage it never had.
+- **Phase 5 — earning autonomy (only after Phase 4 is proven in real use).** The owner's explicit
+  direction: start human-in-the-loop, remove the mandatory review gate only once it's earned. Proposed
+  bar before Phase 5 is even considered: a running track record of discovery sessions where the human
+  reviewer accepted the engine's output without correction above some agreed threshold, across more
+  than one process — not a fixed calendar date. Revisit this bar with the owner once Phase 4 is real.
 
-## 7. Immediate question, separate from the phased plan
+## 7. Deferred, by owner decision: the 53 existing unverified controls
 
-What should happen to the 53 existing unverified controls and the four Tests built on them, right
-now, independent of when Phase 0-4 actually get built? Recommend at minimum surfacing their true
-status in the UI immediately (a real, visible distinction between "never captured live" and "captured
-but not recently re-verified") so nobody — including a future session of this same agent — mistakes
-them for verified data again.
+Investigated the material impact of leaving them exactly as they are for now, per the owner's ask.
+Findings:
 
-## 8. Open decisions needed before Phase 1 starts
+- The four real Tests built on them (`create-delivery.json`, `post-goods-receipt.json`,
+  `post-supplier-invoice.json`, `create-billing.json`, alongside `create-po.json`/`create-so.json`)
+  are grouped in `testgroups/o2c-e2e.json` and `testgroups/po-gr-invoice.json`, and are only ever
+  executed live via the explicit, human-triggered `npm run chain:p2p-o2c` script
+  (`package.json` — requires `--headless true` and a real configured target). Nothing in the
+  isolated/synthetic regression suite touches these files or the real object-repository data at all;
+  isolated tests use their own separately-seeded synthetic fixtures.
+- The only automated (always-run, part of core regression) check that touches these specific files is
+  `regression/tenant-configuration.test.js`, which validates that their `NavigateToApp` URLs use the
+  `${urlBase}` template placeholder rather than a hardcoded tenant hostname — a portability/security
+  check with no awareness of the object repository or control IDs at all.
+- **Conclusion: no automated exposure today.** The only way these unverified controls matter
+  operationally is if a human explicitly runs the live P2P/O2C chain, at which point a stale/wrong
+  control ID fails loudly and visibly (Playwright can't find the element) — not a silent
+  wrong-business-outcome risk. The remaining exposure is the audit-trust one already recorded in §1:
+  `RELEASE_SIGN_OFF_2.0.md`'s O2C live-pass claim rests on objects that were never genuinely verified.
+  That document is historical/signed and is not edited by this design (consistent with
+  `RELEASE_GOVERNANCE_2.1.md`'s existing rule against modifying frozen 2.0.0 evidence) — the caveat is
+  recorded here and in the BL-047 tracker entry instead.
+- **Decision: left untouched for now.** No material operational impact identified; revisit at a later
+  point, most naturally when Phase 2 proves the discovery loop on a real process and can be pointed at
+  reconciling one of these four as a side effect rather than a dedicated remediation project.
 
-1. **Reference-document lookup**: does the target SAP tenant expose OData services Studio could
-   query directly, or should this be UI-search-driven only?
-2. **Review gate**: mandatory before an autonomously-discovered Test can be Published or added to a
-   Regression Pack, or optional?
-3. **Phase 0 remediation**: re-capture the existing 53 controls live now, or flag/quarantine them in
-   the UI and defer re-capture?
-4. **Scope of "known"**: if an App ID has Objects but *no* Test yet, is that "known" (skip discovery,
-   let the user compose manually with existing Objects) or "partially known" (still worth the engine
-   attempting composition, since the hard part — finding real controls — is already done)?
+## 8. Resolved decisions
+
+Per the owner's direct review of this design on 31 July 2026:
+
+1. **Reference-document lookup** — confirmed the pattern already exists (`QueryValidLineItemData`,
+   §5.2 step 1); Phase 2/3 generalize and harden it rather than building new SAP data access.
+2. **Review gate** — mandatory for v1 (§5.2 step 7); autonomy is earned later per Phase 5's criteria,
+   not assumed from the start.
+3. **The 53 unverified controls** — left untouched; no material operational impact found (§7);
+   revisit later, most naturally alongside Phase 2.
+4. **Objects-exist-no-test case** — not a special case. The general reconciliation rule (§5.2 step 4:
+   try `highlightControl` + Reverify before capturing anything new) applies here directly: reuse what
+   already resolves on screen, only capture what doesn't.
