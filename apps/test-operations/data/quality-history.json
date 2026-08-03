@@ -1,6 +1,50 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-03T10-11-05-228Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-03T10:11:05.981Z",
+      "finishedAt": "2026-08-03T10:12:38.303Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-03T10-10-32-374Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-03T10:10:33.222Z",
+      "finishedAt": "2026-08-03T10:10:53.233Z",
+      "passed": 75,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T10-10-17-314Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T10:10:17.385Z",
+      "finishedAt": "2026-08-03T10:10:24.192Z",
+      "passed": 103,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T10-09-15-654Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T10:09:15.721Z",
+      "finishedAt": "2026-08-03T10:09:22.225Z",
+      "passed": 102,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-03T09-27-47-645Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-03T09:27:48.387Z",
@@ -175,53 +219,26 @@
       "skipped": 0,
       "mode": "Unit / Integration",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-03T08-35-56-368Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-03T08:35:57.202Z",
-      "finishedAt": "2026-08-03T08:37:34.361Z",
-      "passed": 57,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-03T08-35-34-660Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-03T08:35:35.436Z",
-      "finishedAt": "2026-08-03T08:35:55.838Z",
-      "passed": 75,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T08-35-27-650Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T08:35:27.725Z",
-      "finishedAt": "2026-08-03T08:35:34.165Z",
-      "passed": 82,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T08-34-43-254Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T08:34:43.443Z",
-      "finishedAt": "2026-08-03T08:34:50.625Z",
-      "passed": 81,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0040",
+      "runId": "CORE-2026-08-03T10-09-15-654Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-08-03T10:09:22.225Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'GET /api/audit/runs supports every AC1 filter and reports X-Total-Count for pagination (BL-035 AC1/AC2)',\n      source: 'regression/api/audit-runs.test.js'\n    },\n...\n    {\n-     name: 'classifyScreenArchetype recognises a Fiori elements List Report by its control-id template marker',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'classifyScreenArchetype recognises a Fiori elements Object Page by its control-id template marker',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'classifyScreenArchetype recognises a dialog by control type, regardless of namespace',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'classifyScreenArchetype returns unknown for a screen matching no known archetype',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'List Report: searches first, using the first process-context value, when nothing has run yet',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'List Report: selects the first results row once a search has already run',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'List Report: clicks the primary action once search and row selection have both run',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'List Report: needsFallback when no search field, table, or unexercised action can be found',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Object Page: fills a field whose control id matches a process-context key',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Object Page: clicks Save once the matching field is already filled',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Object Page: needsFallback when nothing to fill and no recognisable commit action exists',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Dialog: clicks the actionable button',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Dialog: needsFallback when no actionable button is present',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'unknown archetype always needsFallback, never guesses',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n      name: 'Execution Center resolves the same canonical evidence URLs as Audit and Evidence',\n      source: 'regression/evidence-reference.test.js'\n    },\n    {\n      name: 'canonical evidence URL mapping rejects absolute and traversal paths',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-08-03T10:10:24.192Z",
+      "remediationRunId": "CORE-2026-08-03T10-10-17-314Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-08-03T10-10-17-314Z."
+    },
     {
       "id": "FL-0039",
       "runId": "CORE-2026-08-03T09-21-21-522Z",
