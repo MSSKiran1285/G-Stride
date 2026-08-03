@@ -248,6 +248,34 @@ test('Launchpad shell: needsFallback when the matched tile was already clicked w
   assert.match(decision.reason, /already clicked the matching tile/);
 });
 
+// The exact real screen this rule failed on live: asked to match "Create Purchase
+// Requisition", the model initially refused every tile because none said "Create" — the
+// correct tile ("Process Purchase Requisitions") uses a different generic verb for the same
+// business object. Locks in the prompt guidance added after that live finding.
+const realProcurementLaunchpadControls = [
+  { controlId: '__tile20', controlType: 'sap.m.GenericTile', text: 'Process Purchase Requisitions', category: 'actionable' },
+  { controlId: '__tile21', controlType: 'sap.m.GenericTile', text: 'Manage Purchase Orders', category: 'actionable' },
+  { controlId: '__tile22', controlType: 'sap.m.GenericTile', text: 'Post Goods Receipt for Purchasing Document', category: 'actionable' },
+  { controlId: '__tile23', controlType: 'sap.m.GenericTile', text: 'Create Supplier Invoice', category: 'actionable' },
+  { controlId: '__tile24', controlType: 'sap.m.GenericTile', text: 'Supplier Invoices List', category: 'actionable' },
+  { controlId: '__tile25', controlType: 'sap.m.GenericTile', text: 'Monitor Purchase Requisition Items', category: 'actionable' },
+];
+
+test('Launchpad shell: the tile-selection prompt tells the model tiles use generic verbs, not literal wording', async () => {
+  const resolver = fakeResolver('1');
+  await decideNextAction(realProcurementLaunchpadControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.match(resolver.calls[0], /Process Purchase Requisitions.*Manage Purchase Requisitions/);
+  assert.match(resolver.calls[0], /business object/i);
+  assert.match(resolver.calls[0], /do not pick.*Monitor Purchase Requisition Items/i);
+});
+
+test('Launchpad shell: matches "Process Purchase Requisitions" for a Create Purchase Requisition request once the model picks it', async () => {
+  const resolver = fakeResolver('1');
+  const decision = await decideNextAction(realProcurementLaunchpadControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.params.control, '__tile20');
+});
+
 test('Launchpad shell: needsFallback when no tile has visible text to match against', async () => {
   const resolver = fakeResolver('1');
   const decision = await decideNextAction(
