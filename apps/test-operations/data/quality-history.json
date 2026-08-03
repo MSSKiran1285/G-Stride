@@ -1,6 +1,83 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-03T14-37-59-754Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-03T14:38:00.523Z",
+      "finishedAt": "2026-08-03T14:39:25.078Z",
+      "passed": 59,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-03T14-37-19-391Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-03T14:37:20.073Z",
+      "finishedAt": "2026-08-03T14:37:40.257Z",
+      "passed": 84,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T14-37-04-333Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T14:37:04.394Z",
+      "finishedAt": "2026-08-03T14:37:11.163Z",
+      "passed": 127,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-08-03T14-33-48-379Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-03T14:33:49.196Z",
+      "finishedAt": "2026-08-03T14:35:15.840Z",
+      "passed": 59,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-03T14-33-13-880Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-03T14:33:14.540Z",
+      "finishedAt": "2026-08-03T14:33:34.733Z",
+      "passed": 84,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T14-32-51-081Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T14:32:51.136Z",
+      "finishedAt": "2026-08-03T14:32:57.943Z",
+      "passed": 127,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T14-32-26-163Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T14:32:26.216Z",
+      "finishedAt": "2026-08-03T14:32:33.343Z",
+      "passed": 126,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-03T14-17-16-022Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-03T14:17:16.791Z",
@@ -142,86 +219,26 @@
       "skipped": 0,
       "mode": "Unit / Integration",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T10-54-49-382Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T10:54:49.441Z",
-      "finishedAt": "2026-08-03T10:54:55.168Z",
-      "passed": 109,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-03T10-11-05-228Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-03T10:11:05.981Z",
-      "finishedAt": "2026-08-03T10:12:38.303Z",
-      "passed": 57,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-03T10-10-32-374Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-03T10:10:33.222Z",
-      "finishedAt": "2026-08-03T10:10:53.233Z",
-      "passed": 75,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T10-10-17-314Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T10:10:17.385Z",
-      "finishedAt": "2026-08-03T10:10:24.192Z",
-      "passed": 103,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T10-09-15-654Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T10:09:15.721Z",
-      "finishedAt": "2026-08-03T10:09:22.225Z",
-      "passed": 102,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-03T09-27-47-645Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-03T09:27:48.387Z",
-      "finishedAt": "2026-08-03T09:29:17.195Z",
-      "passed": 57,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-03T09-27-26-262Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-03T09:27:27.023Z",
-      "finishedAt": "2026-08-03T09:27:47.133Z",
-      "passed": 75,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0043",
+      "runId": "CORE-2026-08-03T14-32-26-163Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-08-03T14:32:33.343Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'encrypted AI provider API key persists securely across processes, separate from SAP credentials',\n      source: 'regression/ai-credentials-fallback.test.js'\n    },\n...\n    {\n-     name: 'classifyScreenArchetype recognises a Fiori Launchpad home screen by its tile control types',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n      name: 'classifyScreenArchetype returns unknown for a screen matching no known archetype',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n-     name: 'humanizeAppId turns a camelCase App ID back into a readable phrase',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n      name: 'List Report: searches first, using the first process-context value, when nothing has run yet',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n      name: 'List Report: selects the first results row via a captured column (never the table itself) once a search has already run',\n...\n    {\n-     name: 'Launchpad shell: needsFallback with no AI resolver configured, rather than guessing a tile',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Launchpad shell: clicks the tile the model matches to the humanized App ID',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Launchpad shell: needsFallback when the model replies NONE',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Launchpad shell: needsFallback on an unparseable model reply, rather than guessing',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Launchpad shell: needsFallback on an out-of-range tile number',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Launchpad shell: needsFallback when the matched tile was already clicked without navigating away',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'Launchpad shell: needsFallback when no tile has visible text to match against',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n      name: 'derives a Field name from a button-less input control id when no text is present',\n      source: 'regression/discovery-registration.test.js'\n    },\n    {\n      name: 'derives a Button name from visible text, stripping a parenthetical count',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-08-03T14:32:57.943Z",
+      "remediationRunId": "CORE-2026-08-03T14-32-51-081Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-08-03T14-32-51-081Z."
+    },
     {
       "id": "FL-0042",
       "runId": "CORE-2026-08-03T14-11-30-691Z",
