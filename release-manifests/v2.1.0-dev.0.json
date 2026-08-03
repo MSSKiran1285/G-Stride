@@ -1,29 +1,29 @@
 {
   "version": "2.1.0-dev.0",
-  "candidateCommit": "d24f1b3fbd7e6c168f74ce5f8afc9adb18955e5f",
-  "generatedAt": "2026-08-03T08:58:45.156Z",
+  "candidateCommit": "636b28b081d062e2fe2b5201cf96614e4f06b52d",
+  "generatedAt": "2026-08-03T09:29:53.333Z",
   "worktreeClean": false,
   "sourceTreeClean": true,
   "evidenceChangesPresent": true,
   "results": {
     "core": {
-      "runId": "CORE-2026-08-03T08-54-52-539Z",
-      "startedAt": "2026-08-03T08:54:52.867Z",
-      "finishedAt": "2026-08-03T08:55:13.729Z",
-      "commitSha": "d24f1b3fbd7e6c168f74ce5f8afc9adb18955e5f",
+      "runId": "CORE-2026-08-03T09-27-19-625Z",
+      "startedAt": "2026-08-03T09:27:19.690Z",
+      "finishedAt": "2026-08-03T09:27:25.723Z",
+      "commitSha": "636b28b081d062e2fe2b5201cf96614e4f06b52d",
       "worktreeClean": false,
       "sourceTreeClean": true,
-      "passed": 82,
+      "passed": 89,
       "failed": 0,
       "skipped": 0,
       "cancelled": 0,
       "todo": 0
     },
     "isolatedApi": {
-      "runId": "ISOLATED-API-2026-08-03T08-55-15-800Z",
-      "startedAt": "2026-08-03T08:55:18.877Z",
-      "finishedAt": "2026-08-03T08:55:45.188Z",
-      "commitSha": "d24f1b3fbd7e6c168f74ce5f8afc9adb18955e5f",
+      "runId": "ISOLATED-API-2026-08-03T09-27-26-262Z",
+      "startedAt": "2026-08-03T09:27:27.023Z",
+      "finishedAt": "2026-08-03T09:27:47.133Z",
+      "commitSha": "636b28b081d062e2fe2b5201cf96614e4f06b52d",
       "worktreeClean": false,
       "sourceTreeClean": true,
       "passed": 75,
@@ -33,10 +33,10 @@
       "todo": 0
     },
     "isolatedUi": {
-      "runId": "ISOLATED-UI-2026-08-03T08-55-47-121Z",
-      "startedAt": "2026-08-03T08:55:50.469Z",
-      "finishedAt": "2026-08-03T08:58:04.630Z",
-      "commitSha": "d24f1b3fbd7e6c168f74ce5f8afc9adb18955e5f",
+      "runId": "ISOLATED-UI-2026-08-03T09-27-47-645Z",
+      "startedAt": "2026-08-03T09:27:48.387Z",
+      "finishedAt": "2026-08-03T09:29:17.195Z",
+      "commitSha": "636b28b081d062e2fe2b5201cf96614e4f06b52d",
       "worktreeClean": false,
       "sourceTreeClean": true,
       "passed": 57,
@@ -48,10 +48,10 @@
   },
   "secretScan": {
     "passed": true,
-    "filesChecked": 306,
-    "output": "Secret scan passed: 306 non-ignored repository files checked."
+    "filesChecked": 308,
+    "output": "Secret scan passed: 308 non-ignored repository files checked."
   },
-  "testCatalogueCount": 222,
+  "testCatalogueCount": 229,
   "auditEvidenceRunIds": [
     "0ddf8279-5e9b-43d9-ae03-51d6cb3a5964",
     "19d979ce-6627-4b76-84ec-b935515a9291",

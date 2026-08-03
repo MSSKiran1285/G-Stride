@@ -1,6 +1,83 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-03T09-27-47-645Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-03T09:27:48.387Z",
+      "finishedAt": "2026-08-03T09:29:17.195Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-03T09-27-26-262Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-03T09:27:27.023Z",
+      "finishedAt": "2026-08-03T09:27:47.133Z",
+      "passed": 75,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T09-27-19-625Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T09:27:19.690Z",
+      "finishedAt": "2026-08-03T09:27:25.723Z",
+      "passed": 89,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-08-03T09-22-34-684Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-03T09:22:35.555Z",
+      "finishedAt": "2026-08-03T09:24:06.126Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-03T09-22-12-600Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-03T09:22:13.553Z",
+      "finishedAt": "2026-08-03T09:22:34.087Z",
+      "passed": 75,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T09-22-05-561Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T09:22:05.622Z",
+      "finishedAt": "2026-08-03T09:22:11.971Z",
+      "passed": 89,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T09-21-21-522Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T09:21:21.588Z",
+      "finishedAt": "2026-08-03T09:21:28.585Z",
+      "passed": 88,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-03T08-55-47-121Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-03T08:55:50.469Z",
@@ -142,86 +219,26 @@
       "skipped": 0,
       "mode": "Unit / Integration",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-31T07-29-50-598Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-31T07:29:51.367Z",
-      "finishedAt": "2026-07-31T07:31:22.168Z",
-      "passed": 54,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-31T07-29-29-529Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-31T07:29:30.240Z",
-      "finishedAt": "2026-07-31T07:29:50.184Z",
-      "passed": 73,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-31T07-29-22-403Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-31T07:29:22.480Z",
-      "finishedAt": "2026-07-31T07:29:29.121Z",
-      "passed": 82,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-07-31T07-26-26-647Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-07-31T07:26:27.436Z",
-      "finishedAt": "2026-07-31T07:27:54.391Z",
-      "passed": 54,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-07-31T07-26-05-354Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-07-31T07:26:06.058Z",
-      "finishedAt": "2026-07-31T07:26:26.145Z",
-      "passed": 73,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-31T07-25-59-536Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-31T07:25:59.609Z",
-      "finishedAt": "2026-07-31T07:26:04.964Z",
-      "passed": 82,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-07-31T07-25-18-691Z",
-      "label": "Core regression",
-      "startedAt": "2026-07-31T07:25:18.751Z",
-      "finishedAt": "2026-07-31T07:25:24.458Z",
-      "passed": 81,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0039",
+      "runId": "CORE-2026-08-03T09-21-21-522Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-08-03T09:21:28.585Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'GET /api/audit/runs supports every AC1 filter and reports X-Total-Count for pagination (BL-035 AC1/AC2)',\n      source: 'regression/api/audit-runs.test.js'\n    },\n...\n    {\n-     name: 'header-only lookup extracts mapped fields into runState without an item query',\n-     source: 'regression/query-reference-document.test.js'\n-   },\n-   {\n-     name: 'header+item lookup joins on the header key and extracts fields from both levels',\n-     source: 'regression/query-reference-document.test.js'\n-   },\n-   {\n-     name: 'throws a clear error when no active header document is found',\n-     source: 'regression/query-reference-document.test.js'\n-   },\n-   {\n-     name: 'throws a clear error when no matching item is found for the header key',\n-     source: 'regression/query-reference-document.test.js'\n-   },\n-   {\n-     name: 'throws a clear error for a malformed fieldMap entry',\n-     source: 'regression/query-reference-document.test.js'\n-   },\n-   {\n-     name: 'throws a clear error when a mapped field is absent from the queried result',\n-     source: 'regression/query-reference-document.test.js'\n-   },\n-   {\n-     name: 'an item-level field takes precedence over a header field of the same name',\n-     source: 'regression/query-reference-document.test.js'\n-   },\n-   {\n      name: 'record computes durationMs and list/get round-trip every new field (BL-035 AC1/AC3/AC4)',\n      source: 'regression/run-history-store.test.js'\n    },\n    {\n      name: 'get() and list() compute durationMs from timestamps for a ledger row recorded before that column existed (HC-030)',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-08-03T09:22:11.971Z",
+      "remediationRunId": "CORE-2026-08-03T09-22-05-561Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-08-03T09-22-05-561Z."
+    },
     {
       "id": "FL-0038",
       "runId": "ISOLATED-UI-2026-08-03T08-45-51-668Z",
