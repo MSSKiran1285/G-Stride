@@ -9,3 +9,4 @@ export * from './domain/dataColumnSchema';
 export * from './domain/tagStore';
 export * from './domain/runHistoryStore';
 export * from './credentials';
+export * from './aiCredentials';

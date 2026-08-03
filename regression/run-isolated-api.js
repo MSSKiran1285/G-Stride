@@ -117,6 +117,8 @@ async function main() {
         TAF_DISABLE_OS_CREDENTIAL_STORE: '1',
         TAF_CREDENTIAL_STORE_PATH: path.join(tempRoot, 'credentials.enc.json'),
         TAF_CREDENTIAL_KEY_PATH: path.join(tempRoot, 'credential-key'),
+        TAF_AI_CREDENTIAL_STORE_PATH: path.join(tempRoot, 'ai-credentials.enc.json'),
+        TAF_AI_CREDENTIAL_KEY_PATH: path.join(tempRoot, 'ai-credential-key'),
       },
       stdio: ['ignore', 'inherit', 'inherit', 'ipc'],
     },

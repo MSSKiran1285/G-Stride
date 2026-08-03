@@ -43,6 +43,7 @@ import type {
   DataSensitivity,
   DiscoveryState,
   DiscoveryStepResult,
+  AiProviderStatus,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -213,6 +214,10 @@ export const api = {
   getDiscoveryState: () => request<DiscoveryState>('/api/discovery/state'),
   runDiscoveryStep: () => request<DiscoveryStepResult>('/api/discovery/step', { method: 'POST' }),
   stopDiscovery: () => request<{ ok: true }>('/api/discovery/stop', { method: 'POST' }),
+  getAiProviderStatus: () => request<AiProviderStatus>('/api/settings/ai-provider'),
+  saveAiProviderKey: (apiKey: string) =>
+    request<AiProviderStatus>('/api/settings/ai-provider', { method: 'PUT', body: JSON.stringify({ apiKey }) }),
+  removeAiProviderKey: () => request<AiProviderStatus>('/api/settings/ai-provider', { method: 'DELETE' }),
   listData: () => request<string[]>('/api/data'),
   listDataLibrary: () => request<DataLibraryItem[]>('/api/data/library'),
   getDataset: (file: string) => request<Dataset>(`/api/data/${encodeURIComponent(file)}`),

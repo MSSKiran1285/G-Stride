@@ -1,6 +1,7 @@
 import { createStudioServer, StudioServerOptions } from './server';
 
 export { createStudioServer, StudioServerOptions } from './server';
+export { AnthropicResolver, AI_PROVIDER, DEFAULT_ANTHROPIC_MODEL } from './anthropicResolver';
 
 export interface StudioStartOptions extends StudioServerOptions {
   /** Local workstation is the safe default. Non-loopback binding must be an explicit caller choice. */

@@ -401,6 +401,14 @@ export interface DiscoveryState {
   startedAt?: string;
 }
 
+/** BL-047 Phase 2 POC: status for the AI provider used for natural-language process resolution
+ *  and shell-screen fallback decisions — never carries the API key itself. */
+export interface AiProviderStatus {
+  provider: string;
+  configured: boolean;
+  source: 'environment' | 'credential-store' | 'none';
+}
+
 /** A Compose field's request to capture a brand-new object without leaving the Test editor
  * or losing its in-progress (possibly unsaved) work — see App.tsx's ContextualCapturePanel
  * overlay, which is a sibling panel (like SettingsPanel) rather than a route change, so it

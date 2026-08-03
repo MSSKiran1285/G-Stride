@@ -1,7 +1,7 @@
 import { Check, Cloud, Database, Moon, Server, ShieldCheck, Sun, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import type { AuthState, IntegrationSettings, SapIntegrationStatus } from '../types';
+import type { AiProviderStatus, AuthState, IntegrationSettings, SapIntegrationStatus } from '../types';
 import { GoogleSignInButton } from './GoogleSignInButton';
 
 type IntegrationKey = 'sap' | 'salesforce' | 'oracle' | 'servicenow';
@@ -49,6 +49,54 @@ export function SettingsPanel({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // BL-047 Phase 2 POC: the AI provider used for natural-language process resolution and
+  // shell-screen fallback decisions. Self-contained (fetched here, not threaded through
+  // parent state like SAP status) since nothing else in the app needs it yet.
+  const [aiStatus, setAiStatus] = useState<AiProviderStatus | null>(null);
+  const [aiApiKey, setAiApiKey] = useState('');
+  const [aiSaving, setAiSaving] = useState(false);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.getAiProviderStatus().then(setAiStatus).catch((e) => setAiError(String(e)));
+  }, []);
+
+  async function saveAiKey() {
+    if (!aiApiKey.trim()) {
+      setAiError('Enter an API key first.');
+      return;
+    }
+    setAiSaving(true);
+    setAiError(null);
+    setAiMessage(null);
+    try {
+      const status = await api.saveAiProviderKey(aiApiKey.trim());
+      setAiStatus(status);
+      setAiApiKey('');
+      setAiMessage('API key saved securely.');
+    } catch (reason) {
+      setAiError(String(reason));
+    } finally {
+      setAiSaving(false);
+    }
+  }
+
+  async function removeAiKey() {
+    setAiSaving(true);
+    setAiError(null);
+    setAiMessage(null);
+    try {
+      const status = await api.removeAiProviderKey();
+      setAiStatus(status);
+      setAiMessage('API key removed.');
+    } catch (reason) {
+      setAiError(String(reason));
+    } finally {
+      setAiSaving(false);
+    }
+  }
 
   useEffect(() => {
     setGoogleClientId(auth.googleClientId);
@@ -271,6 +319,40 @@ export function SettingsPanel({
 
           {message && <p className="fiori-message-strip success" role="status">{message}</p>}
           {error && <p className="error-text" role="alert">{error}</p>}
+
+          <section className="settings-section">
+            <h3>AI provider (BL-047 POC)</h3>
+            <p className="settings-note">
+              Used for natural-language process resolution and shell-screen fallback decisions the rules engine can't handle deterministically.
+              Currently wired to Anthropic Claude Haiku. The key is encrypted the same way SAP credentials are and is never sent back to this browser.
+            </p>
+            <label>
+              Anthropic API key
+              <input
+                type="password"
+                value={aiApiKey}
+                onChange={(event) => setAiApiKey(event.currentTarget.value)}
+                placeholder={aiStatus?.configured ? 'Leave blank to keep the saved key' : 'sk-ant-...'}
+                autoComplete="new-password"
+              />
+            </label>
+            <div className="settings-action-row">
+              <button type="button" className="primary" onClick={saveAiKey} disabled={aiSaving}>
+                {aiSaving ? 'Working…' : 'Save API key'}
+              </button>
+              <button type="button" onClick={removeAiKey} disabled={aiSaving || !aiStatus?.configured}>
+                Remove
+              </button>
+            </div>
+            {aiStatus?.configured && (
+              <div className="settings-connected">
+                <Check size={16} />
+                Configured{aiStatus.source === 'environment' ? ' (via server environment variable)' : ''}
+              </div>
+            )}
+            {aiMessage && <p className="fiori-message-strip success" role="status">{aiMessage}</p>}
+            {aiError && <p className="error-text" role="alert">{aiError}</p>}
+          </section>
         </div>
       </section>
     </div>

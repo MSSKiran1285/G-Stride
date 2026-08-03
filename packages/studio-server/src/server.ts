@@ -15,6 +15,9 @@ import {
   getCredentialStatus,
   loadTransactionData,
   setCredentials,
+  getAiCredentialStatus,
+  setAiApiKey,
+  removeAiApiKey,
   validateTestContract,
   isLikelyUnstableId,
   findLikelyDuplicates,
@@ -35,6 +38,7 @@ import {
 import { parseCsv, serializeCsv } from './csv';
 import { openScanSession, getScanStatus, captureScan, closeScanSession, highlightControl, startPick, getPickResult, cancelPick, dismissPick, reverifyControl } from './scanSession';
 import { startDiscovery, getDiscoveryState, runDiscoveryStep, stopDiscovery } from './discoverySession';
+import { AI_PROVIDER } from './anthropicResolver';
 import { StudioAuth } from './auth';
 import { ExecutionDraft, ExecutionDraftKind, ExecutionPreflightService } from './executionPreflight';
 import { executionInitiator, executionTargetContext, workspaceContext } from './executionContext';
@@ -547,6 +551,41 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       res.json({ ...saved, ...governance.saveConfiguration(saved, safetyClass) });
     } catch (err: any) {
       res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  // BL-047 Phase 2: the AI provider used for natural-language process resolution and
+  // shell-screen fallback decisions. Same non-secret status / encrypted-storage shape as SAP
+  // integrations above, one shared provider slot for now (Anthropic) rather than a general
+  // multi-provider list, since nothing else is wired up to call a different one yet.
+  app.get('/api/settings/ai-provider', async (_req, res) => {
+    try {
+      const status = await getAiCredentialStatus(AI_PROVIDER);
+      res.json({ provider: AI_PROVIDER, ...status });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.put('/api/settings/ai-provider', async (req, res) => {
+    try {
+      const apiKey = typeof req.body?.apiKey === 'string' ? req.body.apiKey.trim() : '';
+      if (!apiKey) return res.status(400).json({ error: 'Body must include a non-empty apiKey: string.' });
+      await setAiApiKey(AI_PROVIDER, apiKey);
+      const status = await getAiCredentialStatus(AI_PROVIDER);
+      res.json({ provider: AI_PROVIDER, ...status });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/settings/ai-provider', async (_req, res) => {
+    try {
+      await removeAiApiKey(AI_PROVIDER);
+      const status = await getAiCredentialStatus(AI_PROVIDER);
+      res.json({ provider: AI_PROVIDER, ...status });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
     }
   });
 
