@@ -303,6 +303,31 @@ test('Launchpad shell: picks the "Procurement" category tile to drill into for a
   assert.equal(decision.call.params.control, '__tile32');
 });
 
+// The exact real third finding: after drilling into Procurement, the loop stopped on its own
+// safety check ("already clicked the matching tile once without navigating away") because the
+// model picked "Procurement" again instead of the now-visible specific tile "Process Purchase
+// Requisitions" — a persistent quick-nav "Procurement" tile and the tab's own specific app
+// tiles were both present in the same capture, and the prompt had no priority order between
+// them. Locks in the fix: a specific app tile must outrank a category tile when both appear.
+const bothCategoryAndSpecificTileControls = [
+  { controlId: '__tile32', controlType: 'sap.f.Card', text: 'Procurement', category: 'actionable' },
+  { controlId: '__tile40', controlType: 'sap.m.GenericTile', text: 'Process Purchase Requisitions', category: 'actionable' },
+  { controlId: '__tile41', controlType: 'sap.m.GenericTile', text: 'Manage Purchase Orders', category: 'actionable' },
+];
+
+test('Launchpad shell: the tile-selection prompt says a specific app tile always outranks a category tile', async () => {
+  const resolver = fakeResolver('2');
+  await decideNextAction(bothCategoryAndSpecificTileControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.match(resolver.calls[0], /a specific app tile always outranks a broader department\/category tile/i);
+});
+
+test('Launchpad shell: prefers the specific "Process Purchase Requisitions" tile over the "Procurement" category tile when both are present', async () => {
+  const resolver = fakeResolver('2');
+  const decision = await decideNextAction(bothCategoryAndSpecificTileControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.params.control, '__tile40');
+});
+
 test('Launchpad shell: needsFallback when no tile has visible text to match against', async () => {
   const resolver = fakeResolver('1');
   const decision = await decideNextAction(

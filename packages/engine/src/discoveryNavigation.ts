@@ -202,6 +202,8 @@ function buildTileSelectionPrompt(processDescription: string, tiles: CapturedCon
     ``,
     `Some Launchpad screens show broad department/category tiles instead of specific app tiles — e.g. "Finance", "Procurement", "Sales" rather than any single named app. If none of the tiles is a specific app for this process, but one is the department/category that would normally contain it (e.g. "Procurement" for anything about purchase requisitions, purchase orders, goods receipt, or supplier invoices), pick that category tile — navigating into it first is a normal, expected step, not a failure. Only reply NONE when nothing visible, at either level, plausibly leads toward this process.`,
     ``,
+    `IMPORTANT: a specific app tile always outranks a broader department/category tile when both are visible in the same list — e.g. if both "Procurement" and "Process Purchase Requisitions" are present, pick "Process Purchase Requisitions", not "Procurement" again. A department/category tile is only ever the right pick when no specific app tile for this process is visible at all yet.`,
+    ``,
     `Reply with ONLY the number of the single tile that best matches this process, or reply with exactly NONE if no tile is a good match. Do not explain your answer.`,
   ].join('\n');
 }
