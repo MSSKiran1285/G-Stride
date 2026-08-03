@@ -19,6 +19,22 @@ function isDeletable(kind: SearchResultKind): boolean {
   return kind !== 'run';
 }
 
+/** BL-047 Phase 1's Process Intent Router: a natural-language process name that matched no
+ *  existing Test, Object, Dataset, Process, Pack or Run is "unknown" to Studio — this only
+ *  derives a plausible starting App ID for it (e.g. "Create Purchase Requisition" ->
+ *  "createPurchaseRequisition"), the same technical-name convention every existing App ID
+ *  already uses. It does not attempt discovery itself (that's Phase 2+); Phase 1 is routing:
+ *  known -> straight to the existing result, unknown -> the normal manual authoring flow. */
+function deriveAppId(text: string): string {
+  const words = text.trim().split(/[^a-zA-Z0-9]+/).filter(Boolean);
+  if (words.length === 0) return '';
+  const [first, ...rest] = words;
+  return (
+    first.toLowerCase() +
+    rest.map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase()).join('')
+  );
+}
+
 async function usageSummaryFor(result: SearchResult): Promise<string> {
   if (result.kind === 'test') {
     const usage = await api.getTestUsage(result.id);
@@ -218,7 +234,26 @@ export function GlobalSearchPanel({ onNavigate, onClose }: { onNavigate: (route:
           {error && <AsyncFeedback state="error" message={error} />}
           {loading && <AsyncFeedback state="loading" message="Searching…" compact />}
           {!loading && query.trim() && results.length === 0 && (
-            <p className="hint">No results for "{query.trim()}".</p>
+            <div className="search-unknown-process">
+              <p className="hint">No existing Test, Object, Dataset, Process, Pack or Run found for "{query.trim()}".</p>
+              <p className="hint">
+                Studio doesn't know this process yet. Autonomous discovery isn't built yet (see BL-047) —
+                you can start authoring it manually now.
+                {deriveAppId(query) && (
+                  <> Suggested App ID: <code>{deriveAppId(query)}</code></>
+                )}
+              </p>
+              <button
+                type="button"
+                className="primary"
+                onClick={() => {
+                  onClose();
+                  onNavigate('/compose');
+                }}
+              >
+                Open Compose to start authoring
+              </button>
+            </div>
           )}
 
           <ul className="search-results-list">

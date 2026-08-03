@@ -139,3 +139,22 @@ test('Global search deletes an unreferenced artifact without a dependency warnin
   const gone = await api.get(`/api/testcases/${testFile}`);
   assert.equal(gone.status, 404);
 });
+
+test('Global search routes an unknown process to manual authoring with a suggested App ID (BL-047 Phase 1)', async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'global-search-unknown-process', async (page) => {
+      await page.goto(BASE_URL);
+      await openSearch(page);
+
+      await page.getByRole('searchbox').fill('Create Purchase Requisition Nonexistent Process');
+      await page.getByText(/No existing Test, Object, Dataset, Process, Pack or Run found/).waitFor();
+      await page.getByText('createPurchaseRequisitionNonexistentProcess', { exact: true }).waitFor();
+
+      await page.getByRole('button', { name: 'Open Compose to start authoring' }).click();
+      assert.equal(new URL(page.url()).pathname, '/compose');
+      await page.getByRole('heading', { name: 'Compose' }).waitFor();
+      // The search overlay must actually close, not just navigate underneath it.
+      await page.getByRole('heading', { name: /Find any Test, Object, Dataset, Process, Pack or Run/ }).waitFor({ state: 'detached' });
+    });
+  });
+});

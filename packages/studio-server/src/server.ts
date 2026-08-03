@@ -1750,6 +1750,44 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  // BL-047 Phase 1: reconcile every stored Object for one App ID against whatever screen the
+  // open scan session currently has live, instead of capturing a fresh (and possibly
+  // duplicate) control — the same reverifyControl() the single-object Reverify action uses,
+  // run once per Object, with the same verification history recorded for each. A "missing"
+  // outcome here often just means this particular control lives on a different screen within
+  // the same App ID's flow, not that it's wrong — the caller decides what to do with each row.
+  app.post('/api/objects/:appId/reconcile', async (req, res) => {
+    try {
+      const appId = req.params.appId;
+      const stored = objectRepository.listByApp(appId);
+      const results: Array<{ name: string; outcome: 'verified' | 'drifted' | 'missing'; live?: { controlId: string; controlType: string; bindingPath?: string; text?: string } }> = [];
+      for (const control of stored) {
+        const result = await reverifyControl(control.controlId, control.controlType);
+        objectRepository.recordVerification({
+          appId,
+          name: control.name,
+          verifiedAt: new Date().toISOString(),
+          outcome: result.outcome,
+          liveControlId: result.live?.controlId,
+          liveControlType: result.live?.controlType,
+          liveBindingPath: result.live?.bindingPath,
+          liveText: result.live?.text,
+          verifiedBy: auth.state(req).user?.name,
+        });
+        results.push({ name: control.name, outcome: result.outcome, live: result.live });
+      }
+      res.json({
+        total: results.length,
+        verified: results.filter((r) => r.outcome === 'verified').length,
+        drifted: results.filter((r) => r.outcome === 'drifted').length,
+        missing: results.filter((r) => r.outcome === 'missing').length,
+        results,
+      });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
   // Registered before the generic PUT /:appId/:name below — Express matches routes in
   // registration order, so this literal "_reorder" segment must be tried first or it'd be
   // swallowed as if "_reorder" were itself an object name.

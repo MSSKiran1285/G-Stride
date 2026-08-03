@@ -353,6 +353,20 @@ export interface ObjectVerificationEvent {
   verifiedBy?: string | null;
 }
 
+/** BL-047 Phase 1: result of reconciling every stored Object for one App ID against whatever
+ *  screen the open scan session currently has live, rather than capturing a fresh control. */
+export interface ObjectReconcileResult {
+  total: number;
+  verified: number;
+  drifted: number;
+  missing: number;
+  results: Array<{
+    name: string;
+    outcome: 'verified' | 'drifted' | 'missing';
+    live?: { controlId: string; controlType: string; bindingPath?: string; text?: string };
+  }>;
+}
+
 /** A Compose field's request to capture a brand-new object without leaving the Test editor
  * or losing its in-progress (possibly unsaved) work — see App.tsx's ContextualCapturePanel
  * overlay, which is a sibling panel (like SettingsPanel) rather than a route change, so it

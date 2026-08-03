@@ -1685,6 +1685,23 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   gap: 1rem;
 }
 
+.search-unknown-process {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--panel-subtle);
+}
+
+.search-unknown-process p {
+  margin: 0;
+}
+
+.search-unknown-process button {
+  justify-self: start;
+}
+
 .search-results-list {
   display: grid;
   gap: 0.5rem;

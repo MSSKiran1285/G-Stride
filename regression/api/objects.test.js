@@ -130,3 +130,31 @@ test('POST /api/objects/:appId/:name/reverify requires an open scan session', as
   assert.equal(verifications.status, 200);
   assert.deepEqual(verifications.body, []);
 });
+
+test('POST /api/objects/:appId/reconcile requires an open scan session and records nothing without one (BL-047 Phase 1)', async () => {
+  await api.put(`/api/objects/${APP_ID}/RegressionReconcileOne`, {
+    controlId: '__xmlview1--RegressionReconcileOne',
+    controlType: 'sap.m.Button',
+  });
+  await api.put(`/api/objects/${APP_ID}/RegressionReconcileTwo`, {
+    controlId: '__xmlview1--RegressionReconcileTwo',
+    controlType: 'sap.m.Button',
+  });
+
+  const reconcile = await api.post(`/api/objects/${APP_ID}/reconcile`, {});
+  assert.equal(reconcile.status, 400);
+  assert.match(reconcile.body.error, /No active scan session/);
+
+  // Stops at the first Object that fails rather than silently skipping the rest — neither
+  // Object should show a recorded attempt.
+  const first = await api.get(`/api/objects/${APP_ID}/RegressionReconcileOne/verifications`);
+  const second = await api.get(`/api/objects/${APP_ID}/RegressionReconcileTwo/verifications`);
+  assert.deepEqual(first.body, []);
+  assert.deepEqual(second.body, []);
+});
+
+test('POST /api/objects/:appId/reconcile 200s with zero results for an App ID with no Objects (BL-047 Phase 1)', async () => {
+  const reconcile = await api.post('/api/objects/regressionEmptyReconcileApp/reconcile', {});
+  assert.equal(reconcile.status, 200);
+  assert.deepEqual(reconcile.body, { total: 0, verified: 0, drifted: 0, missing: 0, results: [] });
+});

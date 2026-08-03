@@ -3,6 +3,7 @@ import type {
   TestCase,
   ObjectControl,
   ObjectVerificationEvent,
+  ObjectReconcileResult,
   RunStatus,
   RerunReview,
   Dataset,
@@ -163,6 +164,8 @@ export const api = {
       `/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}/reverify`,
       { method: 'POST' }
     ),
+  reconcileObjects: (appId: string) =>
+    request<ObjectReconcileResult>(`/api/objects/${encodeURIComponent(appId)}/reconcile`, { method: 'POST' }),
   reorderObjects: (appId: string, order: string[]) =>
     request<{ ok: true }>(`/api/objects/${encodeURIComponent(appId)}/_reorder`, {
       method: 'PUT',

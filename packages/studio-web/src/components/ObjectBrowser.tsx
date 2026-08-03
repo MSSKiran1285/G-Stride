@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
-import type { ObjectControl, ObjectVerificationEvent } from '../types';
+import type { ObjectControl, ObjectVerificationEvent, ObjectReconcileResult } from '../types';
 import { DomainTag } from './DomainTag';
 import { AsyncFeedback, EmptyState, TableFrame } from './WorkspacePrimitives';
 
@@ -75,6 +75,10 @@ export function ObjectBrowser({
     outcome: 'verified' | 'drifted' | 'missing';
     live?: { controlId: string; controlType: string; bindingPath?: string; text?: string };
   } | null>(null);
+  // BL-047 Phase 1: reconcile every stored Object for this App ID against the currently open
+  // scan session's live screen, instead of capturing a fresh (possibly duplicate) control.
+  const [reconciling, setReconciling] = useState(false);
+  const [reconcileResult, setReconcileResult] = useState<ObjectReconcileResult | null>(null);
   const domainOf = useCallback((id: string) => appIdTags[id] || UNTAGGED, [appIdTags]);
 
   function refreshTags() {
@@ -105,6 +109,7 @@ export function ObjectBrowser({
     setSelectedName(null);
     setEditing(false);
     setEditingDomain(false);
+    setReconcileResult(null);
     if (!appId) {
       setObjects([]);
       return;
@@ -237,6 +242,26 @@ export function ObjectBrowser({
       setActionError(String(e));
     } finally {
       setReverifying(false);
+    }
+  }
+
+  /** BL-047 Phase 1: "reconcile before you capture" — checks every stored Object for this App ID
+   *  against whatever screen the open scan session currently has live, exactly like Reverify does
+   *  for one Object at a time, so a screen already known to Studio doesn't collect a duplicate
+   *  capture. A "missing" result often just means that particular control lives on a different
+   *  screen within the same App ID's flow, not that it's wrong. */
+  async function reconcileAll() {
+    if (objects.length === 0) return;
+    setReconciling(true);
+    setActionError(null);
+    try {
+      const result = await api.reconcileObjects(appId);
+      setReconcileResult(result);
+      refreshObjects(); // pick up refreshed verificationStatus/lastVerifiedAt across the list
+    } catch (e) {
+      setActionError(String(e));
+    } finally {
+      setReconciling(false);
     }
   }
 
@@ -392,6 +417,14 @@ export function ObjectBrowser({
       {appId && (
         <div className="row" style={{ alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
           {notFound && <span className="error-text">Not found on screen — is a scan session open on this app?</span>}
+          <button
+            className="pill pill-neutral"
+            disabled={objects.length === 0 || reconciling || editing}
+            onClick={reconcileAll}
+            title="Check every stored Object for this App ID against the currently open scan session's live screen, before capturing anything new — needs an open scan session"
+          >
+            {reconciling ? 'Reconciling…' : `Reconcile all (${objects.length})`}
+          </button>
           <button className="pill pill-success" disabled={!selected || highlighting || editing} onClick={highlight}>
             {highlighting ? 'Highlighting…' : 'Highlight'}
           </button>
@@ -407,6 +440,21 @@ export function ObjectBrowser({
         </div>
       )}
       {actionError && <AsyncFeedback state="error" message={actionError} />}
+
+      {reconcileResult && (
+        <div
+          className={`fiori-message-strip ${reconcileResult.missing === 0 ? 'success' : reconcileResult.verified + reconcileResult.drifted === 0 ? 'error' : 'warning'}`}
+          aria-label="Reconcile all result"
+        >
+          Reconciled {reconcileResult.total} Object{reconcileResult.total === 1 ? '' : 's'} for {appId} against the current screen:{' '}
+          {reconcileResult.verified} verified, {reconcileResult.drifted} drifted, {reconcileResult.missing} not found on this screen.
+          {reconcileResult.missing > 0 && (
+            <div className="hint" style={{ marginTop: '0.3rem' }}>
+              Not found doesn't necessarily mean wrong — it may live on a different screen within this App ID's flow. Open that screen's scan session and reconcile again, or select it below to Reverify individually.
+            </div>
+          )}
+        </div>
+      )}
 
       {selected && !editing && (
         <div className="panel stack" style={{ gap: '0.6rem' }}>
