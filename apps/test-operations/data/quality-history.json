@@ -1,6 +1,83 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-03T11-00-04-604Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-03T11:00:05.330Z",
+      "finishedAt": "2026-08-03T11:01:29.576Z",
+      "passed": 58,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-03T10-59-34-058Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-03T10:59:34.720Z",
+      "finishedAt": "2026-08-03T10:59:54.829Z",
+      "passed": 80,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T10-59-22-556Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T10:59:22.618Z",
+      "finishedAt": "2026-08-03T10:59:28.632Z",
+      "passed": 110,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-08-03T10-55-51-193Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-03T10:55:52.089Z",
+      "finishedAt": "2026-08-03T10:57:17.106Z",
+      "passed": 58,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-03T10-55-21-225Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-03T10:55:21.931Z",
+      "finishedAt": "2026-08-03T10:55:41.985Z",
+      "passed": 80,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T10-55-09-805Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T10:55:09.862Z",
+      "finishedAt": "2026-08-03T10:55:15.763Z",
+      "passed": 110,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-03T10-54-49-382Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-03T10:54:49.441Z",
+      "finishedAt": "2026-08-03T10:54:55.168Z",
+      "passed": 109,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-03T10-11-05-228Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-03T10:11:05.981Z",
@@ -142,86 +219,26 @@
       "skipped": 4,
       "mode": "API",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T08-54-52-539Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T08:54:52.867Z",
-      "finishedAt": "2026-08-03T08:55:13.729Z",
-      "passed": 82,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-03T08-45-51-668Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-03T08:45:54.462Z",
-      "finishedAt": "2026-08-03T08:48:55.177Z",
-      "passed": 56,
-      "failed": 1,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-03T08-45-22-743Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-03T08:45:25.268Z",
-      "finishedAt": "2026-08-03T08:45:49.786Z",
-      "passed": 75,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T08-45-03-196Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T08:45:03.407Z",
-      "finishedAt": "2026-08-03T08:45:21.116Z",
-      "passed": 82,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-03T08-40-09-612Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-03T08:40:12.329Z",
-      "finishedAt": "2026-08-03T08:43:13.228Z",
-      "passed": 56,
-      "failed": 1,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-03T08-39-40-699Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-03T08:39:43.233Z",
-      "finishedAt": "2026-08-03T08:40:08.054Z",
-      "passed": 75,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T08-39-21-414Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T08:39:21.606Z",
-      "finishedAt": "2026-08-03T08:39:39.018Z",
-      "passed": 82,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0041",
+      "runId": "CORE-2026-08-03T10-54-49-382Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-08-03T10:54:55.168Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'GET /api/audit/runs supports every AC1 filter and reports X-Total-Count for pagination (BL-035 AC1/AC2)',\n      source: 'regression/api/audit-runs.test.js'\n    },\n...\n    {\n-     name: 'POST /api/discovery/:appId/start requires a processContext object in the body',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n-     name: 'POST /api/discovery/:appId/start requires an open scan session (BL-047 Phase 2)',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n-     name: 'GET /api/discovery/state reports inactive when no discovery run has been started',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n-     name: 'POST /api/discovery/step requires a discovery run to already be in progress',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n-     name: 'POST /api/discovery/stop is always safe to call, even with nothing running',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n      name: 'GET /api/groups lists known fixtures',\n      source: 'regression/api/groups.test.js'\n    },\n    {\n      name: 'GET /api/groups/:file returns the parsed group',\n...\n    {\n+     name: 'List Report: selects the first results row once a search has already run',\n-     name: 'List Report: selects the first results row via a captured column (never the table itself) once a search has already run',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n      name: 'List Report: clicks the primary action once search and row selection have both run',\n      source: 'regression/discovery-navigation.test.js'\n...\n    {\n-     name: 'derives a Field name from a button-less input control id when no text is present',\n-     source: 'regression/discovery-registration.test.js'\n-   },\n-   {\n-     name: 'derives a Button name from visible text, stripping a parenthetical count',\n-     source: 'regression/discovery-registration.test.js'\n-   },\n-   {\n-     name: 'derives a short Button name from a single word',\n-     source: 'regression/discovery-registration.test.js'\n-   },\n-   {\n-     name: 'derives a Table name from the control id when the control type ends in Table',\n-     source: 'regression/discovery-registration.test.js'\n-   },\n-   {\n-     name: 'does not double-append the type suffix when the derived base already ends with it',\n-     source: 'regression/discovery-registration.test.js'\n-   },\n-   {\n-     name: 'appends a numeric suffix when the derived name collides with an existing different control',\n-     source: 'regression/discovery-registration.test.js'\n-   },\n-   {\n-     name: 'keeps incrementing the numeric suffix past one collision',\n-     source: 'regression/discovery-registration.test.js'\n-   },\n-   {\n      name: 'Execution Center resolves the same canonical evidence URLs as Audit and Evidence',\n      source: 'regression/evidence-reference.test.js'\n    },\n    {\n      name: 'canonical evidence URL mapping rejects absolute and traversal paths',\n...\n    {\n-     name: 'Autonomous discovery panel (BL-047 Phase 2) only appears once a scan session is open',\n-     source: 'regression/ui/object-repository.test.js'\n-   },\n-   {\n      name: 'Canvas First Overview presents the approved shell and real workspace data',\n      source: 'regression/ui/overview.test.js'\n    },\n    {\n      name: 'Canvas First Overview primary action opens Compose without execution',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-08-03T10:55:15.763Z",
+      "remediationRunId": "CORE-2026-08-03T10-55-09-805Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-08-03T10-55-09-805Z."
+    },
     {
       "id": "FL-0040",
       "runId": "CORE-2026-08-03T10-09-15-654Z",
