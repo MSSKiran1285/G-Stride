@@ -1,4 +1,5 @@
 import { ModuleCall } from '@taf/core';
+import { AiResolver } from './aiResolver';
 
 /**
  * BL-047 Phase 2's live-navigation decision policy: given whatever screen the engine is
@@ -35,7 +36,14 @@ export interface CapturedControl {
   tableId?: string;
 }
 
-export type ScreenArchetype = 'list-report' | 'object-page' | 'dialog' | 'unknown';
+export type ScreenArchetype = 'list-report' | 'object-page' | 'dialog' | 'shell' | 'unknown';
+
+/** A Fiori Launchpad home screen's tiles render as sap.m.GenericTile (or the newer sap.f.Card
+ *  layout) — already a real, verified signal in this codebase: ui5Inspector.ts's
+ *  ACTIONABLE_TYPES/AUTO_ID_EXEMPT_TYPES/BORROWS_CHILD_TEXT entries for these two types were
+ *  each added after a real capture on this tenant's own Launchpad (see their comments), not
+ *  guessed up front. No app screen (List Report/Object Page/dialog) renders either type. */
+const SHELL_TILE_TYPES = new Set(['sap.m.GenericTile', 'sap.f.Card']);
 
 /** Fiori elements template screens embed which generator built them directly in every one of
  *  their controls' ids (e.g. "...::sap.suite.ui.generic.template.ListReport.view.ListReport::...")
@@ -46,6 +54,7 @@ export function classifyScreenArchetype(controls: CapturedControl[]): ScreenArch
   if (controls.some((c) => /^sap\.m\.(Dialog|MessageBox|Popover)$/.test(c.controlType))) return 'dialog';
   if (controls.some((c) => c.controlId.includes('sap.suite.ui.generic.template.ListReport.'))) return 'list-report';
   if (controls.some((c) => c.controlId.includes('sap.suite.ui.generic.template.ObjectPage.'))) return 'object-page';
+  if (controls.some((c) => SHELL_TILE_TYPES.has(c.controlType))) return 'shell';
   return 'unknown';
 }
 
@@ -164,18 +173,105 @@ function decideDialogAction(controls: CapturedControl[], appId: string): Navigat
   return { kind: 'needsFallback', reason: 'Dialog screen: no actionable button found to dismiss or confirm it.' };
 }
 
+/** "createPurchaseRequisition" -> "Create Purchase Requisition" — the same camelCase App ID
+ *  convention BL-037's Process Intent Router already derives text into (GlobalSearchPanel.tsx's
+ *  deriveAppId), run in reverse so the model gets a readable phrase to match tile labels
+ *  against. Every discovery run has an App ID by construction (it's a required parameter), so
+ *  this is available even before BL-047's natural-language entry point exists. */
+export function humanizeAppId(appId: string): string {
+  const withSpaces = appId.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
+}
+
+/** A tile with no readable text can never be matched against a process description — excluded
+ *  before the model ever sees the list, not left for it to guess at. */
+function namedTiles(controls: CapturedControl[]): CapturedControl[] {
+  return controls.filter((c) => SHELL_TILE_TYPES.has(c.controlType) && c.text);
+}
+
+function buildTileSelectionPrompt(processDescription: string, tiles: CapturedControl[]): string {
+  const list = tiles.map((tile, i) => `${i + 1}. ${tile.text}`).join('\n');
+  return [
+    `A test automation engine is looking at a SAP Fiori Launchpad home screen and needs to open the app for this process:`,
+    `"${processDescription}"`,
+    ``,
+    `Here are the tiles visible on the screen:`,
+    list,
+    ``,
+    `Reply with ONLY the number of the single tile that best matches this process, or reply with exactly NONE if no tile is a good match. Do not explain your answer.`,
+  ].join('\n');
+}
+
+/** Parses the model's reply back to one of the offered tiles — never trusts it blindly: an
+ *  out-of-range number, extra words around a number, or anything that isn't a clean match all
+ *  resolve to "no match" rather than guessing which tile was meant. */
+function parseTileSelectionResponse(response: string, tiles: CapturedControl[]): CapturedControl | undefined {
+  const trimmed = response.trim();
+  if (/^none$/i.test(trimmed)) return undefined;
+  const match = trimmed.match(/^(\d+)$/);
+  if (!match) return undefined;
+  const index = Number(match[1]) - 1;
+  return tiles[index];
+}
+
+/** Fiori Launchpad home screens have no fixed structural signal linking a tile's label to an
+ *  arbitrary process description the way a List Report/Object Page's own control ids do —
+ *  matching free-form text to the right tile is a language task, not a rules one, so this is
+ *  the one archetype that calls the model instead of a fixed decision tree (per the owner's
+ *  "rules first, model as fallback" choice). Requires an AiResolver to be supplied at all —
+ *  with none configured, this is an immediate, clearly-worded needsFallback rather than a
+ *  crash or a guess. */
+async function decideShellAction(
+  controls: CapturedControl[],
+  appId: string,
+  history: NavigationHistory,
+  aiResolver: AiResolver | undefined,
+): Promise<NavigationDecision> {
+  if (!aiResolver) {
+    return {
+      kind: 'needsFallback',
+      reason: 'Launchpad home screen: matching a tile to this process needs an AI resolver, and none is configured — add an API key in Settings.',
+    };
+  }
+  const tiles = namedTiles(controls);
+  if (tiles.length === 0) {
+    return { kind: 'needsFallback', reason: 'Launchpad home screen: no tiles with visible text were captured to choose from.' };
+  }
+
+  const processDescription = humanizeAppId(appId);
+  const response = await aiResolver.complete(buildTileSelectionPrompt(processDescription, tiles));
+  const chosen = parseTileSelectionResponse(response, tiles);
+  if (!chosen) {
+    return {
+      kind: 'needsFallback',
+      reason: `Launchpad home screen: no tile confidently matched "${processDescription}" — needs a human to navigate manually.`,
+    };
+  }
+  const historyKey = `click:${chosen.controlId}`;
+  if (history.modulesRunOnThisScreen.includes(historyKey)) {
+    return {
+      kind: 'needsFallback',
+      reason: `Launchpad home screen: already clicked the matching tile ("${chosen.text}") once without navigating away — needs a human to check what happened.`,
+    };
+  }
+  return { kind: 'action', call: { module: 'ClickButton', appId, params: { control: chosen.controlId } }, historyKey };
+}
+
 /**
  * The single entry point BL-047 Phase 2's navigation loop calls once per screen visit. Never
  * throws for "couldn't decide" — that's a `needsFallback` result, not an exception, since not
  * being able to decide is an expected, handleable outcome (fall back to a model, or stop and
- * hand off to the mandatory review gate), not a bug.
+ * hand off to the mandatory review gate), not a bug. Async because the shell/Launchpad
+ * archetype needs a real model call; every other archetype resolves synchronously underneath
+ * but still returns through this same Promise so callers have one uniform entry point.
  */
-export function decideNextAction(
+export async function decideNextAction(
   controls: CapturedControl[],
   processContext: Record<string, string>,
   history: NavigationHistory,
   appId: string,
-): NavigationDecision {
+  aiResolver?: AiResolver,
+): Promise<NavigationDecision> {
   const archetype = classifyScreenArchetype(controls);
   switch (archetype) {
     case 'list-report':
@@ -184,7 +280,9 @@ export function decideNextAction(
       return decideObjectPageAction(controls, processContext, history, appId);
     case 'dialog':
       return decideDialogAction(controls, appId);
+    case 'shell':
+      return decideShellAction(controls, appId, history, aiResolver);
     case 'unknown':
-      return { kind: 'needsFallback', reason: 'Screen did not match any known Fiori elements archetype (List Report, Object Page, or dialog).' };
+      return { kind: 'needsFallback', reason: 'Screen did not match any known Fiori elements archetype (List Report, Object Page, Dialog, or Launchpad shell).' };
   }
 }

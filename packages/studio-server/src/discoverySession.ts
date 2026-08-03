@@ -1,4 +1,4 @@
-import { ObjectRepository } from '@taf/core';
+import { ObjectRepository, getAiCredentialStatus } from '@taf/core';
 import {
   ModuleRegistry,
   classifyScreenArchetype,
@@ -11,6 +11,15 @@ import {
 } from '@taf/engine';
 import { FioriPlaywrightAdapter } from '@taf/adapter-fiori';
 import { captureScan, getActivePage } from './scanSession';
+import { AnthropicResolver, AI_PROVIDER } from './anthropicResolver';
+
+/** Only constructs a resolver when a key is actually configured — the shell/Launchpad
+ *  archetype's own decideShellAction() already gives a clear needsFallback for "no resolver,"
+ *  so an unconfigured POC never crashes, it just can't navigate off a Launchpad screen yet. */
+async function resolveAiResolver(): Promise<AnthropicResolver | undefined> {
+  const status = await getAiCredentialStatus(AI_PROVIDER);
+  return status.configured ? new AnthropicResolver() : undefined;
+}
 
 /**
  * BL-047 Phase 2's live orchestration loop: ties the rules-first decision policy
@@ -150,7 +159,8 @@ export async function runDiscoveryStep(
   }
   current.lastArchetype = archetype;
 
-  const decision = decideNextAction(controls, current.processContext, current.history, current.appId);
+  const aiResolver = await resolveAiResolver();
+  const decision = await decideNextAction(controls, current.processContext, current.history, current.appId, aiResolver);
   if (decision.kind !== 'action') {
     return { decision };
   }
