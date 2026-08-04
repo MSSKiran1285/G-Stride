@@ -246,10 +246,27 @@ async function inspectFrame(frame: Frame): Promise<RawDiscoveredControl[]> {
       return undefined;
     }
 
+    // The Fiori Launchpad keeps a previously-opened app's whole UI5 component alive in the
+    // DOM (hidden, not destroyed) after navigating to a different app — a standard "keep
+    // alive" performance pattern, not a bug in the tenant. document.querySelectorAll('[id]')
+    // finds these stale elements right alongside the real, currently-visible screen's own
+    // controls, with no way to tell them apart by id or type alone. Found via a real capture
+    // on this tenant: after navigating Launchpad home -> Procurement -> Process Purchase
+    // Requisitions, the capture still contained 40 sap.m.GenericTile controls from the Home
+    // page (bound for "homeApp-component---myhome--..."), none of them destroyed, all still
+    // resolving through core.byId(). Filtering to only elements actually rendered on screen —
+    // not display:none, not inside a hidden ancestor — excludes stale kept-alive components
+    // regardless of which app they belong to, without needing to know their ids up front.
+    function isRendered(el: HTMLElement | null | undefined): boolean {
+      if (!el) return true; // no DOM element at all — a logical-only control, not something to filter here
+      return el.offsetParent !== null || el.getClientRects().length > 0;
+    }
+
     const controls: RawDiscoveredControl[] = [];
     ids.forEach((id) => {
       const control = core.byId(id);
       if (!control) return;
+      if (!isRendered(typeof control.getDomRef === 'function' ? control.getDomRef() : undefined)) return;
       const bindingContext = typeof control.getBindingContext === 'function' ? control.getBindingContext() : undefined;
       const parent = typeof control.getParent === 'function' ? control.getParent() : undefined;
       controls.push({
