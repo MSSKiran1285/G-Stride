@@ -1,6 +1,50 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-04T04-27-09-982Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-04T04:27:11.874Z",
+      "finishedAt": "2026-08-04T04:29:24.807Z",
+      "passed": 59,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-04T04-26-42-821Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-04T04:26:45.048Z",
+      "finishedAt": "2026-08-04T04:27:08.724Z",
+      "passed": 84,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-04T04-26-20-269Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-04T04:26:20.373Z",
+      "finishedAt": "2026-08-04T04:26:41.107Z",
+      "passed": 130,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-04T04-25-09-319Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-04T04:25:09.431Z",
+      "finishedAt": "2026-08-04T04:25:29.352Z",
+      "passed": 129,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-04T03-31-20-106Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-04T03:31:21.202Z",
@@ -175,53 +219,26 @@
       "skipped": 4,
       "mode": "API",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T16-03-25-813Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T16:03:25.886Z",
-      "finishedAt": "2026-08-04T02:13:31.132Z",
-      "passed": 133,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-03T16-00-26-468Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-03T16:00:27.186Z",
-      "finishedAt": "2026-08-03T16:01:52.260Z",
-      "passed": 59,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-03T15-59-51-033Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-03T15:59:51.765Z",
-      "finishedAt": "2026-08-03T16:00:12.090Z",
-      "passed": 84,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-03T15-59-37-278Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-03T15:59:37.336Z",
-      "finishedAt": "2026-08-03T15:59:44.015Z",
-      "passed": 133,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0049",
+      "runId": "CORE-2026-08-04T04-25-09-319Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-08-04T04:25:29.352Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'encrypted AI provider API key persists securely across processes, separate from SAP credentials',\n      source: 'regression/ai-credentials-fallback.test.js'\n    },\n...\n    {\n-     name: 'the default model is Opus 5 (owner chose reliability over cost for this agentic, multi-step decision task)',\n-     source: 'regression/anthropic-resolver.test.js'\n-   },\n-   {\n      name: 'complete() throws a clear error on a non-200 response, including the response body',\n      source: 'regression/anthropic-resolver.test.js'\n    },\n    {\n      name: 'complete() throws a clear error when the response has no text content block',\n...\n    {\n+     name: 'POST /api/discovery/:appId/start requires a processContext object in the body',\n-     name: 'POST /api/discovery/:appId/start requires a non-empty instruction in the body',\n      source: 'regression/api/discovery.test.js'\n    },\n    {\n      name: 'POST /api/discovery/:appId/start requires an open scan session (BL-047 Phase 2)',\n      source: 'regression/api/discovery.test.js'\n...\n    {\n+     name: 'classifyScreenArchetype recognises a Fiori elements Object Page by its control-id template marker',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n      name: 'classifyScreenArchetype recognises a dialog by control type, regardless of namespace',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n      name: 'classifyScreenArchetype recognises a Fiori Launchpad home screen by its tile control types',\n...\n    {\n+     name: 'humanizeAppId turns a camelCase App ID back into a readable phrase',\n-     name: 'Dialog: clicks the actionable button without ever calling the model (no instruction interpretation needed)',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'List Report: searches first, using the first process-context value, when nothing has run yet',\n-     name: 'Dialog: needsFallback when no actionable button is present',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'List Report: selects the first results row via a captured column (never the table itself) once a search has already run',\n-     name: 'Every non-dialog archetype needsFallback with no AI resolver configured, never guesses',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'List Report: clicks the primary action once search and row selection have both run',\n-     name: 'needsFallback (without calling the model) when nothing fillable/clickable/selectable was captured',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'List Report: needsFallback when no search field, table, or unexercised action can be found',\n-     name: 'Launchpad shell: clicks the tile the model matches to the instruction, and the prompt carries the instruction and step log',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Object Page: fills a field whose control id matches a process-context key',\n-     name: 'Launchpad shell: needsFallback when the model replies NONE',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Object Page: clicks Save once the matching field is already filled',\n-     name: 'Launchpad shell: needsFallback when the matched tile was already clicked without navigating away',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Object Page: needsFallback when nothing to fill and no recognisable commit action exists',\n-     name: 'List Report screen: the model can fill the search field with a literal value extracted from the instruction',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Dialog: clicks the actionable button',\n-     name: 'List Report screen: the model can select a row via a captured column, never the table control itself',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Dialog: needsFallback when no actionable button is present',\n-     name: 'Unrecognized screen: fills the field the model matches, with a value it extracted itself from the instruction',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'unknown archetype with no AI resolver configured needsFallback, never guesses',\n-     name: 'Unrecognized screen: clicks the button the model picks',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Unrecognized screen: needsFallback with no AI resolver, even with real fields/buttons/tables present',\n-     name: 'Unrecognized screen: selects the first row via the table the model picks',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Unrecognized screen: needsFallback (without calling the model) when nothing fillable/clickable/selectable was captured',\n-     name: 'Unrecognized screen: reports DONE when the model judges the instruction fully carried out',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Unrecognized screen: fills the field the model matches to a reference-data key',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: clicks the button the model picks',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: selects the first row via the table the model picks',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n      name: 'Unrecognized screen: needsFallback when the model replies NONE',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Unrecognized screen: needsFallback on a reply that is not one of the four accepted shapes',\n-     name: 'Unrecognized screen: needsFallback on a reply that is not one of the five accepted shapes',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n      name: 'Unrecognized screen: needsFallback on an out-of-range field number',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Unrecognized screen: needsFallback when the model names a reference-data key that does not exist',\n-     name: 'Unrecognized screen: needsFallback on a FILL reply with no value at all',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n      name: 'Unrecognized screen: needsFallback when the chosen field was already filled once on this screen',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Unrecognized screen: needsFallback when the chosen button was already clicked once without navigating away',\n-     name: 'Unrecognized screen: needsFallback when the chosen button was already clicked once without making progress',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Launchpad shell: needsFallback with no AI resolver configured, rather than guessing a tile',\n-     name: 'Unrecognized screen: the prompt includes the full step log so the model can recognise repeated saves are not progress',\n      source: 'regression/discovery-navigation.test.js'\n    },\n    {\n+     name: 'Launchpad shell: clicks the tile the model matches to the humanized App ID',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: needsFallback when the model replies NONE',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: needsFallback on an unparseable model reply, rather than guessing',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: needsFallback on an out-of-range tile number',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: needsFallback when the matched tile was already clicked without navigating away',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: the tile-selection prompt tells the model tiles use generic verbs, not literal wording',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: matches \"Process Purchase Requisitions\" for a Create Purchase Requisition request once the model picks it',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: the tile-selection prompt tells the model a category tile is a valid pick when no specific app tile exists',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: picks the \"Procurement\" category tile to drill into for a Create Purchase Requisition request',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: the tile-selection prompt says a specific app tile always outranks a category tile',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: prefers the specific \"Process Purchase Requisitions\" tile over the \"Procurement\" category tile when both are present',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: needsFallback when no tile has visible text to match against',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n      name: 'derives a Field name from a button-less input control id when no text is present',\n      source: 'regression/discovery-registration.test.js'\n    },\n    {\n      name: 'derives a Button name from visible text, stripping a parenthetical count',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-08-04T04:26:41.107Z",
+      "remediationRunId": "CORE-2026-08-04T04-26-20-269Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-08-04T04-26-20-269Z."
+    },
     {
       "id": "FL-0048",
       "runId": "CORE-2026-08-04T03-21-27-258Z",
