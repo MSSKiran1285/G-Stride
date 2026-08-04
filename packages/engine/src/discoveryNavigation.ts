@@ -263,6 +263,178 @@ async function decideShellAction(
   return { kind: 'action', call: { module: 'ClickButton', appId, params: { control: chosen.controlId } }, historyKey };
 }
 
+const FILLABLE_TYPE_PATTERN = /Input|Field|TextArea|ComboBox|DatePicker|Select|MultiInput/i;
+const BUTTON_TYPE_PATTERN = /Button/i;
+
+function fillableFields(controls: CapturedControl[]): CapturedControl[] {
+  return controls.filter((c) => c.category === 'actionable' && FILLABLE_TYPE_PATTERN.test(c.controlType));
+}
+
+function clickableButtons(controls: CapturedControl[]): CapturedControl[] {
+  return controls.filter((c) => c.category === 'actionable' && BUTTON_TYPE_PATTERN.test(c.controlType));
+}
+
+/** One representative captured column per distinct table — SelectTableRow needs any single
+ *  captured column to identify which table to act on (see CapturedControl.tableId), so showing
+ *  every column of the same table as a separate candidate would just be redundant noise. */
+function selectableTables(controls: CapturedControl[]): CapturedControl[] {
+  const seenTableIds = new Set<string>();
+  const representatives: CapturedControl[] = [];
+  for (const c of controls) {
+    if (!c.tableId || seenTableIds.has(c.tableId)) continue;
+    seenTableIds.add(c.tableId);
+    representatives.push(c);
+  }
+  return representatives;
+}
+
+function buildUnknownScreenPrompt(
+  processDescription: string,
+  processContext: Record<string, string>,
+  fields: CapturedControl[],
+  buttons: CapturedControl[],
+  tables: CapturedControl[]
+): string {
+  const contextLines =
+    Object.keys(processContext).length > 0
+      ? Object.entries(processContext).map(([key, value]) => `- ${key}: ${value}`).join('\n')
+      : '(none provided)';
+  const fieldLines = fields.length > 0 ? fields.map((f, i) => `${i + 1}. "${f.text ?? f.controlId}"`).join('\n') : '(none)';
+  const buttonLines = buttons.length > 0 ? buttons.map((b, i) => `${i + 1}. "${b.text ?? b.controlId}"`).join('\n') : '(none)';
+  const tableLines = tables.length > 0 ? tables.map((t, i) => `${i + 1}. "${t.text ?? t.controlId}" (column)`).join('\n') : '(none)';
+
+  return [
+    `A test automation engine is looking at a SAP Fiori screen that doesn't match any of its known page layouts (not a recognized List Report, Object Page, dialog, or Launchpad shell) and needs to decide the single next action to advance this process:`,
+    `"${processDescription}"`,
+    ``,
+    `Available reference data for this process:`,
+    contextLines,
+    ``,
+    `Fields that can be filled with reference data:`,
+    fieldLines,
+    ``,
+    `Buttons that can be clicked:`,
+    buttonLines,
+    ``,
+    `Tables whose first row can be selected (each one represents a whole table, by one of its columns):`,
+    tableLines,
+    ``,
+    `Decide the SINGLE next action that best advances this process, using the reference data where its business meaning clearly matches a field (e.g. a "supplier" reference value into a "Supplier" or "Vendor" field). Reply with ONLY one line in exactly one of these formats, with no explanation:`,
+    `FILL <field number> <reference data key>`,
+    `CLICK <button number>`,
+    `SELECT <table number>`,
+    `NONE`,
+  ].join('\n');
+}
+
+type UnknownScreenChoice =
+  | { kind: 'fill'; control: CapturedControl; contextKey: string }
+  | { kind: 'click'; control: CapturedControl }
+  | { kind: 'select'; control: CapturedControl }
+  | undefined;
+
+/** Parses the model's reply back to one specific candidate — never trusts it blindly: an
+ *  out-of-range index, an unknown reference-data key, or anything not in exactly one of the
+ *  four accepted shapes all resolve to "no match" rather than guessing. */
+function parseUnknownScreenResponse(
+  response: string,
+  fields: CapturedControl[],
+  buttons: CapturedControl[],
+  tables: CapturedControl[],
+  processContext: Record<string, string>
+): UnknownScreenChoice {
+  const trimmed = response.trim();
+  if (/^none$/i.test(trimmed)) return undefined;
+
+  const fillMatch = trimmed.match(/^FILL\s+(\d+)\s+(\S+)$/i);
+  if (fillMatch) {
+    const control = fields[Number(fillMatch[1]) - 1];
+    const contextKey = fillMatch[2];
+    if (!control || !(contextKey in processContext)) return undefined;
+    return { kind: 'fill', control, contextKey };
+  }
+
+  const clickMatch = trimmed.match(/^CLICK\s+(\d+)$/i);
+  if (clickMatch) {
+    const control = buttons[Number(clickMatch[1]) - 1];
+    return control ? { kind: 'click', control } : undefined;
+  }
+
+  const selectMatch = trimmed.match(/^SELECT\s+(\d+)$/i);
+  if (selectMatch) {
+    const control = tables[Number(selectMatch[1]) - 1];
+    return control ? { kind: 'select', control } : undefined;
+  }
+
+  return undefined;
+}
+
+/**
+ * BL-047 Phase 2's second model-driven archetype: a screen that matches none of the fixed
+ * Fiori elements templates (e.g. a Fiori Elements V4 app, whose control ids carry a different
+ * namespace than the classic sap.suite.ui.generic.template.* markers decideListReportAction/
+ * decideObjectPageAction target — confirmed via a real live capture where only 1 of 1260
+ * captured controls even contained "ListReport" in its id). There is no fixed structural
+ * signal linking an arbitrary field/button/table's label to an arbitrary process the way a
+ * classic template's own control ids do, so — same reasoning as decideShellAction — this is a
+ * model decision, not a rules one. Deliberately narrower in scope than a general "drive any
+ * screen" agent: one action per call (fill one field, click one button, or select one table's
+ * first row), always through the exact same review-and-registration path every other decision
+ * in this module already goes through.
+ */
+async function decideUnknownAction(
+  controls: CapturedControl[],
+  processContext: Record<string, string>,
+  history: NavigationHistory,
+  appId: string,
+  aiResolver: AiResolver | undefined,
+): Promise<NavigationDecision> {
+  if (!aiResolver) {
+    return {
+      kind: 'needsFallback',
+      reason: 'Unrecognized screen: deciding what to do here needs an AI resolver, and none is configured — add an API key in Settings.',
+    };
+  }
+
+  const fields = fillableFields(controls);
+  const buttons = clickableButtons(controls);
+  const tables = selectableTables(controls);
+  if (fields.length === 0 && buttons.length === 0 && tables.length === 0) {
+    return { kind: 'needsFallback', reason: 'Unrecognized screen: no fillable field, clickable button, or selectable table was captured.' };
+  }
+
+  const processDescription = humanizeAppId(appId);
+  const response = await aiResolver.complete(buildUnknownScreenPrompt(processDescription, processContext, fields, buttons, tables));
+  const choice = parseUnknownScreenResponse(response, fields, buttons, tables, processContext);
+  if (!choice) {
+    return {
+      kind: 'needsFallback',
+      reason: `Unrecognized screen: no confident next action found for "${processDescription}" — needs a human to take over.`,
+    };
+  }
+
+  if (choice.kind === 'fill') {
+    const historyKey = `fill:${choice.control.controlId}`;
+    if (history.modulesRunOnThisScreen.includes(historyKey)) {
+      return { kind: 'needsFallback', reason: `Unrecognized screen: already filled "${choice.control.text}" once — needs a human to check what happened.` };
+    }
+    return {
+      kind: 'action',
+      call: { module: 'EnterHeaderField', appId, params: { field: choice.control.controlId, value: processContext[choice.contextKey] } },
+      historyKey,
+    };
+  }
+
+  const historyKey = choice.kind === 'select' ? `select:${choice.control.controlId}` : `click:${choice.control.controlId}`;
+  if (history.modulesRunOnThisScreen.includes(historyKey)) {
+    return { kind: 'needsFallback', reason: `Unrecognized screen: already ${choice.kind === 'select' ? 'selected a row in' : 'clicked'} "${choice.control.text}" once without navigating away — needs a human to check what happened.` };
+  }
+  if (choice.kind === 'select') {
+    return { kind: 'action', call: { module: 'SelectTableRow', appId, params: { field: choice.control.controlId, rowIndex: '0' } }, historyKey };
+  }
+  return { kind: 'action', call: { module: 'ClickButton', appId, params: { control: choice.control.controlId } }, historyKey };
+}
+
 /**
  * The single entry point BL-047 Phase 2's navigation loop calls once per screen visit. Never
  * throws for "couldn't decide" — that's a `needsFallback` result, not an exception, since not
@@ -289,6 +461,6 @@ export async function decideNextAction(
     case 'shell':
       return decideShellAction(controls, appId, history, aiResolver);
     case 'unknown':
-      return { kind: 'needsFallback', reason: 'Screen did not match any known Fiori elements archetype (List Report, Object Page, Dialog, or Launchpad shell).' };
+      return decideUnknownAction(controls, processContext, history, appId, aiResolver);
   }
 }

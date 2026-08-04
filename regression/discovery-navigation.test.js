@@ -193,7 +193,7 @@ test('Dialog: needsFallback when no actionable button is present', async () => {
   assert.match(decision.reason, /Dialog/);
 });
 
-test('unknown archetype always needsFallback, never guesses', async () => {
+test('unknown archetype with no AI resolver configured needsFallback, never guesses', async () => {
   const decision = await decideNextAction(
     [{ controlId: '__view1--randomThing', controlType: 'sap.m.Text', category: 'informational' }],
     { anything: 'value' },
@@ -201,7 +201,124 @@ test('unknown archetype always needsFallback, never guesses', async () => {
     APP_ID,
   );
   assert.equal(decision.kind, 'needsFallback');
-  assert.match(decision.reason, /did not match any known Fiori elements archetype/);
+  assert.match(decision.reason, /needs an AI resolver/i);
+});
+
+// Modeled on the real "Process Purchase Requisitions" screen reached live on 4 Aug 2026 — a
+// Fiori Elements screen whose control ids carry a different template namespace than the
+// classic sap.suite.ui.generic.template.* markers decideListReportAction targets (confirmed
+// live: only 1 of 1260 captured controls even contained "ListReport" in its id), so it
+// correctly falls through every fixed archetype to 'unknown'. Field/button/table labels here
+// are the real, observed ones from that screen.
+const unknownScreenControls = [
+  { controlId: '__field1', controlType: 'sap.m.Input', text: 'Purchase Requisition Number', category: 'actionable' },
+  { controlId: '__field2', controlType: 'sap.m.Input', text: 'Plant', category: 'actionable' },
+  { controlId: '__field3', controlType: 'sap.m.Input', text: 'Material Group', category: 'actionable' },
+  { controlId: '__btnGo', controlType: 'sap.m.Button', text: 'Go', category: 'actionable' },
+  { controlId: '__btnCreatePO', controlType: 'sap.m.Button', text: 'Create Purchase Order', category: 'actionable' },
+  { controlId: '__table1', controlType: 'sap.m.Table', category: 'structural' },
+  { controlId: '__col1', controlType: 'sap.m.Column', text: 'Purchase Requisition', category: 'structural', tableId: '__table1' },
+  { controlId: '__col2', controlType: 'sap.m.Column', text: 'Material ID', category: 'structural', tableId: '__table1' },
+];
+
+test('Unrecognized screen: needsFallback with no AI resolver, even with real fields/buttons/tables present', async () => {
+  const decision = await decideNextAction(unknownScreenControls, { prNumber: '1000123' }, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition');
+  assert.equal(decision.kind, 'needsFallback');
+  assert.match(decision.reason, /needs an AI resolver/i);
+});
+
+test('Unrecognized screen: needsFallback (without calling the model) when nothing fillable/clickable/selectable was captured', async () => {
+  const resolver = fakeResolver('NONE');
+  const decision = await decideNextAction(
+    [{ controlId: '__text1', controlType: 'sap.m.Text', text: 'Some heading', category: 'informational' }],
+    {},
+    { modulesRunOnThisScreen: [] },
+    'createPurchaseRequisition',
+    resolver
+  );
+  assert.equal(decision.kind, 'needsFallback');
+  assert.equal(resolver.calls.length, 0, 'expected no model call when there is nothing to act on at all');
+});
+
+test('Unrecognized screen: fills the field the model matches to a reference-data key', async () => {
+  const resolver = fakeResolver('FILL 1 prNumber');
+  const decision = await decideNextAction(unknownScreenControls, { prNumber: '1000123' }, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.module, 'EnterHeaderField');
+  assert.equal(decision.call.params.field, '__field1');
+  assert.equal(decision.call.params.value, '1000123');
+  assert.equal(decision.historyKey, 'fill:__field1');
+  assert.match(resolver.calls[0], /Purchase Requisition Number/);
+  assert.match(resolver.calls[0], /prNumber: 1000123/);
+});
+
+test('Unrecognized screen: clicks the button the model picks', async () => {
+  const resolver = fakeResolver('CLICK 1');
+  const decision = await decideNextAction(unknownScreenControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.module, 'ClickButton');
+  assert.equal(decision.call.params.control, '__btnGo');
+  assert.equal(decision.historyKey, 'click:__btnGo');
+});
+
+test('Unrecognized screen: selects the first row via the table the model picks', async () => {
+  const resolver = fakeResolver('SELECT 1');
+  const decision = await decideNextAction(unknownScreenControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.module, 'SelectTableRow');
+  assert.equal(decision.call.params.field, '__col1');
+  assert.equal(decision.call.params.rowIndex, '0');
+  assert.equal(decision.historyKey, 'select:__col1');
+});
+
+test('Unrecognized screen: needsFallback when the model replies NONE', async () => {
+  const resolver = fakeResolver('NONE');
+  const decision = await decideNextAction(unknownScreenControls, {}, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'needsFallback');
+});
+
+test('Unrecognized screen: needsFallback on a reply that is not one of the four accepted shapes', async () => {
+  const resolver = fakeResolver('Sure, fill the first field with the requisition number');
+  const decision = await decideNextAction(unknownScreenControls, { prNumber: '1000123' }, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'needsFallback');
+});
+
+test('Unrecognized screen: needsFallback on an out-of-range field number', async () => {
+  const resolver = fakeResolver('FILL 99 prNumber');
+  const decision = await decideNextAction(unknownScreenControls, { prNumber: '1000123' }, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'needsFallback');
+});
+
+test('Unrecognized screen: needsFallback when the model names a reference-data key that does not exist', async () => {
+  const resolver = fakeResolver('FILL 1 madeUpKey');
+  const decision = await decideNextAction(unknownScreenControls, { prNumber: '1000123' }, { modulesRunOnThisScreen: [] }, 'createPurchaseRequisition', resolver);
+  assert.equal(decision.kind, 'needsFallback');
+});
+
+test('Unrecognized screen: needsFallback when the chosen field was already filled once on this screen', async () => {
+  const resolver = fakeResolver('FILL 1 prNumber');
+  const decision = await decideNextAction(
+    unknownScreenControls,
+    { prNumber: '1000123' },
+    { modulesRunOnThisScreen: ['fill:__field1'] },
+    'createPurchaseRequisition',
+    resolver
+  );
+  assert.equal(decision.kind, 'needsFallback');
+  assert.match(decision.reason, /already filled/);
+});
+
+test('Unrecognized screen: needsFallback when the chosen button was already clicked once without navigating away', async () => {
+  const resolver = fakeResolver('CLICK 1');
+  const decision = await decideNextAction(
+    unknownScreenControls,
+    {},
+    { modulesRunOnThisScreen: ['click:__btnGo'] },
+    'createPurchaseRequisition',
+    resolver
+  );
+  assert.equal(decision.kind, 'needsFallback');
+  assert.match(decision.reason, /already clicked/);
 });
 
 test('Launchpad shell: needsFallback with no AI resolver configured, rather than guessing a tile', async () => {
