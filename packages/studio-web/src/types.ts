@@ -396,7 +396,8 @@ export interface DiscoveryStepResult {
 export interface DiscoveryState {
   active: boolean;
   appId?: string;
-  processContext?: Record<string, string>;
+  instruction?: string;
+  stepLog?: string[];
   steps?: DiscoveredStep[];
   startedAt?: string;
 }

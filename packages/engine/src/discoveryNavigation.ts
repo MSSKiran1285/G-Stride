@@ -4,18 +4,23 @@ import { AiResolver } from './aiResolver';
 /**
  * BL-047 Phase 2's live-navigation decision policy: given whatever screen the engine is
  * currently looking at (as a plain capture, not tied to any one adapter's own type — see the
- * note on CapturedControl below) and the reference master data extracted by
- * QueryReferenceDocument, decide the single next action to take, or say plainly that it can't.
+ * note on CapturedControl below), a plain-English instruction, and a log of what's already been
+ * done this run, decide the single next action to take — or say plainly that it can't.
  *
- * Design (per the owner's explicit choice, "rules first, model as fallback"): try a small,
- * fixed decision tree per Fiori elements archetype first — auditable, deterministic, and
- * testable with plain synthetic control lists, no live model calls. Only when the archetype
- * can't be classified, or the rule for that archetype can't find what it needs, does the
- * caller get a `needsFallback` result instead of an action — deciding what to do with that
- * (call a model, or stop and hand off to the mandatory review gate) is the caller's job, not
- * this module's. No model integration is wired up here yet — see
- * docs/ui-ux/AUTONOMOUS_TEST_AUTHORING_DESIGN.md for why that's a separate decision (provider,
- * credentials, cost) rather than an assumption baked into this module.
+ * Design history: this module originally tried a fixed decision tree per Fiori elements
+ * archetype first, with a model only as a fallback for Launchpad tiles and unrecognized
+ * screens, driven by an abstract `Record<string,string>` of reference values with no memory of
+ * an overall goal. Live testing on 4 Aug 2026 showed exactly why that failed: on a real screen,
+ * the model — given only "here are some buttons, pick one" with no instruction and no history —
+ * clicked Save, Save As, Save, Save again, seven times, with no coherent progress. The owner's
+ * direction after seeing that: switch entirely to a natural-language instruction as the single
+ * source of intent, keep a running log of completed steps as the model's memory of its own
+ * progress, and let the model decide every non-dialog screen this way — "the model should be
+ * the foundation", not a last resort behind two now-dead fixed-rule paths (the old List
+ * Report/Object Page rules depended on that same abstract key-value dictionary and have never
+ * once fired correctly in real testing; every real screen hit has been Launchpad or
+ * unrecognized). Dialogs stay a fixed rule — confirming/dismissing one is unambiguous and needs
+ * no instruction interpretation.
  */
 
 /** Deliberately narrower than adapter-fiori's own DiscoveredControl (which this package must
@@ -48,8 +53,9 @@ const SHELL_TILE_TYPES = new Set(['sap.m.GenericTile', 'sap.f.Card']);
 /** Fiori elements template screens embed which generator built them directly in every one of
  *  their controls' ids (e.g. "...::sap.suite.ui.generic.template.ListReport.view.ListReport::...")
  *  — the same real, verified signal already visible in every createOutboundDelivery control id
- *  inspected during BL-047's design review. This is a far more reliable signal than counting
- *  control types, and needs no heuristic tuning as new screens are seen. */
+ *  inspected during BL-047's design review. Still used to give the model a one-line hint about
+ *  what kind of screen it's looking at, even though the decision itself is no longer a fixed
+ *  rule for these two archetypes (see the module comment above). */
 export function classifyScreenArchetype(controls: CapturedControl[]): ScreenArchetype {
   if (controls.some((c) => /^sap\.m\.(Dialog|MessageBox|Popover)$/.test(c.controlType))) return 'dialog';
   if (controls.some((c) => c.controlId.includes('sap.suite.ui.generic.template.ListReport.'))) return 'list-report';
@@ -61,7 +67,8 @@ export function classifyScreenArchetype(controls: CapturedControl[]): ScreenArch
 /** What the navigation loop has already done on the current screen — a plain history of module
  *  names already executed here, so a stateless call can still tell "have I already searched?"
  *  apart from "have I already selected a row?" without the caller tracking archetype-specific
- *  state of its own. */
+ *  state of its own. Screen-scoped (reset on archetype change) — separate from the run-wide
+ *  step log, which is the model's memory of overall progress on the instruction. */
 export interface NavigationHistory {
   modulesRunOnThisScreen: string[];
 }
@@ -71,96 +78,11 @@ export type NavigationDecision =
   | { kind: 'done' }
   | { kind: 'needsFallback'; reason: string };
 
-/** List Report screens follow the same three-step shape create-delivery.json's hand-written
- *  flow already uses: fill the search field from reference data, run the search, select the
- *  first (most likely only, for a filtered search) result row, then fire the toolbar action
- *  that advances the process. Field/control names are supplied by the caller (findControl),
- *  not guessed here, since which named control plays "the search field" vs "the toolbar
- *  action" is itself an Object Repository lookup, not something this module should know. */
-function decideListReportAction(
-  controls: CapturedControl[],
-  processContext: Record<string, string>,
-  history: NavigationHistory,
-  appId: string,
-): NavigationDecision {
-  const searchField = controls.find((c) => /SearchField|SDDocument|ReferenceDocument/i.test(c.controlId) && c.category !== 'structural');
-  const goButton = controls.find((c) => /btnGo|GoButton/i.test(c.controlId));
-  // SelectTableRow needs a captured *column* (tableId set), never the table control itself —
-  // see CapturedControl.tableId.
-  const resultsColumn = controls.find((c) => Boolean(c.tableId));
-  const primaryAction = controls.find(
-    (c) =>
-      c.category === 'actionable' &&
-      c.controlType === 'sap.m.Button' &&
-      c.controlId !== goButton?.controlId &&
-      !history.modulesRunOnThisScreen.includes(`click:${c.controlId}`)
-  );
-
-  const searchValue = Object.values(processContext)[0];
-  if (searchField && goButton && searchValue && !history.modulesRunOnThisScreen.includes('search')) {
-    return {
-      kind: 'action',
-      call: { module: 'EnterHeaderField', appId, params: { field: searchField.controlId, value: searchValue, pressKey: 'Enter' } },
-      historyKey: 'search',
-    };
-  }
-  if (resultsColumn && !history.modulesRunOnThisScreen.includes('select-row')) {
-    return {
-      kind: 'action',
-      call: { module: 'SelectTableRow', appId, params: { field: resultsColumn.controlId, rowIndex: '0' } },
-      historyKey: 'select-row',
-    };
-  }
-  if (primaryAction) {
-    return {
-      kind: 'action',
-      call: { module: 'ClickButton', appId, params: { control: primaryAction.controlId } },
-      historyKey: `click:${primaryAction.controlId}`,
-    };
-  }
-  return { kind: 'needsFallback', reason: 'List Report screen: could not find a search field, a captured results column, or an unexercised primary action.' };
-}
-
-/** Object Page screens: fill every fillable field this process context has a value for, then
- *  fire the header-level action that commits the page (Save, Post, Create, ...). Reference
- *  fields are matched to on-screen inputs by control id substring against the process
- *  context's own keys — the same "camelCase key names the field" convention QueryReferenceDocument
- *  already establishes, not a new naming scheme. */
-function decideObjectPageAction(
-  controls: CapturedControl[],
-  processContext: Record<string, string>,
-  history: NavigationHistory,
-  appId: string,
-): NavigationDecision {
-  const fillableInputs = controls.filter((c) => c.category === 'actionable' && /Input|Field/i.test(c.controlType));
-  for (const input of fillableInputs) {
-    const matchingKey = Object.keys(processContext).find((key) => input.controlId.toLowerCase().includes(key.toLowerCase()));
-    const fillKey = `fill:${input.controlId}`;
-    if (matchingKey && !history.modulesRunOnThisScreen.includes(fillKey)) {
-      return {
-        kind: 'action',
-        call: { module: 'EnterHeaderField', appId, params: { field: input.controlId, value: processContext[matchingKey] } },
-        historyKey: fillKey,
-      };
-    }
-  }
-  const headerAction = controls.find(
-    (c) => c.category === 'actionable' && c.controlType === 'sap.m.Button' && /Save|Post|Create|Submit/i.test(c.text ?? c.controlId)
-  );
-  if (headerAction) {
-    return {
-      kind: 'action',
-      call: { module: 'ClickButton', appId, params: { control: headerAction.controlId } },
-      historyKey: `click:${headerAction.controlId}`,
-    };
-  }
-  return { kind: 'needsFallback', reason: 'Object Page screen: every process-context field is already filled, but no Save/Post/Create/Submit action was found.' };
-}
-
 /** A confirmation dialog reads its own message and takes the primary (rightmost/first
  *  actionable) button — the same "read message -> primary action" shape every dialog in this
  *  product's existing Tests already follows (e.g. create-delivery.json's own confirmation
- *  steps), just made an explicit rule instead of hand-authored per Test. */
+ *  steps), just made an explicit rule instead of hand-authored per Test. The one archetype that
+ *  stays a fixed rule: confirming/dismissing a dialog needs no instruction interpretation. */
 function decideDialogAction(controls: CapturedControl[], appId: string): NavigationDecision {
   const primaryButton = controls.find((c) => c.controlType === 'sap.m.Button' && c.category === 'actionable');
   if (primaryButton) {
@@ -173,96 +95,6 @@ function decideDialogAction(controls: CapturedControl[], appId: string): Navigat
   return { kind: 'needsFallback', reason: 'Dialog screen: no actionable button found to dismiss or confirm it.' };
 }
 
-/** "createPurchaseRequisition" -> "Create Purchase Requisition" — the same camelCase App ID
- *  convention BL-037's Process Intent Router already derives text into (GlobalSearchPanel.tsx's
- *  deriveAppId), run in reverse so the model gets a readable phrase to match tile labels
- *  against. Every discovery run has an App ID by construction (it's a required parameter), so
- *  this is available even before BL-047's natural-language entry point exists. */
-export function humanizeAppId(appId: string): string {
-  const withSpaces = appId.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
-  return withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
-}
-
-/** A tile with no readable text can never be matched against a process description — excluded
- *  before the model ever sees the list, not left for it to guess at. */
-function namedTiles(controls: CapturedControl[]): CapturedControl[] {
-  return controls.filter((c) => SHELL_TILE_TYPES.has(c.controlType) && c.text);
-}
-
-function buildTileSelectionPrompt(processDescription: string, tiles: CapturedControl[]): string {
-  const list = tiles.map((tile, i) => `${i + 1}. ${tile.text}`).join('\n');
-  return [
-    `A test automation engine is looking at a SAP Fiori Launchpad home screen and needs to open the app for this process:`,
-    `"${processDescription}"`,
-    ``,
-    `Here are the tiles visible on the screen:`,
-    list,
-    ``,
-    `SAP Fiori app tiles are usually named after the business object and a generic verb (Process, Manage, Post, Monitor, Track, ...) rather than the exact action requested — e.g. a request to "Create Purchase Requisition" is correctly handled by a tile named "Process Purchase Requisitions" or "Manage Purchase Requisitions", not only one that literally says "Create". Match on the business object and overall intent, not literal wording, but do not pick a tile for a clearly different object or a different lifecycle stage (e.g. do not pick "Monitor Purchase Requisition Items" or "Supplier Invoices List" for a Create request).`,
-    ``,
-    `Some Launchpad screens show broad department/category tiles instead of specific app tiles — e.g. "Finance", "Procurement", "Sales" rather than any single named app. If none of the tiles is a specific app for this process, but one is the department/category that would normally contain it (e.g. "Procurement" for anything about purchase requisitions, purchase orders, goods receipt, or supplier invoices), pick that category tile — navigating into it first is a normal, expected step, not a failure. Only reply NONE when nothing visible, at either level, plausibly leads toward this process.`,
-    ``,
-    `IMPORTANT: a specific app tile always outranks a broader department/category tile when both are visible in the same list — e.g. if both "Procurement" and "Process Purchase Requisitions" are present, pick "Process Purchase Requisitions", not "Procurement" again. A department/category tile is only ever the right pick when no specific app tile for this process is visible at all yet.`,
-    ``,
-    `Reply with ONLY the number of the single tile that best matches this process, or reply with exactly NONE if no tile is a good match. Do not explain your answer.`,
-  ].join('\n');
-}
-
-/** Parses the model's reply back to one of the offered tiles — never trusts it blindly: an
- *  out-of-range number, extra words around a number, or anything that isn't a clean match all
- *  resolve to "no match" rather than guessing which tile was meant. */
-function parseTileSelectionResponse(response: string, tiles: CapturedControl[]): CapturedControl | undefined {
-  const trimmed = response.trim();
-  if (/^none$/i.test(trimmed)) return undefined;
-  const match = trimmed.match(/^(\d+)$/);
-  if (!match) return undefined;
-  const index = Number(match[1]) - 1;
-  return tiles[index];
-}
-
-/** Fiori Launchpad home screens have no fixed structural signal linking a tile's label to an
- *  arbitrary process description the way a List Report/Object Page's own control ids do —
- *  matching free-form text to the right tile is a language task, not a rules one, so this is
- *  the one archetype that calls the model instead of a fixed decision tree (per the owner's
- *  "rules first, model as fallback" choice). Requires an AiResolver to be supplied at all —
- *  with none configured, this is an immediate, clearly-worded needsFallback rather than a
- *  crash or a guess. */
-async function decideShellAction(
-  controls: CapturedControl[],
-  appId: string,
-  history: NavigationHistory,
-  aiResolver: AiResolver | undefined,
-): Promise<NavigationDecision> {
-  if (!aiResolver) {
-    return {
-      kind: 'needsFallback',
-      reason: 'Launchpad home screen: matching a tile to this process needs an AI resolver, and none is configured — add an API key in Settings.',
-    };
-  }
-  const tiles = namedTiles(controls);
-  if (tiles.length === 0) {
-    return { kind: 'needsFallback', reason: 'Launchpad home screen: no tiles with visible text were captured to choose from.' };
-  }
-
-  const processDescription = humanizeAppId(appId);
-  const response = await aiResolver.complete(buildTileSelectionPrompt(processDescription, tiles));
-  const chosen = parseTileSelectionResponse(response, tiles);
-  if (!chosen) {
-    return {
-      kind: 'needsFallback',
-      reason: `Launchpad home screen: no tile confidently matched "${processDescription}" — needs a human to navigate manually.`,
-    };
-  }
-  const historyKey = `click:${chosen.controlId}`;
-  if (history.modulesRunOnThisScreen.includes(historyKey)) {
-    return {
-      kind: 'needsFallback',
-      reason: `Launchpad home screen: already clicked the matching tile ("${chosen.text}") once without navigating away — needs a human to check what happened.`,
-    };
-  }
-  return { kind: 'action', call: { module: 'ClickButton', appId, params: { control: chosen.controlId } }, historyKey };
-}
-
 const FILLABLE_TYPE_PATTERN = /Input|Field|TextArea|ComboBox|DatePicker|Select|MultiInput/i;
 const BUTTON_TYPE_PATTERN = /Button/i;
 
@@ -270,8 +102,13 @@ function fillableFields(controls: CapturedControl[]): CapturedControl[] {
   return controls.filter((c) => c.category === 'actionable' && FILLABLE_TYPE_PATTERN.test(c.controlType));
 }
 
+/** Ordinary buttons plus Launchpad tiles — from the model's perspective, clicking either one is
+ *  the same kind of action (advance by clicking something), so they share one CLICK candidate
+ *  list instead of needing two separate archetype-specific decision paths. */
 function clickableButtons(controls: CapturedControl[]): CapturedControl[] {
-  return controls.filter((c) => c.category === 'actionable' && BUTTON_TYPE_PATTERN.test(c.controlType));
+  const buttons = controls.filter((c) => c.category === 'actionable' && BUTTON_TYPE_PATTERN.test(c.controlType));
+  const tiles = controls.filter((c) => SHELL_TILE_TYPES.has(c.controlType) && c.text);
+  return [...buttons, ...tiles];
 }
 
 /** One representative captured column per distinct table — SelectTableRow needs any single
@@ -288,111 +125,126 @@ function selectableTables(controls: CapturedControl[]): CapturedControl[] {
   return representatives;
 }
 
-function buildUnknownScreenPrompt(
-  processDescription: string,
-  processContext: Record<string, string>,
+function archetypeHint(archetype: ScreenArchetype): string {
+  switch (archetype) {
+    case 'shell':
+      return 'a Fiori Launchpad screen (a home page or a category page) showing navigation tiles';
+    case 'list-report':
+      return 'a List Report search/results screen';
+    case 'object-page':
+      return 'an Object Page detail/edit screen';
+    case 'dialog':
+      return 'a dialog';
+    case 'unknown':
+      return "a screen whose exact layout isn't recognized";
+  }
+}
+
+function buildInstructionPrompt(
+  instruction: string,
+  stepLog: string[],
+  archetype: ScreenArchetype,
   fields: CapturedControl[],
   buttons: CapturedControl[],
   tables: CapturedControl[]
 ): string {
-  const contextLines =
-    Object.keys(processContext).length > 0
-      ? Object.entries(processContext).map(([key, value]) => `- ${key}: ${value}`).join('\n')
-      : '(none provided)';
+  const stepLines = stepLog.length > 0 ? stepLog.map((s, i) => `${i + 1}. ${s}`).join('\n') : '(none yet)';
   const fieldLines = fields.length > 0 ? fields.map((f, i) => `${i + 1}. "${f.text ?? f.controlId}"`).join('\n') : '(none)';
   const buttonLines = buttons.length > 0 ? buttons.map((b, i) => `${i + 1}. "${b.text ?? b.controlId}"`).join('\n') : '(none)';
   const tableLines = tables.length > 0 ? tables.map((t, i) => `${i + 1}. "${t.text ?? t.controlId}" (column)`).join('\n') : '(none)';
 
   return [
-    `A test automation engine is looking at a SAP Fiori screen that doesn't match any of its known page layouts (not a recognized List Report, Object Page, dialog, or Launchpad shell) and needs to decide the single next action to advance this process:`,
-    `"${processDescription}"`,
+    `You are driving a live SAP Fiori UI, one action at a time, to carry out this instruction:`,
+    `"${instruction}"`,
     ``,
-    `Available reference data for this process:`,
-    contextLines,
+    `Steps already completed so far:`,
+    stepLines,
     ``,
-    `Fields that can be filled with reference data:`,
+    `You are now looking at ${archetypeHint(archetype)}.`,
+    ``,
+    `Fields that can be filled with a literal value:`,
     fieldLines,
     ``,
-    `Buttons that can be clicked:`,
+    `Buttons or tiles that can be clicked:`,
     buttonLines,
     ``,
     `Tables whose first row can be selected (each one represents a whole table, by one of its columns):`,
     tableLines,
     ``,
-    `Decide the SINGLE next action that best advances this process, using the reference data where its business meaning clearly matches a field (e.g. a "supplier" reference value into a "Supplier" or "Vendor" field). Reply with ONLY one line in exactly one of these formats, with no explanation:`,
-    `FILL <field number> <reference data key>`,
+    `SAP Fiori tiles and buttons are often named after the business object and a generic verb (Process, Manage, Post, Monitor, ...) rather than the exact word used in the instruction — match on business meaning and intent, not literal wording. A broad department/category tile (e.g. "Procurement", "Finance") is a reasonable pick when no more specific tile or field is visible yet, but a specific one always outranks a broader category when both are visible together.`,
+    ``,
+    `Decide the SINGLE next action that makes progress on the instruction, given what's already been done. Extract any literal value to type (a number, a date, a name, ...) directly from the instruction's own wording. If the instruction is now fully carried out, reply DONE. If nothing here helps make progress, reply NONE. Reply with ONLY one line in exactly one of these formats, with no explanation:`,
+    `FILL <field number> <literal value to type>`,
     `CLICK <button number>`,
     `SELECT <table number>`,
+    `DONE`,
     `NONE`,
   ].join('\n');
 }
 
-type UnknownScreenChoice =
-  | { kind: 'fill'; control: CapturedControl; contextKey: string }
+type InstructionChoice =
+  | { kind: 'fill'; control: CapturedControl; value: string }
   | { kind: 'click'; control: CapturedControl }
   | { kind: 'select'; control: CapturedControl }
-  | undefined;
+  | { kind: 'done' }
+  | { kind: 'none' };
 
 /** Parses the model's reply back to one specific candidate — never trusts it blindly: an
- *  out-of-range index, an unknown reference-data key, or anything not in exactly one of the
- *  four accepted shapes all resolve to "no match" rather than guessing. */
-function parseUnknownScreenResponse(
+ *  out-of-range index, an empty value, or anything not in exactly one of the five accepted
+ *  shapes all resolve to "no match" rather than guessing. */
+function parseInstructionResponse(
   response: string,
   fields: CapturedControl[],
   buttons: CapturedControl[],
-  tables: CapturedControl[],
-  processContext: Record<string, string>
-): UnknownScreenChoice {
+  tables: CapturedControl[]
+): InstructionChoice {
   const trimmed = response.trim();
-  if (/^none$/i.test(trimmed)) return undefined;
+  if (/^none$/i.test(trimmed)) return { kind: 'none' };
+  if (/^done$/i.test(trimmed)) return { kind: 'done' };
 
-  const fillMatch = trimmed.match(/^FILL\s+(\d+)\s+(\S+)$/i);
+  const fillMatch = trimmed.match(/^FILL\s+(\d+)\s+(.+)$/i);
   if (fillMatch) {
     const control = fields[Number(fillMatch[1]) - 1];
-    const contextKey = fillMatch[2];
-    if (!control || !(contextKey in processContext)) return undefined;
-    return { kind: 'fill', control, contextKey };
+    const value = fillMatch[2].trim();
+    if (!control || !value) return { kind: 'none' };
+    return { kind: 'fill', control, value };
   }
 
   const clickMatch = trimmed.match(/^CLICK\s+(\d+)$/i);
   if (clickMatch) {
     const control = buttons[Number(clickMatch[1]) - 1];
-    return control ? { kind: 'click', control } : undefined;
+    return control ? { kind: 'click', control } : { kind: 'none' };
   }
 
   const selectMatch = trimmed.match(/^SELECT\s+(\d+)$/i);
   if (selectMatch) {
     const control = tables[Number(selectMatch[1]) - 1];
-    return control ? { kind: 'select', control } : undefined;
+    return control ? { kind: 'select', control } : { kind: 'none' };
   }
 
-  return undefined;
+  return { kind: 'none' };
 }
 
 /**
- * BL-047 Phase 2's second model-driven archetype: a screen that matches none of the fixed
- * Fiori elements templates (e.g. a Fiori Elements V4 app, whose control ids carry a different
- * namespace than the classic sap.suite.ui.generic.template.* markers decideListReportAction/
- * decideObjectPageAction target — confirmed via a real live capture where only 1 of 1260
- * captured controls even contained "ListReport" in its id). There is no fixed structural
- * signal linking an arbitrary field/button/table's label to an arbitrary process the way a
- * classic template's own control ids do, so — same reasoning as decideShellAction — this is a
- * model decision, not a rules one. Deliberately narrower in scope than a general "drive any
- * screen" agent: one action per call (fill one field, click one button, or select one table's
- * first row), always through the exact same review-and-registration path every other decision
- * in this module already goes through.
+ * The one model-driven decision every non-dialog archetype now goes through. There is no fixed
+ * structural signal linking an arbitrary field/button/tile/table's label to an arbitrary
+ * instruction the way a dialog's "one obvious button" is unambiguous — deciding this is a
+ * language task, not a rules one. Requires an AiResolver to be supplied at all — with none
+ * configured, this is an immediate, clearly-worded needsFallback rather than a crash or a guess.
  */
-async function decideUnknownAction(
+async function decideWithModel(
   controls: CapturedControl[],
-  processContext: Record<string, string>,
+  instruction: string,
+  stepLog: string[],
   history: NavigationHistory,
   appId: string,
   aiResolver: AiResolver | undefined,
+  archetype: ScreenArchetype
 ): Promise<NavigationDecision> {
   if (!aiResolver) {
     return {
       kind: 'needsFallback',
-      reason: 'Unrecognized screen: deciding what to do here needs an AI resolver, and none is configured — add an API key in Settings.',
+      reason: 'Deciding the next action needs an AI resolver, and none is configured — add an API key in Settings.',
     };
   }
 
@@ -400,34 +252,36 @@ async function decideUnknownAction(
   const buttons = clickableButtons(controls);
   const tables = selectableTables(controls);
   if (fields.length === 0 && buttons.length === 0 && tables.length === 0) {
-    return { kind: 'needsFallback', reason: 'Unrecognized screen: no fillable field, clickable button, or selectable table was captured.' };
+    return { kind: 'needsFallback', reason: 'No fillable field, clickable button/tile, or selectable table was captured on this screen.' };
   }
 
-  const processDescription = humanizeAppId(appId);
-  const response = await aiResolver.complete(buildUnknownScreenPrompt(processDescription, processContext, fields, buttons, tables));
-  const choice = parseUnknownScreenResponse(response, fields, buttons, tables, processContext);
-  if (!choice) {
-    return {
-      kind: 'needsFallback',
-      reason: `Unrecognized screen: no confident next action found for "${processDescription}" — needs a human to take over.`,
-    };
-  }
+  const response = await aiResolver.complete(buildInstructionPrompt(instruction, stepLog, archetype, fields, buttons, tables));
+  const choice = parseInstructionResponse(response, fields, buttons, tables);
 
+  if (choice.kind === 'none') {
+    return { kind: 'needsFallback', reason: `No confident next action found for "${instruction}" from this screen — needs a human to take over.` };
+  }
+  if (choice.kind === 'done') {
+    return { kind: 'done' };
+  }
   if (choice.kind === 'fill') {
     const historyKey = `fill:${choice.control.controlId}`;
     if (history.modulesRunOnThisScreen.includes(historyKey)) {
-      return { kind: 'needsFallback', reason: `Unrecognized screen: already filled "${choice.control.text}" once — needs a human to check what happened.` };
+      return { kind: 'needsFallback', reason: `Already filled "${choice.control.text}" once on this screen — needs a human to check what happened.` };
     }
     return {
       kind: 'action',
-      call: { module: 'EnterHeaderField', appId, params: { field: choice.control.controlId, value: processContext[choice.contextKey] } },
+      call: { module: 'EnterHeaderField', appId, params: { field: choice.control.controlId, value: choice.value } },
       historyKey,
     };
   }
 
   const historyKey = choice.kind === 'select' ? `select:${choice.control.controlId}` : `click:${choice.control.controlId}`;
   if (history.modulesRunOnThisScreen.includes(historyKey)) {
-    return { kind: 'needsFallback', reason: `Unrecognized screen: already ${choice.kind === 'select' ? 'selected a row in' : 'clicked'} "${choice.control.text}" once without navigating away — needs a human to check what happened.` };
+    return {
+      kind: 'needsFallback',
+      reason: `Already ${choice.kind === 'select' ? 'selected a row in' : 'clicked'} "${choice.control.text}" once without making progress — needs a human to check what happened.`,
+    };
   }
   if (choice.kind === 'select') {
     return { kind: 'action', call: { module: 'SelectTableRow', appId, params: { field: choice.control.controlId, rowIndex: '0' } }, historyKey };
@@ -438,29 +292,19 @@ async function decideUnknownAction(
 /**
  * The single entry point BL-047 Phase 2's navigation loop calls once per screen visit. Never
  * throws for "couldn't decide" — that's a `needsFallback` result, not an exception, since not
- * being able to decide is an expected, handleable outcome (fall back to a model, or stop and
- * hand off to the mandatory review gate), not a bug. Async because the shell/Launchpad
- * archetype needs a real model call; every other archetype resolves synchronously underneath
- * but still returns through this same Promise so callers have one uniform entry point.
+ * being able to decide is an expected, handleable outcome (stop and hand off to the mandatory
+ * review gate), not a bug. Dialogs are the one fixed rule; every other archetype is decided by
+ * the model, grounded in the plain-English instruction and the run's own step log.
  */
 export async function decideNextAction(
   controls: CapturedControl[],
-  processContext: Record<string, string>,
+  instruction: string,
+  stepLog: string[],
   history: NavigationHistory,
   appId: string,
   aiResolver?: AiResolver,
 ): Promise<NavigationDecision> {
   const archetype = classifyScreenArchetype(controls);
-  switch (archetype) {
-    case 'list-report':
-      return decideListReportAction(controls, processContext, history, appId);
-    case 'object-page':
-      return decideObjectPageAction(controls, processContext, history, appId);
-    case 'dialog':
-      return decideDialogAction(controls, appId);
-    case 'shell':
-      return decideShellAction(controls, appId, history, aiResolver);
-    case 'unknown':
-      return decideUnknownAction(controls, processContext, history, appId, aiResolver);
-  }
+  if (archetype === 'dialog') return decideDialogAction(controls, appId);
+  return decideWithModel(controls, instruction, stepLog, history, appId, aiResolver, archetype);
 }

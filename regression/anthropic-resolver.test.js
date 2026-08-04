@@ -2,7 +2,7 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { AnthropicResolver } = require('../packages/studio-server/dist');
+const { AnthropicResolver, DEFAULT_ANTHROPIC_MODEL } = require('../packages/studio-server/dist');
 
 const ORIGINAL_ENV_KEY = process.env.TAF_AI_ANTHROPIC_API_KEY;
 
@@ -43,6 +43,21 @@ test('complete() sends the api key, model and prompt, and returns the text conte
     const body = JSON.parse(capturedInit.body);
     assert.equal(body.model, 'claude-haiku-4-5');
     assert.equal(body.messages[0].content, 'Resolve: Create a purchase requisition');
+  }));
+
+test('the default model is Opus 5 (owner chose reliability over cost for this agentic, multi-step decision task)', () =>
+  withApiKey('sk-ant-test-key', async () => {
+    assert.equal(DEFAULT_ANTHROPIC_MODEL, 'claude-opus-5');
+    let capturedBody;
+    const resolver = new AnthropicResolver(
+      undefined,
+      fakeFetch(async (_url, init) => {
+        capturedBody = JSON.parse(init.body);
+        return { ok: true, json: async () => ({ content: [{ type: 'text', text: 'ok' }] }) };
+      })
+    );
+    await resolver.complete('anything');
+    assert.equal(capturedBody.model, 'claude-opus-5');
   }));
 
 test('complete() throws a clear error on a non-200 response, including the response body', () =>

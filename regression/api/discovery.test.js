@@ -6,14 +6,18 @@ const { api, assertServerReachable } = require('../lib/apiClient');
 
 before(assertServerReachable);
 
-test('POST /api/discovery/:appId/start requires a processContext object in the body', async () => {
-  const res = await api.post('/api/discovery/regressionDiscoveryApp/start', {});
-  assert.equal(res.status, 400);
-  assert.match(res.body.error, /processContext/);
+test('POST /api/discovery/:appId/start requires a non-empty instruction in the body', async () => {
+  const empty = await api.post('/api/discovery/regressionDiscoveryApp/start', {});
+  assert.equal(empty.status, 400);
+  assert.match(empty.body.error, /instruction/);
+
+  const blank = await api.post('/api/discovery/regressionDiscoveryApp/start', { instruction: '   ' });
+  assert.equal(blank.status, 400);
+  assert.match(blank.body.error, /instruction/);
 });
 
 test('POST /api/discovery/:appId/start requires an open scan session (BL-047 Phase 2)', async () => {
-  const res = await api.post('/api/discovery/regressionDiscoveryApp/start', { processContext: { soNumber: '4500009999' } });
+  const res = await api.post('/api/discovery/regressionDiscoveryApp/start', { instruction: 'Create a purchase requisition' });
   assert.equal(res.status, 400);
   assert.match(res.body.error, /No active scan session/);
 });

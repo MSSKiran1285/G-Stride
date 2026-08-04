@@ -13,9 +13,9 @@ import { FioriPlaywrightAdapter } from '@taf/adapter-fiori';
 import { captureScan, getActivePage } from './scanSession';
 import { AnthropicResolver, AI_PROVIDER } from './anthropicResolver';
 
-/** Only constructs a resolver when a key is actually configured — the shell/Launchpad
- *  archetype's own decideShellAction() already gives a clear needsFallback for "no resolver,"
- *  so an unconfigured POC never crashes, it just can't navigate off a Launchpad screen yet. */
+/** Only constructs a resolver when a key is actually configured — decideNextAction's own
+ *  needsFallback for "no resolver" already handles this cleanly, so an unconfigured POC never
+ *  crashes, it just can't decide anything beyond dismissing a dialog yet. */
 async function resolveAiResolver(): Promise<AnthropicResolver | undefined> {
   const status = await getAiCredentialStatus(AI_PROVIDER);
   return status.configured ? new AnthropicResolver() : undefined;
@@ -48,7 +48,15 @@ export interface RegisteredControl {
 
 export interface DiscoveryState {
   appId: string;
-  processContext: Record<string, string>;
+  /** The plain-English goal for this run — the single source of intent decideNextAction
+   *  reasons over on every screen (replaces the earlier abstract key-value reference data,
+   *  which gave the model no memory of an overall goal — see discoveryNavigation.ts's module
+   *  comment for why that failed in real testing on 4 Aug 2026). */
+  instruction: string;
+  /** A running, human-readable log of every completed step this run — the model's own memory
+   *  of its progress on the instruction, shown back to it on every subsequent decision. Grows
+   *  for the whole run, unlike `history`, which is scoped to just the current screen. */
+  stepLog: string[];
   history: NavigationHistory;
   lastArchetype: ScreenArchetype | null;
   steps: DiscoveredStep[];
@@ -57,13 +65,14 @@ export interface DiscoveryState {
 
 let state: DiscoveryState | null = null;
 
-export function startDiscovery(appId: string, processContext: Record<string, string>): DiscoveryState {
+export function startDiscovery(appId: string, instruction: string): DiscoveryState {
   // Requires an open scan session up front so the caller gets a clear, immediate error rather
   // than discovering it only on the first step.
   getActivePage();
   state = {
     appId,
-    processContext,
+    instruction,
+    stepLog: [],
     history: { modulesRunOnThisScreen: [] },
     lastArchetype: null,
     steps: [],
@@ -160,7 +169,7 @@ export async function runDiscoveryStep(
   current.lastArchetype = archetype;
 
   const aiResolver = await resolveAiResolver();
-  const decision = await decideNextAction(controls, current.processContext, current.history, current.appId, aiResolver);
+  const decision = await decideNextAction(controls, current.instruction, current.stepLog, current.history, current.appId, aiResolver);
   if (decision.kind !== 'action') {
     return { decision };
   }
@@ -172,21 +181,23 @@ export async function runDiscoveryStep(
   const resolvedParams = { ...decision.call.params, [paramKey]: registeredControl.name };
   const adapter = FioriPlaywrightAdapter.attach(page);
   const module = registry.get(decision.call.module);
+  const runState: Record<string, unknown> = {};
   await module.execute({
     adapter,
     objectRepository,
     appId: current.appId,
     params: resolvedParams,
-    runState: current.processContext,
+    runState,
   });
 
   current.history.modulesRunOnThisScreen.push(decision.historyKey);
   let narrate: string | undefined;
   try {
-    narrate = module.describe?.narrate?.({ params: resolvedParams, runState: current.processContext });
+    narrate = module.describe?.narrate?.({ params: resolvedParams, runState });
   } catch {
     narrate = undefined;
   }
+  current.stepLog.push(narrate ?? `Ran ${decision.call.module}`);
   const step: DiscoveredStep = { module: decision.call.module, appId: current.appId, params: resolvedParams, narrate };
   current.steps.push(step);
 

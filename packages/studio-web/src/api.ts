@@ -209,8 +209,8 @@ export const api = {
   getPickResult: () => request<PickResult>('/api/scan/pick/result'),
   cancelPick: () => request<{ ok: true }>('/api/scan/pick/cancel', { method: 'POST' }),
   dismissPick: (controlId: string) => request<PickResult>('/api/scan/pick/dismiss', { method: 'POST', body: JSON.stringify({ controlId }) }),
-  startDiscovery: (appId: string, processContext: Record<string, string>) =>
-    request<DiscoveryState>(`/api/discovery/${encodeURIComponent(appId)}/start`, { method: 'POST', body: JSON.stringify({ processContext }) }),
+  startDiscovery: (appId: string, instruction: string) =>
+    request<DiscoveryState>(`/api/discovery/${encodeURIComponent(appId)}/start`, { method: 'POST', body: JSON.stringify({ instruction }) }),
   getDiscoveryState: () => request<DiscoveryState>('/api/discovery/state'),
   runDiscoveryStep: () => request<DiscoveryStepResult>('/api/discovery/step', { method: 'POST' }),
   stopDiscovery: () => request<{ ok: true }>('/api/discovery/stop', { method: 'POST' }),

@@ -1981,12 +1981,12 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
   // flow above uses; every discovered control is registered through objectRepository.upsert()
   // before any Module acts on it, never a fabricated control definition.
   app.post('/api/discovery/:appId/start', (req, res) => {
-    const processContext = req.body?.processContext;
-    if (!processContext || typeof processContext !== 'object' || Array.isArray(processContext)) {
-      return res.status(400).json({ error: 'Body must include processContext: Record<string,string>' });
+    const instruction = typeof req.body?.instruction === 'string' ? req.body.instruction.trim() : '';
+    if (!instruction) {
+      return res.status(400).json({ error: 'Body must include a non-empty instruction: string' });
     }
     try {
-      res.status(201).json(startDiscovery(req.params.appId, processContext));
+      res.status(201).json(startDiscovery(req.params.appId, instruction));
     } catch (err: any) {
       res.status(err.status ?? 500).json({ error: err.message });
     }

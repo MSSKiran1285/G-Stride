@@ -43,7 +43,7 @@ export function ObjectScanner({
   // BL-047 Phase 2: the live autonomous-discovery loop, one step per click — per the owner's
   // explicit "human in the loop" decision, this never runs unattended; every step's outcome is
   // shown before the next one can be taken.
-  const [processContextText, setProcessContextText] = useState('');
+  const [instructionText, setInstructionText] = useState('');
   const [discovery, setDiscovery] = useState<DiscoveryState | null>(null);
   const [lastStep, setLastStep] = useState<DiscoveryStepResult | null>(null);
   const [discoveryBusy, setDiscoveryBusy] = useState(false);
@@ -216,32 +216,20 @@ export function ObjectScanner({
     }
   }
 
-  function parseProcessContext(text: string): Record<string, string> {
-    const context: Record<string, string> = {};
-    for (const line of text.split('\n')) {
-      const eq = line.indexOf('=');
-      if (eq <= 0) continue;
-      const key = line.slice(0, eq).trim();
-      const value = line.slice(eq + 1).trim();
-      if (key && value) context[key] = value;
-    }
-    return context;
-  }
-
   async function startDiscoveryRun() {
     if (!appId.trim()) {
       setDiscoveryError('Enter an App ID first — this is what discovered controls get registered under.');
       return;
     }
-    const processContext = parseProcessContext(processContextText);
-    if (Object.keys(processContext).length === 0) {
-      setDiscoveryError('Enter at least one reference value as key=value (one per line), e.g. soNumber=4500009999.');
+    const instruction = instructionText.trim();
+    if (!instruction) {
+      setDiscoveryError('Describe what to do in plain English first, e.g. "Go to Project Management, click on Manage My Timesheet and select the task. Enter 5 hours for today and save & submit."');
       return;
     }
     setDiscoveryError(null);
     setDiscoveryBusy(true);
     try {
-      const state = await api.startDiscovery(appId.trim(), processContext);
+      const state = await api.startDiscovery(appId.trim(), instruction);
       setDiscovery(state);
       setLastStep(null);
     } catch (e) {
@@ -366,18 +354,19 @@ export function ObjectScanner({
         <div className="panel stack">
           <p className="section-title">Autonomous discovery (BL-047)</p>
           <p className="hint">
-            Give it reference values it can search the live screen with — it decides each next action itself (search, select, fill, click) using
-            the current screen's Fiori elements shape, registering any control it touches into the Object Repository above before acting on it.
-            One step at a time: review what it did, then ask for the next step.
+            Describe what to do in plain English — it decides each next action itself (navigate, fill, click, select) against the live screen,
+            registering any control it touches into the Object Repository above before acting on it. It remembers what it's already done this
+            run, so it can carry out a multi-step instruction, not just one isolated action. One step at a time: review what it did, then ask
+            for the next step.
           </p>
 
           {!discovery ? (
             <div className="stack">
               <textarea
-                aria-label="Reference values for discovery, one key=value per line"
-                placeholder={'soNumber=4500009999\nsupplier=USSU-TRL07'}
-                value={processContextText}
-                onChange={(e) => setProcessContextText(e.target.value)}
+                aria-label="Instruction for discovery, in plain English"
+                placeholder={'Go to Project Management, click on Manage My Timesheet and select the task. Enter 5 hours for today and save & submit.'}
+                value={instructionText}
+                onChange={(e) => setInstructionText(e.target.value)}
                 rows={3}
               />
               <div className="row">
@@ -420,8 +409,8 @@ export function ObjectScanner({
                       {lastStep.step.narrate && <> — {lastStep.step.narrate}</>}
                     </>
                   )}
-                  {lastStep.decision.kind === 'needsFallback' && <>Stopped: {lastStep.decision.reason} No model fallback is wired up yet — this needs a human to take over from here.</>}
-                  {lastStep.decision.kind === 'done' && <>The process reports itself complete.</>}
+                  {lastStep.decision.kind === 'needsFallback' && <>Stopped: {lastStep.decision.reason} This needs a human to take over from here.</>}
+                  {lastStep.decision.kind === 'done' && <>The instruction reports itself complete.</>}
                 </div>
               )}
 
