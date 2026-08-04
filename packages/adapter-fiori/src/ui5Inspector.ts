@@ -97,6 +97,24 @@ const ACTIONABLE_TYPES = new Set([
   // dialog (Sales Order Type/Org/Distribution Channel/Division all render as this type),
   // not guessed up front.
   'sap.ui.mdc.Field',
+  // A list row a user clicks to select — the sap.m.List/ListItemBase family. These carry their
+  // own visible title via getTitle() and genuinely stable ids, but without an entry here they
+  // classified as merely "informational" (they have text, so they never fell all the way to
+  // structural) and were therefore never offered as something that can be acted on. Found via a
+  // real capture on this tenant's My Timesheet screen, not guessed up front: the instruction
+  // "select the task" had to choose between "Administration Tasks", "Miscellaneous", "Training"
+  // and "Travel Times", all four of which were captured cleanly as sap.m.ObjectListItem with
+  // stable ids — and none of which was reachable, because the only actionable things on that
+  // screen were toolbar buttons. The whole family is listed rather than just ObjectListItem:
+  // which subtype a given Fiori list uses is a rendering choice, not a semantic one.
+  'sap.m.StandardListItem',
+  'sap.m.ObjectListItem',
+  'sap.m.CustomListItem',
+  'sap.m.ColumnListItem',
+  'sap.m.DisplayListItem',
+  'sap.m.ActionListItem',
+  'sap.m.InputListItem',
+  'sap.m.FeedListItem',
 ]);
 
 const INFORMATIONAL_TYPES = new Set([
@@ -206,6 +224,48 @@ function enrichWithChildText(controls: DiscoveredControl[]): DiscoveredControl[]
   });
 }
 
+/**
+ * Turns "sap-icon://add-activity" into "add activity" — a usable last-resort label for an
+ * icon-only button whose tooltip is empty too. Crude on purpose: an icon name is a designer's
+ * own description of what the button does, so it is nearly always more meaningful than the
+ * control id, and it is only ever reached when there is genuinely nothing better.
+ */
+function humanizeIconName(icon: string): string | undefined {
+  const name = icon.split('/').pop()?.trim();
+  if (!name) return undefined;
+  const words = name.replace(/[-_]+/g, ' ').trim();
+  return words || undefined;
+}
+
+/**
+ * Fills in a display label for a control that has no text of its own, from its tooltip and then
+ * its icon name. Applied only AFTER classification — exactly like enrichWithChildText above, and
+ * for the same reason: a tooltip is often pure screen-reader text, and letting it count as "has
+ * text" during classifyControl would promote layout scaffolding to informational everywhere.
+ * Scoped to control types where an absent text really does mean "icon-only", not to everything.
+ *
+ * Found via a real capture on this tenant's My Timesheet screen: 8 of its 11 buttons (alertBtn,
+ * copyBtn, settingsBtn, groupTasks, msgPopoverBtn, ...) had no text at all, so the discovery
+ * loop's candidate list showed the model raw control ids to choose between. It picked one, which
+ * then registered into the Object Repository under the meaningless name "Button".
+ */
+const ICON_ONLY_TYPES = new Set([
+  'sap.m.Button',
+  'sap.m.OverflowToolbarButton',
+  'sap.m.MenuButton',
+  'sap.m.SplitButton',
+  'sap.m.ToggleButton',
+  'sap.ui.core.Icon',
+]);
+
+function enrichWithFallbackLabel<T extends RawDiscoveredControl>(controls: T[]): T[] {
+  return controls.map((c) => {
+    if (c.text || !ICON_ONLY_TYPES.has(c.controlType)) return c;
+    const label = c.tooltip ?? (c.icon ? humanizeIconName(c.icon) : undefined);
+    return label ? { ...c, text: label } : c;
+  });
+}
+
 const TABLE_COLUMN_TYPES = new Set(['sap.ui.table.Column', 'sap.m.Column']);
 const TABLE_CONTAINER_TYPES = new Set(['sap.ui.table.Table', 'sap.m.Table']);
 
@@ -219,8 +279,18 @@ function enrichWithTableId(controls: DiscoveredControl[]): DiscoveredControl[] {
   });
 }
 
-/** What inspectFrame can determine from inside the page — classification happens back in Node, after evaluate() returns. */
-type RawDiscoveredControl = Omit<DiscoveredControl, 'category' | 'scope' | 'stableId'>;
+/**
+ * What inspectFrame can determine from inside the page — classification happens back in Node,
+ * after evaluate() returns. `tooltip`/`icon` are carried only as raw material for the
+ * post-classification label fallback below and are stripped before anything sees a
+ * DiscoveredControl, deliberately: they must never influence classifyControl (see
+ * ALWAYS_STRUCTURAL_TYPES on why letting screen-reader-only text count as "has text" wrongly
+ * promotes pure scaffolding to informational).
+ */
+type RawDiscoveredControl = Omit<DiscoveredControl, 'category' | 'scope' | 'stableId'> & {
+  tooltip?: string;
+  icon?: string;
+};
 
 async function inspectFrame(frame: Frame): Promise<RawDiscoveredControl[]> {
   return frame.evaluate(() => {
@@ -244,6 +314,21 @@ async function inspectFrame(frame: Frame): Promise<RawDiscoveredControl[]> {
         if (typeof value === 'string' && value) return value;
       }
       return undefined;
+    }
+
+    // An icon-only toolbar button has no getText()/getTitle() at all — its meaning lives in the
+    // tooltip (which is also what a screen reader announces) and, failing that, in the icon name.
+    // Read separately from extractText because these must not feed classification; see
+    // RawDiscoveredControl. Found via a real capture on My Timesheet, where 8 of the 11 captured
+    // buttons had no text whatsoever and were being shown to the model as raw control ids
+    // ("...timesheetMain--copyBtn"), which is not something any model can meaningfully choose from.
+    function extractTooltip(c: any): string | undefined {
+      const value = typeof c.getTooltip_Text === 'function' ? c.getTooltip_Text() : undefined;
+      return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+    }
+    function extractIcon(c: any): string | undefined {
+      const value = typeof c.getIcon === 'function' ? c.getIcon() : undefined;
+      return typeof value === 'string' && value.trim() ? value.trim() : undefined;
     }
 
     // The Fiori Launchpad keeps a previously-opened app's whole UI5 component alive in the
@@ -274,6 +359,8 @@ async function inspectFrame(frame: Frame): Promise<RawDiscoveredControl[]> {
         controlType: control.getMetadata?.().getName?.() ?? 'unknown',
         bindingPath: bindingContext?.getPath?.(),
         text: extractText(control),
+        tooltip: extractTooltip(control),
+        icon: extractIcon(control),
         parentId: parent?.getId?.(),
       });
     });
@@ -293,5 +380,9 @@ export async function inspectUi5Controls(page: Page): Promise<DiscoveredControl[
   const classified = perFrame
     .flat()
     .map((c) => ({ ...c, category: classifyControl(c), scope: classifyScope(c.controlType), stableId: !isAutoGeneratedId(c.controlId) }));
-  return enrichWithTableId(enrichWithChildText(classified));
+  // Label fallback runs after classifyControl and before everything downstream, so a tooltip can
+  // improve what a control is *called* without ever changing what it *is*. tooltip/icon are
+  // dropped immediately after — they exist only to feed that fallback.
+  const labelled = enrichWithFallbackLabel(classified).map(({ tooltip: _tooltip, icon: _icon, ...control }) => control);
+  return enrichWithTableId(enrichWithChildText(labelled));
 }

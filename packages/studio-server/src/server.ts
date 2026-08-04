@@ -37,7 +37,15 @@ import {
 } from './runs';
 import { parseCsv, serializeCsv } from './csv';
 import { openScanSession, getScanStatus, captureScan, closeScanSession, highlightControl, startPick, getPickResult, cancelPick, dismissPick, reverifyControl } from './scanSession';
-import { startDiscovery, getDiscoveryState, runDiscoveryStep, stopDiscovery } from './discoverySession';
+import {
+  startDiscovery,
+  getDiscoveryState,
+  runDiscoveryStep,
+  runDiscovery,
+  recordHumanStep,
+  stopDiscovery,
+  DEFAULT_MAX_STEPS,
+} from './discoverySession';
 import { AI_PROVIDER } from './anthropicResolver';
 import { StudioAuth } from './auth';
 import { ExecutionDraft, ExecutionDraftKind, ExecutionPreflightService } from './executionPreflight';
@@ -1975,9 +1983,9 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     res.json(getPickResult());
   });
 
-  // BL-047 Phase 2: the live autonomous-discovery loop, one step per request — the caller
-  // (Studio's UI) decides whether to take the next step, per the owner's explicit
-  // "human in the loop" decision. Requires the same open scan session the manual capture
+  // BL-047 Phase 2: the live autonomous-discovery loop. `run` drives the instruction to
+  // completion on its own and is the normal way in; `step` takes exactly one action and exists
+  // for diagnosing a single decision. Requires the same open scan session the manual capture
   // flow above uses; every discovered control is registered through objectRepository.upsert()
   // before any Module acts on it, never a fabricated control definition.
   app.post('/api/discovery/:appId/start', (req, res) => {
@@ -2007,9 +2015,45 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  // Answers immediately and lets the run continue in the background: a real run is many
+  // captures, model calls and live UI interactions end to end, far longer than any sensible
+  // HTTP timeout. Progress is read from /api/discovery/state, which the UI polls.
+  app.post('/api/discovery/run', (req, res) => {
+    const current = getDiscoveryState();
+    if (!current) return res.status(400).json({ error: 'No discovery run in progress — start one first.' });
+    if (current.running) return res.status(409).json({ error: 'This discovery run is already going.' });
+
+    const maxSteps = Number.isInteger(req.body?.maxSteps) && req.body.maxSteps > 0 ? req.body.maxSteps : DEFAULT_MAX_STEPS;
+    const updatedBy = auth.state(req).user?.name;
+    // Deliberately not awaited — see above. runDiscovery records every exit (including a thrown
+    // error) as an outcome on the state, so nothing here can escape as an unhandled rejection.
+    void runDiscovery(objectRepository, registry, maxSteps, updatedBy);
+    res.status(202).json({ ok: true, maxSteps });
+  });
+
+  // Records one action a human took by hand after the run handed over to them. The Object
+  // Repository write goes through the same upsert path everything else uses, and the action
+  // joins the run's step log so the model can see it when it picks the instruction back up.
+  app.post('/api/discovery/human-step', (req, res) => {
+    const { controlId, controlType, text, bindingPath, parentId, value } = req.body ?? {};
+    if (typeof controlId !== 'string' || !controlId || typeof controlType !== 'string' || !controlType) {
+      return res.status(400).json({ error: 'Body must include controlId: string and controlType: string' });
+    }
+    try {
+      const result = recordHumanStep(
+        objectRepository,
+        { controlId, controlType, text, bindingPath, parentId, value },
+        auth.state(req).user?.name
+      );
+      res.status(201).json(result);
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
   app.post('/api/discovery/stop', (_req, res) => {
-    stopDiscovery();
-    res.json({ ok: true });
+    const remaining = stopDiscovery();
+    res.json({ ok: true, stillRunning: Boolean(remaining?.running) });
   });
 
   app.get('/api/data', (_req, res) => {

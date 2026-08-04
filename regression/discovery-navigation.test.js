@@ -294,3 +294,101 @@ test('Unrecognized screen: the prompt includes the full step log so the model ca
   assert.match(resolver.calls[0], /3\. Clicked "Save"/);
   assert.match(resolver.calls[0], /instruction is now fully carried out, reply DONE/);
 });
+
+// The live My Timesheet screen (4 Aug 2026) that produced the next round of feedback. Its four
+// tasks are sap.m.ObjectListItem rows — the only controls on screen that could satisfy "select
+// the task" — alongside a toolbar of icon-only buttons whose captured text is genuinely empty.
+const timesheetControls = [
+  { controlId: 'app--timesheetMain--workList-0', controlType: 'sap.m.ObjectListItem', text: 'Administration Tasks', category: 'actionable' },
+  { controlId: 'app--timesheetMain--workList-1', controlType: 'sap.m.ObjectListItem', text: 'Miscellaneous', category: 'actionable' },
+  { controlId: 'app--timesheetMain--workList-2', controlType: 'sap.m.ObjectListItem', text: 'Training', category: 'actionable' },
+  { controlId: 'app--timesheetMain--workList-3', controlType: 'sap.m.ObjectListItem', text: 'Travel Times', category: 'actionable' },
+  { controlId: 'app--timesheetMain--alertBtn', controlType: 'sap.m.Button', category: 'actionable' },
+  { controlId: 'app--timesheetMain--copyBtn', controlType: 'sap.m.Button', category: 'actionable' },
+  { controlId: 'app--timesheetMain--saveSubmit', controlType: 'sap.m.Button', text: 'Save & Submit', category: 'actionable' },
+];
+
+const TIMESHEET_INSTRUCTION =
+  'Go to Project Management, click on Manage My Timesheet and select the task. Enter 5 hours for today and save & submit.';
+
+test('a list row is a click candidate — "select the task" could not be carried out otherwise', async () => {
+  const resolver = fakeResolver((prompt) => {
+    assert.match(prompt, /"Administration Tasks"/);
+    return 'CLICK 1';
+  });
+  const decision = await decideNextAction(
+    timesheetControls,
+    TIMESHEET_INSTRUCTION,
+    [],
+    { modulesRunOnThisScreen: [] },
+    'createTimesheet',
+    resolver
+  );
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.module, 'ClickButton');
+  assert.equal(decision.call.params.control, 'app--timesheetMain--workList-0');
+});
+
+// A raw control id is not a label: the model cannot choose between a list of them on merit, and
+// whatever it does pick registers into the Object Repository under a name derived from that same
+// id. Live on 4 Aug 2026 this produced a step reading `ClickButton control=Button` followed by
+// `Already clicked "undefined"`.
+test('an unlabelled control is never offered to the model, and no control id ever appears in the prompt', async () => {
+  const resolver = fakeResolver('CLICK 1');
+  await decideNextAction(timesheetControls, TIMESHEET_INSTRUCTION, [], { modulesRunOnThisScreen: [] }, 'createTimesheet', resolver);
+  const prompt = resolver.calls[0];
+
+  assert.ok(!prompt.includes('alertBtn'), 'an unlabelled button must not be offered as a candidate');
+  assert.ok(!prompt.includes('copyBtn'), 'an unlabelled button must not be offered as a candidate');
+  for (const control of timesheetControls) {
+    if (!control.text) assert.ok(!prompt.includes(control.controlId), `${control.controlId} leaked into the prompt`);
+  }
+  // The labelled ones are all still there — this filters noise, it does not lose real options.
+  assert.match(prompt, /"Save & Submit"/);
+  assert.match(prompt, /"Travel Times"/);
+});
+
+test('the candidate numbering the model replies against matches the filtered list, not the raw capture', async () => {
+  // "Save & Submit" is the 5th labelled clickable (4 rows, then it) even though it is the 7th
+  // control captured — an off-by-one here would click a completely unrelated control.
+  const resolver = fakeResolver('CLICK 5');
+  const decision = await decideNextAction(
+    timesheetControls,
+    TIMESHEET_INSTRUCTION,
+    [],
+    { modulesRunOnThisScreen: [] },
+    'createTimesheet',
+    resolver
+  );
+  assert.equal(decision.kind, 'action');
+  assert.equal(decision.call.params.control, 'app--timesheetMain--saveSubmit');
+});
+
+test('needsFallback when every candidate on the screen is unlabelled — better to say so than to offer a blind choice', async () => {
+  const resolver = fakeResolver('CLICK 1');
+  const decision = await decideNextAction(
+    timesheetControls.filter((c) => !c.text),
+    TIMESHEET_INSTRUCTION,
+    [],
+    { modulesRunOnThisScreen: [] },
+    'createTimesheet',
+    resolver
+  );
+  assert.equal(decision.kind, 'needsFallback');
+  assert.equal(resolver.calls.length, 0, 'with nothing nameable to choose between, the model should not be called at all');
+});
+
+test('a repeat-action fallback names the control the human will recognise, never "undefined"', async () => {
+  const resolver = fakeResolver('CLICK 1');
+  const decision = await decideNextAction(
+    timesheetControls,
+    TIMESHEET_INSTRUCTION,
+    [],
+    { modulesRunOnThisScreen: ['click:app--timesheetMain--workList-0'] },
+    'createTimesheet',
+    resolver
+  );
+  assert.equal(decision.kind, 'needsFallback');
+  assert.match(decision.reason, /Administration Tasks/);
+  assert.ok(!decision.reason.includes('undefined'), 'the reason must name the control, not interpolate an absent label');
+});

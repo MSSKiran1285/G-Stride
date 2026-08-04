@@ -96,19 +96,38 @@ function decideDialogAction(controls: CapturedControl[], appId: string): Navigat
 }
 
 const FILLABLE_TYPE_PATTERN = /Input|Field|TextArea|ComboBox|DatePicker|Select|MultiInput/i;
-const BUTTON_TYPE_PATTERN = /Button/i;
+const BUTTON_TYPE_PATTERN = /Button|ListItem/i;
 
-function fillableFields(controls: CapturedControl[]): CapturedControl[] {
-  return controls.filter((c) => c.category === 'actionable' && FILLABLE_TYPE_PATTERN.test(c.controlType));
+/**
+ * The one human-readable name for a control, or nothing at all — never its control id.
+ *
+ * A raw id ("...timesheetMain--copyBtn") is not a label: no model can reliably choose between a
+ * list of them, and whatever it does pick then gets registered into the Object Repository under
+ * a name derived from that same id. Both halves of that were seen for real on 4 Aug 2026 — the
+ * loop clicked a text-less control, saved it as "Button", and then reported it back as
+ * `Already clicked "undefined"`. So an unlabelled control is now simply not a candidate: it is
+ * better to say plainly that there is nothing actionable here than to offer a choice that cannot
+ * be made on merit. ui5Inspector's tooltip/icon fallback exists to make sure genuinely
+ * meaningful icon-only buttons still arrive here with a label rather than being dropped.
+ */
+export function labelOf(control: CapturedControl): string | undefined {
+  const text = control.text?.trim();
+  return text ? text : undefined;
 }
 
-/** Ordinary buttons plus Launchpad tiles — from the model's perspective, clicking either one is
- *  the same kind of action (advance by clicking something), so they share one CLICK candidate
- *  list instead of needing two separate archetype-specific decision paths. */
+function fillableFields(controls: CapturedControl[]): CapturedControl[] {
+  return controls.filter((c) => c.category === 'actionable' && FILLABLE_TYPE_PATTERN.test(c.controlType) && labelOf(c));
+}
+
+/** Ordinary buttons, list rows and Launchpad tiles — from the model's perspective, clicking any
+ *  of them is the same kind of action (advance by clicking something), so they share one CLICK
+ *  candidate list instead of needing separate archetype-specific decision paths. List rows are
+ *  included because "select the task"/"open the order" is a click on a row, and on a real
+ *  timesheet screen the rows were the only controls that could have satisfied the instruction. */
 function clickableButtons(controls: CapturedControl[]): CapturedControl[] {
   const buttons = controls.filter((c) => c.category === 'actionable' && BUTTON_TYPE_PATTERN.test(c.controlType));
-  const tiles = controls.filter((c) => SHELL_TILE_TYPES.has(c.controlType) && c.text);
-  return [...buttons, ...tiles];
+  const tiles = controls.filter((c) => SHELL_TILE_TYPES.has(c.controlType));
+  return [...buttons, ...tiles].filter((c) => labelOf(c));
 }
 
 /** One representative captured column per distinct table — SelectTableRow needs any single
@@ -149,9 +168,10 @@ function buildInstructionPrompt(
   tables: CapturedControl[]
 ): string {
   const stepLines = stepLog.length > 0 ? stepLog.map((s, i) => `${i + 1}. ${s}`).join('\n') : '(none yet)';
-  const fieldLines = fields.length > 0 ? fields.map((f, i) => `${i + 1}. "${f.text ?? f.controlId}"`).join('\n') : '(none)';
-  const buttonLines = buttons.length > 0 ? buttons.map((b, i) => `${i + 1}. "${b.text ?? b.controlId}"`).join('\n') : '(none)';
-  const tableLines = tables.length > 0 ? tables.map((t, i) => `${i + 1}. "${t.text ?? t.controlId}" (column)`).join('\n') : '(none)';
+  const fieldLines = fields.length > 0 ? fields.map((f, i) => `${i + 1}. "${labelOf(f)}"`).join('\n') : '(none)';
+  const buttonLines = buttons.length > 0 ? buttons.map((b, i) => `${i + 1}. "${labelOf(b)}"`).join('\n') : '(none)';
+  const tableLines =
+    tables.length > 0 ? tables.map((t, i) => `${i + 1}. "${labelOf(t) ?? 'unnamed table'}" (column)`).join('\n') : '(none)';
 
   return [
     `You are driving a live SAP Fiori UI, one action at a time, to carry out this instruction:`,
@@ -267,7 +287,7 @@ async function decideWithModel(
   if (choice.kind === 'fill') {
     const historyKey = `fill:${choice.control.controlId}`;
     if (history.modulesRunOnThisScreen.includes(historyKey)) {
-      return { kind: 'needsFallback', reason: `Already filled "${choice.control.text}" once on this screen — needs a human to check what happened.` };
+      return { kind: 'needsFallback', reason: `Already filled "${labelOf(choice.control)}" once on this screen — needs a human to check what happened.` };
     }
     return {
       kind: 'action',
@@ -280,7 +300,7 @@ async function decideWithModel(
   if (history.modulesRunOnThisScreen.includes(historyKey)) {
     return {
       kind: 'needsFallback',
-      reason: `Already ${choice.kind === 'select' ? 'selected a row in' : 'clicked'} "${choice.control.text}" once without making progress — needs a human to check what happened.`,
+      reason: `Already ${choice.kind === 'select' ? 'selected a row in' : 'clicked'} "${labelOf(choice.control) ?? choice.control.controlId}" once without making progress — needs a human to check what happened.`,
     };
   }
   if (choice.kind === 'select') {

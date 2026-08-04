@@ -374,7 +374,18 @@ export interface DiscoveredStep {
   appId: string;
   params: Record<string, string>;
   narrate?: string;
+  /** True for a step a human performed by hand in the live window after the run handed over. */
+  byHuman?: boolean;
 }
+
+/** Why an autonomous run is no longer going — polled from the state, since the run outlives
+ *  the request that started it. */
+export type DiscoveryOutcome =
+  | { kind: 'done' }
+  | { kind: 'needsHuman'; reason: string }
+  | { kind: 'budgetReached'; reason: string }
+  | { kind: 'stopped' }
+  | { kind: 'error'; reason: string };
 
 export interface DiscoveryRegisteredControl {
   name: string;
@@ -400,6 +411,11 @@ export interface DiscoveryState {
   stepLog?: string[];
   steps?: DiscoveredStep[];
   startedAt?: string;
+  /** True while the loop is mid-flight — what the UI polls on to know whether to keep watching. */
+  running?: boolean;
+  outcome?: DiscoveryOutcome;
+  /** True once the run has handed back to a human and is recording what they do in the window. */
+  awaitingHuman?: boolean;
 }
 
 /** BL-047 Phase 2 POC: status for the AI provider used for natural-language process resolution

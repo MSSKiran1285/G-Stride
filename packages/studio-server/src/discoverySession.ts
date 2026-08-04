@@ -10,7 +10,7 @@ import {
   ScreenArchetype,
 } from '@taf/engine';
 import { FioriPlaywrightAdapter } from '@taf/adapter-fiori';
-import { captureScan, getActivePage } from './scanSession';
+import { captureScan, getActivePage, startRecording, stopRecording } from './scanSession';
 import { AnthropicResolver, AI_PROVIDER } from './anthropicResolver';
 
 /** Only constructs a resolver when a key is actually configured — decideNextAction's own
@@ -22,12 +22,19 @@ async function resolveAiResolver(): Promise<AnthropicResolver | undefined> {
 }
 
 /**
- * BL-047 Phase 2's live orchestration loop: ties the rules-first decision policy
- * (discoveryNavigation.ts) to a real, open scan session. Deliberately one step per call, not
- * an internal loop that runs to completion unattended — per the owner's explicit decision
- * ("initially let the process have human in the loop"), the caller (the UI, today) decides
- * whether to take the next step, matching this single scan session's own "a human is watching
- * a real browser window" nature.
+ * BL-047 Phase 2's live orchestration loop: ties the model-driven decision policy
+ * (discoveryNavigation.ts) to a real, open scan session.
+ *
+ * This started as strictly one step per HTTP call, on the owner's early "initially let the
+ * process have human in the loop" decision — the right call while a single decision at a time
+ * still needed watching. The owner retired it on 4 Aug 2026 with the question that answers
+ * itself: "If I am going to sit there and click run next step, I might as well add the controls
+ * myself, where is the AI here?" Exactly right — a human pressing a button between every action
+ * is not autonomy, it is a slower manual capture. runDiscovery() now drives the instruction to
+ * completion on its own, and the human-in-the-loop guarantee moved to where it belongs: a Stop
+ * that takes effect between steps, a step budget so a confused run cannot spin forever, and the
+ * mandatory review gate before anything discovered is treated as final. Single-stepping stays
+ * available (runDiscoveryStep) for diagnosing one decision, which is what it was always good at.
  *
  * Only one discovery run at a time, same invariant as scanSession's own single active session
  * — there is exactly one live window to drive.
@@ -38,7 +45,26 @@ export interface DiscoveredStep {
   appId: string;
   params: Record<string, string>;
   narrate?: string;
+  /** True for a step a human performed by hand in the live window while the run was handed
+   *  over to them, rather than one the model decided. Both kinds go into the same ordered list
+   *  and the same step log on purpose — the composed Test has to replay the whole process, and
+   *  the model has to be able to see what the human did before deciding what comes next. */
+  byHuman?: boolean;
 }
+
+/** Why an autonomous run is no longer going. Kept on the state (rather than only returned from
+ *  the request that started the run) because the run outlives that request — the UI polls. */
+export type DiscoveryOutcome =
+  | { kind: 'done' }
+  | { kind: 'needsHuman'; reason: string }
+  | { kind: 'budgetReached'; reason: string }
+  | { kind: 'stopped' }
+  | { kind: 'error'; reason: string };
+
+/** Enough to keep a confused run from driving a real SAP tenant indefinitely. Deliberately a
+ *  plain count rather than a time limit: each step is one capture + one model call + one real
+ *  UI action, so steps — not seconds — are what actually bound the damage. */
+export const DEFAULT_MAX_STEPS = 15;
 
 export interface RegisteredControl {
   name: string;
@@ -61,6 +87,16 @@ export interface DiscoveryState {
   lastArchetype: ScreenArchetype | null;
   steps: DiscoveredStep[];
   startedAt: string;
+  /** True while the autonomous loop is actually mid-flight. The loop outlives the HTTP request
+   *  that started it, so this is what the UI polls to know whether to keep watching. */
+  running: boolean;
+  /** Set by Stop; the loop checks it between steps and never mid-action, so stopping can never
+   *  leave a half-executed UI interaction behind. */
+  stopRequested: boolean;
+  outcome?: DiscoveryOutcome;
+  /** True once the run has handed control back and is waiting for a human to act in the live
+   *  window, with their actions being recorded — see recordHumanStep. */
+  awaitingHuman: boolean;
 }
 
 let state: DiscoveryState | null = null;
@@ -77,6 +113,9 @@ export function startDiscovery(appId: string, instruction: string): DiscoverySta
     lastArchetype: null,
     steps: [],
     startedAt: new Date().toISOString(),
+    running: false,
+    stopRequested: false,
+    awaitingHuman: false,
   };
   return state;
 }
@@ -85,8 +124,19 @@ export function getDiscoveryState(): DiscoveryState | null {
   return state;
 }
 
-export function stopDiscovery(): void {
+/**
+ * Stop means two different things depending on what is happening, and conflating them loses
+ * work: mid-run it means "stop taking actions but keep everything you found", and only once
+ * nothing is running does it mean "discard this run". Without the distinction, stopping a
+ * runaway loop also threw away the steps that had already succeeded.
+ */
+export function stopDiscovery(): DiscoveryState | null {
+  if (state?.running) {
+    state.stopRequested = true;
+    return state;
+  }
   state = null;
+  return null;
 }
 
 function requireState(): DiscoveryState {
@@ -202,4 +252,123 @@ export async function runDiscoveryStep(
   current.steps.push(step);
 
   return { decision, registeredControl, step };
+}
+
+/**
+ * Drives the instruction to completion without a human pressing anything between steps — the
+ * point of the whole feature, and what the owner rightly pushed back for on 4 Aug 2026.
+ *
+ * Runs detached from the request that started it (a real run is many captures, model calls and
+ * UI interactions, far longer than any sensible HTTP timeout), so progress is read by polling
+ * getDiscoveryState(). Every exit is recorded as an explicit outcome — including a thrown error,
+ * which must be caught here rather than escaping as an unhandled rejection that would take the
+ * whole server down and lose the run's findings with it.
+ */
+export async function runDiscovery(
+  objectRepository: ObjectRepository,
+  registry: ModuleRegistry,
+  maxSteps: number = DEFAULT_MAX_STEPS,
+  updatedBy?: string
+): Promise<void> {
+  const current = requireState();
+  if (current.running) return;
+  current.running = true;
+  current.stopRequested = false;
+  current.awaitingHuman = false;
+  current.outcome = undefined;
+  // The model is driving again, so stop attributing what happens in the window to a human —
+  // otherwise the loop's own clicks would be recorded a second time as human steps.
+  await stopRecording();
+
+  /** Hands the window back to a human and starts recording what they do with it, so the run can
+   *  resume knowing what happened while it was stopped. */
+  const handOver = async (outcome: DiscoveryOutcome) => {
+    current.outcome = outcome;
+    current.awaitingHuman = true;
+    await startRecording((interaction) => {
+      try {
+        recordHumanStep(objectRepository, interaction, updatedBy);
+      } catch {
+        // A human can click anywhere, including on something with no stable id worth saving —
+        // never let that take the recorder (or the process) down.
+      }
+    }).catch(() => undefined);
+  };
+
+  try {
+    let stepsTaken = 0;
+    while (stepsTaken < maxSteps) {
+      // Checked between steps only, never mid-action — a stop must not be able to interrupt a
+      // half-applied UI interaction on a real tenant.
+      if (current.stopRequested) {
+        current.outcome = { kind: 'stopped' };
+        return;
+      }
+
+      const result = await runDiscoveryStep(objectRepository, registry, updatedBy);
+      if (result.decision.kind === 'done') {
+        current.outcome = { kind: 'done' };
+        return;
+      }
+      if (result.decision.kind === 'needsFallback') {
+        await handOver({ kind: 'needsHuman', reason: result.decision.reason });
+        return;
+      }
+      stepsTaken += 1;
+    }
+    await handOver({
+      kind: 'budgetReached',
+      reason: `Stopped after ${maxSteps} steps without the instruction reporting itself complete.`,
+    });
+  } catch (error) {
+    await handOver({ kind: 'error', reason: error instanceof Error ? error.message : String(error) });
+  } finally {
+    current.running = false;
+  }
+}
+
+/**
+ * Records one action a human took by hand in the live window while the run was handed over to
+ * them — the owner's second point on 4 Aug 2026: "When asking human to take over, the steps
+ * performed by human should be recorded."
+ *
+ * Two things have to happen for that to be worth anything, and this does both: the control the
+ * human touched goes into the Object Repository through the exact same upsert path everything
+ * else uses (never a fabricated definition — the rule the whole of BL-047 exists to enforce),
+ * and the action joins the run's own step log, so when the model picks the run back up it can
+ * see what the human did and carry on from there instead of repeating it.
+ */
+export function recordHumanStep(
+  objectRepository: ObjectRepository,
+  interaction: { controlId: string; controlType: string; text?: string; bindingPath?: string; parentId?: string; value?: string },
+  updatedBy?: string
+): { step: DiscoveredStep; registeredControl: RegisteredControl } {
+  const current = requireState();
+  const captured: CapturedControl = {
+    controlId: interaction.controlId,
+    controlType: interaction.controlType,
+    text: interaction.text,
+    bindingPath: interaction.bindingPath,
+    parentId: interaction.parentId,
+    category: 'actionable',
+  };
+  const registeredControl = resolveControlName(objectRepository, current.appId, interaction.controlId, [captured], updatedBy);
+
+  const isFill = interaction.value !== undefined;
+  const label = interaction.text?.trim() || registeredControl.name;
+  const step: DiscoveredStep = {
+    module: isFill ? 'EnterHeaderField' : 'ClickButton',
+    appId: current.appId,
+    params: isFill
+      ? { field: registeredControl.name, value: interaction.value as string }
+      : { control: registeredControl.name },
+    narrate: isFill ? `Human entered "${interaction.value}" into "${label}"` : `Human clicked "${label}"`,
+    byHuman: true,
+  };
+  current.steps.push(step);
+  current.stepLog.push(step.narrate as string);
+  // Whatever the human just did almost certainly changed the screen, so what the model had
+  // already tried *here* no longer describes where it now is.
+  current.history = { modulesRunOnThisScreen: [] };
+  return { step, registeredControl };
 }

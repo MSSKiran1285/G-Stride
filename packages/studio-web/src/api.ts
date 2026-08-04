@@ -213,7 +213,14 @@ export const api = {
     request<DiscoveryState>(`/api/discovery/${encodeURIComponent(appId)}/start`, { method: 'POST', body: JSON.stringify({ instruction }) }),
   getDiscoveryState: () => request<DiscoveryState>('/api/discovery/state'),
   runDiscoveryStep: () => request<DiscoveryStepResult>('/api/discovery/step', { method: 'POST' }),
-  stopDiscovery: () => request<{ ok: true }>('/api/discovery/stop', { method: 'POST' }),
+  /** Starts the loop and returns as soon as it is going — progress comes from polling
+   *  getDiscoveryState(), since a real run far outlasts any one request. */
+  runDiscovery: (maxSteps?: number) =>
+    request<{ ok: true; maxSteps: number }>('/api/discovery/run', {
+      method: 'POST',
+      body: JSON.stringify(maxSteps ? { maxSteps } : {}),
+    }),
+  stopDiscovery: () => request<{ ok: true; stillRunning: boolean }>('/api/discovery/stop', { method: 'POST' }),
   getAiProviderStatus: () => request<AiProviderStatus>('/api/settings/ai-provider'),
   saveAiProviderKey: (apiKey: string) =>
     request<AiProviderStatus>('/api/settings/ai-provider', { method: 'PUT', body: JSON.stringify({ apiKey }) }),

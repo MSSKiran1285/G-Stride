@@ -1,6 +1,6 @@
 import { chromium, Browser, Page } from 'playwright';
 import { randomUUID } from 'node:crypto';
-import { inspectUi5Controls, DiscoveredControl } from '@taf/adapter-fiori';
+import { inspectUi5Controls, classifyControl, DiscoveredControl } from '@taf/adapter-fiori';
 
 export interface ScanSessionInfo {
   sessionId: string;
@@ -13,6 +13,34 @@ interface ActiveSession extends ScanSessionInfo {
   page: Page;
   /** Playwright throws if the same exposeFunction name is registered twice on one page — only do it once per session. */
   pickExposed?: boolean;
+  recordExposed?: boolean;
+}
+
+/**
+ * One action a human took by hand in the live window, resolved to the UI5 control they actually
+ * meant. `value` is present only for a field edit.
+ *
+ * Everything here is snapshotted inside the page at the moment of the interaction rather than
+ * looked up afterwards, deliberately: the commonest human action is the one that navigates, and
+ * by the time Node could run a fresh capture the control that was clicked may no longer exist.
+ */
+export interface RecordedInteraction {
+  controlId: string;
+  controlType: string;
+  text?: string;
+  bindingPath?: string;
+  parentId?: string;
+  value?: string;
+}
+
+/** What the in-page listener reports: the whole ancestor chain, innermost first, each entry
+ *  already carrying enough for Node to classify it without touching the (possibly navigated) page. */
+interface InteractionCandidate {
+  id: string;
+  controlType: string;
+  text?: string;
+  bindingPath?: string;
+  parentId?: string;
 }
 
 export interface PickResult {
@@ -342,6 +370,145 @@ export function getPickResult(): PickResult {
   return pickResult;
 }
 
+// --- Recording a human's own actions in the live window (BL-047) -------------------------
+//
+// The mirror image of picking above: picking suppresses the click so selecting "Create" never
+// fires it, whereas recording must let every interaction through untouched and only watch. The
+// two share the ancestor-walk idea (the literal event target is usually a sub-part — an icon, a
+// text span — of the control worth naming) but nothing else, so they are deliberately separate
+// listeners rather than one mode with a flag.
+
+let interactionHandler: ((interaction: RecordedInteraction) => void) | null = null;
+
+/** Picks which control in the clicked ancestor chain the human meant, using the same
+ *  outermost-actionable-then-informational preference handlePicked established for picking, and
+ *  the same classifyControl that categorises a bulk capture — no second, divergent notion of
+ *  what counts as a meaningful control. */
+function resolveInteraction(candidates: InteractionCandidate[], value?: string): RecordedInteraction | undefined {
+  if (candidates.length === 0) return undefined;
+  const classified = candidates.map((c) => ({
+    candidate: c,
+    category: classifyControl({ controlId: c.id, controlType: c.controlType, text: c.text, bindingPath: c.bindingPath }),
+  }));
+  const chosen =
+    [...classified].reverse().find((c) => c.category === 'actionable') ??
+    [...classified].reverse().find((c) => c.category === 'informational') ??
+    classified[0];
+  return {
+    controlId: chosen.candidate.id,
+    controlType: chosen.candidate.controlType,
+    text: chosen.candidate.text,
+    bindingPath: chosen.candidate.bindingPath,
+    parentId: chosen.candidate.parentId,
+    value,
+  };
+}
+
+/**
+ * Starts watching the live window for actions a human performs by hand, reporting each one to
+ * `handler`. Nothing is intercepted or altered — the app behaves exactly as it would with no
+ * recording at all, which is the whole point: the human is taking over precisely because the
+ * model could not, so the takeover must not be made awkward by the recording of it.
+ */
+export async function startRecording(handler: (interaction: RecordedInteraction) => void): Promise<void> {
+  if (!session) {
+    throw Object.assign(new Error('No active scan session — open one first.'), { status: 400 });
+  }
+  interactionHandler = handler;
+
+  if (!session.recordExposed) {
+    await session.page.exposeFunction('__tafReportInteraction', (candidates: InteractionCandidate[], value?: string) => {
+      const interaction = resolveInteraction(candidates, value);
+      if (interaction && interactionHandler) interactionHandler(interaction);
+    });
+    session.recordExposed = true;
+  }
+
+  for (const frame of session.page.frames()) {
+    await frame
+      .evaluate(() => {
+        const w = window as any;
+        if (w.__tafRecordActive) return;
+        w.__tafRecordActive = true;
+
+        function describe(control: any, id: string) {
+          let text: string | undefined;
+          for (const getter of ['getText', 'getTitle', 'getHeaderText']) {
+            if (typeof control[getter] !== 'function') continue;
+            const v = control[getter]();
+            if (typeof v === 'string' && v) {
+              text = v;
+              break;
+            }
+          }
+          if (!text && typeof control.getTooltip_Text === 'function') {
+            const tip = control.getTooltip_Text();
+            if (typeof tip === 'string' && tip.trim()) text = tip.trim();
+          }
+          return {
+            id,
+            controlType: control.getMetadata?.().getName?.() ?? 'unknown',
+            text,
+            bindingPath: control.getBindingContext?.()?.getPath?.(),
+            parentId: control.getParent?.()?.getId?.(),
+          };
+        }
+
+        function chainFrom(target: HTMLElement | null) {
+          const core = (window as any).sap?.ui?.getCore?.();
+          const seen = new Set<string>();
+          const chain: any[] = [];
+          let el: HTMLElement | null = target;
+          while (el) {
+            if (el.id && !seen.has(el.id)) {
+              const control = core?.byId?.(el.id);
+              if (control) {
+                seen.add(el.id);
+                chain.push(describe(control, el.id));
+              }
+            }
+            el = el.parentElement;
+          }
+          return chain;
+        }
+
+        // Capture phase, but nothing is suppressed — we only need to read the target before the
+        // app's own handler potentially re-renders or navigates away from it.
+        const onClick = (e: MouseEvent) => {
+          if (e.ctrlKey || e.metaKey) return; // Ctrl+click belongs to picking, not recording
+          const chain = chainFrom(e.target as HTMLElement);
+          if (chain.length > 0) w.__tafReportInteraction(chain);
+        };
+        // A field edit is only meaningful once the human has finished typing, which is what
+        // "change" means and "input" does not — recording per keystroke would produce one step
+        // per character.
+        const onChange = (e: Event) => {
+          const target = e.target as HTMLInputElement | HTMLTextAreaElement;
+          if (!target || typeof target.value !== 'string') return;
+          const chain = chainFrom(target as unknown as HTMLElement);
+          if (chain.length > 0) w.__tafReportInteraction(chain, target.value);
+        };
+
+        w.__tafRecordCleanup = () => {
+          window.removeEventListener('click', onClick, true);
+          window.removeEventListener('change', onChange, true);
+          w.__tafRecordActive = false;
+        };
+        window.addEventListener('click', onClick, true);
+        window.addEventListener('change', onChange, true);
+      })
+      .catch(() => undefined);
+  }
+}
+
+export async function stopRecording(): Promise<void> {
+  interactionHandler = null;
+  if (!session) return;
+  for (const frame of session.page.frames()) {
+    await frame.evaluate(() => (window as any).__tafRecordCleanup?.()).catch(() => undefined);
+  }
+}
+
 /** Permanently drops one control from the accumulated pick list — server-side, so a
  * dismissed "already saved"/junk row stays gone across a page reload or tab switch
  * instead of reappearing the next time the client re-fetches the full list. */
@@ -366,5 +533,6 @@ export async function closeScanSession(): Promise<void> {
   const current = session;
   session = null;
   pickResult = { status: 'idle', picks: [] };
+  interactionHandler = null;
   await current.browser.close().catch(() => undefined);
 }

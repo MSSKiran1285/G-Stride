@@ -40,14 +40,16 @@ export function ObjectScanner({
   // reads that as "new" again, and re-adds it right back — Cancel would silently undo itself.
   const dismissedIdsRef = useRef(new Set<string>());
 
-  // BL-047 Phase 2: the live autonomous-discovery loop, one step per click — per the owner's
-  // explicit "human in the loop" decision, this never runs unattended; every step's outcome is
-  // shown before the next one can be taken.
+  // BL-047 Phase 2: the live autonomous-discovery loop. Run drives the whole instruction on its
+  // own; the loop lives server-side and outlives any one request, so this polls state while it
+  // is going rather than awaiting a response. "Run one step" stays for diagnosing a single
+  // decision — it is no longer how the feature is meant to be used.
   const [instructionText, setInstructionText] = useState('');
   const [discovery, setDiscovery] = useState<DiscoveryState | null>(null);
   const [lastStep, setLastStep] = useState<DiscoveryStepResult | null>(null);
   const [discoveryBusy, setDiscoveryBusy] = useState(false);
   const [discoveryError, setDiscoveryError] = useState<string | null>(null);
+  const discoveryPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   function beginPolling() {
     if (pickPollRef.current) clearInterval(pickPollRef.current);
@@ -63,6 +65,23 @@ export function ObjectScanner({
         setPickedControls((prev) => [...prev, ...newOnes]);
       }
     }, 1000);
+  }
+
+  // Watches the server-side run. Keeps polling while it is still taking steps AND while it is
+  // waiting on a human, because in that second state the steps the human performs in the live
+  // window are being recorded server-side — they should appear here as they happen, not only
+  // once the model is asked to resume.
+  function beginDiscoveryPolling() {
+    if (discoveryPollRef.current) clearInterval(discoveryPollRef.current);
+    discoveryPollRef.current = setInterval(async () => {
+      const state = await api.getDiscoveryState().catch(() => null);
+      if (!state) return;
+      setDiscovery(state.active ? state : null);
+      if (!state.active || (!state.running && !state.awaitingHuman)) {
+        if (discoveryPollRef.current) clearInterval(discoveryPollRef.current);
+        discoveryPollRef.current = null;
+      }
+    }, 1500);
   }
 
   // Studio's App.tsx fully unmounts ObjectScanner when you switch tabs (not just hides it),
@@ -96,7 +115,12 @@ export function ObjectScanner({
 
     api
       .getDiscoveryState()
-      .then((state) => setDiscovery(state.active ? state : null))
+      .then((state) => {
+        setDiscovery(state.active ? state : null);
+        // The loop runs server-side, so it may well still be going from before this component
+        // was last unmounted — pick the watch back up rather than showing a frozen snapshot.
+        if (state.active && (state.running || state.awaitingHuman)) beginDiscoveryPolling();
+      })
       .catch(() => undefined);
 
     api
@@ -115,6 +139,7 @@ export function ObjectScanner({
 
     return () => {
       if (pickPollRef.current) clearInterval(pickPollRef.current);
+      if (discoveryPollRef.current) clearInterval(discoveryPollRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -232,6 +257,25 @@ export function ObjectScanner({
       const state = await api.startDiscovery(appId.trim(), instruction);
       setDiscovery(state);
       setLastStep(null);
+      // Starting and then immediately running is the whole point — being asked to press a
+      // second button before anything happens is exactly the friction this replaced.
+      await api.runDiscovery();
+      beginDiscoveryPolling();
+    } catch (e) {
+      setDiscoveryError(String(e));
+    } finally {
+      setDiscoveryBusy(false);
+    }
+  }
+
+  /** Picks the instruction back up after a handover — the model now sees whatever the human
+   *  did in the meantime, because those steps were recorded into the same step log. */
+  async function resumeDiscoveryRun() {
+    setDiscoveryError(null);
+    setDiscoveryBusy(true);
+    try {
+      await api.runDiscovery();
+      beginDiscoveryPolling();
     } catch (e) {
       setDiscoveryError(String(e));
     } finally {
@@ -254,12 +298,22 @@ export function ObjectScanner({
     }
   }
 
+  // Stop means "stop taking actions, keep what you found" while the loop is going, and only
+  // means "discard this run" once it has already come to rest — mirroring the server, so
+  // halting a run that is going wrong never throws away the steps that already worked.
   async function stopDiscoveryRun() {
     setDiscoveryBusy(true);
     try {
-      await api.stopDiscovery();
-      setDiscovery(null);
-      setLastStep(null);
+      const result = await api.stopDiscovery();
+      if (result.stillRunning) {
+        const state = await api.getDiscoveryState().catch(() => null);
+        if (state) setDiscovery(state.active ? state : null);
+      } else {
+        if (discoveryPollRef.current) clearInterval(discoveryPollRef.current);
+        discoveryPollRef.current = null;
+        setDiscovery(null);
+        setLastStep(null);
+      }
     } catch (e) {
       setDiscoveryError(String(e));
     } finally {
@@ -354,10 +408,10 @@ export function ObjectScanner({
         <div className="panel stack">
           <p className="section-title">Autonomous discovery (BL-047)</p>
           <p className="hint">
-            Describe what to do in plain English — it decides each next action itself (navigate, fill, click, select) against the live screen,
-            registering any control it touches into the Object Repository above before acting on it. It remembers what it's already done this
-            run, so it can carry out a multi-step instruction, not just one isolated action. One step at a time: review what it did, then ask
-            for the next step.
+            Describe what to do in plain English and it carries the whole instruction out on its own — deciding each action (navigate, fill,
+            click, select) against the live screen and registering every control it touches into the Object Repository above before acting on
+            it. Stop it at any point; it finishes the action it is on and keeps everything it found. If it gets stuck it hands the window back
+            to you and records what you do by hand, so when you tell it to carry on it knows what happened while it was waiting.
           </p>
 
           {!discovery ? (
@@ -371,25 +425,59 @@ export function ObjectScanner({
               />
               <div className="row">
                 <button className="primary" onClick={startDiscoveryRun} disabled={discoveryBusy}>
-                  {discoveryBusy ? 'Starting…' : 'Start discovery'}
+                  {discoveryBusy ? 'Starting…' : 'Run'}
                 </button>
               </div>
             </div>
           ) : (
             <div className="stack">
               <div className="row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
-                <span className="badge running">running</span>
+                <span className={`badge ${discovery.running ? 'running' : discovery.awaitingHuman ? 'warning' : 'neutral'}`}>
+                  {discovery.running ? 'running' : discovery.awaitingHuman ? 'over to you' : 'idle'}
+                </span>
                 <span className="hint" style={{ flex: 1, minWidth: '10rem' }}>
                   {discovery.appId} — started {discovery.startedAt ? new Date(discovery.startedAt).toLocaleTimeString() : ''} —{' '}
                   {discovery.steps?.length ?? 0} step{(discovery.steps?.length ?? 0) === 1 ? '' : 's'} taken so far
                 </span>
-                <button className="primary" onClick={nextDiscoveryStep} disabled={discoveryBusy}>
-                  {discoveryBusy ? 'Working…' : 'Run next step'}
+                {!discovery.running && (
+                  <button className="primary" onClick={resumeDiscoveryRun} disabled={discoveryBusy}>
+                    {discoveryBusy ? 'Working…' : discovery.awaitingHuman ? 'Carry on from here' : 'Run'}
+                  </button>
+                )}
+                {/* Kept for diagnosing one decision in isolation — deliberately not the primary
+                    action any more: pressing a button between every step is not autonomy. */}
+                <button className="neutral" onClick={nextDiscoveryStep} disabled={discoveryBusy || discovery.running}>
+                  Run one step
                 </button>
                 <button className="neutral-solid" onClick={stopDiscoveryRun} disabled={discoveryBusy}>
-                  Stop
+                  {discovery.running ? 'Stop' : 'Discard run'}
                 </button>
               </div>
+
+              {discovery.outcome && !discovery.running && (
+                <div
+                  className={`fiori-message-strip ${
+                    discovery.outcome.kind === 'done' ? 'success' : discovery.outcome.kind === 'error' ? 'error' : 'warning'
+                  }`}
+                  role="status"
+                >
+                  {discovery.outcome.kind === 'done' && <>The instruction reports itself complete.</>}
+                  {discovery.outcome.kind === 'stopped' && <>Stopped on request — everything found so far is kept.</>}
+                  {discovery.outcome.kind === 'needsHuman' && (
+                    <>
+                      {discovery.outcome.reason} <strong>Over to you</strong> — carry on in the live window and every control you touch is
+                      recorded here, then press “Carry on from here”.
+                    </>
+                  )}
+                  {discovery.outcome.kind === 'budgetReached' && (
+                    <>
+                      {discovery.outcome.reason} <strong>Over to you</strong> — carry on in the live window, or press “Carry on from here” to
+                      let it try again.
+                    </>
+                  )}
+                  {discovery.outcome.kind === 'error' && <>Stopped on an error: {discovery.outcome.reason}</>}
+                </div>
+              )}
 
               {lastStep && (
                 <div
@@ -420,16 +508,22 @@ export function ObjectScanner({
                     <thead>
                       <tr>
                         <th>#</th>
+                        <th>By</th>
                         <th>Module</th>
-                        <th>Params</th>
+                        <th>What happened</th>
                       </tr>
                     </thead>
                     <tbody>
                       {discovery.steps.map((s, i) => (
                         <tr key={i}>
                           <td>{i + 1}</td>
+                          <td>
+                            <span className={`badge ${s.byHuman ? 'warning' : 'neutral'}`}>{s.byHuman ? 'you' : 'AI'}</span>
+                          </td>
                           <td>{s.module}</td>
-                          <td className="hint">{Object.entries(s.params).map(([k, v]) => `${k}=${v}`).join(', ')}</td>
+                          <td className="hint">
+                            {s.narrate ?? Object.entries(s.params).map(([k, v]) => `${k}=${v}`).join(', ')}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
