@@ -1,7 +1,7 @@
-import { CheckCircle2, ChevronDown, ChevronRight, Download, History, Search, ShieldCheck, XCircle } from 'lucide-react';
+import { CheckCircle2, Download, History, Search, ShieldCheck, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import type { CapturedDocument, EvidenceGovernance, RunHistoryEntry, RunHistoryFilter, RunHistoryGroup, RunHistorySummary, RunMode } from '../types';
+import type { CapturedDocument, EvidenceGovernance, RunHistoryEntry, RunHistoryFilter, RunHistorySummary, RunMode } from '../types';
 import { studioRoutes } from '../routes';
 import { AsyncFeedback, Card, EmptyState, PageHeader, Toolbar } from './WorkspacePrimitives';
 
@@ -78,13 +78,6 @@ export function DocumentsPanel({
   const [selectedRun, setSelectedRun] = useState<RunHistoryEntry | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<CapturedDocument[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
-  // BL-046: the grouping tree. `appIdScope` is what the tree selects; it is a filter like any
-  // other, which is why sort, pagination, the status/mode/date filters and lineage all keep
-  // working inside a selection instead of being replaced by it.
-  const [groups, setGroups] = useState<RunHistoryGroup[]>([]);
-  const [appIdScope, setAppIdScope] = useState<string | null>(null);
-  const [collapsedAreas, setCollapsedAreas] = useState<Set<string>>(new Set());
-  const [groupsError, setGroupsError] = useState<string | null>(null);
 
   function currentFilter(): RunHistoryFilter {
     const cutoffDays = range === 'all' ? null : Number(range);
@@ -95,7 +88,6 @@ export function DocumentsPanel({
       environment: environment.trim() || undefined,
       dateFrom: cutoffDays ? new Date(Date.now() - cutoffDays * 86_400_000).toISOString() : undefined,
       studioRunId: lineageStudioRunId ?? undefined,
-      appId: appIdScope ?? undefined,
       sortBy,
       sortDirection,
       limit: PAGE_SIZE,
@@ -118,34 +110,7 @@ export function DocumentsPanel({
   useEffect(() => {
     loadRuns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, status, mode, range, environment, lineageStudioRunId, appIdScope, sortBy, sortDirection, page]);
-
-  // Counts are refetched on every filter change except the App ID scope itself — selecting a
-  // node must not renumber the tree you selected it from.
-  useEffect(() => {
-    const cutoffDays = range === 'all' ? null : Number(range);
-    api
-      .listRunHistoryGroups({
-        query: query.trim() || undefined,
-        status: status || undefined,
-        mode: mode || undefined,
-        environment: environment.trim() || undefined,
-        dateFrom: cutoffDays ? new Date(Date.now() - cutoffDays * 86_400_000).toISOString() : undefined,
-        studioRunId: lineageStudioRunId ?? undefined,
-      })
-      .then((next) => {
-        setGroups(next);
-        setGroupsError(null);
-      })
-      // Never swallow this. The tree only renders when there are groups, so a silently-caught
-      // failure makes a broken endpoint indistinguishable from a ledger with nothing in it —
-      // exactly the confusion HC-007 and HC-023 were both raised for. Say what went wrong.
-      .catch((reason) => {
-        setGroups([]);
-        setGroupsError(String(reason));
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, status, mode, range, environment, lineageStudioRunId]);
+  }, [query, status, mode, range, environment, lineageStudioRunId, sortBy, sortDirection, page]);
 
   useEffect(() => {
     api.getEvidenceGovernance().then(setGovernance).catch(() => setGovernance(null));
@@ -186,19 +151,6 @@ export function DocumentsPanel({
   const failed = runs.length - passed;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  // Process area -> App IDs, with the area's roll-up being the sum of its children. Untagged App
-  // IDs collect under one explicit bucket rather than being hidden or silently attached to a real
-  // area — an audit view must not imply an artifact belongs somewhere it does not.
-  const areaMap = new Map<string, RunHistoryGroup[]>();
-  for (const g of groups) {
-    const area = g.processArea || 'Untagged';
-    if (!areaMap.has(area)) areaMap.set(area, []);
-    areaMap.get(area)!.push(g);
-  }
-  const areaNames = [...areaMap.keys()].sort((a, b) => (a === 'Untagged' ? 1 : b === 'Untagged' ? -1 : a.localeCompare(b)));
-  const ledgerTotal = groups.reduce((sum, g) => sum + g.total, 0);
-  const passRate = (p: number, t: number) => (t === 0 ? 0 : Math.round((p / t) * 100));
-
   return (
     <div className="audit-library">
       <PageHeader
@@ -225,97 +177,6 @@ export function DocumentsPanel({
             </span>
           </div>
         </section>
-      )}
-
-      {groupsError && (
-        <div className="fiori-message-strip warning" role="status">
-          Grouped view unavailable — {groupsError} The run list below is unaffected.
-        </div>
-      )}
-
-      {groups.length > 0 && (
-        <nav className="audit-group-tree" aria-label="Runs grouped by process area and application">
-          <div className="audit-group-tree-head">
-            <span className="canvas-eyebrow">Grouped ledger</span>
-            <button
-              type="button"
-              className={`audit-group-node audit-group-all${appIdScope === null ? ' is-selected' : ''}`}
-              aria-pressed={appIdScope === null}
-              onClick={() => { setAppIdScope(null); setPage(0); }}
-            >
-              <span className="audit-group-label">All applications</span>
-              <span className="audit-group-counts">
-                <span className="audit-group-rate">{passRate(groups.reduce((n, g) => n + g.passed, 0), ledgerTotal)}%</span>
-                <span className="badge passed">{groups.reduce((n, g) => n + g.passed, 0)}</span>
-                <span className="badge failed">{groups.reduce((n, g) => n + g.failed, 0)}</span>
-                <span className="hint">{ledgerTotal}</span>
-              </span>
-            </button>
-          </div>
-          {areaNames.map((area) => {
-            const children = areaMap.get(area)!;
-            const areaTotal = children.reduce((n, g) => n + g.total, 0);
-            const areaPassed = children.reduce((n, g) => n + g.passed, 0);
-            const areaFailed = children.reduce((n, g) => n + g.failed, 0);
-            const collapsed = collapsedAreas.has(area);
-            return (
-              <div key={area} className="audit-group-area">
-                <button
-                  type="button"
-                  className="audit-group-node audit-group-area-head"
-                  aria-expanded={!collapsed}
-                  onClick={() =>
-                    setCollapsedAreas((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(area)) next.delete(area);
-                      else next.add(area);
-                      return next;
-                    })
-                  }
-                >
-                  <span className="audit-group-label">
-                    {collapsed ? <ChevronRight size={14} aria-hidden="true" /> : <ChevronDown size={14} aria-hidden="true" />}
-                    {area}
-                  </span>
-                  <span className="audit-group-counts">
-                    <span className="audit-group-rate">{passRate(areaPassed, areaTotal)}%</span>
-                    <span className="badge passed">{areaPassed}</span>
-                    <span className="badge failed">{areaFailed}</span>
-                    <span className="hint">{areaTotal}</span>
-                  </span>
-                </button>
-                {!collapsed &&
-                  children
-                    .slice()
-                    .sort((a, b) => a.appId.localeCompare(b.appId))
-                    .map((g) => (
-                      <button
-                        key={g.appId}
-                        type="button"
-                        className={`audit-group-node audit-group-app${appIdScope === g.appId ? ' is-selected' : ''}`}
-                        aria-pressed={appIdScope === g.appId}
-                        onClick={() => { setAppIdScope(appIdScope === g.appId ? null : g.appId); setPage(0); }}
-                      >
-                        <span className="audit-group-label">{g.appId}</span>
-                        <span className="audit-group-counts">
-                          <span className="audit-group-rate">{passRate(g.passed, g.total)}%</span>
-                          <span className="badge passed">{g.passed}</span>
-                          <span className="badge failed">{g.failed}</span>
-                          <span className="hint">{g.total}</span>
-                        </span>
-                      </button>
-                    ))}
-              </div>
-            );
-          })}
-        </nav>
-      )}
-
-      {appIdScope && (
-        <div className="fiori-message-strip info audit-lineage-strip">
-          <span>Showing only runs for <code>{appIdScope}</code>.</span>
-          <button type="button" className="ghost" onClick={() => { setAppIdScope(null); setPage(0); }}>Clear</button>
-        </div>
       )}
 
       {lineageStudioRunId && (

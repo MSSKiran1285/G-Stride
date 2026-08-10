@@ -114,16 +114,6 @@ export interface RunHistoryFilter {
   sortDirection?: 'asc' | 'desc';
 }
 
-/** One App ID's roll-up across every matching run — BL-046's grouping tree. `lastStartedAt` lets
- *  the tree be ordered by recency as well as by name. */
-export interface RunHistoryGroupCount {
-  appId: string;
-  total: number;
-  passed: number;
-  failed: number;
-  lastStartedAt: string;
-}
-
 export interface RunHistoryPage {
   items: RunHistorySummary[];
   total: number;
@@ -270,34 +260,6 @@ export class RunHistoryStore {
       params.query = `%${filter.query}%`;
     }
     return { where: clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '', params };
-  }
-
-  /**
-   * BL-046: per-App-ID roll-up counts across EVERY matching run, not just the visible page.
-   *
-   * The point of the grouping tree is to make a large ledger navigable, which it can only do if
-   * each node states how much sits underneath it — a tree whose counts described the current page
-   * would be worse than no tree at all, since the numbers would change as you paged. So this is a
-   * separate aggregate query rather than something derived client-side from the page.
-   *
-   * Reuses buildWhere() deliberately: the counts must be filtered by exactly the same predicate as
-   * the list, or the tree and the grid would disagree about what exists. Callers pass the active
-   * filter with `appId` omitted, so every group is counted under the other active filters.
-   */
-  groupCountsByAppId(filter: RunHistoryFilter = {}): RunHistoryGroupCount[] {
-    const { where, params } = RunHistoryStore.buildWhere(filter);
-    return this.db
-      .prepare(
-        `SELECT app_id AS appId,
-                COUNT(*) AS total,
-                SUM(CASE WHEN status = 'passed' THEN 1 ELSE 0 END) AS passed,
-                SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
-                MAX(started_at) AS lastStartedAt
-         FROM runs ${where}
-         GROUP BY app_id
-         ORDER BY app_id ASC`
-      )
-      .all(params) as RunHistoryGroupCount[];
   }
 
   /** Lightweight listing — omits the result blob, which can be large across many runs. Returns

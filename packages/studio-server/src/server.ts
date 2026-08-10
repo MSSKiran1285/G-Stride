@@ -2384,38 +2384,6 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
-  /**
-   * BL-046: roll-up counts per App ID for the Audit ledger's grouping tree, across every run
-   * matching the caller's other filters — never just the current page. `appId` is deliberately
-   * NOT accepted here: the tree exists to let you choose an App ID, so counting under one already
-   * chosen would collapse the tree to a single node.
-   */
-  app.get('/api/audit/runs/groups', (req, res) => {
-    try {
-      const { status, mode, executedBy, environment, dateFrom, dateTo, query } = req.query;
-      if (status !== undefined && status !== 'passed' && status !== 'failed') {
-        return res.status(400).json({ error: 'status must be "passed" or "failed" if given' });
-      }
-      const str = (value: unknown) => (typeof value === 'string' && value ? value : undefined);
-      const groups = runHistory.groupCountsByAppId({
-        status: status as 'passed' | 'failed' | undefined,
-        mode: str(mode) as any,
-        executedBy: str(executedBy),
-        environment: str(environment),
-        dateFrom: str(dateFrom),
-        dateTo: str(dateTo),
-        query: str(query),
-      });
-      // Process area comes from the same appId tag store the rest of the product groups by, so
-      // the ledger's tree matches how Tests, datasets and Objects are already organised rather
-      // than inventing a second taxonomy for audit alone.
-      const areas = tagStore.listTags('appId');
-      res.json(groups.map((g) => ({ ...g, processArea: areas[g.appId] ?? '' })));
-    } catch (err: any) {
-      res.status(err.status ?? 500).json({ error: err.message });
-    }
-  });
-
   app.get('/api/audit/runs/:id', (req, res) => {
     try {
       const entry = runHistory.get(req.params.id);
