@@ -64,8 +64,15 @@ test('Canvas First Overview presents the approved shell and real workspace data'
       const revisedTco = Number((await totalTco.textContent()).replace(/[^\d.-]/g, ''));
       assert.equal(revisedTco, initialTco + 100, 'expected other period cost to be included in automation TCO');
 
-      const logoVisible = await page.locator('img.brand-logo-light[src="/ai-elk-logo-transparent.png"]').isVisible();
-      assert.equal(logoVisible, true, 'expected the AI ELK logo to remain visible in the persistent shell');
+      // BL-048 de-branded the shell: the brand area is now the product wordmark alone. Kept as an
+      // assertion rather than deleted, so the persistent shell's branding stays covered — and
+      // inverted, so a logo image reappearing would fail rather than pass unnoticed.
+      await page.locator('.lhs-brand-logo .brand-name').getByText('QA/4HANA Studio').waitFor();
+      assert.equal(
+        await page.locator('.lhs-brand-logo img').count(),
+        0,
+        'expected no logo image in the persistent shell after BL-048'
+      );
 
       await page.locator('.account-trigger').click();
       await page.getByRole('menuitem', { name: 'Settings' }).waitFor();

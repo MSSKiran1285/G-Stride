@@ -2,7 +2,7 @@
   "name": "sap-taf",
   "private": true,
   "version": "2.1.0-dev.0",
-  "description": "QA/4HANA Studio test automation platform by AI ELK.",
+  "description": "QA/4HANA Studio test automation platform.",
   "workspaces": [
     "packages/*"
   ],

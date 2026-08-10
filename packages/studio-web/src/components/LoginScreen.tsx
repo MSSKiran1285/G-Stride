@@ -17,10 +17,6 @@ export function LoginScreen({
   return (
     <main className="login-screen">
       <section className="login-card" aria-labelledby="login-title">
-        <span className="login-logo-pair" aria-hidden="true">
-          <img className="brand-logo-light" src="/ai-elk-logo-transparent.png" alt="" />
-          <img className="brand-logo-dark" src="/ai-elk-logo-dark.png" alt="" />
-        </span>
         <span className="canvas-eyebrow">Secure single-user workspace</span>
         <h1 id="login-title">Sign in to QA/4HANA Studio</h1>
         <p>

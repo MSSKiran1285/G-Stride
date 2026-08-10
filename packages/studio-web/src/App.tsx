@@ -259,21 +259,9 @@ export function App() {
             onClick={() => navigateTo('launchpad')}
             aria-label="QA/4HANA Studio — go to Automation Overview"
           >
-            <span className="brand-logo-pair" aria-hidden="true">
-              <img className="brand-logo-image brand-logo-light" src="/ai-elk-logo-transparent.png" alt="" />
-              <img className="brand-logo-image brand-logo-dark" src="/ai-elk-logo-dark.png" alt="" />
+            <span className="brand-title-wrap">
+              <span className="brand-name">{sidebarCollapsed ? 'QA/4' : 'QA/4HANA Studio'}</span>
             </span>
-            {!sidebarCollapsed && (
-              <span className="brand-title-wrap">
-                <span className="brand-name">QA/4HANA Studio</span>
-                <span className="brand-byline">
-                  <span className="brand-by">by</span>
-                  <span className="brand-wordmark" aria-label="AI ELK">
-                    <span className="brand-wordmark-ai">ai</span><span className="brand-wordmark-elk">elk</span>
-                  </span>
-                </span>
-              </span>
-            )}
           </button>
           <button
             type="button"

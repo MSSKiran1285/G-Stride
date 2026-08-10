@@ -16,6 +16,22 @@ const testFiles = fs.readdirSync(__dirname)
 const runId = process.env.REGRESSION_RUN_ID
   || `CORE-${new Date().toISOString().replace(/[:.]/g, '-')}`;
 
+const catalogScript = path.join('apps', 'test-operations', 'scripts', 'generate-catalog.mjs');
+const generateCatalog = () => spawnSync(process.execPath, [catalogScript], { cwd: repoRoot, stdio: 'inherit' });
+
+// The catalogue has to be regenerated BEFORE the suite as well as after it, because one of the
+// tests in the suite (quality-catalog.test.js) asserts that the committed test-catalog.json
+// matches a fresh scan of the test sources. Generating it only afterwards meant that suite was
+// always checking the PREVIOUS run's catalogue: any commit that added, renamed or removed a test
+// failed on its first run and passed on the second, having regenerated the file in between.
+// That is an ordering bug, not a flaky test, and it repeatedly produced false failures in
+// release evidence — the kind of noise that trains people to re-run rather than read a failure.
+//
+// Running it twice is correct rather than redundant: this pass fixes the inventory half (which
+// depends only on the test sources, and is what a test-name change breaks), and the pass after
+// the run fixes the status half (which depends on results that do not exist yet at this point).
+const preGenerated = generateCatalog();
+
 const testRun = spawnSync(
   process.execPath,
   [
@@ -47,10 +63,6 @@ const recorded = spawnSync(
   ],
   { cwd: repoRoot, stdio: 'inherit' },
 );
-const generated = spawnSync(
-  process.execPath,
-  [path.join('apps', 'test-operations', 'scripts', 'generate-catalog.mjs')],
-  { cwd: repoRoot, stdio: 'inherit' },
-);
+const generated = generateCatalog();
 
-process.exitCode = testRun.status || recorded.status || generated.status || 0;
+process.exitCode = preGenerated.status || testRun.status || recorded.status || generated.status || 0;

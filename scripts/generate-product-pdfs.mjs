@@ -9,7 +9,6 @@ const outputDir = path.join(root, 'docs', 'product-guides');
 const trackerPath = path.join(root, 'docs', 'ui-ux', 'PRODUCT_BACKLOG_TRACKER.html');
 const qualityPath = path.join(root, 'apps', 'test-operations', 'data', 'quality-history.json');
 const catalogPath = path.join(root, 'apps', 'test-operations', 'data', 'test-catalog.json');
-const logoPath = path.join(root, 'packages', 'studio-web', 'public', 'ai-elk-logo-transparent.png');
 const generatedDate = '30 July 2026';
 
 function html(value) {
@@ -46,10 +45,10 @@ function sectionTitle(number, title, kicker = '') {
   return `<header class="section-title">${kicker ? `<p class="eyebrow">${html(kicker)}</p>` : ''}<h2><span>${html(number)}</span>${html(title)}</h2></header>`;
 }
 
-function cover(title, subtitle, documentCode, logoData) {
+function cover(title, subtitle, documentCode) {
   return `
     <section class="cover">
-      <div class="cover-brand"><img src="${logoData}" alt="AI ELK logo"><div><strong>QA/4HANA Studio</strong><span>by aielk</span></div></div>
+      <div class="cover-brand"><div><strong>QA/4HANA Studio</strong></div></div>
       <div class="cover-copy">
         <p class="eyebrow">Product documentation · Current verified build</p>
         <h1>${html(title)}</h1>
@@ -100,7 +99,6 @@ const baseStyles = `
   .cover { min-height: 255mm; display: flex; flex-direction: column; page-break-after: always; padding: 5mm 2mm 0; }
   .cover::before { content: ""; position: absolute; inset: 0 0 auto; height: 6mm; background: var(--coral); }
   .cover-brand { display: flex; gap: 4mm; align-items: center; margin-top: 5mm; }
-  .cover-brand img { width: 22mm; height: 22mm; object-fit: contain; }
   .cover-brand strong { display: block; font-size: 16pt; }
   .cover-brand span { display: block; color: var(--coral-dark); font-weight: 700; }
   .cover-copy { margin: 45mm 0 auto; max-width: 160mm; }
@@ -394,7 +392,7 @@ function backlogDetails(backlog) {
     </article>`).join('');
 }
 
-async function implementationReport({ backlog, quality, catalogCount, logoData }) {
+async function implementationReport({ backlog, quality, catalogCount }) {
   const statusCounts = Object.fromEntries(['Implemented', 'Partial', 'Not started', 'Deferred'].map(
     (state) => [state, backlog.filter((item) => item.status === state).length],
   ));
@@ -440,7 +438,7 @@ async function implementationReport({ backlog, quality, catalogCount, logoData }
   ].map(([n, label]) => `<a href="#section-${n}"><strong>${n}</strong>${html(label)}</a>`).join('');
 
   const body = `
-    ${cover('Product Implementation, Backlog and Defect Status Report', 'A detailed evidence-based account of implemented functionality, every user story and acceptance criterion, remediated defects, remaining product gaps, and workspace-level capability.', 'Q4H-PROD-STATUS-2.0', logoData)}
+    ${cover('Product Implementation, Backlog and Defect Status Report', 'A detailed evidence-based account of implemented functionality, every user story and acceptance criterion, remediated defects, remaining product gaps, and workspace-level capability.', 'Q4H-PROD-STATUS-2.0')}
     <section>
       <p class="eyebrow">Document map</p><h2>Contents</h2><div class="toc">${toc}</div>
       <div class="callout"><strong>Interpretation rule.</strong> “Implemented” means the tracker criterion is covered by repository evidence. “Partial” identifies delivered capability that still has acceptance work. “Open” is not yet accepted. “Deferred” is intentionally outside the current release scope.</div>
@@ -544,7 +542,7 @@ async function implementationReport({ backlog, quality, catalogCount, logoData }
   return documentShell('QA/4HANA Studio — Product Implementation Status Report', body);
 }
 
-async function trainingWorkInstruction(logoData) {
+async function trainingWorkInstruction() {
   const figures = {
     overview: await screenFigure('01-automation-overview.png', 'Automation Overview'),
     objects: await screenFigure('02-control-object-repository.png', 'Control Object Repository'),
@@ -571,7 +569,7 @@ async function trainingWorkInstruction(logoData) {
   }
 
   const body = `
-    ${cover('User Training Work Instruction', 'Detailed screen-by-screen operating instruction for workspace owners, functional consultants, test authors and execution operators.', 'Q4H-WI-USER-2.0', logoData)}
+    ${cover('User Training Work Instruction', 'Detailed screen-by-screen operating instruction for workspace owners, functional consultants, test authors and execution operators.', 'Q4H-WI-USER-2.0')}
     <section>
       <p class="eyebrow">Before you begin</p><h2>Audience, prerequisites and safety</h2>
       <div class="two-col">
@@ -750,7 +748,7 @@ async function trainingWorkInstruction(logoData) {
   return documentShell('QA/4HANA Studio — User Training Work Instruction', body);
 }
 
-async function howToAndFaq(logoData) {
+async function howToAndFaq() {
   const recipes = [
     ['Configure the SAP connection safely', ['Open the profile menu and select Settings.', 'Choose SAP under Test-system connections.', 'Enter the approved non-production URL, username and password.', 'Save the connection; confirm only non-secret status is shown afterward.', 'Classify and verify the target before live scan or execution.']],
     ['Create a reusable Single Test', ['Open Compose and search the Test Library first.', 'Select New Test; enter business name, file name, application and process area.', 'Choose Blank or copy an existing Test as a template.', 'Declare typed inputs/outputs and sensitivity.', 'Add steps, objects and value sources; save as Draft.', 'Resolve publish findings and publish.']],
@@ -760,7 +758,7 @@ async function howToAndFaq(logoData) {
     ['Create an independent Regression Pack', ['Open Processes & Packs → Regression Packs.', 'Create a Draft Pack and add Test or Business Process members.', 'Set member-specific data/application/session/failure policies.', 'Validate references and compatible policies.', 'Publish and select it later through Saved Pack execution.']],
     ['Run a controlled Test or scenario', ['Open Execution Center and choose the execution type.', 'Select exact scope and App ID.', 'Choose data, filters, limits and headed/headless behavior.', 'Run preflight and correct all blockers.', 'Review immutable data/scope, acknowledge warnings and start.', 'Monitor the stable run route and open canonical evidence when complete.']],
     ['Rerun safely', ['Open the original run and choose rerun.', 'Choose full or eligible failed scope.', 'Review input, artifact, target and policy differences.', 'For transactional work, confirm retained state is eligible; started transactions may be blocked.', 'Start the new run and preserve the parent/child lineage.']],
-    ['Find evidence', ['Open Audit & Evidence.', 'Search by process/Test, App ID, run ID or executor.', 'Filter outcome, mode and date.', 'Open the stable run detail and select Evidence PDF.', 'Confirm the Test name header, AI ELK logo, run identity, target context and redaction.']],
+    ['Find evidence', ['Open Audit & Evidence.', 'Search by process/Test, App ID, run ID or executor.', 'Filter outcome, mode and date.', 'Open the stable run detail and select Evidence PDF.', 'Confirm the Test name header, run identity, target context and redaction.']],
   ];
 
   const faqs = [
@@ -801,7 +799,7 @@ async function howToAndFaq(logoData) {
   ];
 
   const body = `
-    ${cover('How-to Guide and Frequently Asked Questions', 'Task recipes, operating guidance, safety rules, troubleshooting and concise answers for everyday QA/4HANA Studio use.', 'Q4H-HOWTO-FAQ-2.0', logoData)}
+    ${cover('How-to Guide and Frequently Asked Questions', 'Task recipes, operating guidance, safety rules, troubleshooting and concise answers for everyday QA/4HANA Studio use.', 'Q4H-HOWTO-FAQ-2.0')}
     <section>
       <p class="eyebrow">Quick reference</p><h2>Golden path</h2>
       <div class="card"><ol>
@@ -871,18 +869,17 @@ async function renderPdf(browser, htmlPath, pdfPath, title) {
     printBackground: true,
     displayHeaderFooter: true,
     margin: { top: '18mm', right: '14mm', bottom: '18mm', left: '14mm' },
-    headerTemplate: `<div style="width:100%;font:8px 'Segoe UI',Arial;color:#587086;padding:0 14mm;display:flex;justify-content:space-between;"><span>QA/4HANA Studio · by aielk</span><span>${html(title)}</span></div>`,
+    headerTemplate: `<div style="width:100%;font:8px 'Segoe UI',Arial;color:#587086;padding:0 14mm;display:flex;justify-content:space-between;"><span>QA/4HANA Studio</span><span>${html(title)}</span></div>`,
     footerTemplate: `<div style="width:100%;font:8px 'Segoe UI',Arial;color:#587086;padding:0 14mm;display:flex;justify-content:space-between;"><span>Internal product documentation · ${generatedDate}</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
   });
   await page.close();
 }
 
 await fs.mkdir(outputDir, { recursive: true });
-const [trackerSource, qualitySource, catalogSource, logoData] = await Promise.all([
+const [trackerSource, qualitySource, catalogSource] = await Promise.all([
   fs.readFile(trackerPath, 'utf8'),
   fs.readFile(qualityPath, 'utf8'),
   fs.readFile(catalogPath, 'utf8'),
-  dataUri(logoPath),
 ]);
 
 const backlog = readBacklog(trackerSource);
@@ -892,17 +889,17 @@ const documents = [
   {
     stem: 'QA4HANA_Product_Implementation_Status_Report',
     title: 'Implementation status',
-    content: await implementationReport({ backlog, quality, catalogCount: catalog.tests.length, logoData }),
+    content: await implementationReport({ backlog, quality, catalogCount: catalog.tests.length }),
   },
   {
     stem: 'QA4HANA_User_Training_Work_Instruction',
     title: 'User training work instruction',
-    content: await trainingWorkInstruction(logoData),
+    content: await trainingWorkInstruction(),
   },
   {
     stem: 'QA4HANA_How_To_Guide_and_FAQ',
     title: 'How-to guide and FAQ',
-    content: await howToAndFaq(logoData),
+    content: await howToAndFaq(),
   },
 ];
 

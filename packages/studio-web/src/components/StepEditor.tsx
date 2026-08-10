@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, ModuleCall, ModuleInfo, ModuleParamDescriptor, ObjectControl, TestStepValueBinding, TestSystemContextKey } from '../types';
 import { TableRowsEditor } from './TableRowsEditor';
@@ -68,6 +69,9 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
   const [valueBindings, setValueBindings] = useState<Record<string, TestStepValueBinding>>(initial?.valueBindings ?? {});
   const [genericKey, setGenericKey] = useState('');
   const [objectControls, setObjectControls] = useState<ObjectControl[]>([]);
+  // Announced rather than only shown, matching how TestCaseEditor already reports step
+  // reordering — a reorder that is only visible is invisible to a screen-reader user.
+  const [paramOrderAnnouncement, setParamOrderAnnouncement] = useState('');
 
   const selected = useMemo(() => modules.find((m) => m.name === moduleName) ?? null, [modules, moduleName]);
   const effectiveAppId = appId || defaultAppId;
@@ -95,6 +99,31 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
 
   function setParam(key: string, value: string) {
     setParams((prev) => ({ ...prev, [key]: value }));
+  }
+
+  /**
+   * BL-042: reorders the step's own parameter list. Only reachable for modules with no
+   * descriptor — a described module's fields render in the order its own `describe.params`
+   * declares, which is part of the module's contract and identical in every Test that uses it,
+   * so it is not a per-step preference to override. The free-form list is different: those keys
+   * exist only in this Test's JSON, so their order is genuinely this step's to choose.
+   *
+   * Persistence comes free and is not a trick: JSON.stringify emits string keys in insertion
+   * order, so rebuilding the object in the chosen order is what makes the ordering survive save
+   * and reload, with no schema change and no separate ordering field to keep in sync.
+   */
+  function moveParam(key: string, direction: -1 | 1) {
+    setParams((prev) => {
+      const keys = Object.keys(prev);
+      const from = keys.indexOf(key);
+      const to = from + direction;
+      if (from === -1 || to < 0 || to >= keys.length) return prev;
+      keys.splice(to, 0, ...keys.splice(from, 1));
+      const next: Record<string, string> = {};
+      for (const k of keys) next[k] = prev[k];
+      setParamOrderAnnouncement(`${key} moved to position ${to + 1} of ${keys.length}.`);
+      return next;
+    });
   }
 
   function removeParam(key: string) {
@@ -221,6 +250,7 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
 
   return (
     <div className="panel stack">
+      <span className="sr-only" role="status" aria-live="polite">{paramOrderAnnouncement}</span>
       <div className="row">
         <div style={{ flex: 1 }}>
           <label>Module</label>
@@ -266,11 +296,27 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
         <div className="param-grid">
           {selected?.describe
             ? selected.describe.params.map(renderField)
-            : Object.keys(params).map((key) => (
+            : Object.keys(params).map((key, index, all) => (
                 <div key={key}>
                   <label>{key}</label>
                   <div className="row">
                     <input aria-label={key} type="text" value={params[key]} onChange={(e) => setParam(key, e.target.value)} />
+                    <button
+                      className="ghost icon-only"
+                      aria-label={`Move parameter ${key} up`}
+                      onClick={() => moveParam(key, -1)}
+                      disabled={index === 0}
+                    >
+                      <ArrowUp size={14} aria-hidden="true" />
+                    </button>
+                    <button
+                      className="ghost icon-only"
+                      aria-label={`Move parameter ${key} down`}
+                      onClick={() => moveParam(key, 1)}
+                      disabled={index === all.length - 1}
+                    >
+                      <ArrowDown size={14} aria-hidden="true" />
+                    </button>
                     <button className="ghost danger" onClick={() => removeParam(key)} title="Remove param">
                       ✕
                     </button>

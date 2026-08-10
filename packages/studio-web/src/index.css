@@ -1,4 +1,4 @@
-/* QA/4HANA Studio by AI ELK - Canvas First Design System */
+/* QA/4HANA Studio - Canvas First Design System */
 
 :root {
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -59,7 +59,7 @@
   --lhs-text: #112a46;
   --lhs-text-soft: #334b66;
 
-  /* AI ELK coral interaction palette */
+  /* Coral interaction palette */
   --brand-coral: #f06f61;
   --accent: #b9473d;
   --accent-hover: #9e382f;
@@ -221,15 +221,6 @@ button, input, select, textarea {
   min-width: 0;
 }
 
-.brand-logo-image {
-  display: block;
-  width: 34px;
-  height: 54px;
-  flex: 0 0 auto;
-  object-fit: contain;
-  border-radius: 4px;
-}
-
 .brand-title-wrap {
   display: flex;
   flex-direction: column;
@@ -257,11 +248,6 @@ button, input, select, textarea {
   flex-direction: column;
   gap: 0.55rem;
   padding: 0.65rem 0.35rem;
-}
-
-.sidebar-collapsed .brand-logo-image {
-  width: 28px;
-  height: 44px;
 }
 
 .lhs-collapse-btn {
@@ -1571,21 +1557,6 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
 .login-card p {
   margin: 0;
   color: var(--text-soft);
-}
-
-.login-logo-pair {
-  display: block;
-}
-
-.login-logo-pair img {
-  width: 74px;
-  height: 104px;
-  object-fit: contain;
-}
-
-[data-theme="light"] .login-logo-pair .brand-logo-dark,
-[data-theme="dark"] .login-logo-pair .brand-logo-light {
-  display: none;
 }
 
 .google-signin-wrap {
@@ -4171,81 +4142,8 @@ button.template-card {
   padding: 0.55rem 0.8rem 0.55rem 0.9rem;
 }
 
-.canvas-shell .brand-logo-image {
-  width: 30px;
-  height: 48px;
-}
-
-.brand-logo-pair {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-}
-
-.brand-logo-pair .brand-logo-image {
-  grid-area: 1 / 1;
-}
-
-.brand-logo-dark {
-  display: none;
-}
-
-[data-theme="dark"] .brand-logo-light {
-  display: none;
-}
-
-[data-theme="dark"] .brand-logo-dark {
-  display: block;
-}
-
 .canvas-shell .brand-name {
   font-size: 0.92rem;
-}
-
-.brand-byline {
-  display: flex;
-  align-items: baseline;
-  gap: 0.28rem;
-  margin-top: 0.18rem;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.brand-by {
-  color: var(--lhs-text);
-  font-size: 0.66rem;
-  font-weight: 650;
-}
-
-.brand-wordmark {
-  display: inline-flex;
-  align-items: baseline;
-  font-family: "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif;
-  font-size: 0.8rem;
-  letter-spacing: -0.055em;
-}
-
-.brand-wordmark-ai {
-  color: var(--accent);
-  font-family: "Arial Rounded MT Bold", "Avenir Next", sans-serif;
-  font-weight: 750;
-}
-
-.brand-wordmark-elk {
-  color: var(--lhs-text);
-  font-weight: 450;
-}
-
-[data-theme="dark"] .brand-by {
-  color: #fff8f2;
-}
-
-[data-theme="dark"] .brand-wordmark-ai {
-  color: #fff8f2;
-}
-
-[data-theme="dark"] .brand-wordmark-elk {
-  color: var(--accent);
 }
 
 .canvas-shell .lhs-collapse-btn {
@@ -4337,11 +4235,6 @@ button.template-card {
 
 .canvas-shell.sidebar-collapsed .lhs-brand-header {
   min-height: 112px;
-}
-
-.canvas-shell.sidebar-collapsed .brand-logo-image {
-  width: 26px;
-  height: 42px;
 }
 
 .canvas-shell.sidebar-collapsed .lhs-nav-item {

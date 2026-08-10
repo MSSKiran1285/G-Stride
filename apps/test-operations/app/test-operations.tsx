@@ -131,8 +131,6 @@ export function TestOperations({ snapshot }: { snapshot: Snapshot }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/ai-elk-logo-dark.png" alt="" />
           <div>
             <strong>QA/4HANA</strong>
             <span>Test Operations</span>
