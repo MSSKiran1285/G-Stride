@@ -1,6 +1,39 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-10T07-43-33-509Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-10T07:43:34.542Z",
+      "finishedAt": "2026-08-10T07:45:15.120Z",
+      "passed": 62,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-10T07-43-11-840Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-10T07:43:12.615Z",
+      "finishedAt": "2026-08-10T07:43:32.951Z",
+      "passed": 78,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-10T07-43-02-526Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-10T07:43:02.686Z",
+      "finishedAt": "2026-08-10T07:43:11.322Z",
+      "passed": 90,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-10T07-18-53-616Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-10T07:18:56.049Z",
@@ -185,39 +218,6 @@
       "failed": 0,
       "skipped": 4,
       "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-10T03-52-49-895Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-10T03:52:49.945Z",
-      "finishedAt": "2026-08-10T03:52:57.436Z",
-      "passed": 90,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-10T03-52-26-311Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-10T03:52:26.370Z",
-      "finishedAt": "2026-08-10T03:52:34.043Z",
-      "passed": 89,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-04T05-06-08-013Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-04T05:06:09.640Z",
-      "finishedAt": "2026-08-04T05:07:59.366Z",
-      "passed": 59,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
       "targetClass": "Isolated"
     }
   ],
