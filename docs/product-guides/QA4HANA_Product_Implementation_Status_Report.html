@@ -129,14 +129,14 @@
       <header class="section-title"><p class="eyebrow">Current product position</p><h2><span>1</span>Executive implementation summary</h2></header>
       <p class="lead">QA/4HANA Studio is a working, Canvas First SAP test-automation product spanning reusable authoring, controlled execution, immutable evidence and operational quality reporting.</p>
       <div class="metrics">
-        <div class="metric"><strong>48</strong><span>Backlog items</span></div>
-        <div class="metric"><strong>39</strong><span>Implemented</span></div>
-        <div class="metric"><strong>136/167</strong><span>Accepted criteria</span></div>
-        <div class="metric"><strong>230</strong><span>Catalogue tests</span></div>
+        <div class="metric"><strong>50</strong><span>Backlog items</span></div>
+        <div class="metric"><strong>44</strong><span>Implemented</span></div>
+        <div class="metric"><strong>153/173</strong><span>Accepted criteria</span></div>
+        <div class="metric"><strong>234</strong><span>Catalogue tests</span></div>
       </div>
       <div class="metrics">
         <div class="metric"><strong>0</strong><span>Partial items</span></div>
-        <div class="metric"><strong>6</strong><span>Not started</span></div>
+        <div class="metric"><strong>3</strong><span>Not started</span></div>
         <div class="metric"><strong>3</strong><span>Deferred</span></div>
         <div class="metric"><strong>51/51</strong><span>Defects remediated</span></div>
       </div>
@@ -157,7 +157,7 @@
           <li>All 51 recorded historical failures have a remediation run; no open ledger defect remains.</li>
         </ul></div>
       </div>
-      <div class="callout warning"><strong>Important distinction.</strong> The absence of an open recorded defect does not mean the backlog is complete. 9 items still contain partial, open or deferred acceptance scope and are listed in Section 5.</div>
+      <div class="callout warning"><strong>Important distinction.</strong> The absence of an open recorded defect does not mean the backlog is complete. 6 items still contain partial, open or deferred acceptance scope and are listed in Section 5.</div>
     </section>
 
     <section id="section-2">
@@ -226,9 +226,9 @@
       <table class="striped">
         <thead><tr><th>Status</th><th>Items</th><th>Meaning</th></tr></thead>
         <tbody>
-          <tr><td><span class="status status-implemented">Implemented</span></td><td>39</td><td>All recorded acceptance criteria are satisfied.</td></tr>
+          <tr><td><span class="status status-implemented">Implemented</span></td><td>44</td><td>All recorded acceptance criteria are satisfied.</td></tr>
           <tr><td><span class="status status-partial">Partial</span></td><td>0</td><td>Some functionality exists; one or more criteria still need delivery.</td></tr>
-          <tr><td><span class="status status-not-started">Not started</span></td><td>6</td><td>No acceptance criterion is complete.</td></tr>
+          <tr><td><span class="status status-not-started">Not started</span></td><td>3</td><td>No acceptance criterion is complete.</td></tr>
           <tr><td><span class="status status-deferred">Deferred</span></td><td>3</td><td>Deliberately outside the present release scope.</td></tr>
         </tbody>
       </table>
@@ -1097,65 +1097,65 @@
     <article class="backlog-item" id="BL-042">
       <div class="backlog-head">
         <div><p class="backlog-id">BL-042 · HC-013 · Post-production hypercare</p><h3>Add sortable fields to Compose</h3></div>
-        <span class="status status-not-started">Not started</span>
+        <span class="status status-implemented">Implemented</span>
       </div>
       <div class="meta-grid">
         <div><span>Priority</span><strong>P3</strong></div>
         <div><span>Planned tranche</span><strong>T5 · Post-2.0</strong></div>
-        <div><span>Actual release</span><strong>Not yet delivered</strong></div>
+        <div><span>Actual release</span><strong>2.1.0</strong></div>
         <div><span>Workspace</span><strong>Compose</strong></div>
-        <div><span>Acceptance</span><strong>0/3</strong></div>
+        <div><span>Acceptance</span><strong>3/3</strong></div>
       </div>
       <h4>Description</h4><p>Let a tester reorder Compose&#039;s own field list (not just step order) by dragging or keyboard, for forms with many parameters.</p>
       <h4>User story</h4><p>As an automation engineer authoring a Test with many fields, I want to sort or reorder them so that I can organize the form the way the target screen presents it.</p>
       <h4>Acceptance criteria</h4>
       <div>
-        <div class="criterion"><span class="num">1</span><span>A Compose field list supports reordering independent of the underlying JSON key order.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">2</span><span>Reordering has keyboard controls and does not require drag (consistent with BL-016&#039;s ordered-transfer pattern).</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">3</span><span>Reordering persists across save/reload.</span><span class="status status-open">Open</span></div>
+        <div class="criterion"><span class="num">1</span><span>A Compose field list supports reordering independent of the underlying JSON key order.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">2</span><span>Reordering has keyboard controls and does not require drag (consistent with BL-016&#039;s ordered-transfer pattern).</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">3</span><span>Reordering persists across save/reload.</span><span class="status status-implemented">Implemented</span></div>
       </div>
-      <h4>Implementation coverage</h4><p>Raised as a post-production hypercare New Feature request (HC-013), not implemented in this pass. No sortable-field UI exists in Compose today.</p>
-      <p class="small"><strong>Evidence:</strong> Post Production Incidents.csv (HC-013)<br><strong>Last reconciled:</strong> 2026-07-31</p>
+      <h4>Implementation coverage</h4><p>Raised as a post-production hypercare New Feature request (HC-013). A step&#039;s own parameter list is now reorderable from the keyboard: each free-form parameter carries Move up / Move down controls, matching the ArrowUp/ArrowDown idiom TestCaseEditor already uses for step order, with an aria-live announcement so a reorder is not visible-only. Persistence needed no schema change and no separate ordering field — JSON.stringify emits string keys in insertion order, so rebuilding the params object in the chosen order is itself what makes the order survive save and reload. Deliberately scoped to modules with no descriptor: a described module&#039;s fields render in the order its own describe.params declares, which is part of that module&#039;s contract and identical in every Test that uses it, so it is not a per-step preference to override. The free-form keys are different — they exist only in this Test&#039;s JSON, which is exactly why their order is this step&#039;s to choose. Regression test drives the reorder through the UI and then re-reads the stored Test, so the assertion is on what persisted rather than on what the open editor displayed.</p>
+      <p class="small"><strong>Evidence:</strong> Post Production Incidents.csv (HC-013) · packages/studio-web/src/components/StepEditor.tsx · regression/ui/backlog-t5-usability.test.js<br><strong>Last reconciled:</strong> 2026-08-10</p>
     </article>
     <article class="backlog-item" id="BL-043">
       <div class="backlog-head">
         <div><p class="backlog-id">BL-043 · HC-017 · Post-production hypercare</p><h3>Add multi-select to Mass Capture before saving</h3></div>
-        <span class="status status-not-started">Not started</span>
+        <span class="status status-implemented">Implemented</span>
       </div>
       <div class="meta-grid">
         <div><span>Priority</span><strong>P3</strong></div>
         <div><span>Planned tranche</span><strong>T5 · Post-2.0</strong></div>
-        <div><span>Actual release</span><strong>Not yet delivered</strong></div>
+        <div><span>Actual release</span><strong>2.1.0</strong></div>
         <div><span>Workspace</span><strong>Control Object Repository</strong></div>
-        <div><span>Acceptance</span><strong>0/3</strong></div>
+        <div><span>Acceptance</span><strong>3/3</strong></div>
       </div>
       <h4>Description</h4><p>Let a tester select exactly which discovered controls to save from a Mass Capture result set, instead of saving everything not individually dismissed.</p>
       <h4>User story</h4><p>As an automation engineer capturing a busy screen, I want to pick just the controls I need so that I don&#039;t clutter the Object Repository with ones I&#039;ll never use.</p>
       <h4>Acceptance criteria</h4>
       <div>
-        <div class="criterion"><span class="num">1</span><span>Each Mass Capture result row has an explicit selection control.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">2</span><span>&quot;Save selected&quot; saves only checked rows; existing &quot;Save all&quot; and per-row Cancel remain available.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">3</span><span>Selection state survives a Highlight-on-screen round trip.</span><span class="status status-open">Open</span></div>
+        <div class="criterion"><span class="num">1</span><span>Each Mass Capture result row has an explicit selection control.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">2</span><span>&quot;Save selected&quot; saves only checked rows; existing &quot;Save all&quot; and per-row Cancel remain available.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">3</span><span>Selection state survives a Highlight-on-screen round trip.</span><span class="status status-implemented">Implemented</span></div>
       </div>
-      <h4>Implementation coverage</h4><p>Raised as a post-production hypercare Defect (HC-017). Investigated: CurationList (shared by bulk capture and the picker flow) today only offers per-row Cancel plus an all-or-nothing Save all — a workable but indirect way to select a subset. Not changed in this pass given the component&#039;s shared blast radius; scoped here for its own reviewed implementation.</p>
-      <p class="small"><strong>Evidence:</strong> Post Production Incidents.csv (HC-017) · packages/studio-web/src/components/CurationList.tsx<br><strong>Last reconciled:</strong> 2026-07-31</p>
+      <h4>Implementation coverage</h4><p>Raised as a post-production hypercare Defect (HC-017). Every savable Mass Capture row now has its own checkbox, with &quot;Save selected (n)&quot; and a Select all / Clear selection toggle alongside the existing controls. &quot;Save all&quot; and per-row Cancel are untouched on purpose rather than reimplemented in terms of selection: they are a different intent, and a bulk capture where you genuinely want everything should not first require ticking forty boxes. The third criterion drove the implementation more than the first two — selection is keyed by controlId in a Set, not by row index or DOM order, because Highlight-on-screen re-renders the list while the user is mid-selection and dismissing a row shifts every index after it; anything positional would have silently reset the selection and saved the wrong set. Rows that cannot be saved (no stable id, or already saved) render an empty cell rather than a dead checkbox, so the control is only ever offered where it does something. The component is shared with the picker flow, which is why the change is additive throughout and no existing path changed behaviour.</p>
+      <p class="small"><strong>Evidence:</strong> Post Production Incidents.csv (HC-017) · packages/studio-web/src/components/CurationList.tsx · regression/ui/backlog-t5-usability.test.js<br><strong>Last reconciled:</strong> 2026-08-10</p>
     </article>
     <article class="backlog-item" id="BL-044">
       <div class="backlog-head">
         <div><p class="backlog-id">BL-044 · HC-021 · Post-production hypercare</p><h3>Turn the Process area field into a suggest-dropdown</h3></div>
-        <span class="status status-not-started">Not started</span>
+        <span class="status status-implemented">Implemented</span>
       </div>
       <div class="meta-grid">
         <div><span>Priority</span><strong>P3</strong></div>
         <div><span>Planned tranche</span><strong>T5 · Post-2.0</strong></div>
-        <div><span>Actual release</span><strong>Not yet delivered</strong></div>
+        <div><span>Actual release</span><strong>2.1.0</strong></div>
         <div><span>Workspace</span><strong>Compose, Processes &amp; Packs, Test Data, Control Object Repository</strong></div>
-        <div><span>Acceptance</span><strong>0/3</strong></div>
+        <div><span>Acceptance</span><strong>3/3</strong></div>
       </div>
       <h4>Description</h4><p>Replace the free-text Process area field&#039;s plain input with a combobox that shows the current value selected among known process areas.</p>
       <h4>User story</h4><p>As a tester tagging a Test or Process, I want to see and pick from existing process areas in a dropdown so that I don&#039;t retype or slightly misspell an existing one.</p>
       <h4>Acceptance criteria</h4>
       <div>
-        <div class="criterion"><span class="num">1</span><span>The Process area control shows known values as selectable options with the current value indicated.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">2</span><span>Typing a new value remains possible (the set of process areas is not fixed).</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">3</span><span>Applied consistently everywhere the field appears (Compose, Business Processes, Test Data, Control Object Repository).</span><span class="status status-open">Open</span></div>
+        <div class="criterion"><span class="num">1</span><span>The Process area control shows known values as selectable options with the current value indicated.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">2</span><span>Typing a new value remains possible (the set of process areas is not fixed).</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">3</span><span>Applied consistently everywhere the field appears (Compose, Business Processes, Test Data, Control Object Repository).</span><span class="status status-implemented">Implemented</span></div>
       </div>
-      <h4>Implementation coverage</h4><p>Raised as a post-production hypercare Defect (HC-021, &quot;Open Text &gt; Domain&quot;). The field already offers one-click chips for known values (DomainTag.tsx) alongside free text, but not a true dropdown showing the current selection. Terminology was already unified to &quot;Process area&quot; everywhere (HC-022, see change log); the dropdown UX change itself is scoped here.</p>
-      <p class="small"><strong>Evidence:</strong> Post Production Incidents.csv (HC-021) · packages/studio-web/src/components/DomainTag.tsx<br><strong>Last reconciled:</strong> 2026-07-31</p>
+      <h4>Implementation coverage</h4><p>Raised as a post-production hypercare Defect (HC-021, &quot;Open Text &gt; Domain&quot;). The Process area control is now a real combobox — an input backed by a datalist, deliberately not a select. That distinction is the requirement, not an implementation detail: the set of process areas is a growing convention rather than a fixed enumeration, so the control has to offer everything that already exists AND still accept something new in the same keystroke; a select would have made the first use of a new area impossible. The current value is indicated rather than merely present, via aria-pressed on the matching quick-pick chip. The chips stay alongside the dropdown because they save in one click where choosing from the list still requires pressing Save. Consistency across Compose, Business Processes, Test Data and the Control Object Repository came free: all four render the same DomainTag component, so the change landed in one place instead of four. Each field generates its own datalist id — several tagged artifacts can share a screen, and a shared id would let one field&#039;s suggestions silently drive another&#039;s.</p>
+      <p class="small"><strong>Evidence:</strong> Post Production Incidents.csv (HC-021) · packages/studio-web/src/components/DomainTag.tsx · regression/ui/backlog-t5-usability.test.js<br><strong>Last reconciled:</strong> 2026-08-10</p>
     </article>
     <article class="backlog-item" id="BL-045">
       <div class="backlog-head">
@@ -1199,25 +1199,67 @@
       <h4>Implementation coverage</h4><p>Raised as a post-production hypercare Defect (HC-033). BL-035 already added pagination and every AC1 filter, which helps, but no grouping/virtualization strategy exists yet for very large ledgers. Scoped here rather than guessed at without real volume data to design against.</p>
       <p class="small"><strong>Evidence:</strong> Post Production Incidents.csv (HC-033) · packages/studio-web/src/components/DocumentsPanel.tsx<br><strong>Last reconciled:</strong> 2026-07-31</p>
     </article>
-    <article class="backlog-item" id="BL-048">
+    <article class="backlog-item" id="BL-050">
       <div class="backlog-head">
-        <div><p class="backlog-id">BL-048 · New requirement — de-brand the product</p><h3>Remove the aielk logo and &quot;by aielk&quot; attribution from the product and its artefacts</h3></div>
+        <div><p class="backlog-id">BL-050 · Found while closing the 2.1.0 live-SAP gate, 10 Aug 2026</p><h3>The documented way to run the live-SAP gate cannot actually reach the tenant</h3></div>
         <span class="status status-not-started">Not started</span>
       </div>
       <div class="meta-grid">
         <div><span>Priority</span><strong>P2</strong></div>
         <div><span>Planned tranche</span><strong>T5 · Post-2.0</strong></div>
         <div><span>Actual release</span><strong>Not yet delivered</strong></div>
+        <div><span>Workspace</span><strong>Platform, Execution Center</strong></div>
+        <div><span>Acceptance</span><strong>0/3</strong></div>
+      </div>
+      <h4>Description</h4><p>RELEASE_VERIFICATION_2.1_CHECKLIST §3 tells the release owner to close the live-SAP gate with `REGRESSION_LIVE=1 npm run test:api:isolated`, but the isolated harnesses hardcode a synthetic SAP target and never read REGRESSION_LIVE — so that command cannot exercise the real tenant.</p>
+      <h4>User story</h4><p>As the release owner, I want the documented verification command to actually perform the verification it claims, so that a gate cannot be recorded as closed on evidence that never touched the target.</p>
+      <h4>Acceptance criteria</h4>
+      <div>
+        <div class="criterion"><span class="num">1</span><span>The documented command for the live-SAP gate runs against the real configured target, or the checklist documents the command that does.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">2</span><span>Running the live suites cannot silently pass against a synthetic host — an unreachable or mis-targeted live run fails loudly.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">3</span><span>The synthetic-fixture tests in the same files do not fail merely because the live mode was requested.</span><span class="status status-open">Open</span></div>
+      </div>
+      <h4>Implementation coverage</h4><p>Found on 10 Aug 2026 while actually closing the §3 gate for the 2.1.0 GA rather than by reading the checklist. Both regression/run-isolated-api.js and regression/run-isolated-ui.js set the SAP target to https://synthetic.non-production.invalid against their own throwaway credential store, and neither file references REGRESSION_LIVE anywhere — so the checklist&#039;s documented command exercises a fake host no matter what the environment variable says. This is a governance defect rather than a test defect: the risk is not that the command errors, it is that a gate whose whole purpose is proving the product works against real SAP could be recorded as closed on a run that never reached it. The gate was genuinely closed for 2.1.0 by running the live cases directly against a server using the owner&#039;s real credential store (REGRESSION_LIVE=1 REGRESSION_ALLOW_EXECUTION=1 node --test on the two files), and all six read-only live cases passed — see RELEASE_SIGN_OFF_2.1.md. The checklist has been annotated with the working command in the meantime, but the harnesses themselves should honour the flag so the documented and the effective procedure stop diverging. A secondary annoyance to fix with it: run in that mode, the synthetic fixtures in those same files fail, because they only exist inside the isolated harness — which makes a correct live run look like a failing one to anyone reading the raw output.</p>
+      <p class="small"><strong>Evidence:</strong> docs/ui-ux/RELEASE_VERIFICATION_2.1_CHECKLIST.md §3 · regression/run-isolated-api.js · regression/run-isolated-ui.js · docs/ui-ux/RELEASE_SIGN_OFF_2.1.md<br><strong>Last reconciled:</strong> 2026-08-10</p>
+    </article>
+    <article class="backlog-item" id="BL-049">
+      <div class="backlog-head">
+        <div><p class="backlog-id">BL-049 · Found during BL-047 validation, 4-10 Aug 2026</p><h3>Release workflow validated a catalogue a later suite regenerated</h3></div>
+        <span class="status status-implemented">Implemented</span>
+      </div>
+      <div class="meta-grid">
+        <div><span>Priority</span><strong>P2</strong></div>
+        <div><span>Planned tranche</span><strong>T5 · Post-2.0</strong></div>
+        <div><span>Actual release</span><strong>2.1.0</strong></div>
+        <div><span>Workspace</span><strong>Platform, Test Operations</strong></div>
+        <div><span>Acceptance</span><strong>3/3</strong></div>
+      </div>
+      <h4>Description</h4><p>The recorded core suite asserted that the committed test catalogue matched the test sources, but the catalogue was only regenerated after that suite had already run — so any change to the set of tests failed the first run and passed the second.</p>
+      <h4>User story</h4><p>As the release owner, I want a failing release check to mean something is actually wrong, so that I read failures instead of learning to re-run past them.</p>
+      <h4>Acceptance criteria</h4>
+      <div>
+        <div class="criterion"><span class="num">1</span><span>The catalogue the core suite validates is current for the run in progress, not left over from the previous one.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">2</span><span>A commit that adds, renames or removes a test passes the recorded workflow on its first run.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">3</span><span>The check still fails for genuine catalogue drift rather than being weakened or removed.</span><span class="status status-implemented">Implemented</span></div>
+      </div>
+      <h4>Implementation coverage</h4><p>Found while running the release workflow repeatedly during BL-047 and its removal, and initially mis-attributed — including by me — as a known flaky test. It is not flaky, it is deterministic: quality-catalog.test.js asserts that the committed test-catalog.json matches a fresh scan of the test sources, but run-recorded-core.js regenerated that catalogue only AFTER the suite finished, so the suite was always checking the previous run&#039;s file. Any commit that changed the set of test names therefore failed on the first run and passed on the second, having regenerated the file in between. The cost was not the extra minutes: it produced false failures in release evidence often enough to train a re-run reflex, which is exactly how a real catalogue drift would have been waved through. Fixed by generating the catalogue before the suite as well as after. Running it twice is correct rather than redundant — the first pass fixes the inventory half, which depends only on the test sources and is what a test-name change breaks; the pass after the run fixes the status half, which depends on results that do not exist yet beforehand. The check itself is unchanged and still fails on genuine drift. Confirmed in practice on 10 Aug 2026: the first workflow run after the test set stopped changing passed the catalogue check on its first attempt, and the runs in this pass — which added and renamed tests — did the same.</p>
+      <p class="small"><strong>Evidence:</strong> regression/run-recorded-core.js · regression/quality-catalog.test.js<br><strong>Last reconciled:</strong> 2026-08-10</p>
+    </article>
+    <article class="backlog-item" id="BL-048">
+      <div class="backlog-head">
+        <div><p class="backlog-id">BL-048 · New requirement — de-brand the product</p><h3>Remove the aielk logo and &quot;by aielk&quot; attribution from the product and its artefacts</h3></div>
+        <span class="status status-implemented">Implemented</span>
+      </div>
+      <div class="meta-grid">
+        <div><span>Priority</span><strong>P2</strong></div>
+        <div><span>Planned tranche</span><strong>T5 · Post-2.0</strong></div>
+        <div><span>Actual release</span><strong>2.1.0</strong></div>
         <div><span>Workspace</span><strong>Shell, All workspaces, Audit &amp; Evidence</strong></div>
-        <div><span>Acceptance</span><strong>0/5</strong></div>
+        <div><span>Acceptance</span><strong>5/5</strong></div>
       </div>
       <h4>Description</h4><p>Strip the aielk deer logo and every &quot;by aielk&quot; / &quot;AI ELK&quot; attribution out of the product: the app shell and login screen, the browser favicon and page titles, generated evidence PDFs and product guides, and the repository&#039;s own metadata and documentation. What replaces the brand in each location is an open decision (see criteria) — the item is not just a delete.</p>
       <h4>User story</h4><p>As the product owner, I want no aielk branding anywhere in the product or anything it generates, so that the platform and its evidence carry no third-party attribution.</p>
       <h4>Acceptance criteria</h4>
       <div>
-        <div class="criterion"><span class="num">1</span><span>The logo is gone from the app shell, the login screen and the browser favicon/apple-touch icon, with a decided replacement (plain wordmark, product mark, or nothing) rather than an empty gap where it used to sit.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">2</span><span>No &quot;by aielk&quot; or &quot;AI ELK&quot; string remains in the running product, in generated evidence PDFs, in the generated product guides, or in repository metadata (package.json description, page titles, CSS comments).</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">3</span><span>The seven logo image assets are removed from the repository, and no code path still references a deleted file.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">4</span><span>Regression coverage is updated rather than dropped: regression/ui/overview.test.js currently asserts the logo IS visible in the persistent shell, so it must be changed to assert the new intended state.</span><span class="status status-open">Open</span></div><div class="criterion"><span class="num">5</span><span>Already-signed 2.0.0 evidence under audit-evidence/ is left untouched, per RELEASE_GOVERNANCE_2.1 §&#039;v2.0.0 remains frozen and unchanged&#039; — historical evidence records what was true when it was recorded.</span><span class="status status-open">Open</span></div>
+        <div class="criterion"><span class="num">1</span><span>The logo is gone from the app shell, the login screen and the browser favicon/apple-touch icon, with a decided replacement (plain wordmark, product mark, or nothing) rather than an empty gap where it used to sit.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">2</span><span>No &quot;by aielk&quot; or &quot;AI ELK&quot; string remains in the running product, in generated evidence PDFs, in the generated product guides, or in repository metadata (package.json description, page titles, CSS comments).</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">3</span><span>The five live logo image assets are removed from the repository, and no code path still references a deleted file. The two under audit-evidence/ are screenshots of historical design evidence, not live assets, and are retained under criterion 5.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">4</span><span>Regression coverage is updated rather than dropped: regression/ui/overview.test.js currently asserts the logo IS visible in the persistent shell, so it must be changed to assert the new intended state.</span><span class="status status-implemented">Implemented</span></div><div class="criterion"><span class="num">5</span><span>Already-signed 2.0.0 evidence under audit-evidence/ is left untouched, per RELEASE_GOVERNANCE_2.1 §&#039;v2.0.0 remains frozen and unchanged&#039; — historical evidence records what was true when it was recorded.</span><span class="status status-implemented">Implemented</span></div>
       </div>
-      <h4>Implementation coverage</h4><p>Raised by the workspace owner on 10 Aug 2026. Footprint established by search, not estimated: 7 logo image assets (packages/studio-web/public/ai-elk-logo-{transparent,dark,evidence}.png, apps/test-operations/public/ai-elk-logo-{transparent,dark}.png, audit-evidence/logo-{light-transparent,dark-contrast}.png) and roughly 30 source references across 9 files. The UI touchpoints are App.tsx&#039;s brand-logo-pair and brand-wordmark, LoginScreen.tsx&#039;s login-logo-pair, index.html&#039;s three icon links plus meta description and title, and about fifteen CSS rules in index.css. Generated artefacts matter as much as screens: evidencePdf.ts embeds the logo as a data URI and prints &quot;QA/4HANA STUDIO · by aielk&quot; on every evidence PDF footer, and generate-product-pdfs.mjs puts it on each product-guide cover and running header — so the three committed guide HTMLs regenerate clean once the generator is fixed. Repository metadata (package.json description) and doc prose (CANVAS_FIRST_IMPLEMENTATION.md, this tracker) also carry the name. Two things make this more than a find-and-replace. First, removal leaves real holes — the shell header, the login screen and the PDF cover are laid out around a logo, so what goes in its place is a design decision, not a deletion. Second, audit-evidence/ holds already-signed 2.0.0 evidence PDFs with the logo baked in; RELEASE_GOVERNANCE_2.1 forbids modifying frozen 2.0.0 evidence, so those stay as they are and the item is scoped to the product and everything it generates from here on.</p>
+      <h4>Implementation coverage</h4><p>Raised by the workspace owner on 10 Aug 2026. Footprint established by search, not estimated: 7 logo image assets (packages/studio-web/public/ai-elk-logo-{transparent,dark,evidence}.png, apps/test-operations/public/ai-elk-logo-{transparent,dark}.png, audit-evidence/logo-{light-transparent,dark-contrast}.png) and roughly 30 source references across 9 files. The UI touchpoints are App.tsx&#039;s brand-logo-pair and brand-wordmark, LoginScreen.tsx&#039;s login-logo-pair, index.html&#039;s three icon links plus meta description and title, and about fifteen CSS rules in index.css. Generated artefacts matter as much as screens: evidencePdf.ts embeds the logo as a data URI and prints &quot;QA/4HANA STUDIO · by aielk&quot; on every evidence PDF footer, and generate-product-pdfs.mjs puts it on each product-guide cover and running header — so the three committed guide HTMLs regenerate clean once the generator is fixed. Repository metadata (package.json description) and doc prose (CANVAS_FIRST_IMPLEMENTATION.md, this tracker) also carry the name. Two things make this more than a find-and-replace. First, removal leaves real holes — the shell header, the login screen and the PDF cover are laid out around a logo, so what goes in its place is a design decision, not a deletion. Second, audit-evidence/ holds already-signed 2.0.0 evidence PDFs with the logo baked in; RELEASE_GOVERNANCE_2.1 forbids modifying frozen 2.0.0 evidence, so those stay as they are and the item is scoped to the product and everything it generates from here on. Implemented on 10 Aug 2026 to the owner&#039;s instruction that nothing replaces the logo and the product simply reads &quot;QA/4HANA Studio&quot;. The shell header and login screen now carry the wordmark alone; the collapsed sidebar shows &quot;QA/4&quot; where the mark used to sit, so collapsing still leaves something legible rather than an empty rail. Favicon and apple-touch links are gone rather than repointed, since there is no replacement mark to point at. Evidence PDFs and the three product guides regenerate clean — the guides were rebuilt as part of this change, not left to drift. Twenty dead CSS rules for the removed logo and wordmark elements were deleted with them. Five live image assets removed; the two under audit-evidence/ are July screenshots of historical design evidence, not live assets, and are retained deliberately — deleting them would falsify a record of what the product looked like at the time. The one remaining occurrence of the name anywhere in the product&#039;s own documentation is this item&#039;s own text, which necessarily quotes what it removed. regression/ui/overview.test.js&#039;s branding assertion was inverted rather than deleted: it now requires the wordmark and asserts no image is present in the shell brand area, so a logo reappearing fails instead of passing unnoticed. Corrected the same day after the owner pointed out that this tracker&#039;s OWN page header still carried the logo and a &quot;by aielk&quot; byline — it had been marked 5/5 while a visible reference remained. The cause was a bad search on my part, not a judgement call: the sweep used a regex requiring 60 characters of context on both sides of the match, which silently skips any occurrence near the start of a line, and the header markup sat at indentation. Re-swept without that constraint; the header img (pointing at an already-deleted asset, so rendering broken) and the byline are gone, along with the now-dead .brand img CSS rule. Every remaining occurrence of the name in the repository is inside BL-048&#039;s own record and the change-log entry describing the removal — text that cannot describe what it removed without naming it.</p>
       <p class="small"><strong>Evidence:</strong> Workspace owner requirement, 10 Aug 2026 · packages/studio-web/src/App.tsx · packages/studio-web/src/components/LoginScreen.tsx · packages/studio-web/index.html · packages/studio-web/src/index.css · packages/reporting/src/evidencePdf.ts · scripts/generate-product-pdfs.mjs · apps/test-operations/app/layout.tsx · package.json · regression/ui/overview.test.js<br><strong>Last reconciled:</strong> 2026-08-10</p>
     </article>
     <article class="backlog-item" id="BL-047">
@@ -1575,21 +1617,6 @@
       <td><ul><li>Schedules capture immutable scope, target and owner.</li><li>Notifications link to stable run records without exposing secrets.</li><li>Parallel work respects target capacity, data isolation and cancellation.</li><li>Concurrency limits and queue health are observable.</li></ul></td>
       <td>Keep deferred until schedules, notifications, target capacity and concurrency governance are designed.</td>
     </tr><tr>
-      <td><strong>BL-042</strong><br><span class="status status-not-started">Not started</span></td>
-      <td><strong>Add sortable fields to Compose</strong><br><span class="small">Compose · P3</span></td>
-      <td><ul><li>A Compose field list supports reordering independent of the underlying JSON key order.</li><li>Reordering has keyboard controls and does not require drag (consistent with BL-016&#039;s ordered-transfer pattern).</li><li>Reordering persists across save/reload.</li></ul></td>
-      <td>Refine and schedule the remaining acceptance criteria.</td>
-    </tr><tr>
-      <td><strong>BL-043</strong><br><span class="status status-not-started">Not started</span></td>
-      <td><strong>Add multi-select to Mass Capture before saving</strong><br><span class="small">Control Object Repository · P3</span></td>
-      <td><ul><li>Each Mass Capture result row has an explicit selection control.</li><li>&quot;Save selected&quot; saves only checked rows; existing &quot;Save all&quot; and per-row Cancel remain available.</li><li>Selection state survives a Highlight-on-screen round trip.</li></ul></td>
-      <td>Refine and schedule the remaining acceptance criteria.</td>
-    </tr><tr>
-      <td><strong>BL-044</strong><br><span class="status status-not-started">Not started</span></td>
-      <td><strong>Turn the Process area field into a suggest-dropdown</strong><br><span class="small">Compose, Processes &amp; Packs, Test Data, Control Object Repository · P3</span></td>
-      <td><ul><li>The Process area control shows known values as selectable options with the current value indicated.</li><li>Typing a new value remains possible (the set of process areas is not fixed).</li><li>Applied consistently everywhere the field appears (Compose, Business Processes, Test Data, Control Object Repository).</li></ul></td>
-      <td>Refine and schedule the remaining acceptance criteria.</td>
-    </tr><tr>
       <td><strong>BL-045</strong><br><span class="status status-not-started">Not started</span></td>
       <td><strong>Improve Test Data grid row readability</strong><br><span class="small">Test Data · P3</span></td>
       <td><ul><li>Column values are legible without expanding every cell.</li><li>Dense per-cell controls (edit/expand icons) remain available but visually secondary.</li><li>Change does not regress the existing nested-JSON and relational CSV editing flows.</li></ul></td>
@@ -1600,9 +1627,9 @@
       <td><ul><li>Long result sets are grouped (e.g. by date or App ID) or virtualized instead of one continuous scroll.</li><li>Existing filters, sort, pagination and lineage links keep working unchanged.</li><li>Behavior is verified against a realistically large synthetic run set, not just a handful of fixtures.</li></ul></td>
       <td>Refine and schedule the remaining acceptance criteria.</td>
     </tr><tr>
-      <td><strong>BL-048</strong><br><span class="status status-not-started">Not started</span></td>
-      <td><strong>Remove the aielk logo and &quot;by aielk&quot; attribution from the product and its artefacts</strong><br><span class="small">Shell, All workspaces, Audit &amp; Evidence · P2</span></td>
-      <td><ul><li>The logo is gone from the app shell, the login screen and the browser favicon/apple-touch icon, with a decided replacement (plain wordmark, product mark, or nothing) rather than an empty gap where it used to sit.</li><li>No &quot;by aielk&quot; or &quot;AI ELK&quot; string remains in the running product, in generated evidence PDFs, in the generated product guides, or in repository metadata (package.json description, page titles, CSS comments).</li><li>The seven logo image assets are removed from the repository, and no code path still references a deleted file.</li><li>Regression coverage is updated rather than dropped: regression/ui/overview.test.js currently asserts the logo IS visible in the persistent shell, so it must be changed to assert the new intended state.</li><li>Already-signed 2.0.0 evidence under audit-evidence/ is left untouched, per RELEASE_GOVERNANCE_2.1 §&#039;v2.0.0 remains frozen and unchanged&#039; — historical evidence records what was true when it was recorded.</li></ul></td>
+      <td><strong>BL-050</strong><br><span class="status status-not-started">Not started</span></td>
+      <td><strong>The documented way to run the live-SAP gate cannot actually reach the tenant</strong><br><span class="small">Platform, Execution Center · P2</span></td>
+      <td><ul><li>The documented command for the live-SAP gate runs against the real configured target, or the checklist documents the command that does.</li><li>Running the live suites cannot silently pass against a synthetic host — an unreachable or mis-targeted live run fails loudly.</li><li>The synthetic-fixture tests in the same files do not fail merely because the live mode was requested.</li></ul></td>
       <td>Refine and schedule the remaining acceptance criteria.</td>
     </tr><tr>
       <td><strong>BL-047</strong><br><span class="status status-deferred">Deferred</span></td>
@@ -1618,7 +1645,7 @@
       <div class="two-col">
         <div class="card"><h3>Evidence base used</h3><ul>
           <li>Authoritative HTML Product Backlog Tracker.</li>
-          <li>Repository-generated 230-test operations catalogue.</li>
+          <li>Repository-generated 234-test operations catalogue.</li>
           <li>Recorded execution and failure history.</li>
           <li>Core, API, UI, accessibility, secret-scan and live-run documentation.</li>
           <li>Current production build source and anonymized workspace captures.</li>

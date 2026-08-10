@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-10T05:50:22.811Z",
+  "generatedAt": "2026-08-10T06:15:23.663Z",
   "source": "Repository regression inventory and recorded Node test-run output",
   "tests": [
     {
@@ -10,8 +10,8 @@
       "mode": "API",
       "source": "regression/api/audit-runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 46.2757,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 46.7006,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -34,8 +34,8 @@
       "mode": "API",
       "source": "regression/api/data-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 30.6384,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 27.8166,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -46,8 +46,8 @@
       "mode": "API",
       "source": "regression/api/data-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 18.1133,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 18.0338,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -58,8 +58,8 @@
       "mode": "API",
       "source": "regression/api/data-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 25.6114,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 22.3863,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -70,8 +70,8 @@
       "mode": "API",
       "source": "regression/api/data-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 6.0082,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 6.0416,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -82,8 +82,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 13.832,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 14.115,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -94,8 +94,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3.1946,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.9425,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -106,8 +106,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.9649,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.9284,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -118,8 +118,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 5.2457,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 6.0661,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -130,8 +130,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3.4633,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.9134,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -142,8 +142,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 7.7181,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 6.4355,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -154,8 +154,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 10.5461,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 8.3822,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -166,8 +166,8 @@
       "mode": "API",
       "source": "regression/api/data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 17.1276,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 15.8922,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -178,8 +178,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 18.8217,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 14.507,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -190,8 +190,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.9109,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3.0139,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -202,8 +202,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.3189,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.3098,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -214,8 +214,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 5.5147,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 4.3023,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -226,8 +226,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.6741,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3.8347,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -238,8 +238,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 5.5073,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 7.4525,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -250,8 +250,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.7268,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.2955,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -262,8 +262,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 5.8242,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 6.5409,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -274,8 +274,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 24.6427,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 22.8585,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -286,8 +286,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 5.6795,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 5.006,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -298,8 +298,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 5.8773,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 6.0845,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -310,8 +310,8 @@
       "mode": "API",
       "source": "regression/api/groups.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.3082,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.2844,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -322,8 +322,8 @@
       "mode": "API",
       "source": "regression/api/objects.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 52.5149,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 42.232,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -334,8 +334,8 @@
       "mode": "API",
       "source": "regression/api/objects.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 9.4042,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 8.5926,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -346,8 +346,8 @@
       "mode": "API",
       "source": "regression/api/objects.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 21.603,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 14.8502,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -358,8 +358,8 @@
       "mode": "API",
       "source": "regression/api/objects.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 35.4384,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 32.9602,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -370,8 +370,8 @@
       "mode": "API",
       "source": "regression/api/objects.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 8.7193,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 9.4552,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -382,8 +382,8 @@
       "mode": "API",
       "source": "regression/api/objects.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 14.6714,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 14.015,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -394,8 +394,8 @@
       "mode": "API",
       "source": "regression/api/objects.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.1283,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 1.6741,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -406,8 +406,8 @@
       "mode": "API",
       "source": "regression/api/overview-preferences.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 20.6508,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 19.3948,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -418,8 +418,8 @@
       "mode": "API",
       "source": "regression/api/overview-preferences.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3.1942,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3.268,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -430,8 +430,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 19.6723,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 13.4693,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -442,8 +442,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 11.0164,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 10.8438,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -454,8 +454,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3.4608,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.5477,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -466,8 +466,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.8691,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.3361,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -478,8 +478,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.8658,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3.2884,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -490,8 +490,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 6.0122,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 5.8497,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -502,8 +502,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 5.9424,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 4.9112,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -514,8 +514,8 @@
       "mode": "API",
       "source": "regression/api/packs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 24.5505,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 22.1284,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -526,8 +526,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 18.54,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 18.5761,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -538,8 +538,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3.0006,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3.1086,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -550,8 +550,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3.2419,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3.2486,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -562,8 +562,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.4834,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.8876,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -574,8 +574,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3039.9549,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3043.6026,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -586,8 +586,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3036.7591,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3031.6381,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -598,8 +598,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3031.6011,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3026.7262,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -610,8 +610,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3040.7681,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3036.8403,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -622,8 +622,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3040.3832,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3042.3617,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -634,8 +634,8 @@
       "mode": "API",
       "source": "regression/api/runs.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 3043.1569,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3057.2634,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -694,8 +694,8 @@
       "mode": "API",
       "source": "regression/api/search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 19.5248,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 19.9375,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -706,8 +706,8 @@
       "mode": "API",
       "source": "regression/api/search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 19.3875,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 18.6684,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -718,8 +718,8 @@
       "mode": "API",
       "source": "regression/api/search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 19.1739,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 19.379,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -730,8 +730,8 @@
       "mode": "API",
       "source": "regression/api/search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 4.3022,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 3.6557,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -742,8 +742,8 @@
       "mode": "API",
       "source": "regression/api/search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 4.0757,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 4.2199,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -754,8 +754,8 @@
       "mode": "API",
       "source": "regression/api/search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 14.733,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 13.3925,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -766,8 +766,8 @@
       "mode": "API",
       "source": "regression/api/search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 13.4946,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 13.1739,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -778,8 +778,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 16.6025,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 15.1187,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -790,8 +790,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 4.4391,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 4.6036,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -802,8 +802,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 18.2055,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 16.8381,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -814,8 +814,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 7.17,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 6.6195,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -826,8 +826,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 9.6475,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 8.086,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -838,8 +838,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.2829,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.5502,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -850,8 +850,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.3028,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.2241,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -862,8 +862,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 1.5374,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 1.8174,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -874,8 +874,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 1.7576,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 2.1987,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -886,8 +886,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 2.0418,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 1.987,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -898,8 +898,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 4.7613,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 4.8318,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -922,8 +922,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 23.7061,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 22.5931,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -934,8 +934,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 6.6344,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 6.5045,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -946,8 +946,8 @@
       "mode": "API",
       "source": "regression/api/testcases.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:57.351Z",
-      "durationMs": 4.6625,
+      "lastExecutedAt": "2026-08-10T06:13:58.502Z",
+      "durationMs": 4.2062,
       "executionNote": "Passed in Isolated API regression."
     },
     {
@@ -958,8 +958,8 @@
       "mode": "Unit / Integration",
       "source": "regression/automation-run-reference.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.6401,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.8627,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -970,8 +970,8 @@
       "mode": "Unit / Integration",
       "source": "regression/credentials-fallback.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 127.835,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 125.4157,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -982,8 +982,8 @@
       "mode": "Unit / Integration",
       "source": "regression/data-column-schema.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 6.038,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 8.2742,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -994,8 +994,8 @@
       "mode": "Unit / Integration",
       "source": "regression/data-column-schema.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.8208,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.8057,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1006,8 +1006,8 @@
       "mode": "Unit / Integration",
       "source": "regression/data-column-schema.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.3727,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3786,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1018,8 +1018,8 @@
       "mode": "Unit / Integration",
       "source": "regression/data-column-schema.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.3099,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3131,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1030,8 +1030,8 @@
       "mode": "Unit / Integration",
       "source": "regression/data-column-schema.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.3623,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.6845,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1042,8 +1042,8 @@
       "mode": "Unit / Integration",
       "source": "regression/evidence-reference.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 3.013,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 2.545,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1054,8 +1054,8 @@
       "mode": "Unit / Integration",
       "source": "regression/evidence-reference.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.1538,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.142,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1066,8 +1066,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-child-progress.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 5.8553,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 5.595,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1078,8 +1078,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-child-progress.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.3767,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 3.5443,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1090,8 +1090,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 2.1251,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 2.6089,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1102,8 +1102,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.5577,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 2.4897,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1114,8 +1114,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 2.7553,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.9564,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1126,8 +1126,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 2.4357,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 2.8492,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1138,8 +1138,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-data.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.2453,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.1174,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1150,8 +1150,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-hierarchy-diagnosis.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 23.9412,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 10.9856,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1162,8 +1162,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-hierarchy-diagnosis.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 19.8806,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 3.8959,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1174,8 +1174,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-hierarchy-diagnosis.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 4.7903,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 3.6148,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1186,8 +1186,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-hierarchy-diagnosis.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 4.1684,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 3.2039,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1198,8 +1198,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-hierarchy-diagnosis.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 4.2415,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 4.863,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1210,8 +1210,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 43.6585,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 41.6622,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1222,8 +1222,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 29.8509,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 33.0174,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1234,8 +1234,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 27.7009,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 29.4925,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1246,8 +1246,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 27.6592,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 29.0599,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1258,8 +1258,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 27.3093,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 27.7668,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1270,8 +1270,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 26.3676,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 32.5883,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1282,8 +1282,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 26.7745,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 28.5448,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1294,8 +1294,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 2.1637,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 2.1024,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1306,8 +1306,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-orchestrator.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 27.8049,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 33.4977,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1318,8 +1318,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-plan-contract.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 2.8418,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 3.6522,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1330,8 +1330,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-plan-contract.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.4525,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.4705,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1342,8 +1342,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-plan-contract.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.2535,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.2577,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1354,8 +1354,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-plan-contract.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.322,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3236,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1366,8 +1366,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-plan-contract.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.6713,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.6808,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1378,8 +1378,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-plan-contract.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.8849,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.7756,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1390,8 +1390,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-plan-contract.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.4092,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3959,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1402,8 +1402,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 58.4465,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 57.2832,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1414,8 +1414,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 36.8538,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 65.5401,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1426,8 +1426,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 33.2774,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 42.256,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1438,8 +1438,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 28.8716,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 32.8209,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1450,8 +1450,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 31.0915,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 36.1792,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1462,8 +1462,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 29.196,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 34.8925,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1474,8 +1474,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 32.111,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 36.837,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1486,8 +1486,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-preflight.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 32.0712,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 36.4838,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1498,8 +1498,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-progress.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 41.5634,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 25.05,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1510,8 +1510,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-recovery.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.6923,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.7749,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1522,8 +1522,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-recovery.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.2941,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3288,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1534,8 +1534,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-recovery.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.6043,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.5979,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1546,8 +1546,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-recovery.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.6893,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.7179,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1558,8 +1558,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-recovery.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.3249,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3488,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1570,8 +1570,8 @@
       "mode": "Unit / Integration",
       "source": "regression/execution-release-hardening.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 174.4491,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 154.223,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1582,8 +1582,8 @@
       "mode": "Unit / Integration",
       "source": "regression/legacy-migration.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 7.5011,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 7.9974,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1594,8 +1594,8 @@
       "mode": "Unit / Integration",
       "source": "regression/legacy-migration.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 3.4627,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 3.7875,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1606,8 +1606,8 @@
       "mode": "Unit / Integration",
       "source": "regression/legacy-migration.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.7866,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.9464,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1618,8 +1618,8 @@
       "mode": "Unit / Integration",
       "source": "regression/object-repository.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 14.0665,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 11.599,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1630,8 +1630,8 @@
       "mode": "Unit / Integration",
       "source": "regression/object-repository.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.5922,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.7166,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1642,8 +1642,8 @@
       "mode": "Unit / Integration",
       "source": "regression/object-repository.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.7161,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.8215,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1654,8 +1654,8 @@
       "mode": "Unit / Integration",
       "source": "regression/object-repository.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.2548,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.2812,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1666,8 +1666,8 @@
       "mode": "Unit / Integration",
       "source": "regression/object-repository.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.2305,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.289,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1678,8 +1678,8 @@
       "mode": "Unit / Integration",
       "source": "regression/overview-preferences-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.2455,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.7654,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1690,8 +1690,8 @@
       "mode": "Unit / Integration",
       "source": "regression/overview-preferences-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.2242,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.5735,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1702,8 +1702,8 @@
       "mode": "Unit / Integration",
       "source": "regression/overview-preferences-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.82,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.6408,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1714,8 +1714,8 @@
       "mode": "Unit / Integration",
       "source": "regression/quality-catalog.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 12.611,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 13.5879,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1726,8 +1726,8 @@
       "mode": "Unit / Integration",
       "source": "regression/quality-catalog.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.3106,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3137,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1738,8 +1738,8 @@
       "mode": "Unit / Integration",
       "source": "regression/run-history-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 6.5048,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 5.2147,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1750,8 +1750,8 @@
       "mode": "Unit / Integration",
       "source": "regression/run-history-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 2.385,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 10.3837,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1762,8 +1762,8 @@
       "mode": "Unit / Integration",
       "source": "regression/run-history-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 2.0232,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.8644,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1774,8 +1774,8 @@
       "mode": "Unit / Integration",
       "source": "regression/run-history-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.9956,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.0486,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1786,8 +1786,8 @@
       "mode": "Unit / Integration",
       "source": "regression/run-history-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.8648,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.8764,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1810,8 +1810,8 @@
       "mode": "Unit / Integration",
       "source": "regression/run-history-store.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.5857,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.5635,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1822,8 +1822,8 @@
       "mode": "API",
       "source": "regression/sap-settings.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 533.8131,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 504.9549,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1834,8 +1834,8 @@
       "mode": "API",
       "source": "regression/t1-security-context.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 147.1688,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 164.2499,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1846,8 +1846,8 @@
       "mode": "API",
       "source": "regression/t1-security-context.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 106.1962,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 119.8756,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1858,8 +1858,8 @@
       "mode": "API",
       "source": "regression/t1-security-context.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.7227,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.3197,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1870,8 +1870,8 @@
       "mode": "API",
       "source": "regression/t1-security-context.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 109.7202,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 108.5901,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1882,8 +1882,8 @@
       "mode": "API",
       "source": "regression/t1-security-context.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 93.2381,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 88.4978,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1894,8 +1894,8 @@
       "mode": "Unit / Integration",
       "source": "regression/tenant-configuration.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.7218,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.3999,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1906,8 +1906,8 @@
       "mode": "Unit / Integration",
       "source": "regression/transactional-negative.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 5.1448,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 8.0615,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1918,8 +1918,8 @@
       "mode": "Unit / Integration",
       "source": "regression/transactional-negative.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 1.5445,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 1.1821,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1930,8 +1930,8 @@
       "mode": "Unit / Integration",
       "source": "regression/transactional-negative.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 628.5056,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 611.4308,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1942,8 +1942,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-labels.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 225.9127,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 283.747,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1954,8 +1954,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-labels.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 195.6302,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 198.4974,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1966,8 +1966,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-labels.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 206.2192,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 193.2845,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1978,8 +1978,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-labels.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 191.5898,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 185.5949,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -1990,8 +1990,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-labels.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 220.2652,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 185.5623,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -2002,8 +2002,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-labels.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 184.5723,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 214.423,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -2014,8 +2014,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-labels.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 0.3513,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 0.2913,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -2026,8 +2026,8 @@
       "mode": "Unit / Integration",
       "source": "regression/ui5-inspector-visibility.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:48:36.210Z",
-      "durationMs": 232.8936,
+      "lastExecutedAt": "2026-08-10T06:13:37.535Z",
+      "durationMs": 210.7258,
       "executionNote": "Passed in Core regression."
     },
     {
@@ -2038,8 +2038,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/accessibility.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 6608.9311,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 6173.0072,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2050,8 +2050,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/accessibility.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 3083.6556,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 2815.895,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2062,8 +2062,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/accessibility.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 2637.0008,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 2643.9768,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2074,8 +2074,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/audit-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 446.4791,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 458.3375,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2086,8 +2086,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/audit-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 417.5037,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 415.0621,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2098,8 +2098,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/audit-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 878.2915,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 878.6504,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2110,8 +2110,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/backlog-t5-usability.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 402.6457,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 439.6003,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2122,8 +2122,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/backlog-t5-usability.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 410.9748,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 407.5664,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2146,8 +2146,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/backlog-t5-usability.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 308.7582,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 324.8234,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2158,8 +2158,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/compose.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1114.0125,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1161.7543,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2170,8 +2170,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/compose.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1062.9455,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1025.2798,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2182,8 +2182,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/data-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1021.2874,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 963.7912,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2194,8 +2194,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/data-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 892.2135,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 930.9909,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2206,8 +2206,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/data-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 869.9156,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 858.4454,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2218,8 +2218,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/data-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 421.9552,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 422.03,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2230,8 +2230,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/global-search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 878.4932,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 855.2437,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2242,8 +2242,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/global-search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 844.2983,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 829.4305,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2254,8 +2254,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/global-search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 772.6919,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 812.4773,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2266,8 +2266,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/global-search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 777.7659,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 800.9057,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2278,8 +2278,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/global-search.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 776.9234,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 803.743,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2290,8 +2290,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/groups-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 918.2488,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 995.3683,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2302,8 +2302,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/groups-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 864.7499,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 902.1988,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2314,8 +2314,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/help-release-notes.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 455.4097,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 554.0795,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2326,8 +2326,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/help-release-notes.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 521.0219,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 519.1798,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2338,8 +2338,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/object-repository.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 726.2705,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 709.5951,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2350,8 +2350,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/object-repository.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 717.7251,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 606.992,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2362,8 +2362,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/overview.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 747.1628,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 761.4366,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2374,8 +2374,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/overview.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 629.49,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 614.2653,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2386,8 +2386,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/overview.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 977.3957,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1039.5994,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2398,8 +2398,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/overview.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 768.4501,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 820.8467,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2410,8 +2410,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/overview.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 396.2743,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 388.8031,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2422,8 +2422,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/packs-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1001.2287,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1120.2648,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2434,8 +2434,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/packs-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 602.0273,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 587.5878,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2446,8 +2446,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 973.0608,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 932.9507,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2458,8 +2458,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 648.3253,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 679.985,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2470,8 +2470,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 806.2959,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 781.8925,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2482,8 +2482,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 801.7172,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 802.5847,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2494,8 +2494,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 793.0578,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 807.0517,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2506,8 +2506,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 387.4639,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 396.4801,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2518,8 +2518,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 3930.0827,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 4022.3909,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2530,8 +2530,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 3977.8249,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 3932.3335,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2542,8 +2542,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 3929.2868,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 3983.2758,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2554,8 +2554,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 3986.01,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 3873.0327,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2566,8 +2566,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 3897.7457,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 3921.2265,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2578,8 +2578,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 3904.9881,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 3955.4467,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2590,8 +2590,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 4024.3132,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 4034.6336,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2638,8 +2638,8 @@
       "mode": "Live UI",
       "source": "regression/ui/run-tab.test.js",
       "latestStatus": "Skipped",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 0.0284,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 0.0248,
       "executionNote": "set REGRESSION_LIVE_TRANSACTIONAL=1 only after test-data ownership, fail-stop retention, and live-run approval are confirmed"
     },
     {
@@ -2650,8 +2650,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/stable-routes.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1274.2717,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1273.8916,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2662,8 +2662,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/stable-routes.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1193.6041,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1136.8268,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2674,8 +2674,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/t1-foundations.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 683.1827,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 713.6341,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2686,8 +2686,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/t1-foundations.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 660.4032,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 681.492,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2698,8 +2698,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/t1-foundations.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 448.9237,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 378.7224,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2710,8 +2710,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/t1-foundations.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 350.8702,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 365.4435,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2722,8 +2722,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/test-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 436.5882,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 403.2156,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2734,8 +2734,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/test-library.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1058.3847,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1089.0708,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2746,8 +2746,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/typed-test-authoring.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1342.7313,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1356.0183,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2758,8 +2758,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/typed-test-authoring.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1218.4463,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 1274.464,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2770,8 +2770,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/unsaved-guards.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 1042.6783,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 908.909,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2782,8 +2782,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/unsaved-guards.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 768.0581,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 765.9085,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2794,8 +2794,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/unsaved-guards.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 702.3791,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 703.6936,
       "executionNote": "Passed in Isolated UI regression."
     },
     {
@@ -2806,8 +2806,8 @@
       "mode": "Headless UI",
       "source": "regression/ui/unsaved-guards.test.js",
       "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T05:50:22.671Z",
-      "durationMs": 777.1498,
+      "lastExecutedAt": "2026-08-10T06:15:23.526Z",
+      "durationMs": 803.1201,
       "executionNote": "Passed in Isolated UI regression."
     }
   ]
