@@ -84,6 +84,7 @@ export function DocumentsPanel({
   const [groups, setGroups] = useState<RunHistoryGroup[]>([]);
   const [appIdScope, setAppIdScope] = useState<string | null>(null);
   const [collapsedAreas, setCollapsedAreas] = useState<Set<string>>(new Set());
+  const [groupsError, setGroupsError] = useState<string | null>(null);
 
   function currentFilter(): RunHistoryFilter {
     const cutoffDays = range === 'all' ? null : Number(range);
@@ -132,8 +133,17 @@ export function DocumentsPanel({
         dateFrom: cutoffDays ? new Date(Date.now() - cutoffDays * 86_400_000).toISOString() : undefined,
         studioRunId: lineageStudioRunId ?? undefined,
       })
-      .then(setGroups)
-      .catch(() => setGroups([]));
+      .then((next) => {
+        setGroups(next);
+        setGroupsError(null);
+      })
+      // Never swallow this. The tree only renders when there are groups, so a silently-caught
+      // failure makes a broken endpoint indistinguishable from a ledger with nothing in it —
+      // exactly the confusion HC-007 and HC-023 were both raised for. Say what went wrong.
+      .catch((reason) => {
+        setGroups([]);
+        setGroupsError(String(reason));
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, status, mode, range, environment, lineageStudioRunId]);
 
@@ -215,6 +225,12 @@ export function DocumentsPanel({
             </span>
           </div>
         </section>
+      )}
+
+      {groupsError && (
+        <div className="fiori-message-strip warning" role="status">
+          Grouped view unavailable — {groupsError} The run list below is unaffected.
+        </div>
       )}
 
       {groups.length > 0 && (
