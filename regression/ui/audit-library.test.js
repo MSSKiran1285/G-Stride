@@ -138,3 +138,55 @@ test('Audit and Evidence: environment filter, rerun lineage, and a source-artifa
     store.close();
   }
 });
+
+// BL-046 — the grouping tree. A flat, continuously-scrolling ledger stops being navigable as runs
+// accumulate; the tree's job is to let you see where the failures are before opening anything.
+// Its counts must therefore describe the whole filtered ledger, and selecting a node must narrow
+// the grid rather than replace the filters already applied.
+test('Audit and Evidence: runs group by process area and App ID with roll-up counts, and a node scopes the grid (BL-046 AC1/AC2)', async () => {
+  const store = new RunHistoryStore(requireEnv('REGRESSION_RUN_HISTORY_DB'));
+  try {
+    // More runs than one page holds, so a tree counting only the visible page would be visibly wrong.
+    for (let i = 0; i < 26; i += 1) {
+      store.record({
+        id: `bl046-ui-grouped-${i}`,
+        startedAt: `2026-03-${String((i % 27) + 1).padStart(2, '0')}T00:00:00.000Z`,
+        finishedAt: `2026-03-${String((i % 27) + 1).padStart(2, '0')}T00:00:04.000Z`,
+        status: i % 2 === 0 ? 'passed' : 'failed',
+        executedBy: 'bl046-executor',
+        mode: 'chain',
+        appId: 'bl046UiApp',
+        testCaseNames: ['BL-046 Grouped Run'],
+        testCaseFiles: ['cleanup-abandoned-drafts.json'],
+        result: { status: 'ok' },
+      });
+    }
+
+    await withBrowser(async (browser) => {
+      await withPage(browser, 'bl046-audit-grouping', async (page) => {
+        await page.goto(BASE_URL);
+        await page.getByRole('button', { name: /Audit and Evidence/ }).first().click();
+        await page.getByRole('heading', { name: 'Audit and Evidence', level: 2 }).waitFor();
+
+        const node = page.getByRole('button', { name: /bl046UiApp/ });
+        await node.waitFor();
+
+        // 26 runs, alternating — 13 passed, 13 failed. The counts must reflect all of them, not
+        // the 20-row first page.
+        const counts = await node.textContent();
+        assert.match(counts, /26/, `expected the node to roll up all 26 runs, got "${counts}"`);
+        assert.match(counts, /13/, `expected passed/failed roll-ups, got "${counts}"`);
+
+        // Selecting the node scopes the grid and says so, and the scope is clearable.
+        await node.click();
+        await page.getByText('Showing only runs for').waitFor();
+        assert.equal(await node.getAttribute('aria-pressed'), 'true');
+
+        await page.getByRole('button', { name: 'Clear' }).last().click();
+        assert.equal(await node.getAttribute('aria-pressed'), 'false');
+      });
+    });
+  } finally {
+    store.close();
+  }
+});

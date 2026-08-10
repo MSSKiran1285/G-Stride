@@ -419,7 +419,11 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
   const totalDuration = formatTotalDuration(input.startedAt, input.finishedAt);
   const tenant = inferTenant(input.stages);
   const modeLabel = executionModeLabel(input);
-  const testCaseId = input.testCaseId ?? '[Not assigned]';
+  // HC-029: only Batch-mode config ever sets this. Chain/Suite runs structurally never do, so the
+  // old "[Not assigned]" fallback put a permanently-empty field in the evidence of most runs and
+  // read as missing data rather than as inapplicable. Owner's decision (10 Aug 2026): drop it.
+  // Kept when it is genuinely set — for a Batch run it is real traceability, not noise.
+  const testCaseId = input.testCaseId;
   const documentOutputs = outputKeys.filter(
     (key) => !/count$/i.test(key) && !['automationReference', 'automationOwner', 'transactionFailureDisposition'].includes(key)
   );
@@ -447,7 +451,7 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
     <tr><td>Target Safety Class</td><td>${escapeHtml(input.targetSafetyClass ?? 'Not captured')}</td></tr>
     <tr><td>Target Verified At</td><td>${escapeHtml(input.targetVerifiedAt ? formatTimestamp(input.targetVerifiedAt) : 'Not captured')}</td></tr>
     <tr><td>Redaction</td><td>${input.redactionState === 'enforced' ? 'Enforced — credentials excluded; execution logs filtered' : 'Not captured'}</td></tr>
-    <tr><td>Test Case ID</td><td>${escapeHtml(testCaseId)}</td></tr>
+    ${testCaseId ? `<tr><td>Test Case ID</td><td>${escapeHtml(testCaseId)}</td></tr>` : ''}
   `;
 
   const cover = `
@@ -622,15 +626,15 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
         <h2 class="chapter">4. Traceability &amp; Results Matrix</h2>
         <h3>4.1 Input / Output Table</h3>
         <table class="io">
-          <thead><tr><th>Field</th><th>Type</th><th>Value</th><th>Produced / Consumed In</th><th>Test Case ID</th></tr></thead>
+          <thead><tr><th>Field</th><th>Type</th><th>Value</th><th>Produced / Consumed In</th>${testCaseId ? '<th>Test Case ID</th>' : ''}</tr></thead>
           <tbody>
             ${inputKeys
-              .map((k) => `<tr><td>${escapeHtml(k)}</td><td class="input-col">Input</td><td>${escapeHtml(input.inputFields[k])}</td><td>Execution input</td><td>${escapeHtml(testCaseId)}</td></tr>`)
+              .map((k) => `<tr><td>${escapeHtml(k)}</td><td class="input-col">Input</td><td>${escapeHtml(input.inputFields[k])}</td><td>Execution input</td>${testCaseId ? `<td>${escapeHtml(testCaseId)}</td>` : ''}</tr>`)
               .join('')}
             ${outputKeys
               .map((key) => {
                 const descriptor = describeOutput(key, input.stages.length);
-                return `<tr><td>${escapeHtml(key)}</td><td class="output-col">Output</td><td><b>${escapeHtml(String(input.outputFields[key]))}</b></td><td>${escapeHtml(descriptor.producedIn)}</td><td>${escapeHtml(testCaseId)}</td></tr>`;
+                return `<tr><td>${escapeHtml(key)}</td><td class="output-col">Output</td><td><b>${escapeHtml(String(input.outputFields[key]))}</b></td><td>${escapeHtml(descriptor.producedIn)}</td>${testCaseId ? `<td>${escapeHtml(testCaseId)}</td>` : ''}</tr>`;
               })
               .join('')}
           </tbody>

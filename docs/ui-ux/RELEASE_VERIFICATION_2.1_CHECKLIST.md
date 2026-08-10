@@ -37,6 +37,12 @@ current, not inherited from an earlier point in 2.1.0 development.
 
 ## 2. Manual NVDA screen-reader journey — needs a human with NVDA installed
 
+> **Priority: LOW** (owner decision, 10 Aug 2026). This gate remains genuinely open and is the
+> one item `v2.1.0` shipped without; the owner has accepted that risk and deprioritised the
+> re-run rather than closed it. Automated accessibility (§1) passes across the candidate and is
+> re-verified on every recorded run, but per governance §9.3 it is not a substitute. Recording
+> this as low priority does not make it done.
+
 Not executable by an engineering agent: this environment has no NVDA installation and no
 audio/speech-capture tooling, so the spoken-output review the 2.0.0 evidence describes cannot be
 approximated here. Follow the same method `NVDA_PRIMARY_WORKSPACE_RESULTS.md` used (official NVDA

@@ -5,6 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { fork, spawn, spawnSync } = require('node:child_process');
 
+const LIVE_MODE = Boolean(process.env.REGRESSION_LIVE || process.env.REGRESSION_LIVE_TRANSACTIONAL);
 const REPO_ROOT = path.resolve(__dirname, '..');
 
 function writeJson(file, value) {
@@ -114,9 +115,18 @@ async function main() {
         ...process.env,
         ISOLATED_STUDIO_ROOT: tempRoot,
         ISOLATED_STUDIO_WEB_DIST: path.join(REPO_ROOT, 'packages', 'studio-web', 'dist'),
-        TAF_DISABLE_OS_CREDENTIAL_STORE: '1',
-        TAF_CREDENTIAL_STORE_PATH: path.join(tempRoot, 'credentials.enc.json'),
-        TAF_CREDENTIAL_KEY_PATH: path.join(tempRoot, 'credential-key'),
+        // BL-050: everything else about the harness stays isolated, but SAP credential resolution
+        // must be the real one in live mode. Both halves matter: a throwaway file store has no
+        // tenant credentials in it, and the real credentials resolve from the OS credential store,
+        // so forcing the file-only fallback would leave the live suites with nothing to
+        // authenticate with — which is how they could only ever have reached the synthetic target.
+        ...(LIVE_MODE
+          ? {}
+          : {
+            TAF_DISABLE_OS_CREDENTIAL_STORE: '1',
+            TAF_CREDENTIAL_STORE_PATH: path.join(tempRoot, 'credentials.enc.json'),
+            TAF_CREDENTIAL_KEY_PATH: path.join(tempRoot, 'credential-key'),
+          }),
         TAF_AI_CREDENTIAL_STORE_PATH: path.join(tempRoot, 'ai-credentials.enc.json'),
         TAF_AI_CREDENTIAL_KEY_PATH: path.join(tempRoot, 'ai-credential-key'),
       },
@@ -134,19 +144,43 @@ async function main() {
       });
     });
 
-    const savedTarget = await fetch(`${baseUrl}/api/settings/integrations/sap`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: 'https://synthetic.non-production.invalid',
-        username: 'isolated-execution-user',
-        password: 'isolated-execution-secret',
-        safetyClass: 'non-production',
-      }),
-    });
-    if (!savedTarget.ok) throw new Error(`Could not configure isolated target: ${await savedTarget.text()}`);
-    const verifiedTarget = await fetch(`${baseUrl}/api/settings/integrations/sap/verify`, { method: 'POST' });
-    if (!verifiedTarget.ok) throw new Error(`Could not verify isolated target: ${await verifiedTarget.text()}`);
+    // BL-050: in live mode the harness must NOT install its own synthetic target, or the
+    // live-gated suites would run against https://synthetic.non-production.invalid and a gate
+    // whose entire purpose is proving the product works against real SAP could be recorded as
+    // closed on a run that never reached it. Live mode therefore inherits the real credential
+    // store (see the env block above) and asserts the target is genuinely configured and
+    // non-production before any live test is allowed to run.
+    if (LIVE_MODE) {
+      const status = await fetch(`${baseUrl}/api/settings/integrations`).then((r) => r.json());
+      const sap = status?.sap ?? {};
+      if (!sap.configured) {
+        throw new Error(
+          'REGRESSION_LIVE is set, but no SAP target is configured. The live gate needs a real, '
+          + 'owner-authorised non-production target — configure it in Settings first.'
+        );
+      }
+      if (sap.safetyClass !== 'non-production') {
+        throw new Error(
+          `Refusing to run live tests against a target classified "${sap.safetyClass}". `
+          + 'Only a non-production target may be used.'
+        );
+      }
+      console.log(`Live mode: using the configured target ${sap.url} (${sap.safetyClass}, ${sap.verificationStatus}).`);
+    } else {
+      const savedTarget = await fetch(`${baseUrl}/api/settings/integrations/sap`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: 'https://synthetic.non-production.invalid',
+          username: 'isolated-execution-user',
+          password: 'isolated-execution-secret',
+          safetyClass: 'non-production',
+        }),
+      });
+      if (!savedTarget.ok) throw new Error(`Could not configure isolated target: ${await savedTarget.text()}`);
+      const verifiedTarget = await fetch(`${baseUrl}/api/settings/integrations/sap/verify`, { method: 'POST' });
+      if (!verifiedTarget.ok) throw new Error(`Could not verify isolated target: ${await verifiedTarget.text()}`);
+    }
 
     const apiTests = fs.readdirSync(path.join(__dirname, 'api'))
       .filter((file) => file.endsWith('.test.js'))
@@ -158,6 +192,11 @@ async function main() {
         [
           '--test',
           '--test-concurrency=1',
+          // BL-050: in live mode run ONLY the live-gated cases. The synthetic-fixture tests in
+          // these same files exist to exercise an isolated workspace; against the real one their
+          // fixtures are absent and they fail — which made a genuinely successful live run look
+          // like a failing one and buried the three results that actually matter.
+          ...(LIVE_MODE ? ['--test-name-pattern=^live'] : []),
           ...(process.env.REGRESSION_RESULT_FILE
             ? ['--test-reporter=./regression/reporters/result-capture.js']
             : []),

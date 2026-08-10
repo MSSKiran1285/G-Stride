@@ -20,6 +20,7 @@ import type {
   RunHistorySummary,
   RunHistoryEntry,
   RunHistoryFilter,
+  RunHistoryGroup,
   AuthState,
   IntegrationSettings,
   SapIntegrationStatus,
@@ -91,6 +92,15 @@ export const api = {
       target: Pick<SapIntegrationStatus, 'safetyClass' | 'verificationStatus' | 'verifiedAt' | 'verificationMessage'>;
       message: string;
     }>('/api/settings/integrations/sap/verify', { method: 'POST' }),
+  /** Roll-up counts per App ID across the whole filtered ledger — BL-046's grouping tree. */
+  listRunHistoryGroups: (filter: Omit<RunHistoryFilter, 'appId' | 'limit' | 'offset' | 'sortBy' | 'sortDirection'> = {}) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(filter)) {
+      if (value !== undefined && value !== '') params.set(key, String(value));
+    }
+    const qs = params.toString();
+    return request<RunHistoryGroup[]>(`/api/audit/runs/groups${qs ? `?${qs}` : ''}`);
+  },
   getEvidenceGovernance: () => request<EvidenceGovernance>('/api/evidence-governance'),
   getOverviewPreferences: () => request<ImpactAssumptions>('/api/settings/overview-preferences'),
   saveOverviewPreferences: (assumptions: ImpactAssumptions) =>

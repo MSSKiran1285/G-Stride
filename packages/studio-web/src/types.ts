@@ -548,6 +548,18 @@ export interface RunHistorySummary {
   targetSafetyClass?: string;
 }
 
+/** BL-046: one App ID's roll-up across every matching run, used to build the Audit ledger's
+ *  grouping tree. Counts span the whole filtered ledger, not the visible page — a tree whose
+ *  numbers changed as you paged would be worse than no tree. */
+export interface RunHistoryGroup {
+  appId: string;
+  processArea: string;
+  total: number;
+  passed: number;
+  failed: number;
+  lastStartedAt: string;
+}
+
 export interface RunHistoryFilter {
   appId?: string;
   status?: 'passed' | 'failed';
