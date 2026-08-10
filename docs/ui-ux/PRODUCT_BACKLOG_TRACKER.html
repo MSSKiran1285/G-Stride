@@ -209,6 +209,7 @@
       <div class="version-alert" role="note">
         <strong>Version note:</strong> <code>v2.0.0</code> (commit <code>fb4bd49</code>, 30 Jul 2026 08:07:59 +05:30) remains the frozen, signed GA release backed by a 125-test catalogue — its tag and sign-off are unchanged.
         <code>main</code> continued afterward without a version bump and is now tracked as <strong>2.1.0-dev</strong>. BL-012, BL-020, BL-021, BL-028 and BL-029 reached their final Implemented state on <code>main</code> after the freeze and are marked "Shipped 2.1.0" below — their planned tranche reflects original scoping, not their actual release.
+        <strong><code>v2.1.0</code> was tagged GA on 10 Aug 2026</strong> — see <a href="./RELEASE_SIGN_OFF_2.1.md">RELEASE_SIGN_OFF_2.1.md</a>, which records one gate knowingly not re-run: the manual NVDA screen-reader journey, last executed 29 Jul 2026 against the 2.0.0 build. Automated accessibility passes across the candidate and live-SAP read-only verification was re-run against the real tenant on the day; NVDA was not, and the sign-off says so in its own heading rather than in a footnote.
         <strong>BL-047 is deferred and out of 2.1.0 scope</strong> by owner decision on 4 Aug 2026: its implementation was removed from <code>main</code> (commit <code>469e815</code>) rather than shipped unused, so the next GA carries none of it. The removal was surgical — fixes it made to the shared capture pipeline, to Object reconciliation and to Global Search stayed, because those serve features unrelated to autonomous discovery. Its 23 original commits remain in history up to <code>810821a</code>, so resuming would start from real committed work rather than nothing; the small amount that was still uncommitted when the item was dropped was discarded outright by owner decision and is gone.
         See <a href="./RELEASE_GOVERNANCE_2.1.md">RELEASE_GOVERNANCE_2.1.md</a> for the full decision record.
       </div>
@@ -789,6 +790,20 @@
         deliveryState: "Backlog", acceptanceProgress: "0/3",
         coverage: "Raised as a post-production hypercare Defect (HC-033). BL-035 already added pagination and every AC1 filter, which helps, but no grouping/virtualization strategy exists yet for very large ledgers. Scoped here rather than guessed at without real volume data to design against.",
         evidence: ["Post Production Incidents.csv (HC-033)", "packages/studio-web/src/components/DocumentsPanel.tsx"], updated: "2026-07-31"
+      },
+      {
+        id: "BL-050", legacy: "Found while closing the 2.1.0 live-SAP gate, 10 Aug 2026", title: "The documented way to run the live-SAP gate cannot actually reach the tenant",
+        description: "RELEASE_VERIFICATION_2.1_CHECKLIST §3 tells the release owner to close the live-SAP gate with `REGRESSION_LIVE=1 npm run test:api:isolated`, but the isolated harnesses hardcode a synthetic SAP target and never read REGRESSION_LIVE — so that command cannot exercise the real tenant.",
+        story: "As the release owner, I want the documented verification command to actually perform the verification it claims, so that a gate cannot be recorded as closed on evidence that never touched the target.",
+        criteria: [
+          "The documented command for the live-SAP gate runs against the real configured target, or the checklist documents the command that does.",
+          "Running the live suites cannot silently pass against a synthetic host — an unreachable or mis-targeted live run fails loudly.",
+          "The synthetic-fixture tests in the same files do not fail merely because the live mode was requested."
+        ],
+        workspace: ["Platform", "Execution Center"], plannedTranche: "T5 · Post-2.0", priority: "P2", status: "Not started",
+        deliveryState: "Backlog", acceptanceProgress: "0/3",
+        coverage: "Found on 10 Aug 2026 while actually closing the §3 gate for the 2.1.0 GA rather than by reading the checklist. Both regression/run-isolated-api.js and regression/run-isolated-ui.js set the SAP target to https://synthetic.non-production.invalid against their own throwaway credential store, and neither file references REGRESSION_LIVE anywhere — so the checklist's documented command exercises a fake host no matter what the environment variable says. This is a governance defect rather than a test defect: the risk is not that the command errors, it is that a gate whose whole purpose is proving the product works against real SAP could be recorded as closed on a run that never reached it. The gate was genuinely closed for 2.1.0 by running the live cases directly against a server using the owner's real credential store (REGRESSION_LIVE=1 REGRESSION_ALLOW_EXECUTION=1 node --test on the two files), and all six read-only live cases passed — see RELEASE_SIGN_OFF_2.1.md. The checklist has been annotated with the working command in the meantime, but the harnesses themselves should honour the flag so the documented and the effective procedure stop diverging. A secondary annoyance to fix with it: run in that mode, the synthetic fixtures in those same files fail, because they only exist inside the isolated harness — which makes a correct live run look like a failing one to anyone reading the raw output.",
+        evidence: ["docs/ui-ux/RELEASE_VERIFICATION_2.1_CHECKLIST.md §3", "regression/run-isolated-api.js", "regression/run-isolated-ui.js", "docs/ui-ux/RELEASE_SIGN_OFF_2.1.md"], updated: "2026-08-10"
       },
       {
         id: "BL-049", legacy: "Found during BL-047 validation, 4-10 Aug 2026", title: "Release workflow validated a catalogue a later suite regenerated",

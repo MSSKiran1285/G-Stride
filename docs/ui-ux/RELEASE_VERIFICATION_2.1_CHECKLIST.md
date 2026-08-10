@@ -65,9 +65,9 @@ non-production SAP target and explicit opt-in env vars:
 
 | Check | How to run | 2.0.0 result | 2.1.0 candidate result |
 | --- | --- | --- | --- |
-| Live read-only Chain/Suite/Batch, API | `REGRESSION_LIVE=1 npm run test:api:isolated` | Pass | ☐ pending |
-| Live read-only Chain/Suite/Batch, Studio UI | `REGRESSION_LIVE=1 npm run test:ui:isolated` | Pass | ☐ pending |
-| Authorised negative transactional (create-PO blocked without a line item) | `REGRESSION_LIVE_TRANSACTIONAL=1 npm run test:api:isolated` — **requires explicit owner authorisation before each run**, per the fail-stop/retained-state policy already in force for BL-041 | Pass (run `299669f8-75b6-471d-9c56-ed0375011fc5`) | ☐ pending |
+| Live read-only Chain/Suite/Batch, API | ~~`REGRESSION_LIVE=1 npm run test:api:isolated`~~ — see BL-050; the isolated harness hardcodes a synthetic target and never reads `REGRESSION_LIVE`. Run directly against a server using the real credential store: `REGRESSION_LIVE=1 REGRESSION_ALLOW_EXECUTION=1 node --test regression/api/runs.test.js` | Pass | **Pass** — 10 Aug 2026, `RELEASE_SIGN_OFF_2.1.md` |
+| Live read-only Chain/Suite/Batch, Studio UI | ~~`REGRESSION_LIVE=1 npm run test:ui:isolated`~~ — same defect, see BL-050. Run `REGRESSION_LIVE=1 REGRESSION_ALLOW_EXECUTION=1 node --test regression/ui/run-tab.test.js` | Pass | **Pass** — 10 Aug 2026, `RELEASE_SIGN_OFF_2.1.md` |
+| Authorised negative transactional (create-PO blocked without a line item) | `REGRESSION_LIVE_TRANSACTIONAL=1 npm run test:api:isolated` — **requires explicit owner authorisation before each run**, per the fail-stop/retained-state policy already in force for BL-041 | Pass (run `299669f8-75b6-471d-9c56-ed0375011fc5`) | **Not run** — no owner authorisation given for this candidate |
 
 Any new positive transactional case (P2P/O2C) beyond what BL-041 already covers needs its own
 explicit test-data ownership and owner authorisation before it is attempted — this checklist does not
@@ -75,8 +75,8 @@ pre-approve one.
 
 ## 4. Workspace-owner sign-off
 
-- [ ] Owner reviews §1–§3 results against this exact candidate commit.
-- [ ] Owner explicitly signs a `RELEASE_SIGN_OFF_2.1.md` (or equivalent), naming the candidate commit,
+- [x] Owner reviews §1–§3 results against this exact candidate commit. — 10 Aug 2026
+- [x] Owner explicitly signs `RELEASE_SIGN_OFF_2.1.md`, naming the candidate commit,
       the verification executor, and the decision — mirroring `RELEASE_SIGN_OFF_2.0.md`'s structure.
 - [ ] Only after that sign-off does `RELEASE_GOVERNANCE_2.1.md` get a closing note recording 2.1.0 as
       ready to tag. No tag is created by this checklist or by completing any row above alone.
