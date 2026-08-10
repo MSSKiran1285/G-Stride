@@ -1,6 +1,39 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-10T07-18-53-616Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-10T07:18:56.049Z",
+      "finishedAt": "2026-08-10T07:21:55.285Z",
+      "passed": 62,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-10T07-18-25-572Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-10T07:18:27.962Z",
+      "finishedAt": "2026-08-10T07:18:52.043Z",
+      "passed": 78,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-10T07-18-02-348Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-10T07:18:02.838Z",
+      "finishedAt": "2026-08-10T07:18:24.066Z",
+      "passed": 90,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-10T06-13-58-985Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-10T06:13:59.660Z",
@@ -185,39 +218,6 @@
       "failed": 0,
       "skipped": 4,
       "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-04T05-05-43-604Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-04T05:05:44.690Z",
-      "finishedAt": "2026-08-04T05:06:06.996Z",
-      "passed": 87,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-04T05-05-28-893Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-04T05:05:28.982Z",
-      "finishedAt": "2026-08-04T05:05:42.854Z",
-      "passed": 142,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-04T05-04-44-477Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-04T05:04:44.545Z",
-      "finishedAt": "2026-08-04T05:04:57.570Z",
-      "passed": 141,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
       "targetClass": "Isolated"
     }
   ],
