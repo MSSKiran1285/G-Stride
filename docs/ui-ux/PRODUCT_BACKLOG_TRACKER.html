@@ -209,6 +209,7 @@
       <div class="version-alert" role="note">
         <strong>Version note:</strong> <code>v2.0.0</code> (commit <code>fb4bd49</code>, 30 Jul 2026 08:07:59 +05:30) remains the frozen, signed GA release backed by a 125-test catalogue — its tag and sign-off are unchanged.
         <code>main</code> continued afterward without a version bump and is now tracked as <strong>2.1.0-dev</strong>. BL-012, BL-020, BL-021, BL-028 and BL-029 reached their final Implemented state on <code>main</code> after the freeze and are marked "Shipped 2.1.0" below — their planned tranche reflects original scoping, not their actual release.
+        <strong>BL-047 is deferred and out of 2.1.0 scope</strong> by owner decision on 4 Aug 2026: its implementation was removed from <code>main</code> (commit <code>469e815</code>) rather than shipped unused, so the next GA carries none of it. The removal was surgical — fixes it made to the shared capture pipeline, to Object reconciliation and to Global Search stayed, because those serve features unrelated to autonomous discovery. The work itself is preserved on branch <code>bl047-wip-archive</code>, and all of its original commits remain in history.
         See <a href="./RELEASE_GOVERNANCE_2.1.md">RELEASE_GOVERNANCE_2.1.md</a> for the full decision record.
       </div>
 

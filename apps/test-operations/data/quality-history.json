@@ -1,6 +1,94 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-10T03-53-18-934Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-10T03:53:19.641Z",
+      "finishedAt": "2026-08-10T03:54:41.178Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-10T03-52-57-864Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-10T03:52:58.632Z",
+      "finishedAt": "2026-08-10T03:53:18.509Z",
+      "passed": 75,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-10T03-52-49-895Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-10T03:52:49.945Z",
+      "finishedAt": "2026-08-10T03:52:57.436Z",
+      "passed": 90,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-10T03-52-26-311Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-10T03:52:26.370Z",
+      "finishedAt": "2026-08-10T03:52:34.043Z",
+      "passed": 89,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-UI-2026-08-04T05-06-08-013Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-04T05:06:09.640Z",
+      "finishedAt": "2026-08-04T05:07:59.366Z",
+      "passed": 59,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-04T05-05-43-604Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-04T05:05:44.690Z",
+      "finishedAt": "2026-08-04T05:06:06.996Z",
+      "passed": 87,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-04T05-05-28-893Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-04T05:05:28.982Z",
+      "finishedAt": "2026-08-04T05:05:42.854Z",
+      "passed": 142,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-04T05-04-44-477Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-04T05:04:44.545Z",
+      "finishedAt": "2026-08-04T05:04:57.570Z",
+      "passed": 141,
+      "failed": 1,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-04T04-27-09-982Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-04T04:27:11.874Z",
@@ -131,97 +219,43 @@
       "skipped": 4,
       "mode": "Headless UI",
       "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-04T02-40-08-142Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-04T02:40:09.260Z",
-      "finishedAt": "2026-08-04T02:40:30.790Z",
-      "passed": 84,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-04T02-39-37-053Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-04T02:39:37.146Z",
-      "finishedAt": "2026-08-04T02:39:49.960Z",
-      "passed": 134,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-04T02-32-50-177Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-04T02:32:51.932Z",
-      "finishedAt": "2026-08-04T02:35:12.052Z",
-      "passed": 59,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-04T02-31-58-623Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-04T02:32:00.207Z",
-      "finishedAt": "2026-08-04T02:32:22.739Z",
-      "passed": 84,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-04T02-31-22-900Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-04T02:31:23.014Z",
-      "finishedAt": "2026-08-04T02:31:39.544Z",
-      "passed": 134,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-04T02-30-33-886Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-04T02:30:34.086Z",
-      "finishedAt": "2026-08-04T02:30:55.136Z",
-      "passed": 133,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-04T02-14-51-093Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-04T02:14:52.102Z",
-      "finishedAt": "2026-08-04T02:16:39.310Z",
-      "passed": 59,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-API-2026-08-04T02-13-55-928Z",
-      "label": "Isolated API regression",
-      "startedAt": "2026-08-04T02:13:56.857Z",
-      "finishedAt": "2026-08-04T02:14:17.482Z",
-      "passed": 84,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "API",
-      "targetClass": "Isolated"
     }
   ],
   "failureLedger": [
+    {
+      "id": "FL-0051",
+      "runId": "CORE-2026-08-10T03-52-26-311Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-08-10T03:52:34.043Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n+     name: 'encrypted AI provider API key persists securely across processes, separate from SAP credentials',\n+     source: 'regression/ai-credentials-fallback.test.js'\n+   },\n+   {\n+     name: 'an environment variable takes precedence over a stored key, and status reports its source',\n+     source: 'regression/ai-credentials-fallback.test.js'\n+   },\n+   {\n+     name: 'getAiApiKey throws a clear, actionable error when nothing is configured',\n+     source: 'regression/ai-credentials-fallback.test.js'\n+   },\n+   {\n+     name: 'removeAiApiKey clears a stored key so status reverts to not configured',\n+     source: 'regression/ai-credentials-fallback.test.js'\n+   },\n+   {\n+     name: 'complete() sends the api key, model and prompt, and returns the text content block',\n+     source: 'regression/anthropic-resolver.test.js'\n+   },\n+   {\n+     name: 'the default model is Opus 5 (owner chose reliability over cost for this agentic, multi-step decision task)',\n+     source: 'regression/anthropic-resolver.test.js'\n+   },\n+   {\n+     name: 'complete() throws a clear error on a non-200 response, including the response body',\n+     source: 'regression/anthropic-resolver.test.js'\n+   },\n+   {\n+     name: 'complete() throws a clear error when the response has no text content block',\n+     source: 'regression/anthropic-resolver.test.js'\n+   },\n+   {\n+     name: 'complete() fails clearly (via getAiApiKey) when no API key is configured at all',\n+     source: 'regression/anthropic-resolver.test.js'\n+   },\n+   {\n+     name: 'GET /api/settings/ai-provider reports not configured before any key is saved',\n+     source: 'regression/api/ai-provider.test.js'\n+   },\n+   {\n+     name: 'PUT /api/settings/ai-provider rejects an empty apiKey',\n+     source: 'regression/api/ai-provider.test.js'\n+   },\n+   {\n+     name: 'PUT then GET /api/settings/ai-provider round-trips configured status without ever returning the key',\n+     source: 'regression/api/ai-provider.test.js'\n+   },\n+   {\n+     name: 'DELETE /api/settings/ai-provider removes the key, reverting status to not configured',\n+     source: 'regression/api/ai-provider.test.js'\n+   },\n+   {\n      name: 'GET /api/audit/runs supports every AC1 filter and reports X-Total-Count for pagination (BL-035 AC1/AC2)',\n      source: 'regression/api/audit-runs.test.js'\n    },\n    {\n      name: \"GET /api/audit/runs/:id/documents returns only that run\\\\'s captured document values (BL-035 AC4)\",\n...\n    {\n+     name: 'POST /api/discovery/:appId/start requires a non-empty instruction in the body',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n+     name: 'POST /api/discovery/:appId/start requires an open scan session (BL-047 Phase 2)',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n+     name: 'GET /api/discovery/state reports inactive when no discovery run has been started',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n+     name: 'POST /api/discovery/step requires a discovery run to already be in progress',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n+     name: 'POST /api/discovery/stop is always safe to call, even with nothing running',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n+     name: 'POST /api/discovery/run requires a discovery run to already be in progress',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n+     name: 'POST /api/discovery/human-step requires the control it is asked to record',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n+     name: 'POST /api/discovery/human-step refuses to record anything when no run is in progress',\n+     source: 'regression/api/discovery.test.js'\n+   },\n+   {\n      name: 'GET /api/groups lists known fixtures',\n      source: 'regression/api/groups.test.js'\n    },\n    {\n      name: 'GET /api/groups/:file returns the parsed group',\n...\n    {\n+     name: 'classifyScreenArchetype recognises a Fiori elements List Report by its control-id template marker',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'classifyScreenArchetype recognises a dialog by control type, regardless of namespace',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'classifyScreenArchetype recognises a Fiori Launchpad home screen by its tile control types',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'classifyScreenArchetype returns unknown for a screen matching no known archetype',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Dialog: clicks the actionable button without ever calling the model (no instruction interpretation needed)',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Dialog: needsFallback when no actionable button is present',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Every non-dialog archetype needsFallback with no AI resolver configured, never guesses',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'needsFallback (without calling the model) when nothing fillable/clickable/selectable was captured',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: clicks the tile the model matches to the instruction, and the prompt carries the instruction and step log',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: needsFallback when the model replies NONE',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Launchpad shell: needsFallback when the matched tile was already clicked without navigating away',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'List Report screen: the model can fill the search field with a literal value extracted from the instruction',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'List Report screen: the model can select a row via a captured column, never the table control itself',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: fills the field the model matches, with a value it extracted itself from the instruction',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: clicks the button the model picks',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: selects the first row via the table the model picks',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: reports DONE when the model judges the instruction fully carried out',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: needsFallback when the model replies NONE',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: needsFallback on a reply that is not one of the five accepted shapes',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: needsFallback on an out-of-range field number',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: needsFallback on a FILL reply with no value at all',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: needsFallback when the chosen field was already filled once on this screen',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: needsFallback when the chosen button was already clicked once without making progress',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'Unrecognized screen: the prompt includes the full step log so the model can recognise repeated saves are not progress',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'a list row is a click candidate — \"select the task\" could not be carried out otherwise',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'an unlabelled control is never offered to the model, and no control id ever appears in the prompt',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'the candidate numbering the model replies against matches the filtered list, not the raw capture',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'needsFallback when every candidate on the screen is unlabelled — better to say so than to offer a blind choice',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'a repeat-action fallback names the control the human will recognise, never \"undefined\"',\n+     source: 'regression/discovery-navigation.test.js'\n+   },\n+   {\n+     name: 'derives a Field name from a button-less input control id when no text is present',\n+     source: 'regression/discovery-registration.test.js'\n+   },\n+   {\n+     name: 'derives a Button name from visible text, stripping a parenthetical count',\n+     source: 'regression/discovery-registration.test.js'\n+   },\n+   {\n+     name: 'derives a short Button name from a single word',\n+     source: 'regression/discovery-registration.test.js'\n+   },\n+   {\n+     name: 'derives a Table name from the control id when the control type ends in Table',\n+     source: 'regression/discovery-registration.test.js'\n+   },\n+   {\n+     name: 'does not double-append the type suffix when the derived base already ends with it',\n+     source: 'regression/discovery-registration.test.js'\n+   },\n+   {\n+     name: 'appends a numeric suffix when the derived name collides with an existing different control',\n+     source: 'regression/discovery-registration.test.js'\n+   },\n+   {\n+     name: 'keeps incrementing the numeric suffix past one collision',\n+     source: 'regression/discovery-registration.test.js'\n+   },\n+   {\n      name: 'Execution Center resolves the same canonical evidence URLs as Audit and Evidence',\n      source: 'regression/evidence-reference.test.js'\n    },\n    {\n      name: 'canonical evidence URL mapping rejects absolute and traversal paths',\n...\n    {\n+     name: 'header-only lookup extracts mapped fields into runState without an item query',\n+     source: 'regression/query-reference-document.test.js'\n+   },\n+   {\n+     name: 'header+item lookup joins on the header key and extracts fields from both levels',\n+     source: 'regression/query-reference-document.test.js'\n+   },\n+   {\n+     name: 'throws a clear error when no active header document is found',\n+     source: 'regression/query-reference-document.test.js'\n+   },\n+   {\n+     name: 'throws a clear error when no matching item is found for the header key',\n+     source: 'regression/query-reference-document.test.js'\n+   },\n+   {\n+     name: 'throws a clear error for a malformed fieldMap entry',\n+     source: 'regression/query-reference-document.test.js'\n+   },\n+   {\n+     name: 'throws a clear error when a mapped field is absent from the queried result',\n+     source: 'regression/query-reference-document.test.js'\n+   },\n+   {\n+     name: 'an item-level field takes precedence over a header field of the same name',\n+     source: 'regression/query-reference-document.test.js'\n+   },\n+   {\n      name: 'record computes durationMs and list/get round-trip every new field (BL-035 AC1/AC3/AC4)',\n      source: 'regression/run-history-store.test.js'\n    },\n    {\n      name: 'get() and list() compute durationMs from timestamps for a ledger row recorded before that column existed (HC-030)',\n...\n    {\n+     name: 'Settings: saving and removing the AI provider API key round-trips the configured badge (BL-047 Phase 2 POC)',\n+     source: 'regression/ui/ai-provider-settings.test.js'\n+   },\n+   {\n      name: 'Audit and Evidence uses a searchable run library instead of date accordions',\n      source: 'regression/ui/audit-library.test.js'\n    },\n    {\n      name: 'Audit and Evidence toolbar gives every filter a genuinely usable width, not a collapsed sliver (HC-003/HC-032)',\n...\n    {\n+     name: 'Autonomous discovery panel (BL-047 Phase 2) only appears once a scan session is open',\n+     source: 'regression/ui/object-repository.test.js'\n+   },\n+   {\n      name: 'Canvas First Overview presents the approved shell and real workspace data',\n      source: 'regression/ui/overview.test.js'\n    },\n    {\n      name: 'Canvas First Overview primary action opens Compose without execution',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-08-10T03:52:57.436Z",
+      "remediationRunId": "CORE-2026-08-10T03-52-49-895Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-08-10T03-52-49-895Z."
+    },
+    {
+      "id": "FL-0050",
+      "runId": "CORE-2026-08-04T05-04-44-477Z",
+      "test": "Test Operations catalogue inventory and status fields come only from repository tests and recorded runs",
+      "file": "regression/quality-catalog.test.js",
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated",
+      "failedAt": "2026-08-04T05:04:57.570Z",
+      "error": "Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    {\n      name: 'encrypted AI provider API key persists securely across processes, separate from SAP credentials',\n      source: 'regression/ai-credentials-fallback.test.js'\n    },\n...\n    {\n-     name: 'POST /api/discovery/run requires a discovery run to already be in progress',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n-     name: 'POST /api/discovery/human-step requires the control it is asked to record',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n-     name: 'POST /api/discovery/human-step refuses to record anything when no run is in progress',\n-     source: 'regression/api/discovery.test.js'\n-   },\n-   {\n      name: 'GET /api/groups lists known fixtures',\n      source: 'regression/api/groups.test.js'\n    },\n    {\n      name: 'GET /api/groups/:file returns the parsed group',\n...\n    {\n-     name: 'a list row is a click candidate — \"select the task\" could not be carried out otherwise',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'an unlabelled control is never offered to the model, and no control id ever appears in the prompt',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'the candidate numbering the model replies against matches the filtered list, not the raw capture',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'needsFallback when every candidate on the screen is unlabelled — better to say so than to offer a blind choice',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n-     name: 'a repeat-action fallback names the control the human will recognise, never \"undefined\"',\n-     source: 'regression/discovery-navigation.test.js'\n-   },\n-   {\n      name: 'derives a Field name from a button-less input control id when no text is present',\n      source: 'regression/discovery-registration.test.js'\n    },\n    {\n      name: 'derives a Button name from visible text, stripping a parenthetical count',\n...\n    {\n-     name: 'an icon-only button takes its label from its tooltip, so the model never sees a raw control id',\n-     source: 'regression/ui5-inspector-labels.test.js'\n-   },\n-   {\n-     name: 'an icon-only button with no tooltip falls back to a readable form of its icon name',\n-     source: 'regression/ui5-inspector-labels.test.js'\n-   },\n-   {\n-     name: \"a control's own text always wins over its tooltip\",\n-     source: 'regression/ui5-inspector-labels.test.js'\n-   },\n-   {\n-     name: 'a tooltip on pure layout scaffolding never becomes a label, and never promotes it out of structural',\n-     source: 'regression/ui5-inspector-labels.test.js'\n-   },\n-   {\n-     name: 'the raw tooltip/icon fields never leak out of the capture — they exist only to feed the label fallback',\n-     source: 'regression/ui5-inspector-labels.test.js'\n-   },\n-   {\n-     name: 'a list row is actionable — \"select the task\" has to be able to reach it',\n-     source: 'regression/ui5-inspector-labels.test.js'\n-   },\n-   {\n-     name: 'classifyControl treats the whole sap.m list-item family as actionable, not just ObjectListItem',\n-     source: 'regression/ui5-inspector-labels.test.js'\n-   },\n-   {\n      name: 'inspectUi5Controls excludes controls whose DOM element is not actually rendered (kept-alive stale components)',\n      source: 'regression/ui5-inspector-visibility.test.js'\n    },\n    {\n      name: 'Axe reports no serious or critical violations in every primary workspace',\n",
+      "state": "Remediated",
+      "remediatedAt": "2026-08-04T05:05:42.854Z",
+      "remediationRunId": "CORE-2026-08-04T05-05-28-893Z",
+      "feature": "Execution Engine",
+      "area": "Execution Center",
+      "source": "regression/quality-catalog.test.js",
+      "remediation": "Verified by recorded run CORE-2026-08-04T05-05-28-893Z."
+    },
     {
       "id": "FL-0049",
       "runId": "CORE-2026-08-04T04-25-09-319Z",
