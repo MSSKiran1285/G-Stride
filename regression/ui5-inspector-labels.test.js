@@ -7,7 +7,7 @@ const { inspectUi5Controls, classifyControl } = require('../packages/adapter-fio
 
 // Real finding, live on this tenant's My Timesheet screen (4 Aug 2026): of the 11 buttons
 // captured there, 8 had no text of any kind — alertBtn, copyBtn, settingsBtn, groupTasks,
-// msgPopoverBtn and friends are all icon-only. The discovery loop was therefore offering the
+// msgPopoverBtn and friends are all icon-only. Capture was therefore surfacing them to callers as
 // model a list of raw control ids ("...timesheetMain--copyBtn") to choose between; it picked
 // one, which registered into the Object Repository under the name "Button" and then reported
 // itself back as `Already clicked "undefined"`.

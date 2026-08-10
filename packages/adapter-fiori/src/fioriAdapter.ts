@@ -13,18 +13,6 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
 
   constructor(private options: { headless?: boolean } = {}) {}
 
-  /**
-   * Wraps an already-open Playwright Page instead of launching a new browser — for driving
-   * the SAME window a human (or a scan session) already has open, rather than a second,
-   * disconnected one. Deliberately leaves `browser`/`context` unset, so close() (which only
-   * closes those) is a safe no-op here: whoever opened the page still owns its lifecycle.
-   */
-  static attach(page: Page): FioriPlaywrightAdapter {
-    const adapter = new FioriPlaywrightAdapter();
-    adapter.page = page;
-    return adapter;
-  }
-
   async open(url: string): Promise<void> {
     const headless = this.options.headless ?? true;
     // --start-maximized + viewport:null (use the actual window size instead of a fixed

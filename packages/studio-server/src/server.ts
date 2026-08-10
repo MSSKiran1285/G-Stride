@@ -15,9 +15,6 @@ import {
   getCredentialStatus,
   loadTransactionData,
   setCredentials,
-  getAiCredentialStatus,
-  setAiApiKey,
-  removeAiApiKey,
   validateTestContract,
   isLikelyUnstableId,
   findLikelyDuplicates,
@@ -37,16 +34,6 @@ import {
 } from './runs';
 import { parseCsv, serializeCsv } from './csv';
 import { openScanSession, getScanStatus, captureScan, closeScanSession, highlightControl, startPick, getPickResult, cancelPick, dismissPick, reverifyControl } from './scanSession';
-import {
-  startDiscovery,
-  getDiscoveryState,
-  runDiscoveryStep,
-  runDiscovery,
-  recordHumanStep,
-  stopDiscovery,
-  DEFAULT_MAX_STEPS,
-} from './discoverySession';
-import { AI_PROVIDER } from './anthropicResolver';
 import { StudioAuth } from './auth';
 import { ExecutionDraft, ExecutionDraftKind, ExecutionPreflightService } from './executionPreflight';
 import { executionInitiator, executionTargetContext, workspaceContext } from './executionContext';
@@ -559,41 +546,6 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       res.json({ ...saved, ...governance.saveConfiguration(saved, safetyClass) });
     } catch (err: any) {
       res.status(err.status ?? 500).json({ error: err.message });
-    }
-  });
-
-  // BL-047 Phase 2: the AI provider used for natural-language process resolution and
-  // shell-screen fallback decisions. Same non-secret status / encrypted-storage shape as SAP
-  // integrations above, one shared provider slot for now (Anthropic) rather than a general
-  // multi-provider list, since nothing else is wired up to call a different one yet.
-  app.get('/api/settings/ai-provider', async (_req, res) => {
-    try {
-      const status = await getAiCredentialStatus(AI_PROVIDER);
-      res.json({ provider: AI_PROVIDER, ...status });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
-    }
-  });
-
-  app.put('/api/settings/ai-provider', async (req, res) => {
-    try {
-      const apiKey = typeof req.body?.apiKey === 'string' ? req.body.apiKey.trim() : '';
-      if (!apiKey) return res.status(400).json({ error: 'Body must include a non-empty apiKey: string.' });
-      await setAiApiKey(AI_PROVIDER, apiKey);
-      const status = await getAiCredentialStatus(AI_PROVIDER);
-      res.json({ provider: AI_PROVIDER, ...status });
-    } catch (err: any) {
-      res.status(err.status ?? 500).json({ error: err.message });
-    }
-  });
-
-  app.delete('/api/settings/ai-provider', async (_req, res) => {
-    try {
-      await removeAiApiKey(AI_PROVIDER);
-      const status = await getAiCredentialStatus(AI_PROVIDER);
-      res.json({ provider: AI_PROVIDER, ...status });
-    } catch (err: any) {
-      res.status(500).json({ error: err.message });
     }
   });
 
@@ -1981,79 +1933,6 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
     dismissPick(controlId);
     res.json(getPickResult());
-  });
-
-  // BL-047 Phase 2: the live autonomous-discovery loop. `run` drives the instruction to
-  // completion on its own and is the normal way in; `step` takes exactly one action and exists
-  // for diagnosing a single decision. Requires the same open scan session the manual capture
-  // flow above uses; every discovered control is registered through objectRepository.upsert()
-  // before any Module acts on it, never a fabricated control definition.
-  app.post('/api/discovery/:appId/start', (req, res) => {
-    const instruction = typeof req.body?.instruction === 'string' ? req.body.instruction.trim() : '';
-    if (!instruction) {
-      return res.status(400).json({ error: 'Body must include a non-empty instruction: string' });
-    }
-    try {
-      res.status(201).json(startDiscovery(req.params.appId, instruction));
-    } catch (err: any) {
-      res.status(err.status ?? 500).json({ error: err.message });
-    }
-  });
-
-  app.get('/api/discovery/state', (_req, res) => {
-    const current = getDiscoveryState();
-    if (!current) return res.json({ active: false });
-    res.json({ active: true, ...current });
-  });
-
-  app.post('/api/discovery/step', async (req, res) => {
-    try {
-      const result = await runDiscoveryStep(objectRepository, registry, auth.state(req).user?.name);
-      res.json(result);
-    } catch (err: any) {
-      res.status(err.status ?? 500).json({ error: err.message });
-    }
-  });
-
-  // Answers immediately and lets the run continue in the background: a real run is many
-  // captures, model calls and live UI interactions end to end, far longer than any sensible
-  // HTTP timeout. Progress is read from /api/discovery/state, which the UI polls.
-  app.post('/api/discovery/run', (req, res) => {
-    const current = getDiscoveryState();
-    if (!current) return res.status(400).json({ error: 'No discovery run in progress — start one first.' });
-    if (current.running) return res.status(409).json({ error: 'This discovery run is already going.' });
-
-    const maxSteps = Number.isInteger(req.body?.maxSteps) && req.body.maxSteps > 0 ? req.body.maxSteps : DEFAULT_MAX_STEPS;
-    const updatedBy = auth.state(req).user?.name;
-    // Deliberately not awaited — see above. runDiscovery records every exit (including a thrown
-    // error) as an outcome on the state, so nothing here can escape as an unhandled rejection.
-    void runDiscovery(objectRepository, registry, maxSteps, updatedBy);
-    res.status(202).json({ ok: true, maxSteps });
-  });
-
-  // Records one action a human took by hand after the run handed over to them. The Object
-  // Repository write goes through the same upsert path everything else uses, and the action
-  // joins the run's step log so the model can see it when it picks the instruction back up.
-  app.post('/api/discovery/human-step', (req, res) => {
-    const { controlId, controlType, text, bindingPath, parentId, value } = req.body ?? {};
-    if (typeof controlId !== 'string' || !controlId || typeof controlType !== 'string' || !controlType) {
-      return res.status(400).json({ error: 'Body must include controlId: string and controlType: string' });
-    }
-    try {
-      const result = recordHumanStep(
-        objectRepository,
-        { controlId, controlType, text, bindingPath, parentId, value },
-        auth.state(req).user?.name
-      );
-      res.status(201).json(result);
-    } catch (err: any) {
-      res.status(err.status ?? 500).json({ error: err.message });
-    }
-  });
-
-  app.post('/api/discovery/stop', (_req, res) => {
-    const remaining = stopDiscovery();
-    res.json({ ok: true, stillRunning: Boolean(remaining?.running) });
   });
 
   app.get('/api/data', (_req, res) => {

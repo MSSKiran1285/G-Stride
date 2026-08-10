@@ -353,8 +353,8 @@ export interface ObjectVerificationEvent {
   verifiedBy?: string | null;
 }
 
-/** BL-047 Phase 1: result of reconciling every stored Object for one App ID against whatever
- *  screen the open scan session currently has live, rather than capturing a fresh control. */
+/** Result of reconciling every stored Object for one App ID against whatever screen the open
+ *  scan session currently has live, rather than capturing a fresh control. */
 export interface ObjectReconcileResult {
   total: number;
   verified: number;
@@ -365,65 +365,6 @@ export interface ObjectReconcileResult {
     outcome: 'verified' | 'drifted' | 'missing';
     live?: { controlId: string; controlType: string; bindingPath?: string; text?: string };
   }>;
-}
-
-/** BL-047 Phase 2: one step already taken by the autonomous discovery loop, in the exact
- *  ModuleCall shape it will compose into a Test once the review gate exists. */
-export interface DiscoveredStep {
-  module: string;
-  appId: string;
-  params: Record<string, string>;
-  narrate?: string;
-  /** True for a step a human performed by hand in the live window after the run handed over. */
-  byHuman?: boolean;
-}
-
-/** Why an autonomous run is no longer going — polled from the state, since the run outlives
- *  the request that started it. */
-export type DiscoveryOutcome =
-  | { kind: 'done' }
-  | { kind: 'needsHuman'; reason: string }
-  | { kind: 'budgetReached'; reason: string }
-  | { kind: 'stopped' }
-  | { kind: 'error'; reason: string };
-
-export interface DiscoveryRegisteredControl {
-  name: string;
-  controlId: string;
-  isNew: boolean;
-}
-
-export type NavigationDecision =
-  | { kind: 'action'; call: { module: string; appId?: string; params: Record<string, string> }; historyKey: string }
-  | { kind: 'done' }
-  | { kind: 'needsFallback'; reason: string };
-
-export interface DiscoveryStepResult {
-  decision: NavigationDecision;
-  registeredControl?: DiscoveryRegisteredControl;
-  step?: DiscoveredStep;
-}
-
-export interface DiscoveryState {
-  active: boolean;
-  appId?: string;
-  instruction?: string;
-  stepLog?: string[];
-  steps?: DiscoveredStep[];
-  startedAt?: string;
-  /** True while the loop is mid-flight — what the UI polls on to know whether to keep watching. */
-  running?: boolean;
-  outcome?: DiscoveryOutcome;
-  /** True once the run has handed back to a human and is recording what they do in the window. */
-  awaitingHuman?: boolean;
-}
-
-/** BL-047 Phase 2 POC: status for the AI provider used for natural-language process resolution
- *  and shell-screen fallback decisions — never carries the API key itself. */
-export interface AiProviderStatus {
-  provider: string;
-  configured: boolean;
-  source: 'environment' | 'credential-store' | 'none';
 }
 
 /** A Compose field's request to capture a brand-new object without leaving the Test editor

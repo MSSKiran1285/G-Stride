@@ -61,16 +61,3 @@ test('Reconcile all count tracks the current Object list, not a stale snapshot',
     });
   });
 });
-
-test('Autonomous discovery panel (BL-047 Phase 2) only appears once a scan session is open', async () => {
-  await withBrowser(async (browser) => {
-    await withPage(browser, 'object-repository-discovery-gating', async (page) => {
-      await page.goto(`${BASE_URL}/objects`);
-      // No scan session is open in this isolated environment — the discovery loop only makes
-      // sense against a real live screen, so it must not even offer a "Start discovery" control
-      // yet, rather than surfacing a confusing mid-flow error the way Reconcile does.
-      await page.getByText('Scan a live screen').waitFor();
-      assert.equal(await page.getByText('Autonomous discovery (BL-047)').count(), 0);
-    });
-  });
-});

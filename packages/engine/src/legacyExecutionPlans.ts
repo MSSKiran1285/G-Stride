@@ -94,13 +94,6 @@ export function capturesForStep(module: string, params: Record<string, string>):
         params.plantKey || 'plant',
         params.quantityKey || 'quantity',
       ];
-    case 'QueryReferenceDocument':
-      // fieldMap is "SourceField:runStateKey" pairs — the runState half of each is what this
-      // step actually produces; malformed entries are caught at execute() time, not here.
-      return (params.fieldMap || '')
-        .split(',')
-        .map((pair) => pair.trim().split(':')[1]?.trim())
-        .filter((key): key is string => Boolean(key));
     case 'MatchGrossAmountToPoReference':
       return [params.amountKey || 'invoiceAmount'];
     case 'ReceiveOpenLineItem':

@@ -8,7 +8,6 @@ import { SaveAndCaptureDocumentNumber } from './modules/saveAndCaptureDocumentNu
 import { AssertControlText } from './modules/assertControlText';
 import { Wait } from './modules/wait';
 import { QueryValidLineItemData } from './modules/queryValidLineItemData';
-import { QueryReferenceDocument } from './modules/queryReferenceDocument';
 import { CleanupAbandonedDrafts } from './modules/cleanupAbandonedDrafts';
 import { SearchGoodsReceiptByPO } from './modules/searchGoodsReceiptByPO';
 import { ReceiveOpenLineItem } from './modules/receiveOpenLineItem';
@@ -38,7 +37,6 @@ const builtInModules: Module[] = [
   AssertControlText,
   Wait,
   QueryValidLineItemData,
-  QueryReferenceDocument,
   CleanupAbandonedDrafts,
   SearchGoodsReceiptByPO,
   ReceiveOpenLineItem,

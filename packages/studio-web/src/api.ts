@@ -41,9 +41,6 @@ import type {
   TestReferences,
   TestValueType,
   DataSensitivity,
-  DiscoveryState,
-  DiscoveryStepResult,
-  AiProviderStatus,
 } from './types';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -209,22 +206,6 @@ export const api = {
   getPickResult: () => request<PickResult>('/api/scan/pick/result'),
   cancelPick: () => request<{ ok: true }>('/api/scan/pick/cancel', { method: 'POST' }),
   dismissPick: (controlId: string) => request<PickResult>('/api/scan/pick/dismiss', { method: 'POST', body: JSON.stringify({ controlId }) }),
-  startDiscovery: (appId: string, instruction: string) =>
-    request<DiscoveryState>(`/api/discovery/${encodeURIComponent(appId)}/start`, { method: 'POST', body: JSON.stringify({ instruction }) }),
-  getDiscoveryState: () => request<DiscoveryState>('/api/discovery/state'),
-  runDiscoveryStep: () => request<DiscoveryStepResult>('/api/discovery/step', { method: 'POST' }),
-  /** Starts the loop and returns as soon as it is going — progress comes from polling
-   *  getDiscoveryState(), since a real run far outlasts any one request. */
-  runDiscovery: (maxSteps?: number) =>
-    request<{ ok: true; maxSteps: number }>('/api/discovery/run', {
-      method: 'POST',
-      body: JSON.stringify(maxSteps ? { maxSteps } : {}),
-    }),
-  stopDiscovery: () => request<{ ok: true; stillRunning: boolean }>('/api/discovery/stop', { method: 'POST' }),
-  getAiProviderStatus: () => request<AiProviderStatus>('/api/settings/ai-provider'),
-  saveAiProviderKey: (apiKey: string) =>
-    request<AiProviderStatus>('/api/settings/ai-provider', { method: 'PUT', body: JSON.stringify({ apiKey }) }),
-  removeAiProviderKey: () => request<AiProviderStatus>('/api/settings/ai-provider', { method: 'DELETE' }),
   listData: () => request<string[]>('/api/data'),
   listDataLibrary: () => request<DataLibraryItem[]>('/api/data/library'),
   getDataset: (file: string) => request<Dataset>(`/api/data/${encodeURIComponent(file)}`),
