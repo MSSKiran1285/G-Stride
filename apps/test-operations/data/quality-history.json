@@ -1,6 +1,39 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-10T04-35-26-608Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-10T04:35:27.404Z",
+      "finishedAt": "2026-08-10T04:36:52.485Z",
+      "passed": 57,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-10T04-35-05-416Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-10T04:35:06.084Z",
+      "finishedAt": "2026-08-10T04:35:26.090Z",
+      "passed": 75,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-10T04-34-57-063Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-10T04:34:57.116Z",
+      "finishedAt": "2026-08-10T04:35:04.990Z",
+      "passed": 90,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "ISOLATED-UI-2026-08-10T03-53-18-934Z",
       "label": "Isolated UI regression",
       "startedAt": "2026-08-10T03:53:19.641Z",
@@ -185,39 +218,6 @@
       "failed": 0,
       "skipped": 4,
       "mode": "API",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-04T03-22-09-170Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-04T03:22:09.347Z",
-      "finishedAt": "2026-08-04T03:22:27.458Z",
-      "passed": 145,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-04T03-21-27-258Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-04T03:21:27.384Z",
-      "finishedAt": "2026-08-04T03:21:44.131Z",
-      "passed": 144,
-      "failed": 1,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "ISOLATED-UI-2026-08-04T02-40-58-905Z",
-      "label": "Isolated UI regression",
-      "startedAt": "2026-08-04T02:41:00.161Z",
-      "finishedAt": "2026-08-04T02:43:00.036Z",
-      "passed": 59,
-      "failed": 0,
-      "skipped": 4,
-      "mode": "Headless UI",
       "targetClass": "Isolated"
     }
   ],
