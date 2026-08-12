@@ -1,12 +1,28 @@
 /* G-Stride - Canvas First Design System */
 
 :root {
-  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* 'Inter Variable' is the family name the bundled @fontsource-variable/inter registers; plain
+     'Inter' follows it so a locally installed copy is still used if the bundle ever fails. */
+  --font-sans: 'Inter Variable', 'Inter', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --font-size-xs: 0.68rem;
   --font-size-sm: 0.75rem;
   --font-size-md: 0.85rem;
   --font-size-lg: 1rem;
+
+  /* Typography scale. Absolute px rather than rem: the scale is specified in px, and the two must
+     not drift apart if the root size is ever changed. */
+  --type-body: 15px;
+  --type-body-lh: 1.55;
+  --type-secondary: 13.5px;
+  --type-secondary-lh: 1.5;
+  --type-table: 13.75px;
+  --type-table-lh: 1.45;
+  --type-table-head: 12px;
+  --type-section-title: 19px;
+  --type-section-title-lh: 1.3;
+  --type-page-title: 23px;
+  --type-page-title-lh: 1.25;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -25,7 +41,9 @@
   --panel-light-subtle: #f1f5f9;
   --border-light: #e2e8f0;
   --border-light-strong: #cbd5e1;
-  --text-light: #112a46;
+  /* Only the light theme takes the specified #1F2937 - the dark theme keeps its own light-on-dark
+     text, or the interface would be unreadable there. */
+  --text-light: #1F2937;
   --text-light-soft: #334b66;
   --text-light-muted: #5b6b7f;
 
@@ -146,10 +164,27 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 13.5px;
-  line-height: 1.5;
+  font-size: var(--type-body);
+  line-height: var(--type-body-lh);
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Headings had no base rules at all, so they took the browser's em-relative defaults and grew with
+   the body size. Pinning them keeps the scale where it is specified. */
+h1 {
+  font-size: var(--type-page-title);
+  line-height: var(--type-page-title-lh);
+}
+
+h2 {
+  font-size: var(--type-section-title);
+  line-height: var(--type-section-title-lh);
+}
+
+h3 {
+  font-size: 18px;
+  line-height: var(--type-section-title-lh);
 }
 
 button, input, select, textarea {
@@ -2510,7 +2545,8 @@ label {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.83rem;
+  font-size: var(--type-table);
+  line-height: var(--type-table-lh);
 }
 
 th, td {
@@ -2523,7 +2559,7 @@ th {
   background: var(--panel-subtle);
   color: var(--text-soft);
   font-weight: 700;
-  font-size: 0.72rem;
+  font-size: var(--type-table-head);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -2640,15 +2676,15 @@ tr:hover td { background: var(--accent-soft); }
 .section-title {
   margin: 0 0 0.4rem;
   color: var(--text);
-  font-size: 0.95rem;
-  line-height: 1.35;
+  font-size: var(--type-section-title);
+  line-height: var(--type-section-title-lh);
   font-weight: 750;
 }
 
 .hint {
   color: var(--text-soft);
-  font-size: 0.8rem;
-  line-height: 1.45;
+  font-size: var(--type-secondary);
+  line-height: var(--type-secondary-lh);
 }
 
 .error-text {
@@ -3265,16 +3301,15 @@ button.neutral-solid {
   box-shadow: inset 0 2px 0 var(--accent);
 }
 
+/* A plain number: the pill around it added weight without meaning, and its fixed height stopped
+   the cell aligning with the rest of the row. */
 .step-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.6rem;
-  min-height: 1.6rem;
-  border-radius: var(--radius-full);
   color: var(--text-soft);
-  background: var(--panel-subtle);
-  font-weight: 750;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  width: 2.5rem;
+  padding-right: 0.75rem;
 }
 
 .step-module {
@@ -3302,6 +3337,16 @@ button.neutral-solid {
 
 .steps-heading-row .section-title {
   margin: 0;
+}
+
+/* Every cell starts on the same line. Without this a row whose params wrap centres its module name
+   against the taller cell, so step 9 sits lower than its own number. */
+/* Two classes, so this outranks the Ultra-Compact Tables block's `.responsive-table td`, which
+   forces middle alignment. Matching that rule's specificity is not enough - it is declared later
+   in the file and would win the tie. A row whose params wrap otherwise centres its module name
+   between the param lines instead of starting level with them. */
+.responsive-table.steps-table td {
+  vertical-align: top !important;
 }
 
 .steps-table .step-select {
@@ -7303,7 +7348,10 @@ button.pill:disabled,
 .responsive-table,
 .ref-trend-table,
 .table-wrap table {
-  font-size: 0.76rem !important;
+  /* This block carries !important throughout, so it is what actually sets table type - the base
+     `table` rule never wins. The scale has to be applied here to take effect. */
+  font-size: var(--type-table) !important;
+  line-height: var(--type-table-lh) !important;
   border-collapse: collapse !important;
   width: 100% !important;
 }
@@ -7312,7 +7360,7 @@ button.pill:disabled,
 .ref-trend-table th,
 .table-wrap table th {
   padding: 0.25rem 0.5rem !important;
-  font-size: 0.72rem !important;
+  font-size: var(--type-table-head) !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 0.03em !important;
@@ -7324,9 +7372,10 @@ button.pill:disabled,
 .responsive-table td,
 .ref-trend-table td,
 .table-wrap table td {
-  padding: 0.2rem 0.5rem !important;
-  font-size: 0.76rem !important;
-  line-height: 1.2 !important;
+  padding: 0.35rem 0.5rem !important;
+  font-size: var(--type-table) !important;
+  line-height: var(--type-table-lh) !important;
+  /* height on a cell is a minimum, so rows grow with the taller type rather than clipping. */
   height: 26px !important;
   vertical-align: middle !important;
 }
