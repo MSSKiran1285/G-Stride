@@ -92,6 +92,51 @@ test('BL-044: each Process area field owns its own option list', async () => {
 // described module's fields render in its declared order, which is part of the module contract
 // and the same in every Test, so it is not a per-step preference. These keys exist only in this
 // Test's JSON, which is exactly why their order is this step's to choose — and why it persists.
+// Steps are reordered by dragging, and the per-row up/down buttons were removed once dragging
+// covered it. Dragging is pointer-only, so the drag handle is a real button that moves the step
+// with the arrow keys — without it, reordering a step would not be possible from the keyboard at
+// all (WCAG 2.1.1). This asserts that path directly, because it is now the only one.
+test('a step can be reordered from the keyboard using the drag handle, and the move is announced', async () => {
+  const file = 'step-keyboard-reorder.json';
+  await withTestCase(
+    file,
+    {
+      name: 'Keyboard step reorder',
+      steps: [
+        { module: 'FirstStepModule', params: {} },
+        { module: 'SecondStepModule', params: {} },
+      ],
+    },
+    async () => {
+      await withBrowser(async (browser) => {
+        await withPage(browser, 'step-keyboard-reorder', async (page) => {
+          await page.goto(`${BASE_URL}/compose/tests/${encodeURIComponent(file)}`);
+          const modules = () => page.locator('tbody .step-module').allTextContents();
+          await page.locator('#step-handle-1').waitFor();
+          assert.deepEqual(await modules(), ['FirstStepModule', 'SecondStepModule']);
+
+          // The removed up/down buttons must not simply have come back.
+          assert.equal(await page.getByRole('button', { name: /^Move step .* (up|down)$/ }).count(), 0);
+
+          await page.locator('#step-handle-1').focus();
+          await page.keyboard.press('ArrowUp');
+
+          await page.getByRole('status').filter({ hasText: 'SecondStepModule moved to step 1.' }).waitFor();
+          assert.deepEqual(await modules(), ['SecondStepModule', 'FirstStepModule']);
+          // Rows are keyed by index, so focus has to be moved deliberately or it stays on the
+          // position rather than following the step that moved.
+          assert.equal(await page.evaluate(() => document.activeElement?.id), 'step-handle-0');
+
+          await page.getByRole('button', { name: 'Save test case' }).click();
+          await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
+          const saved = await api.get(`/api/testcases/${file}`);
+          assert.deepEqual(saved.body.steps.map((s) => s.module), ['SecondStepModule', 'FirstStepModule']);
+        });
+      });
+    },
+  );
+});
+
 test('BL-042: a step\'s free-form parameters can be reordered by keyboard, and the order persists', async () => {
   const file = 'bl042-sortable-fields.json';
   await withTestCase(

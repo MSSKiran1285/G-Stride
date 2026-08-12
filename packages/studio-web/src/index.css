@@ -3239,6 +3239,24 @@ button.neutral-solid {
   user-select: none;
 }
 
+/* The handle is a real button so it can be reached and driven from the keyboard, but it should
+   still read as a grip rather than as a control competing with Edit and Remove. */
+.step-drag-handle {
+  background: none;
+  border: 0;
+  padding: 0.1rem 0.25rem;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: grab;
+  line-height: 1;
+  border-radius: 4px;
+}
+
+.step-drag-handle:hover {
+  color: var(--text);
+}
+
 .dragging {
   opacity: 0.55;
 }

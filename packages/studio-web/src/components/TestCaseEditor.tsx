@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, ModuleCall, ModuleInfo, TestApplication, TestCase, TestContract, TestValidationIssue } from '../types';
 import { StepEditor } from './StepEditor';
@@ -286,35 +285,6 @@ export function TestCaseEditor({
 
   return (
     <div className="stack">
-      <details className="panel">
-        <summary className="section-title" style={{ cursor: 'pointer' }}>
-          How Objects, Modules, and App ID fit together
-        </summary>
-        <div className="stack" style={{ marginTop: '0.6rem', fontSize: '0.85rem', color: 'var(--text-soft)' }}>
-          <p style={{ margin: 0 }}>
-            <strong style={{ color: 'var(--text)' }}>Modules</strong> are generic, reusable verbs — "Click Button,"
-            "Enter Header Field" — built into Studio. They know <em>how</em> to do something but nothing about{' '}
-            <em>what</em> screen you're on.
-          </p>
-          <p style={{ margin: 0 }}>
-            <strong style={{ color: 'var(--text)' }}>Objects</strong> (captured in the Objects tab) are the nouns — a
-            specific, named control on a specific screen. An object just remembers where something is; it can't do
-            anything by itself.
-          </p>
-          <p style={{ margin: 0 }}>
-            A step is a module (the verb) plus a reference to one saved object (the noun), by name — e.g.{' '}
-            <code>Click Button</code> + <code>CreateButton</code>. A few modules (<code>Add Line Item(s)</code>,{' '}
-            <code>Save &amp; Capture Document Number</code>) bundle several related objects internally, so one step
-            covers what would otherwise be several.
-          </p>
-          <p style={{ margin: 0 }}>
-            <strong style={{ color: 'var(--text)' }}>App ID</strong> is just a namespace — it keeps one screen's
-            "SupplierField" from colliding with another screen's. Set it per step (or once as the test case default);
-            it determines which saved objects show up as suggestions when you're filling in a field below.
-          </p>
-        </div>
-      </details>
-
       {selectedTxTemplate && (
         <div className="fiori-message-strip info" style={{ marginBottom: '0.75rem' }}>
           <strong>SAP Transaction Template Active:</strong> Pre-loaded sequence for <code>{selectedTxTemplate}</code>. Edit parameters or add custom step modules below.
@@ -451,30 +421,35 @@ export function TestCaseEditor({
                         }}
                         className={[dragIndex === i ? 'dragging' : '', dragOverIndex === i ? 'drag-over' : ''].filter(Boolean).join(' ')}
                       >
-                        <td className="drag-handle" title="Drag to reorder" data-label="Reorder">
-                          ⠿
+                        <td className="drag-handle" data-label="Reorder">
+                          {/* The handle carries the keyboard path now that the up/down buttons are
+                              gone: dragging is pointer-only, so without this a step could not be
+                              reordered from the keyboard at all. Moves announce via the live
+                              region below, the same as a drag does. */}
+                          <button
+                            type="button"
+                            className="step-drag-handle"
+                            id={`step-handle-${i}`}
+                            title="Drag to reorder, or use the up and down arrow keys"
+                            aria-label={`Reorder step ${i + 1}: ${step.module}. Use the up and down arrow keys to move it.`}
+                            onKeyDown={(event) => {
+                              const to = event.key === 'ArrowUp' ? i - 1 : event.key === 'ArrowDown' ? i + 1 : null;
+                              if (to === null || to < 0 || to >= testCase.steps.length) return;
+                              event.preventDefault();
+                              reorderStep(i, to);
+                              // Rows are keyed by index, so focus would otherwise stay on the
+                              // position rather than following the step that just moved.
+                              requestAnimationFrame(() => document.getElementById(`step-handle-${to}`)?.focus());
+                            }}
+                          >
+                            ⠿
+                          </button>
                         </td>
                         <td className="step-index" data-label="Step">{i + 1}</td>
                         <td className="step-module" data-label="Module">{step.module}</td>
                         <td data-label="App ID">{step.appId && <span className="badge running">{step.appId}</span>}</td>
                         <td className="step-params" data-label="Parameters"><StepParamChips params={step.params} /></td>
                         <td className="step-actions" data-label="Actions">
-                          <button
-                            className="ghost icon-only"
-                            aria-label={`Move step ${i + 1}: ${step.module} up`}
-                            onClick={() => reorderStep(i, i - 1)}
-                            disabled={i === 0}
-                          >
-                            <ArrowUp size={14} aria-hidden="true" />
-                          </button>
-                          <button
-                            className="ghost icon-only"
-                            aria-label={`Move step ${i + 1}: ${step.module} down`}
-                            onClick={() => reorderStep(i, i + 1)}
-                            disabled={i === testCase.steps.length - 1}
-                          >
-                            <ArrowDown size={14} aria-hidden="true" />
-                          </button>
                           <button className="ghost" aria-label={`${editingIndex === i ? 'Close editor for' : 'Edit'} step ${i + 1}: ${step.module}`} onClick={() => setEditingIndex(editingIndex === i ? null : i)}>
                             {editingIndex === i ? 'Close' : 'Edit'}
                           </button>
