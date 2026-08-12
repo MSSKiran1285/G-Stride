@@ -3281,12 +3281,45 @@ button.neutral-solid {
   font-weight: 700;
 }
 
+/* Params now take the width the per-row Edit and Remove buttons used to occupy, so a long chip
+   list wraps far less. The cap is gone: this is the last column and has nothing to crowd. */
 .step-params {
-  max-width: 34rem;
+  width: 100%;
   color: var(--text-soft);
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
   font-size: 0.75rem;
   overflow-wrap: anywhere;
+}
+
+/* Actions live once in the toolbar beside the "Steps (n)" heading, as in the Object Library. */
+.steps-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.steps-heading-row .section-title {
+  margin: 0;
+}
+
+.steps-table .step-select {
+  width: 32px;
+  text-align: center;
+}
+
+.steps-table .step-select input {
+  cursor: pointer;
+  margin: 0;
+}
+
+.steps-table tbody tr {
+  cursor: pointer;
+}
+
+.steps-table tbody tr.selected-step > td {
+  background: var(--accent-soft);
 }
 
 /* StepParamChips sorts every param into literal / datavar / runstate. Those classes were being

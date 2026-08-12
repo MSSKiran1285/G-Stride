@@ -137,6 +137,51 @@ test('a step can be reordered from the keyboard using the drag handle, and the m
   );
 });
 
+// Edit and Remove moved off every row into one toolbar beside the "Steps (n)" heading, acting on
+// the step picked by its radio. Selection is by position, so removing a step has to clear or shift
+// it — otherwise the toolbar keeps pointing at a row that is now a different step.
+test('the steps toolbar removes the selected step and does not leave the selection dangling', async () => {
+  const file = 'step-toolbar-remove.json';
+  await withTestCase(
+    file,
+    {
+      name: 'Toolbar remove',
+      steps: [
+        { module: 'AlphaStepModule', params: {} },
+        { module: 'BetaStepModule', params: {} },
+        { module: 'GammaStepModule', params: {} },
+      ],
+    },
+    async () => {
+      await withBrowser(async (browser) => {
+        await withPage(browser, 'step-toolbar-remove', async (page) => {
+          await page.goto(`${BASE_URL}/compose/tests/${encodeURIComponent(file)}`);
+          const modules = () => page.locator('tbody .step-module').allTextContents();
+          const remove = page.getByRole('button', { name: 'REMOVE' });
+          await page.getByRole('radio', { name: /^Select step 1:/ }).waitFor();
+
+          // Nothing selected yet, so there is nothing for the toolbar to act on.
+          assert.equal(await remove.isDisabled(), true, 'REMOVE should be disabled with no step selected');
+          assert.equal(await page.getByRole('button', { name: 'EDIT' }).isDisabled(), true);
+
+          await page.getByRole('radio', { name: 'Select step 2: BetaStepModule' }).check();
+          assert.equal(await remove.isDisabled(), false);
+          await remove.click();
+
+          assert.deepEqual(await modules(), ['AlphaStepModule', 'GammaStepModule']);
+          // The removed step took the selection with it rather than handing it to its neighbour.
+          assert.equal(await remove.isDisabled(), true, 'selection should be cleared after removing the selected step');
+
+          await page.getByRole('button', { name: 'Save Test' }).click();
+          await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
+          const saved = await api.get(`/api/testcases/${file}`);
+          assert.deepEqual(saved.body.steps.map((s) => s.module), ['AlphaStepModule', 'GammaStepModule']);
+        });
+      });
+    },
+  );
+});
+
 test('BL-042: a step\'s free-form parameters can be reordered by keyboard, and the order persists', async () => {
   const file = 'bl042-sortable-fields.json';
   await withTestCase(
@@ -149,7 +194,9 @@ test('BL-042: a step\'s free-form parameters can be reordered by keyboard, and t
   await withBrowser(async (browser) => {
     await withPage(browser, 'bl042-sortable-fields', async (page) => {
       await page.goto(`${BASE_URL}/compose/tests/${encodeURIComponent(file)}`);
-      await page.getByRole('button', { name: /Edit step 1/ }).click();
+      // Steps are picked with a radio and acted on from the toolbar, as in the Object Library.
+      await page.getByRole('radio', { name: /^Select step 1:/ }).check();
+      await page.getByRole('button', { name: 'EDIT' }).click();
 
       const moveBetaUp = page.getByRole('button', { name: 'Move parameter beta up' });
       await moveBetaUp.waitFor();

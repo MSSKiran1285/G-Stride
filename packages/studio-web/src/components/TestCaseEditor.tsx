@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, ModuleCall, ModuleInfo, TestApplication, TestCase, TestContract, TestValidationIssue } from '../types';
 import { StepEditor } from './StepEditor';
@@ -83,6 +84,8 @@ export function TestCaseEditor({
   const [testCase, setTestCase] = useState<TestCase | null>(null);
   const [dirty, setDirty] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // Which row the toolbar's EDIT and REMOVE act on, mirroring the Object Library's control table.
+  const [selectedStep, setSelectedStep] = useState<number | null>(null);
   const [newFileName, setNewFileName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
@@ -232,6 +235,10 @@ export function TestCaseEditor({
   function removeStep(index: number) {
     if (!testCase) return;
     updateTestCase({ ...testCase, steps: testCase.steps.filter((_, i) => i !== index) });
+    // Selection is by position, so it has to be dropped or shifted — otherwise the toolbar would
+    // keep pointing at a row that is now a different step, or at one that no longer exists.
+    setSelectedStep((current) => (current === null || current === index ? null : current > index ? current - 1 : current));
+    setEditingIndex((current) => (current === null || current === index ? null : current > index ? current - 1 : current));
   }
 
   useEffect(() => {
@@ -246,6 +253,8 @@ export function TestCaseEditor({
     const [moved] = steps.splice(from, 1);
     steps.splice(to, 0, moved);
     updateTestCase({ ...testCase, steps });
+    // Selection is by position, so it follows the step that moved rather than staying on the row.
+    if (selectedStep === from) setSelectedStep(to);
     setReorderAnnouncement(`${moved.module} moved to step ${to + 1}.`);
   }
 
@@ -402,19 +411,41 @@ export function TestCaseEditor({
           )}
 
           <div>
-            <p className="section-title">
-              Steps ({testCase.steps.length}){dirty && <span className="hint"> — unsaved changes</span>}
-            </p>
+            {/* Same shape as the Object Library's control table: a row is picked with a radio and
+                the actions live once in the toolbar, rather than being repeated on every row. */}
+            <div className="steps-heading-row">
+              <p className="section-title">
+                Steps ({testCase.steps.length}){dirty && <span className="hint"> — unsaved changes</span>}
+              </p>
+              <div className="obj-lib-actions-group">
+                <button
+                  type="button"
+                  className="pill pill-neutral"
+                  disabled={selectedStep === null}
+                  onClick={() => setEditingIndex(editingIndex === selectedStep ? null : selectedStep)}
+                >
+                  {editingIndex !== null && editingIndex === selectedStep ? 'CLOSE' : 'EDIT'}
+                </button>
+                <button
+                  type="button"
+                  className="pill pill-danger"
+                  disabled={selectedStep === null}
+                  onClick={() => selectedStep !== null && removeStep(selectedStep)}
+                >
+                  <Trash2 size={13} /> REMOVE
+                </button>
+              </div>
+            </div>
             <TableFrame label="Test steps">
-              <table className="responsive-table">
+              <table className="responsive-table steps-table">
                 <thead>
                   <tr>
-                    <th></th>
+                    <th><span className="sr-only">Reorder</span></th>
+                    <th><span className="sr-only">Select</span></th>
                     <th>#</th>
                     <th>Module</th>
                     <th>App ID</th>
                     <th>Params</th>
-                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -438,7 +469,12 @@ export function TestCaseEditor({
                           setDragIndex(null);
                           setDragOverIndex(null);
                         }}
-                        className={[dragIndex === i ? 'dragging' : '', dragOverIndex === i ? 'drag-over' : ''].filter(Boolean).join(' ')}
+                        className={[
+                          dragIndex === i ? 'dragging' : '',
+                          dragOverIndex === i ? 'drag-over' : '',
+                          selectedStep === i ? 'selected-step' : '',
+                        ].filter(Boolean).join(' ')}
+                        onClick={() => setSelectedStep(i)}
                       >
                         <td className="drag-handle" data-label="Reorder">
                           {/* The handle carries the keyboard path now that the up/down buttons are
@@ -462,18 +498,19 @@ export function TestCaseEditor({
                             ⠿
                           </button>
                         </td>
+                        <td className="step-select" data-label="Select" onClick={(event) => event.stopPropagation()}>
+                          <input
+                            type="radio"
+                            name="selected-step"
+                            checked={selectedStep === i}
+                            onChange={() => setSelectedStep(i)}
+                            aria-label={`Select step ${i + 1}: ${step.module}`}
+                          />
+                        </td>
                         <td className="step-index" data-label="Step">{i + 1}</td>
                         <td className="step-module" data-label="Module">{step.module}</td>
                         <td data-label="App ID">{step.appId && <span className="badge running">{step.appId}</span>}</td>
                         <td className="step-params" data-label="Parameters"><StepParamChips params={step.params} /></td>
-                        <td className="step-actions" data-label="Actions">
-                          <button className="ghost" aria-label={`${editingIndex === i ? 'Close editor for' : 'Edit'} step ${i + 1}: ${step.module}`} onClick={() => setEditingIndex(editingIndex === i ? null : i)}>
-                            {editingIndex === i ? 'Close' : 'Edit'}
-                          </button>
-                          <button className="ghost danger" aria-label={`Remove step ${i + 1}: ${step.module}`} onClick={() => removeStep(i)}>
-                            Remove
-                          </button>
-                        </td>
                       </tr>
                       {editingIndex === i && (
                         <tr>

@@ -55,7 +55,9 @@ test('typed Test publishes with a dataset binding and round-trips executable Mod
 
       await page.reload();
       await page.locator('.test-lifecycle-bar').getByText('Published', { exact: true }).first().waitFor();
-      await page.getByRole('button', { name: 'Edit step 1: Wait' }).click();
+      // Steps are picked with a radio and acted on from the toolbar, as in the Object Library.
+      await page.getByRole('radio', { name: 'Select step 1: Wait' }).check();
+      await page.getByRole('button', { name: 'EDIT' }).click();
       assert.equal(await page.getByLabel('Value source for Milliseconds').inputValue(), 'dataset');
     });
   });
