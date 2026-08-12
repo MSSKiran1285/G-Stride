@@ -10,9 +10,9 @@ before(assertServerReachable);
 async function createBlankTest(page, name) {
   await page.goto(`${BASE_URL}/compose`);
   await page.getByRole('button', { name: 'Compose New Test' }).click();
-  await page.getByLabel('Business name').fill(name);
+  await page.getByLabel('Test name').fill(name);
   await page.getByRole('button', { name: 'Create Test' }).click();
-  await page.getByLabel('Test case name').waitFor();
+  await page.getByLabel('Test name').waitFor();
 }
 
 test('typed Test publishes with a dataset binding and round-trips executable ModuleCall JSON', async () => {

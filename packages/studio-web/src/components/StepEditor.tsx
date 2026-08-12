@@ -240,7 +240,7 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
           />
         ) : renderValueField(p, value)}
         {handoff.length > 0 && (
-          <p className="hint" style={{ margin: '0.2rem 0 0' }} title="Resolved from an earlier step in this test case, not a data file column">
+          <p className="hint" style={{ margin: '0.2rem 0 0' }} title="Resolved from an earlier step in this Test, not a data file column">
             ↩ captured earlier: {handoff.join(', ')}
           </p>
         )}

@@ -64,7 +64,7 @@ const navSteps: NavStep[] = [
     id: 'editor',
     label: 'Compose Tests',
     icon: <FileCode2 size={18} />,
-    desc: 'Build modular, executable test cases',
+    desc: 'Build modular, executable Tests',
   },
   {
     id: 'data',

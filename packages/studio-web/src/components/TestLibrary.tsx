@@ -200,7 +200,7 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
     event.preventDefault();
     const stem = fileStem(fileName || businessName);
     if (!businessName.trim() || !stem) {
-      setError('Enter a business name and a valid file name.');
+      setError('Enter a Test name and a valid identifier.');
       return;
     }
     if (startingPoint === 'template' && !templateFile) {
@@ -428,7 +428,7 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
             <form className="panel stack test-create-panel" onSubmit={createTest} aria-labelledby="newTestHeading">
               <div className="test-create-grid">
                 <div>
-                  <label htmlFor="new-test-business-name">Business name</label>
+                  <label htmlFor="new-test-business-name">Test name</label>
                   <input id="new-test-business-name" value={businessName} onChange={(event) => updateBusinessName(event.target.value)} placeholder="Create purchase order" autoFocus />
                 </div>
                 <div>

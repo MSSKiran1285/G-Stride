@@ -15,7 +15,7 @@ test('Compose: create a test case, add a step, save, reload, reopen (required Co
 
       // Create a new, clearly-marked throwaway Test through the guided library flow.
       await page.getByRole('button', { name: 'Compose New Test' }).click();
-      await page.getByLabel('Business name').fill('Regression Sample');
+      await page.getByLabel('Test name').fill('Regression Sample');
       // Process area is a folder dropdown now, so a brand-new area is created through it.
       await page.getByLabel('Process area').selectOption('__new_process_area__');
       await page.getByLabel('New folder name').fill('Quality Engineering');
@@ -28,7 +28,7 @@ test('Compose: create a test case, add a step, save, reload, reopen (required Co
       await page.getByText('Wait', { exact: true }).last().click();
       await page.locator('div:has(> label:text-is("Milliseconds")) input').fill('250');
       await page.getByRole('button', { name: 'Save step' }).click();
-      await page.getByRole('button', { name: 'Save test case' }).click();
+      await page.getByRole('button', { name: 'Save Test' }).click();
 
       await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
       assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
@@ -50,7 +50,7 @@ test("Compose: contextual capture opens over an object field and returns without
       await page.getByRole('button', { name: /Compose/ }).first().click();
 
       await page.getByRole('button', { name: 'Compose New Test' }).click();
-      await page.getByLabel('Business name').fill('Regression Contextual Capture');
+      await page.getByLabel('Test name').fill('Regression Contextual Capture');
       await page.getByRole('button', { name: 'Create Test' }).click();
       await page.waitForURL('**/compose/tests/regression-contextual-capture.json');
 

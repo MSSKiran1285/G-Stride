@@ -142,7 +142,7 @@ export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }
   async function save() {
     if (!group || !selectedFile) return;
     if (group.testCaseFiles.length === 0) {
-      setError('Add at least one test case file to this Business Process before saving.');
+      setError('Add at least one Test to this Business Process before saving.');
       return;
     }
     if (group.testCaseFiles.some((file) => !contracts[file])) {
@@ -357,10 +357,10 @@ export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }
           </div>
 
           <p className="section-title">
-            Test cases ({group.testCaseFiles.length}){dirty && <span className="hint"> — unsaved changes</span>}
+            Tests ({group.testCaseFiles.length}){dirty && <span className="hint"> — unsaved changes</span>}
           </p>
           <FileChainPicker
-            availableLabel="Available test cases"
+            availableLabel="Available Tests"
             selectedLabel="Business Process order"
             items={testCaseFiles}
             selected={group.testCaseFiles}

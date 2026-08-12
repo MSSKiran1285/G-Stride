@@ -13,8 +13,8 @@ test('artifact detail routes restore Compose, Data, Process, Object, and Audit c
       const cases = [
         {
           path: '/compose/tests/regression-sample.json',
-          ready: () => page.getByLabel('Test case name'),
-          value: async () => page.getByLabel('Test case name').inputValue(),
+          ready: () => page.getByLabel('Test name'),
+          value: async () => page.getByLabel('Test name').inputValue(),
           expected: 'Regression Sample',
         },
         {
@@ -86,7 +86,7 @@ test('browser back and forward restore route-selected artifacts', async () => {
       await page.goBack();
       assert.equal(new URL(page.url()).pathname, '/data');
       await page.goBack();
-      await page.getByLabel('Test case name').waitFor();
+      await page.getByLabel('Test name').waitFor();
       assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
       await page.goForward();
       await page.getByRole('button', { name: 'Open dataset' }).waitFor();

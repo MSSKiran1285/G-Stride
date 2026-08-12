@@ -25,7 +25,7 @@ function CompletionBanner({ run }: { run: RunStatus }) {
   const isBatch = run.mode === 'batch';
   const passedCount = isBatch ? groupResults.filter((g) => g.status === 'passed').length : results.filter((r) => r.status === 'passed').length;
   const total = isBatch ? groupResults.length : results.length;
-  const unit = isBatch ? 'process iteration' : run.mode === 'suite' ? 'test case' : 'iteration';
+  const unit = isBatch ? 'process iteration' : run.mode === 'suite' ? 'Test' : 'iteration';
   const plural = (n: number) => (n === 1 ? unit : `${unit}s`);
   const completedUnits = isBatch ? groupResults.length : results.length;
   const totalUnits = Math.max(1, run.totalUnits ?? completedUnits);
@@ -509,7 +509,7 @@ export function RunPanel({
             : mode === 'chain'
             ? 'A dependent, multi-stage business process (e.g. Create PO → Goods Receipt → Invoice) — one shared session, later steps can use values earlier ones captured. Loops every row of the data file: each row is one full pass through the whole chain. Stops at the first failure.'
             : mode === 'suite'
-            ? 'Independent scenarios that shouldn\'t affect each other (a regression pack: happy path, negative path, edge cases) — each its own fresh session. Loops every row × every test case. A failure in one does not stop the others.'
+            ? 'Independent scenarios that shouldn\'t affect each other (a regression pack: happy path, negative path, edge cases) — each its own fresh session. Loops every row × every Test. A failure in one does not stop the others.'
             : mode === 'batch'
             ? 'Independent, named business scenarios (Groups) run as one regression pack — each has its own App ID and data file. Every data row creates an isolated process iteration, and a failure in one Group does not prevent the next Group from running.'
             : 'Run a published Regression Pack exactly as authored, including mixed independent Tests and Business Processes with member-specific data and policies.'}
@@ -1064,9 +1064,9 @@ export function RunPanel({
                     <thead>
                       <tr>
                         <th>Group</th>
-                        <th>Total test cases</th>
+                        <th>Total Tests</th>
                         <th>Passed</th>
-                        <th>Failed test case</th>
+                        <th>Failed Test</th>
                         <th>Pass %</th>
                         <th>Duration</th>
                         <th>Evidence</th>
@@ -1102,12 +1102,12 @@ export function RunPanel({
               {(run.groupResults ?? []).map((g, gi) => (
                 <div key={gi} className="stack">
                   <p className="section-title">
-                    {g.name} — test case detail
+                    {g.name} — Test detail
                   </p>
                   <table>
                     <thead>
                       <tr>
-                        <th>Test case</th>
+                        <th>Test</th>
                         <th>Status</th>
                         <th>Duration</th>
                       </tr>

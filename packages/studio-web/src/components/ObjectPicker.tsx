@@ -219,7 +219,7 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
                 {highlightMatch(o.name, value)}
               </span>
               {usedNames.has(o.name) && (
-                <span className="badge informational" style={{ flex: '0 0 auto' }} title="Used for this exact module+param in another saved test case">
+                <span className="badge informational" style={{ flex: '0 0 auto' }} title="Used for this exact module+param in another saved Test">
                   used
                 </span>
               )}

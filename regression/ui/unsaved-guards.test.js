@@ -22,9 +22,9 @@ test('unsaved new test case is protected from shell navigation', async () => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Compose/ }).first().click();
       await page.getByRole('button', { name: 'Compose New Test' }).click();
-      await page.getByLabel('Business name').fill('Unsaved Test');
+      await page.getByLabel('Test name').fill('Unsaved Test');
       await page.getByRole('button', { name: 'Create Test' }).click();
-      await page.getByLabel('Test case name').fill('Unsaved Test edited locally');
+      await page.getByLabel('Test name').fill('Unsaved Test edited locally');
       await expectDiscardGuard(page, () => page.getByRole('button', { name: /Test Data/ }).first().click());
       await page.getByRole('heading', { name: 'Compose' }).waitFor();
     });
@@ -64,11 +64,11 @@ test('browser Back cannot discard an unsaved route-selected artifact without con
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Compose/ }).first().click();
       await page.getByRole('button', { name: 'Compose New Test' }).click();
-      await page.getByLabel('Business name').fill('Unsaved Back Route');
+      await page.getByLabel('Test name').fill('Unsaved Back Route');
       await page.getByRole('button', { name: 'Create Test' }).click();
       await page.waitForURL('**/compose/tests/unsaved-back-route.json');
       assert.equal(new URL(page.url()).pathname, '/compose/tests/unsaved-back-route.json');
-      await page.getByLabel('Test case name').fill('Unsaved Back Route edited locally');
+      await page.getByLabel('Test name').fill('Unsaved Back Route edited locally');
       await page.getByText(/unsaved changes/i).waitFor();
 
       const dialogPromise = page.waitForEvent('dialog');
@@ -79,7 +79,7 @@ test('browser Back cannot discard an unsaved route-selected artifact without con
       await backAttempt;
       await page.waitForURL('**/compose/tests/unsaved-back-route.json');
       assert.equal(new URL(page.url()).pathname, '/compose/tests/unsaved-back-route.json');
-      await page.getByLabel('Test case name').waitFor();
+      await page.getByLabel('Test name').waitFor();
     });
   });
 });

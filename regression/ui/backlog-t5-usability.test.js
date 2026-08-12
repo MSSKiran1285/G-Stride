@@ -127,7 +127,7 @@ test('a step can be reordered from the keyboard using the drag handle, and the m
           // position rather than following the step that moved.
           assert.equal(await page.evaluate(() => document.activeElement?.id), 'step-handle-0');
 
-          await page.getByRole('button', { name: 'Save test case' }).click();
+          await page.getByRole('button', { name: 'Save Test' }).click();
           await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
           const saved = await api.get(`/api/testcases/${file}`);
           assert.deepEqual(saved.body.steps.map((s) => s.module), ['SecondStepModule', 'FirstStepModule']);
@@ -160,7 +160,7 @@ test('BL-042: a step\'s free-form parameters can be reordered by keyboard, and t
       await page.getByRole('button', { name: 'Save step' }).click();
       // "Save step" only closes the step editor into React state; the Test itself still has to
       // be written for the ordering to have actually persisted, which is what is asserted below.
-      await page.getByRole('button', { name: 'Save test case' }).click();
+      await page.getByRole('button', { name: 'Save Test' }).click();
       await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
 
       // Persistence is the real assertion: the order has to survive the round trip through the

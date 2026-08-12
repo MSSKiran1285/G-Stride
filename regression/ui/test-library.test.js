@@ -103,7 +103,7 @@ test('guided creation copies a template and restores the stable Test route', asy
     await withPage(browser, 'test-library-template-create', async (page) => {
       await page.goto(`${BASE_URL}/compose`);
       await page.getByRole('button', { name: 'Compose New Test' }).click();
-      await page.getByLabel('Business name').fill('Template Clone Regression');
+      await page.getByLabel('Test name').fill('Template Clone Regression');
       await page.getByLabel('Test application').selectOption('Oracle');
       // Process area is a folder dropdown now, so a brand-new area is created through it.
       await page.getByLabel('Process area').selectOption('__new_process_area__');
@@ -114,12 +114,12 @@ test('guided creation copies a template and restores the stable Test route', asy
       await page.getByRole('button', { name: 'Create Test' }).click();
 
       await page.waitForURL('**/compose/tests/template-clone-regression.json');
-      assert.equal(await page.getByLabel('Test case name').inputValue(), 'Template Clone Regression');
+      assert.equal(await page.getByLabel('Test name').inputValue(), 'Template Clone Regression');
       assert.equal(await page.getByLabel('Test application').inputValue(), 'Oracle');
       await page.locator('.step-module', { hasText: 'Wait' }).waitFor();
 
       await page.reload();
-      await page.getByLabel('Test case name').waitFor();
+      await page.getByLabel('Test name').waitFor();
       assert.equal(await page.getByLabel('Test application').inputValue(), 'Oracle');
       await page.getByRole('button', { name: 'Back to Test Library' }).click();
 

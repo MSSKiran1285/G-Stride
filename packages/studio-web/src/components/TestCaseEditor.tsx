@@ -184,7 +184,7 @@ export function TestCaseEditor({
 
   function confirmDiscardIfDirty(): boolean {
     if (!dirty) return true;
-    return window.confirm('You have unsaved changes to this test case. Discard them?');
+    return window.confirm('You have unsaved changes to this Test. Discard them?');
   }
 
   function updateTestCase(next: TestCase) {
@@ -312,9 +312,9 @@ export function TestCaseEditor({
 
       {showLibraryControls && <div className="panel row">
         <div style={{ flex: 1 }}>
-          <label>Open test case</label>
+          <label>Open Test</label>
           <GroupedPicker
-            ariaLabel="Open test case"
+            ariaLabel="Open Test"
             value={selectedFile}
             onChange={openFile}
             items={files}
@@ -327,7 +327,7 @@ export function TestCaseEditor({
         <div style={{ flex: 1 }}>
           <label>Or create new</label>
           <div className="row">
-            <input aria-label="New test case file name" type="text" placeholder="my-new-scenario" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+            <input aria-label="New Test identifier" type="text" placeholder="my-new-scenario" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
             <button onClick={createNew}>Create</button>
           </div>
         </div>
@@ -355,8 +355,8 @@ export function TestCaseEditor({
 
           <div className="row" style={{ alignItems: 'flex-start', gap: '1rem' }}>
             <div style={{ flex: 1 }}>
-              <label>Test case name</label>
-              <input aria-label="Test case name" type="text" value={testCase.name} onChange={(e) => updateTestCase({ ...testCase, name: e.target.value })} />
+              <label>Test name</label>
+              <input aria-label="Test name" type="text" value={testCase.name} onChange={(e) => updateTestCase({ ...testCase, name: e.target.value })} />
             </div>
             <div style={{ flex: 1, maxWidth: '20rem' }}>
               <label>Application</label>
@@ -405,7 +405,7 @@ export function TestCaseEditor({
             <p className="section-title">
               Steps ({testCase.steps.length}){dirty && <span className="hint"> — unsaved changes</span>}
             </p>
-            <TableFrame label="Test case steps">
+            <TableFrame label="Test steps">
               <table className="responsive-table">
                 <thead>
                   <tr>
@@ -519,7 +519,7 @@ export function TestCaseEditor({
               + Add step
             </button>
             <button className="primary" onClick={save} disabled={saving}>
-              {saving ? 'Saving…' : 'Save test case'}
+              {saving ? 'Saving…' : 'Save Test'}
             </button>
             <button onClick={() => void publish()} disabled={saving || publishing}>
               {publishing ? 'Checking…' : 'Publish Test'}
