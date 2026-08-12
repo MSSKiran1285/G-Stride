@@ -7,6 +7,70 @@ const { withBrowser, withPage } = require('../lib/browserSession');
 
 before(assertServerReachable);
 
+// The Test this creates is removed again afterwards: the Test Library tree and the Automation
+// Overview both read the real workspace, so a stray draft would fail an unrelated file.
+async function withTestCase(file, testCase, body) {
+  await api.put(`/api/testcases/${file}`, testCase);
+  try {
+    await body();
+  } finally {
+    await api.delete(`/api/testcases/${file}?force=true`).catch(() => undefined);
+  }
+}
+
+// apiClient.get returns the whole response envelope, so the tag map is under .body.
+const tagOf = async (file) => (await api.get('/api/tags/testCase')).body[file];
+
+// Folder names distinctive enough that they cannot collide with fixture or workspace data.
+const SOURCE_AREA = 'DndSourceArea';
+const TARGET_AREA = 'DndTargetArea';
+
+test('a Test can be dragged between process area folders, and out of one entirely', async () => {
+  const file = 'dnd-move-regression.json';
+  // The test owns both folders rather than borrowing whatever the workspace happens to contain.
+  for (const area of [SOURCE_AREA, TARGET_AREA]) {
+    await api.post('/api/process-areas', { name: area }).catch(() => undefined);
+  }
+  try {
+    await withTestCase(file, { name: 'Drag And Drop Regression', application: 'SAP', version: 1, lifecycle: 'draft', steps: [] }, async () => {
+      await api.put(`/api/tags/testCase/${file}`, { processArea: SOURCE_AREA });
+
+      await withBrowser(async (browser) => {
+        await withPage(browser, 'test-library-drag-drop', async (page) => {
+          await page.goto(`${BASE_URL}/compose`);
+          const tree = page.locator('.obj-lib-tree-aside');
+          await tree.locator('.obj-tree-folder-row', { hasText: SOURCE_AREA }).click();
+
+          const dragged = tree.locator('.obj-tree-child-item', { hasText: 'Drag And Drop Regression' });
+          await dragged.waitFor();
+
+          // Dropping on a folder retags the Test to that process area.
+          await dragged.dragTo(tree.locator('.obj-tree-folder-row', { hasText: TARGET_AREA }));
+          await tree
+            .locator('.tree-folder-group', { hasText: TARGET_AREA })
+            .locator('.obj-tree-child-item', { hasText: 'Drag And Drop Regression' })
+            .waitFor();
+          assert.equal(await tagOf(file), TARGET_AREA, 'the drop should persist the new process area');
+
+          // (untagged) is a view of "no process area", so dropping there clears the tag rather than
+          // storing "(untagged)" as though it were a real folder.
+          const moved = tree.locator('.obj-tree-child-item', { hasText: 'Drag And Drop Regression' });
+          await moved.dragTo(tree.locator('.obj-tree-folder-row', { hasText: '(untagged)' }));
+          await tree
+            .locator('.tree-folder-group', { hasText: '(untagged)' })
+            .locator('.obj-tree-child-item', { hasText: 'Drag And Drop Regression' })
+            .waitFor();
+          assert.equal(await tagOf(file) || '', '', 'drop on (untagged) should clear the process area');
+        });
+      });
+    });
+  } finally {
+    for (const area of [SOURCE_AREA, TARGET_AREA]) {
+      await api.delete(`/api/process-areas/${encodeURIComponent(area)}`).catch(() => undefined);
+    }
+  }
+});
+
 test('Test Library filters by name, process area, application and readiness', async () => {
   await api.put('/api/tags/testCase/create-po.json', { processArea: 'Procurement' });
 

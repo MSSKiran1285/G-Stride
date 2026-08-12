@@ -60,6 +60,8 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
   const [registeredAreas, setRegisteredAreas] = useState<string[]>([]);
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [draggingFile, setDraggingFile] = useState<string | null>(null);
+  const [dragOverArea, setDragOverArea] = useState<string | null>(null);
 
   function loadLibrary() {
     setLoading(true);
@@ -73,6 +75,21 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
     api.listProcessAreas()
       .then(setRegisteredAreas)
       .catch(() => setRegisteredAreas([]));
+  }
+
+  // Dropping a Test on a folder retags it. (untagged) is a view of "no process area", so dropping
+  // there clears the tag rather than writing "(untagged)" as if it were a real folder name.
+  async function moveTestToArea(file: string, area: string) {
+    const target = area === UNTAGGED ? '' : area;
+    const current = items.find((item) => item.file === file);
+    if (current && (current.processArea ?? '') === target) return;
+    try {
+      await api.setTag('testCase', file, target);
+      loadLibrary();
+      setError(null);
+    } catch (reason) {
+      setError(String(reason));
+    }
   }
 
   async function createFolder() {
@@ -262,7 +279,27 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                 return (
                   <div key={area} className="tree-folder-group">
                     <div
-                      className={`obj-tree-folder-row ${isAreaActive ? 'active-domain' : ''}`}
+                      className={`obj-tree-folder-row ${isAreaActive ? 'active-domain' : ''} ${dragOverArea === area ? 'drop-target' : ''}`}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.dataTransfer.dropEffect = 'move';
+                        if (dragOverArea !== area) setDragOverArea(area);
+                      }}
+                      onDragLeave={(event) => {
+                        event.stopPropagation();
+                        setDragOverArea((current) => (current === area ? null : current));
+                      }}
+                      onDrop={async (event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        const file = event.dataTransfer.getData('text/plain') || draggingFile;
+                        setDragOverArea(null);
+                        setDraggingFile(null);
+                        if (!file) return;
+                        setExpandedAreas((prev) => ({ ...prev, [area]: true }));
+                        await moveTestToArea(file, area);
+                      }}
                       onClick={() => {
                         setComposing(false);
                         setSelectedArea(area);
@@ -299,8 +336,19 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                             return (
                               <div
                                 key={item.file}
-                                className={`obj-tree-child-item ${isOpen ? 'selected' : ''}`}
-                                title={item.file}
+                                draggable={true}
+                                onDragStart={(event) => {
+                                  event.stopPropagation();
+                                  event.dataTransfer.setData('text/plain', item.file);
+                                  event.dataTransfer.effectAllowed = 'move';
+                                  setDraggingFile(item.file);
+                                }}
+                                onDragEnd={() => {
+                                  setDraggingFile(null);
+                                  setDragOverArea(null);
+                                }}
+                                className={`obj-tree-child-item ${isOpen ? 'selected' : ''} ${draggingFile === item.file ? 'dragging-tree-item' : ''}`}
+                                title={`${item.file} — drag to move to another folder`}
                                 onClick={(event) => {
                                   event.stopPropagation();
                                   setSelectedArea(area);
