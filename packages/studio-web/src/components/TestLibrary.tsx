@@ -432,11 +432,18 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                   <input id="new-test-business-name" value={businessName} onChange={(event) => updateBusinessName(event.target.value)} placeholder="Create purchase order" autoFocus />
                 </div>
                 <div>
-                  <label htmlFor="new-test-file-name">File name</label>
-                  <div className="input-suffix">
-                    <input id="new-test-file-name" value={fileName} onChange={(event) => { setFileName(event.target.value); setFileNameEdited(true); }} placeholder="create-purchase-order" />
-                    <span>.json</span>
-                  </div>
+                  {/* Named for what it does rather than for how it is stored: this is the id that
+                      appears in the Test's stable route. The .json extension was shown next to it
+                      but is not a choice - every Test is JSON - so it only added noise. */}
+                  <label htmlFor="new-test-file-name">Identifier</label>
+                  <input
+                    id="new-test-file-name"
+                    value={fileName}
+                    onChange={(event) => { setFileName(event.target.value); setFileNameEdited(true); }}
+                    placeholder="create-purchase-order"
+                    aria-describedby="new-test-file-name-hint"
+                  />
+                  <span id="new-test-file-name-hint" className="hint field-hint">Used in the Test's stable route. Cannot be changed later.</span>
                 </div>
                 <div>
                   <label htmlFor="new-test-application">Test application</label>

@@ -12,6 +12,15 @@ const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGG
 
 /** One chip per param so a step with several params reads as a scannable list
  *  instead of one dense `key=value · key=value` run-on string. */
+// What each chip colour means. The distinction is the column's whole reason for existing: it shows
+// at a glance which steps are wired to the test data and which consume a value an earlier step
+// captured, neither of which is visible without opening every step in turn.
+const PARAM_KIND_HINT: Record<string, string> = {
+  literal: 'Fixed value',
+  datavar: 'Reads a value from the test data',
+  runstate: 'Uses a value captured by an earlier step',
+};
+
 function StepParamChips({ params }: { params: Record<string, string> }) {
   const entries = Object.entries(params).filter(([, v]) => v !== '');
   if (entries.length === 0) return <span className="hint">No params</span>;
@@ -22,7 +31,7 @@ function StepParamChips({ params }: { params: Record<string, string> }) {
         const isDataVar = value.includes('${') || value.includes('{{data.');
         const chipType = isRunState ? 'runstate' : isDataVar ? 'datavar' : 'literal';
         return (
-          <span className={`step-param-chip ${chipType}`} key={key}>
+          <span className={`step-param-chip ${chipType}`} key={key} title={`${PARAM_KIND_HINT[chipType]} — ${key}=${value}`}>
             <span className="step-param-chip-key">{key}</span>
             <span className="step-param-chip-value">={value}</span>
           </span>
@@ -85,6 +94,10 @@ export function TestCaseEditor({
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [reorderAnnouncement, setReorderAnnouncement] = useState('');
+  // Set when a keyboard reorder needs focus to follow the step it moved. Rows are keyed by index,
+  // so focus otherwise stays on the position. An effect rather than requestAnimationFrame: rAF is
+  // not guaranteed to run after React has committed the new row order, which made this racy.
+  const [pendingStepFocus, setPendingStepFocus] = useState<number | null>(null);
   // Keys produced by whole test cases that run BEFORE this one when it's a later stage
   // in a saved Group (Chain mode shares runState across a Group's stages) — see BL-07.
   // computeHandoffKeys alone only sees steps within the currently open file, which
@@ -220,6 +233,12 @@ export function TestCaseEditor({
     if (!testCase) return;
     updateTestCase({ ...testCase, steps: testCase.steps.filter((_, i) => i !== index) });
   }
+
+  useEffect(() => {
+    if (pendingStepFocus === null) return;
+    document.getElementById(`step-handle-${pendingStepFocus}`)?.focus();
+    setPendingStepFocus(null);
+  }, [pendingStepFocus]);
 
   function reorderStep(from: number, to: number) {
     if (!testCase || from === to) return;
@@ -437,9 +456,7 @@ export function TestCaseEditor({
                               if (to === null || to < 0 || to >= testCase.steps.length) return;
                               event.preventDefault();
                               reorderStep(i, to);
-                              // Rows are keyed by index, so focus would otherwise stay on the
-                              // position rather than following the step that just moved.
-                              requestAnimationFrame(() => document.getElementById(`step-handle-${to}`)?.focus());
+                              setPendingStepFocus(to);
                             }}
                           >
                             ⠿

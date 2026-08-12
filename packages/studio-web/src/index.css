@@ -3289,6 +3289,51 @@ button.neutral-solid {
   overflow-wrap: anywhere;
 }
 
+/* StepParamChips sorts every param into literal / datavar / runstate. Those classes were being
+   applied with nothing to render them, so the column collapsed into one undifferentiated monospace
+   run — the classification was computed and then thrown away. These rules are what make it legible:
+   separate chips, and the three kinds actually distinguishable. */
+.step-param-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.step-param-chip {
+  /* Deliberately not inline-flex: that blockifies the key and value spans, so the chip's text
+     becomes "ms\n=250" — it breaks copy-paste and any read of the rendered text. */
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-subtle);
+  color: var(--text-soft);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.step-param-chip-key {
+  font-weight: 600;
+  /* The chip allows breaking anywhere so a long value cannot overflow the column; the key must be
+     exempt, or "url" wraps one character per line. */
+  white-space: nowrap;
+}
+
+/* Reads a value from the test data. */
+.step-param-chip.datavar {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+/* Consumes a value an earlier step captured — the handoff between steps. */
+.step-param-chip.runstate {
+  color: var(--success-hover);
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+
 .step-actions {
   display: flex;
   align-items: center;
@@ -6453,6 +6498,18 @@ button.text-action:hover {
 .test-create-grid > div,
 .test-library-filters > div {
   min-width: 0;
+}
+
+/* The suffix wrapper used to supply this width. With the ".json" suffix gone the inputs are bare,
+   so they need it themselves or they shrink to their default size and sit short of the selects. */
+.test-create-grid input,
+.test-create-grid select {
+  width: 100%;
+}
+
+.test-create-grid .field-hint {
+  display: block;
+  margin-top: 0.2rem;
 }
 
 .input-suffix,
