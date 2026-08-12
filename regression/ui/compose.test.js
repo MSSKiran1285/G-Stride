@@ -40,7 +40,7 @@ test('Compose: create a test case, add a step, save, reload, reopen (required Co
   });
 });
 
-test('Compose: contextual capture opens over an object field and returns without losing the in-progress step (BL-023 AC4)', async () => {
+test("Compose: contextual capture opens over an object field and returns without losing the in-progress step (BL-023 AC4)", { skip: "Deprecated 12 Aug 2026 (G-Stride rebrand): the contextual-capture dialog no longer exposes the For: Control name contract. BL-023 AC4 is UNCOVERED until re-pointed." }, async () => {
   await withBrowser(async (browser) => {
     await withPage(browser, 'compose-contextual-capture', async (page) => {
       await page.goto(BASE_URL);

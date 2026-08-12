@@ -65,13 +65,13 @@ test('T1.3 shell and responsive tables remain operable at narrow widths', async 
       await page.goto(`${BASE_URL}/compose/tests/cleanup-abandoned-drafts.json`);
 
       for (const destination of [
-        'Automation Overview',
-        'Control Object Repository',
-        'Compose',
+        'Overview',
+        'Object Library',
+        'Compose Tests',
         'Test Data',
         'Processes & Packs',
         'Execution Center',
-        'Audit and Evidence',
+        'Evidence Vault',
       ]) {
         await page.getByRole('button', { name: destination, exact: true }).waitFor();
       }
@@ -104,12 +104,12 @@ test('T1.3 primary text and controls meet normal-text contrast in both themes', 
   await withBrowser(async (browser) => {
     await withPage(browser, 't1-theme-contrast', async (page) => {
       await page.goto(BASE_URL);
-      await page.locator('.canvas-overview-actions .primary').waitFor();
+      await page.locator('.step-nav-btn.primary').first().waitFor();
       for (const theme of ['light', 'dark']) {
         await page.evaluate((nextTheme) => document.documentElement.setAttribute('data-theme', nextTheme), theme);
         const colors = await page.evaluate(() => {
           const body = getComputedStyle(document.body);
-          const primary = getComputedStyle(document.querySelector('.canvas-overview-actions .primary'));
+          const primary = getComputedStyle(document.querySelector('.step-nav-btn.primary'));
           return {
             bodyText: body.color,
             bodyBackground: body.backgroundColor,

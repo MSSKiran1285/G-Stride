@@ -50,12 +50,12 @@ test('artifact detail routes restore Compose, Data, Process, Object, and Audit c
       }
 
       await page.goto(`${BASE_URL}/objects/routeApp/SubmitButton`);
-      await page.getByLabel('Select object SubmitButton').waitFor();
-      assert.equal(await page.getByLabel('Select object SubmitButton').isChecked(), true);
+      await page.getByLabel('Select control SubmitButton').waitFor();
+      assert.equal(await page.getByLabel('Select control SubmitButton').isChecked(), true);
       await page.reload();
-      await page.getByLabel('Select object SubmitButton').waitFor();
-      await page.waitForFunction(() => document.querySelector('input[aria-label="Select object SubmitButton"]')?.checked === true);
-      assert.equal(await page.getByLabel('Select object SubmitButton').isChecked(), true);
+      await page.getByLabel('Select control SubmitButton').waitFor();
+      await page.waitForFunction(() => document.querySelector('input[aria-label="Select control SubmitButton"]')?.checked === true);
+      assert.equal(await page.getByLabel('Select control SubmitButton').isChecked(), true);
 
       await page.goto(`${BASE_URL}/audit/runs/route-audit-run`);
       const auditDetail = page.getByLabel('Selected audit record');

@@ -10,13 +10,13 @@ before(assertServerReachable);
 const nvdaSettleMs = process.env.REGRESSION_NVDA === '1' ? 1200 : 0;
 
 const workspaces = [
-  { name: 'Automation Overview', path: '/' },
-  { name: 'Control Object Repository', path: '/objects' },
-  { name: 'Compose', path: '/compose' },
+  { name: 'Overview', path: '/' },
+  { name: 'Object Library', path: '/objects' },
+  { name: 'Compose Tests', path: '/compose' },
   { name: 'Test Data', path: '/data' },
   { name: 'Processes & Packs', path: '/process-suites' },
   { name: 'Execution Center', path: '/execute/new' },
-  { name: 'Audit and Evidence', path: '/audit-evidence' },
+  { name: 'Evidence Vault', path: '/audit-evidence' },
 ];
 
 async function openWorkspace(page, workspace) {

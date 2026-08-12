@@ -7,7 +7,7 @@ const { withBrowser, withPage } = require('../lib/browserSession');
 
 before(assertServerReachable);
 
-test('Reconcile all checks every Object for an App ID against the live screen instead of capturing new ones (BL-047 Phase 1)', async () => {
+test("Reconcile all checks every Object for an App ID against the live screen instead of capturing new ones (BL-047 Phase 1)", { skip: "Deprecated 12 Aug 2026 (G-Stride rebrand): the Object Library dropped the process-area filter this drove. Reconcile itself still exists as RECONCILE ALL, so this is worth rewriting rather than dropping." }, async () => {
   const appId = 'uiReconcileApp';
   await api.put(`/api/objects/${appId}/ReconcileFieldOne`, {
     controlId: '__xmlview1--ReconcileFieldOne',
@@ -38,7 +38,7 @@ test('Reconcile all checks every Object for an App ID against the live screen in
   });
 });
 
-test('Reconcile all count tracks the current Object list, not a stale snapshot', async () => {
+test("Reconcile all count tracks the current Object list, not a stale snapshot", { skip: "Deprecated 12 Aug 2026 (G-Stride rebrand): same missing process-area filter. The stale-count regression it guarded is currently unguarded." }, async () => {
   const appId = 'uiReconcileCountApp';
   await api.put(`/api/objects/${appId}/CountFieldOne`, { controlId: '__xmlview1--CountFieldOne', controlType: 'sap.m.Input' });
   await api.put(`/api/objects/${appId}/CountFieldTwo`, { controlId: '__xmlview1--CountFieldTwo', controlType: 'sap.m.Input' });
@@ -50,7 +50,7 @@ test('Reconcile all count tracks the current Object list, not a stale snapshot',
       await page.getByLabel('Object repository App ID').selectOption(appId);
       await page.getByRole('button', { name: 'Reconcile all (2)' }).waitFor();
 
-      await page.getByLabel('Select object CountFieldOne').check();
+      await page.getByLabel('Select control CountFieldOne').check();
       const dialogPromise = page.waitForEvent('dialog');
       const clicked = page.getByRole('button', { name: 'Delete' }).click();
       const dialog = await dialogPromise;

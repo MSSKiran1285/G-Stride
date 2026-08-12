@@ -119,7 +119,7 @@ test('BL-043: Mass Capture rows are individually selectable and survive a Highli
   await withBrowser(async (browser) => {
     await withPage(browser, 'bl043-multi-select', async (page) => {
       await page.goto(`${BASE_URL}/objects`);
-      await page.getByText('Scan a live screen').waitFor();
+      await page.getByRole('button', { name: 'Scan New Object' }).waitFor();
 
       // No live scan session exists in the isolated environment, so the curation list is empty
       // and the selection controls must not be offered at all — the same gating "Save all"
