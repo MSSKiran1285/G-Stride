@@ -1,76 +1,36 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Activity,
-  AlertTriangle,
-  ArrowRight,
-  ChevronRight,
-  CircleDollarSign,
-  Clock3,
-  FileCheck2,
-  FileCode2,
-  Layers,
+  Box,
+  Calendar,
+  Check,
+  ChevronDown,
+  Clock,
+  DollarSign,
+  ExternalLink,
+  FileText,
+  FlaskConical,
+  GitFork,
+  Info,
   Play,
-  Plus,
   RefreshCw,
-  Scan,
-  TimerReset,
-  TrendingUp,
+  ShieldCheck,
+  Sun,
 } from 'lucide-react';
 import { api } from '../api';
-import type { CapturedDocument, ImpactAssumptions, RunHistorySummary, TestLibraryItem, WorkspaceContext } from '../types';
-import { studioRoutes } from '../routes';
+import type { CapturedDocument, ImpactAssumptions, RunHistorySummary, WorkspaceContext } from '../types';
 import type { View } from '../App';
 
 interface AutomationOverviewProps {
   onNavigate: (view: View) => void;
   onNavigateToRoute: (path: string) => void;
-  /** HC-008: opens Audit and Evidence pre-filtered to failed runs, instead of the
-   *  unfiltered workspace onNavigate('documents') would land on. */
   onOpenFailedRuns: () => void;
   workspaceContext: WorkspaceContext | null;
 }
 
-/** HC-004: the workspace greeting reflects the local time of day instead of always saying morning. */
 function timeOfDayGreeting(hour: number): string {
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
-}
-
-function displayName(fileName: string) {
-  return fileName
-    .replace(/\.json$/i, '')
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((part) => (part.length <= 3 ? part.toUpperCase() : `${part[0].toUpperCase()}${part.slice(1)}`))
-    .join(' ');
-}
-
-function formatTimestamp(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return 'Time unavailable';
-  return new Intl.DateTimeFormat(undefined, {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date);
-}
-
-function formatDuration(run: RunHistorySummary) {
-  const start = new Date(run.startedAt).getTime();
-  const finish = new Date(run.finishedAt).getTime();
-  if (!Number.isFinite(start) || !Number.isFinite(finish) || finish < start) return 'Duration unavailable';
-  const totalSeconds = Math.round((finish - start) / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-}
-
-function executionName(run: RunHistorySummary) {
-  if (run.testCaseNames.length === 1) return displayName(run.testCaseNames[0]);
-  if (run.testCaseNames.length > 1) return `${run.testCaseNames.length} test cases`;
-  return 'Execution';
 }
 
 interface ExecutionImpact {
@@ -210,63 +170,68 @@ function formatHours(value: number) {
 }
 
 function formatCurrency(value: number) {
-  return new Intl.NumberFormat(undefined, {
+  const formatted = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     maximumFractionDigits: 0,
   }).format(value);
+  return formatted.startsWith('$') ? `US${formatted}` : formatted;
 }
 
-export interface WeeklyTrendBucket {
-  weekStart: string;
+export interface WeeklyTrendBucket5Weeks {
+  weekLabel: string;
   total: number;
   passed: number;
   failed: number;
   passRate: number | null;
+  automationHours: number;
 }
 
-/** Buckets runs into real calendar weeks (Monday-start, UTC) — every bucket's counts come
- *  directly from actual recorded runs; a week with no executions is simply absent rather than
- *  interpolated or projected (BL-019 AC3: "never fabricate trends"). */
-export function computeWeeklyTrend(runs: RunHistorySummary[]): WeeklyTrendBucket[] {
-  const startOfWeek = (iso: string): string | null => {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return null;
-    const day = (date.getUTCDay() + 6) % 7; // 0 = Monday
-    const monday = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() - day));
-    return monday.toISOString().slice(0, 10);
-  };
-  const buckets = new Map<string, { total: number; passed: number; failed: number }>();
-  for (const run of runs) {
-    const week = startOfWeek(run.startedAt);
-    if (!week) continue;
-    const bucket = buckets.get(week) ?? { total: 0, passed: 0, failed: 0 };
-    bucket.total += 1;
-    if (run.status === 'passed') bucket.passed += 1;
-    if (run.status === 'failed') bucket.failed += 1;
-    buckets.set(week, bucket);
+export function computeWeeklyTrend5Weeks(runs: RunHistorySummary[]): WeeklyTrendBucket5Weeks[] {
+  const now = new Date();
+  const dayOfWeek = (now.getUTCDay() + 6) % 7; // 0 = Monday
+  const currentMonday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - dayOfWeek));
+
+  const weekBuckets: { mondayIso: string; sundayIso: string; label: string }[] = [];
+  for (let i = 0; i <= 4; i++) {
+    const monday = new Date(currentMonday.getTime() - i * 7 * 86_400_000);
+    const sunday = new Date(monday.getTime() + 6 * 86_400_000);
+
+    const mStr = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(monday);
+    const sStr = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(sunday);
+    const label = `${mStr} – ${sStr}`;
+
+    weekBuckets.push({
+      mondayIso: monday.toISOString().slice(0, 10),
+      sundayIso: sunday.toISOString().slice(0, 10),
+      label,
+    });
   }
-  return [...buckets.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([weekStart, bucket]) => ({
-      weekStart,
-      total: bucket.total,
-      passed: bucket.passed,
-      failed: bucket.failed,
-      passRate: bucket.total > 0 ? (bucket.passed / bucket.total) * 100 : null,
-    }));
-}
 
-function formatWeekLabel(weekStart: string): string {
-  const date = new Date(`${weekStart}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime())) return weekStart;
-  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date);
+  return weekBuckets.map((wb) => {
+    const matching = runs.filter((r) => {
+      const dateStr = r.startedAt.slice(0, 10);
+      return dateStr >= wb.mondayIso && dateStr <= wb.sundayIso;
+    });
+    const total = matching.length;
+    const passed = matching.filter((r) => r.status === 'passed').length;
+    const failed = matching.filter((r) => r.status === 'failed').length;
+    const passRate = total > 0 ? (passed / total) * 100 : null;
+    const automationHours = matching.reduce((sum, r) => sum + runDurationHours(r), 0);
+
+    return {
+      weekLabel: wb.label,
+      total,
+      passed,
+      failed,
+      passRate,
+      automationHours,
+    };
+  });
 }
 
 const IMPACT_WINDOW_SIZE = 500;
 
-/** Used only while the saved preference is still loading (or unavailable) — see
- *  OverviewPreferencesStore's identical defaults on the server. */
 const DEFAULT_IMPACT_ASSUMPTIONS: ImpactAssumptions = {
   manualMinutesPerTest: 12,
   manualDurationMultiplier: 3,
@@ -283,19 +248,49 @@ const DEFAULT_IMPACT_ASSUMPTIONS: ImpactAssumptions = {
   otherAutomationCost: 0,
 };
 
-export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailedRuns, workspaceContext }: AutomationOverviewProps) {
+function dynamicGreetingSubhead(hour: number): string {
+  const morningQuestions = [
+    'What SAP workflows would you like to test or automate today?',
+    'Where should we focus your test automation today?',
+    'How can I help you accelerate your S/4HANA quality today?',
+    'Ready to inspect your SAP test coverage and execution impact?',
+    'Which SAP module or business process would you like to validate today?',
+  ];
+
+  const afternoonQuestions = [
+    'What SAP business processes are we validating this afternoon?',
+    'How can I help you streamline your test executions today?',
+    'Where would you like to build or run automated tests next?',
+    'Ready to review your latest SAP execution impact and test metrics?',
+    'Which SAP test scenario would you like to execute next?',
+  ];
+
+  const eveningQuestions = [
+    'Ready to review today\'s SAP test execution results and evidence?',
+    'What compliance or execution records would you like to inspect tonight?',
+    'Here is your end-of-day SAP automation impact and test summary.',
+    'Where would you like to pick up your SAP automation next?',
+    'How did your SAP automation runs perform today?',
+  ];
+
+  const pool = hour < 12 ? morningQuestions : hour < 17 ? afternoonQuestions : eveningQuestions;
+  const randomIndex = Math.floor(Math.random() * pool.length);
+  return pool[randomIndex];
+}
+
+export function AutomationOverview({ onNavigate, workspaceContext }: AutomationOverviewProps) {
   const [testCases, setTestCases] = useState<string[]>([]);
-  const [testLibrary, setTestLibrary] = useState<TestLibraryItem[]>([]);
   const [groups, setGroups] = useState<string[]>([]);
   const [objectsCount, setObjectsCount] = useState<number | null>(null);
   const [documents, setDocuments] = useState<CapturedDocument[]>([]);
   const [allRuns, setAllRuns] = useState<RunHistorySummary[]>([]);
-  const [selectedTestCase, setSelectedTestCase] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [refreshedAt, setRefreshedAt] = useState<Date | null>(null);
-  const [dateRangeFilter, setDateRangeFilter] = useState<'7' | '30' | '90' | 'all'>('all');
+  const [dateRangeFilter, setDateRangeFilter] = useState<'30' | '60' | '90' | 'all' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
+  const [showDateDropdown, setShowDateDropdown] = useState<boolean>(false);
   const [appIdFilter, setAppIdFilter] = useState('');
   const [impactAssumptions, setImpactAssumptions] = useState<ImpactAssumptions | null>(null);
 
@@ -306,9 +301,8 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailed
       setLoading(true);
       setLoadError(null);
 
-      const [testCasesResult, testLibraryResult, groupsResult, appIdsResult, documentsResult, runsResult, assumptionsResult] = await Promise.allSettled([
+      const [testCasesResult, groupsResult, appIdsResult, documentsResult, runsResult, assumptionsResult] = await Promise.allSettled([
         api.listTestCases(),
-        api.listTestLibrary(),
         api.listGroups(),
         api.listAppIds(),
         api.listDocuments(),
@@ -317,25 +311,12 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailed
       ]);
 
       if (!active) return;
-      // HC-009: name exactly which section failed instead of a blanket "some data is
-      // unavailable" that never said what "some" meant.
       const unavailableSections: string[] = [];
 
-      if (testCasesResult.status === 'fulfilled') {
-        setTestCases(testCasesResult.value);
-        setSelectedTestCase((current) => (
-          current && testCasesResult.value.includes(current) ? current : (testCasesResult.value[0] ?? null)
-        ));
-      } else {
-        setTestCases([]);
-        setSelectedTestCase(null);
-        unavailableSections.push('Tests');
-      }
-
-      if (testLibraryResult.status === 'fulfilled') setTestLibrary(testLibraryResult.value);
+      if (testCasesResult.status === 'fulfilled') setTestCases(testCasesResult.value);
       else {
-        setTestLibrary([]);
-        unavailableSections.push('Test Library');
+        setTestCases([]);
+        unavailableSections.push('Tests');
       }
 
       if (groupsResult.status === 'fulfilled') setGroups(groupsResult.value);
@@ -380,7 +361,6 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailed
         setLoadError(`${unavailableSections.join(', ')} could not be loaded. You can retry without leaving this page.`);
       }
       setLoading(false);
-      setRefreshedAt(new Date());
     }
 
     void loadOverview();
@@ -389,8 +369,6 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailed
     };
   }, [reloadKey]);
 
-  // BL-019 AC2: persisted as an owner workspace preference, debounced so dragging through a
-  // number input doesn't fire a PUT per keystroke.
   useEffect(() => {
     if (!impactAssumptions) return;
     const timer = setTimeout(() => {
@@ -399,87 +377,114 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailed
     return () => clearTimeout(timer);
   }, [impactAssumptions]);
 
-  const recentRuns = useMemo(() => allRuns.slice(0, 4), [allRuns]);
-
-  const selectedRunCount = useMemo(
-    () => selectedTestCase
-      ? allRuns.filter((run) => run.testCaseNames.includes(selectedTestCase)).length
-      : 0,
-    [allRuns, selectedTestCase],
-  );
-
-  const selectedEvidenceCount = useMemo(
-    () => selectedTestCase
-      ? documents.filter((document) => document.testCaseName === selectedTestCase).length
-      : 0,
-    [documents, selectedTestCase],
-  );
-
-  // The App ID filter scopes recorded EXECUTIONS, so its options come from the runs
-  // themselves — not from the unrelated Object Repository app-id list (api.listAppIds()),
-  // which only reflects which apps have saved controls, not which apps have been run.
   const runAppIds = useMemo(
     () => [...new Set(allRuns.map((run) => run.appId).filter(Boolean))].sort(),
     [allRuns],
   );
 
   const filteredRuns = useMemo(() => {
-    const cutoff = dateRangeFilter === 'all' ? null : Date.now() - Number(dateRangeFilter) * 86_400_000;
+    let startMs: number | null = null;
+    let endMs: number | null = null;
+
+    if (dateRangeFilter === 'custom') {
+      if (customStartDate) startMs = new Date(customStartDate + 'T00:00:00').getTime();
+      if (customEndDate) endMs = new Date(customEndDate + 'T23:59:59.999').getTime();
+    } else if (dateRangeFilter !== 'all') {
+      const days = Number(dateRangeFilter);
+      startMs = Date.now() - days * 86_400_000;
+    }
+
     return allRuns.filter((run) => {
       if (appIdFilter && run.appId !== appIdFilter) return false;
-      if (cutoff !== null && new Date(run.startedAt).getTime() < cutoff) return false;
+      const runMs = new Date(run.startedAt).getTime();
+      if (startMs !== null && Number.isFinite(startMs) && runMs < startMs) return false;
+      if (endMs !== null && Number.isFinite(endMs) && runMs > endMs) return false;
       return true;
     });
-  }, [allRuns, dateRangeFilter, appIdFilter]);
+  }, [allRuns, dateRangeFilter, customStartDate, customEndDate, appIdFilter]);
 
   const executionImpact = useMemo(
     () => calculateExecutionImpact(filteredRuns, impactAssumptions ?? DEFAULT_IMPACT_ASSUMPTIONS),
     [filteredRuns, impactAssumptions],
   );
 
-  const weeklyTrend = useMemo(() => computeWeeklyTrend(filteredRuns), [filteredRuns]);
+  const weeklyTrend5Weeks = useMemo(() => computeWeeklyTrend5Weeks(filteredRuns), [filteredRuns]);
 
-  const recentFailureCount = useMemo(
-    () => allRuns.filter((run) => run.status === 'failed' && Date.now() - new Date(run.startedAt).getTime() <= 7 * 86_400_000).length,
-    [allRuns],
-  );
-  const draftTestCount = useMemo(() => testLibrary.filter((item) => item.status === 'draft').length, [testLibrary]);
-  const unpublishedTestCount = useMemo(() => testLibrary.filter((item) => item.status === 'ready').length, [testLibrary]);
+  // Always display user name in Camel Case (Capitalized Case)
+  const rawUserName = workspaceContext?.owner?.name
+    ? workspaceContext.owner.name.split(' ')[0]
+    : 'Kiran';
+  const userName = rawUserName.charAt(0).toUpperCase() + rawUserName.slice(1).toLowerCase();
+
+  const actualEvidenceCount = allRuns.length || documents.length;
+  const now = new Date();
+
+  const [greetingSubhead] = useState(() => dynamicGreetingSubhead(now.getHours()));
 
   return (
-    <div className="canvas-overview">
-      <header className="canvas-overview-intro">
-        <div>
-          <span className="canvas-eyebrow">Your automation workspace</span>
-          <h1>{timeOfDayGreeting(new Date().getHours())}</h1>
-          <p>Continue recent work, review executions, or start a new test.</p>
+    <div className="ref-overview-canvas">
+      {/* Reference Header */}
+      <header className="ref-overview-header">
+        <div className="ref-greeting-group">
+          <h1>
+            Good {timeOfDayGreeting(now.getHours()).replace('Good ', '').toLowerCase()}, {userName}
+          </h1>
+          <p>{greetingSubhead}</p>
         </div>
-        <div className="canvas-overview-actions">
-          <button type="button" className="primary" onClick={() => onNavigate('editor')}>
-            <Plus size={17} aria-hidden="true" /> Create test
-          </button>
-          <button type="button" className="outline" onClick={() => onNavigate('run')}>
-            <Play size={16} aria-hidden="true" /> New execution
-          </button>
+
+        <div className="ref-time-widget">
+          <div className="ref-time-row">
+            <Sun size={18} className="ref-sun-icon" />
+            <span className="ref-time-text">
+              {new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).format(now)}
+            </span>
+          </div>
+          <span className="ref-date-text">
+            {new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).format(now)}
+          </span>
         </div>
       </header>
 
-      <div className="canvas-summary" aria-label="Workspace summary">
-        <button type="button" onClick={() => onNavigate('editor')}>
-          <FileCode2 size={17} aria-hidden="true" />
-          <span><strong>{loading ? '—' : testCases.length}</strong> Tests</span>
+      {/* Top 4 Summary Strip */}
+      <div className="ref-summary-strip" aria-label="Workspace summary">
+        <button type="button" className="ref-summary-card" onClick={() => onNavigate('editor')}>
+          <div className="ref-summary-icon-wrapper test-blue">
+            <FlaskConical size={20} />
+          </div>
+          <div className="ref-summary-content">
+            <strong className="ref-summary-num">{loading ? '—' : testCases.length}</strong>
+            <span className="ref-summary-label">Tests</span>
+          </div>
         </button>
-        <button type="button" onClick={() => onNavigate('groups')}>
-          <Layers size={17} aria-hidden="true" />
-          <span><strong>{loading ? '—' : groups.length}</strong> Business Processes</span>
+
+        <button type="button" className="ref-summary-card" onClick={() => onNavigate('groups')}>
+          <div className="ref-summary-icon-wrapper process-green">
+            <GitFork size={20} />
+          </div>
+          <div className="ref-summary-content">
+            <strong className="ref-summary-num">{loading ? '—' : groups.length}</strong>
+            <span className="ref-summary-label">Business Processes</span>
+          </div>
         </button>
-        <button type="button" onClick={() => onNavigate('objects')}>
-          <Scan size={17} aria-hidden="true" />
-          <span><strong>{loading ? '—' : (objectsCount ?? '—')}</strong> Controls</span>
+
+        <button type="button" className="ref-summary-card" onClick={() => onNavigate('objects')}>
+          <div className="ref-summary-icon-wrapper control-purple">
+            <ShieldCheck size={20} />
+          </div>
+          <div className="ref-summary-content">
+            <strong className="ref-summary-num">{loading ? '—' : (objectsCount ?? '—')}</strong>
+            <span className="ref-summary-label">Controls</span>
+          </div>
         </button>
-        <button type="button" onClick={() => onNavigate('documents')}>
-          <FileCheck2 size={17} aria-hidden="true" />
-          <span><strong>{loading ? '—' : documents.length}</strong> Evidence records</span>
+
+        <button type="button" className="ref-summary-card" onClick={() => onNavigate('documents')}>
+          <div className="ref-summary-icon-wrapper evidence-blue">
+            <FileText size={20} />
+          </div>
+          <div className="ref-summary-content">
+            <strong className="ref-summary-num">{loading ? '—' : actualEvidenceCount}</strong>
+            <span className="ref-summary-label">Evidence records</span>
+          </div>
         </button>
       </div>
 
@@ -492,35 +497,7 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailed
         </div>
       )}
 
-      {!loading && (recentFailureCount > 0 || draftTestCount > 0 || unpublishedTestCount > 0) && (
-        <section className="canvas-attention" aria-labelledby="attention-heading">
-          <div className="canvas-attention-heading">
-            <AlertTriangle size={18} aria-hidden="true" />
-            <h2 id="attention-heading">Needs attention</h2>
-          </div>
-          <div className="canvas-attention-list">
-            {recentFailureCount > 0 && (
-              <button type="button" className="canvas-attention-row" onClick={onOpenFailedRuns}>
-                <span>{recentFailureCount} execution{recentFailureCount === 1 ? '' : 's'} failed in the last 7 days</span>
-                <span className="text-action">Open Audit and Evidence <ArrowRight size={14} aria-hidden="true" /></span>
-              </button>
-            )}
-            {draftTestCount > 0 && (
-              <button type="button" className="canvas-attention-row" onClick={() => onNavigate('editor')}>
-                <span>{draftTestCount} draft test{draftTestCount === 1 ? '' : 's'} without steps yet</span>
-                <span className="text-action">Open Test Library <ArrowRight size={14} aria-hidden="true" /></span>
-              </button>
-            )}
-            {unpublishedTestCount > 0 && (
-              <button type="button" className="canvas-attention-row" onClick={() => onNavigate('editor')}>
-                <span>{unpublishedTestCount} test{unpublishedTestCount === 1 ? '' : 's'} not yet published (blocked from Regression Packs)</span>
-                <span className="text-action">Open Test Library <ArrowRight size={14} aria-hidden="true" /></span>
-              </button>
-            )}
-          </div>
-        </section>
-      )}
-
+      {/* Execution Impact Section */}
       <ExecutionImpactDashboard
         impact={executionImpact}
         assumptions={impactAssumptions ?? DEFAULT_IMPACT_ASSUMPTIONS}
@@ -528,170 +505,19 @@ export function AutomationOverview({ onNavigate, onNavigateToRoute, onOpenFailed
         onAssumptionsChange={setImpactAssumptions}
         dateRangeFilter={dateRangeFilter}
         onDateRangeChange={setDateRangeFilter}
+        customStartDate={customStartDate}
+        onCustomStartDateChange={setCustomStartDate}
+        customEndDate={customEndDate}
+        onCustomEndDateChange={setCustomEndDate}
+        showDateDropdown={showDateDropdown}
+        onToggleDateDropdown={setShowDateDropdown}
         appIdFilter={appIdFilter}
         onAppIdFilterChange={setAppIdFilter}
         appIds={runAppIds}
-        windowSize={IMPACT_WINDOW_SIZE}
-        totalRunsAvailable={allRuns.length}
-        refreshedAt={refreshedAt}
-        weeklyTrend={weeklyTrend}
+        weeklyTrend={weeklyTrend5Weeks}
+        onNavigate={onNavigate}
+        allRuns={allRuns}
       />
-
-      <div className="canvas-overview-layout">
-        <div className="canvas-overview-main">
-          <section className="canvas-section" aria-labelledby="continue-heading">
-            <div className="canvas-section-heading">
-              <div>
-                <h2 id="continue-heading">Pick up where you left off</h2>
-                <p>Saved test cases available in this workspace</p>
-              </div>
-              <button type="button" className="text-action" onClick={() => onNavigate('editor')}>
-                View all <ArrowRight size={14} aria-hidden="true" />
-              </button>
-            </div>
-
-            <div className="canvas-artifact-list">
-              {loading ? (
-                <div className="canvas-empty-state">Loading saved work…</div>
-              ) : testCases.length > 0 ? (
-                testCases.slice(0, 5).map((testCase) => (
-                  <button
-                    type="button"
-                    key={testCase}
-                    className={`canvas-artifact-row ${selectedTestCase === testCase ? 'selected' : ''}`}
-                    onClick={() => setSelectedTestCase(testCase)}
-                    aria-pressed={selectedTestCase === testCase}
-                  >
-                    <span className="canvas-row-icon"><FileCode2 size={18} aria-hidden="true" /></span>
-                    <span className="canvas-row-content">
-                      <strong>{displayName(testCase)}</strong>
-                      <small>Saved test case · {testCase}</small>
-                    </span>
-                    <ChevronRight size={17} aria-hidden="true" />
-                  </button>
-                ))
-              ) : (
-                <div className="canvas-empty-state">
-                  <FileCode2 size={22} aria-hidden="true" />
-                  <strong>No test cases yet</strong>
-                  <span>Create your first test to begin building this workspace.</span>
-                  <button type="button" className="text-action" onClick={() => onNavigate('editor')}>Create a test</button>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <div className="canvas-lower-grid">
-            <section className="canvas-section" aria-labelledby="executions-heading">
-              <div className="canvas-section-heading">
-                <div>
-                  <h2 id="executions-heading">Recent executions</h2>
-                  <p>Latest immutable run records</p>
-                </div>
-                <button type="button" className="text-action" onClick={() => onNavigate('documents')}>
-                  History <ArrowRight size={14} aria-hidden="true" />
-                </button>
-              </div>
-
-              <div className="canvas-run-list">
-                {loading ? (
-                  <div className="canvas-empty-state compact">Loading execution history…</div>
-                ) : recentRuns.length > 0 ? (
-                  recentRuns.map((run) => (
-                    <button type="button" key={run.id} className="canvas-run-row" onClick={() => onNavigateToRoute(studioRoutes.auditRun(run.id))}>
-                      <span className={`run-status-dot ${run.status}`} aria-hidden="true" />
-                      <span className="canvas-row-content">
-                        <strong>{executionName(run)}</strong>
-                        <small>{formatTimestamp(run.startedAt)} · {formatDuration(run)}</small>
-                      </span>
-                      <span className={`run-status-text ${run.status}`}>{run.status}</span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="canvas-empty-state compact">
-                    <Play size={21} aria-hidden="true" />
-                    <strong>No recorded executions</strong>
-                    <span>Completed runs will appear here.</span>
-                  </div>
-                )}
-              </div>
-            </section>
-
-            <section className="canvas-section" aria-labelledby="evidence-heading">
-              <div className="canvas-section-heading">
-                <div>
-                  <h2 id="evidence-heading">Captured evidence</h2>
-                  <p>Evidence saved by recorded runs</p>
-                </div>
-              </div>
-
-              {loading ? (
-                <div className="canvas-empty-state compact">Loading evidence…</div>
-              ) : documents.length > 0 ? (
-                <div className="canvas-evidence-summary">
-                  <span className="canvas-evidence-icon"><FileCheck2 size={24} aria-hidden="true" /></span>
-                  <strong>{documents.length} evidence record{documents.length === 1 ? '' : 's'}</strong>
-                  <span>Across {new Set(documents.map((document) => document.testCaseName)).size} test case{new Set(documents.map((document) => document.testCaseName)).size === 1 ? '' : 's'}</span>
-                  <button type="button" className="text-action" onClick={() => onNavigate('documents')}>Open audit and evidence</button>
-                </div>
-              ) : (
-                <div className="canvas-empty-state compact">
-                  <FileCheck2 size={21} aria-hidden="true" />
-                  <strong>No evidence captured yet</strong>
-                  <span>Evidence from recorded executions will appear here.</span>
-                </div>
-              )}
-            </section>
-          </div>
-        </div>
-
-        <aside className="canvas-inspector" aria-label="Selected test case details">
-          {selectedTestCase ? (
-            <>
-              <div className="canvas-inspector-header">
-                <div>
-                  <span className="canvas-eyebrow">Test case</span>
-                  <h2>{displayName(selectedTestCase)}</h2>
-                </div>
-              </div>
-
-              <div className="canvas-inspector-actions">
-                <button type="button" className="primary" onClick={() => onNavigateToRoute(studioRoutes.test(selectedTestCase))}>
-                  Open in Compose
-                </button>
-                <button type="button" className="outline" onClick={() => onNavigate('run')}>
-                  <Play size={15} aria-hidden="true" /> Execute
-                </button>
-              </div>
-
-              <dl className="canvas-detail-list">
-                <div>
-                  <dt>Source file</dt>
-                  <dd>{selectedTestCase}</dd>
-                </div>
-                <div>
-                  <dt>Recorded executions</dt>
-                  <dd>{selectedRunCount}</dd>
-                </div>
-                <div>
-                  <dt>Evidence records</dt>
-                  <dd>{selectedEvidenceCount}</dd>
-                </div>
-              </dl>
-
-              <div className="canvas-inspector-note">
-                <TriangleTargetMessage context={workspaceContext} />
-              </div>
-            </>
-          ) : (
-            <div className="canvas-empty-state">
-              <FileCode2 size={23} aria-hidden="true" />
-              <strong>No test selected</strong>
-              <span>Select a saved test to see its workspace context.</span>
-            </div>
-          )}
-        </aside>
-      </div>
     </div>
   );
 }
@@ -701,15 +527,20 @@ interface ExecutionImpactDashboardProps {
   assumptions: ImpactAssumptions;
   loading: boolean;
   onAssumptionsChange: (assumptions: ImpactAssumptions) => void;
-  dateRangeFilter: '7' | '30' | '90' | 'all';
-  onDateRangeChange: (value: '7' | '30' | '90' | 'all') => void;
+  dateRangeFilter: '30' | '60' | '90' | 'all' | 'custom';
+  onDateRangeChange: (value: '30' | '60' | '90' | 'all' | 'custom') => void;
+  customStartDate: string;
+  onCustomStartDateChange: (val: string) => void;
+  customEndDate: string;
+  onCustomEndDateChange: (val: string) => void;
+  showDateDropdown: boolean;
+  onToggleDateDropdown: (show: boolean) => void;
   appIdFilter: string;
   onAppIdFilterChange: (value: string) => void;
   appIds: string[];
-  windowSize: number;
-  totalRunsAvailable: number;
-  refreshedAt: Date | null;
-  weeklyTrend: WeeklyTrendBucket[];
+  weeklyTrend: WeeklyTrendBucket5Weeks[];
+  onNavigate: (view: View) => void;
+  allRuns: RunHistorySummary[];
 }
 
 function ExecutionImpactDashboard({
@@ -719,13 +550,18 @@ function ExecutionImpactDashboard({
   onAssumptionsChange,
   dateRangeFilter,
   onDateRangeChange,
+  customStartDate,
+  onCustomStartDateChange,
+  customEndDate,
+  onCustomEndDateChange,
+  showDateDropdown,
+  onToggleDateDropdown,
   appIdFilter,
   onAppIdFilterChange,
   appIds,
-  windowSize,
-  totalRunsAvailable,
-  refreshedAt,
   weeklyTrend,
+  onNavigate,
+  allRuns,
 }: ExecutionImpactDashboardProps) {
   const updateAssumption = (key: keyof ImpactAssumptions, value: number) => {
     onAssumptionsChange({
@@ -736,152 +572,324 @@ function ExecutionImpactDashboard({
 
   const passWidth = impact.total > 0 ? (impact.passed / impact.total) * 100 : 0;
   const failWidth = impact.total > 0 ? (impact.failed / impact.total) * 100 : 0;
-  const rangeLabel = dateRangeFilter === 'all' ? 'all recorded history' : `the last ${dateRangeFilter} days`;
+
+  const dateRangeDisplayLabel = useMemo(() => {
+    if (dateRangeFilter === '30') return 'Last 30 days';
+    if (dateRangeFilter === '60') return 'Last 60 days';
+    if (dateRangeFilter === '90') return 'Last 90 days';
+    if (dateRangeFilter === 'custom' && customStartDate && customEndDate) {
+      const s = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(customStartDate + 'T00:00:00'));
+      const e = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(customEndDate + 'T00:00:00'));
+      return `${s} – ${e}`;
+    }
+    if (dateRangeFilter === 'custom') return 'Custom range';
+    if (allRuns.length > 0) {
+      const times = allRuns.map((r) => new Date(r.startedAt).getTime()).filter(Number.isFinite);
+      const min = new Date(Math.min(...times));
+      const max = new Date(Math.max(...times));
+      const s = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(min);
+      const e = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(max);
+      return `${s} – ${e}`;
+    }
+    return 'All available history';
+  }, [dateRangeFilter, customStartDate, customEndDate, allRuns]);
 
   return (
-    <section className="execution-impact" aria-labelledby="execution-impact-heading">
-      <div className="execution-impact-heading">
-        <div>
-          <span className="canvas-eyebrow">Measured outcomes and modeled impact</span>
-          <h2 id="execution-impact-heading">Execution impact</h2>
-          <p>Run totals and duration are exact. Manual effort and cost are transparent scenario estimates.</p>
+    <section className="ref-impact-section" aria-labelledby="execution-impact-heading">
+      {/* Section Title + Inline Filter Pills */}
+      <div className="ref-impact-header">
+        <h2 id="execution-impact-heading">Execution Impact</h2>
+        <div className="ref-impact-filters">
+          {/* Custom Date Range Pill */}
+          <div className="ref-filter-pill ref-date-pill-container">
+            <button
+              type="button"
+              className="ref-pill-trigger-btn"
+              onClick={() => onToggleDateDropdown(!showDateDropdown)}
+              aria-expanded={showDateDropdown}
+              aria-haspopup="true"
+            >
+              <Calendar size={15} className="ref-pill-icon" />
+              <div className="ref-pill-text">
+                <span className="ref-pill-label">Date range</span>
+                <span className="ref-pill-value">{dateRangeDisplayLabel}</span>
+              </div>
+              <ChevronDown size={14} className="ref-pill-chevron" />
+            </button>
+
+            {/* Custom Interactive Dropdown Menu */}
+            {showDateDropdown && (
+              <div className="ref-dropdown-menu">
+                <div className="ref-dropdown-presets">
+                  <button
+                    type="button"
+                    className={`ref-dropdown-item${dateRangeFilter === 'all' ? ' active' : ''}`}
+                    onClick={() => {
+                      onDateRangeChange('all');
+                      onToggleDateDropdown(false);
+                    }}
+                  >
+                    All available history
+                  </button>
+                  <button
+                    type="button"
+                    className={`ref-dropdown-item${dateRangeFilter === '30' ? ' active' : ''}`}
+                    onClick={() => {
+                      onDateRangeChange('30');
+                      onToggleDateDropdown(false);
+                    }}
+                  >
+                    Last 30 days
+                  </button>
+                  <button
+                    type="button"
+                    className={`ref-dropdown-item${dateRangeFilter === '60' ? ' active' : ''}`}
+                    onClick={() => {
+                      onDateRangeChange('60');
+                      onToggleDateDropdown(false);
+                    }}
+                  >
+                    Last 60 days
+                  </button>
+                  <button
+                    type="button"
+                    className={`ref-dropdown-item${dateRangeFilter === '90' ? ' active' : ''}`}
+                    onClick={() => {
+                      onDateRangeChange('90');
+                      onToggleDateDropdown(false);
+                    }}
+                  >
+                    Last 90 days
+                  </button>
+                </div>
+
+                <div className="ref-dropdown-divider" />
+
+                <div className="ref-custom-date-section">
+                  <span className="ref-custom-date-title">Custom date range</span>
+                  <div className="ref-datepicker-inputs">
+                    <label>
+                      Start date
+                      <input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => onCustomStartDateChange(e.currentTarget.value)}
+                      />
+                    </label>
+                    <label>
+                      End date
+                      <input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => onCustomEndDateChange(e.currentTarget.value)}
+                      />
+                    </label>
+                  </div>
+                  <div className="ref-datepicker-footer">
+                    <button
+                      type="button"
+                      className="ref-dp-apply"
+                      disabled={!customStartDate || !customEndDate}
+                      onClick={() => {
+                        if (customStartDate && customEndDate) {
+                          onDateRangeChange('custom');
+                          onToggleDateDropdown(false);
+                        }
+                      }}
+                    >
+                      Apply
+                    </button>
+                    <button
+                      type="button"
+                      className="ref-dp-clear"
+                      onClick={() => {
+                        onCustomStartDateChange('');
+                        onCustomEndDateChange('');
+                        onDateRangeChange('all');
+                        onToggleDateDropdown(false);
+                      }}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* App ID Pill */}
+          <div className="ref-filter-pill ref-app-pill-container">
+            <Box size={15} className="ref-pill-icon" />
+            <div className="ref-pill-text">
+              <span className="ref-pill-label">App ID</span>
+              <span className="ref-pill-value">{appIdFilter || 'All Apps'}</span>
+            </div>
+            <ChevronDown size={14} className="ref-pill-chevron" />
+            <select
+              className="ref-overlay-select"
+              value={appIdFilter}
+              onChange={(e) => onAppIdFilterChange(e.currentTarget.value)}
+            >
+              <option value="">All Apps</option>
+              {appIds.map((id) => <option key={id} value={id}>{id}</option>)}
+            </select>
+          </div>
         </div>
-        <button type="button" className="text-action" onClick={() => document.querySelector('.canvas-run-list')?.scrollIntoView({ behavior: 'smooth' })}>
-          Recent runs <ArrowRight size={14} aria-hidden="true" />
-        </button>
       </div>
 
-      <div className="impact-scope-toolbar" role="group" aria-label="Filter execution impact">
-        <label>
-          Date range
-          <select value={dateRangeFilter} onChange={(event) => onDateRangeChange(event.currentTarget.value as '7' | '30' | '90' | 'all')}>
-            <option value="all">All available history</option>
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-          </select>
-        </label>
-        <label>
-          App ID
-          <select value={appIdFilter} onChange={(event) => onAppIdFilterChange(event.currentTarget.value)}>
-            <option value="">All App IDs</option>
-            {appIds.map((appId) => <option key={appId} value={appId}>{appId}</option>)}
-          </select>
-        </label>
-      </div>
-
-      <p className="impact-scope-disclosure">
-        Scope: <strong>{loading ? '—' : impact.total}</strong> execution{impact.total === 1 ? '' : 's'} matching {appIdFilter || 'all App IDs'} over {rangeLabel},
-        drawn from the {Math.min(totalRunsAvailable, windowSize)} most recently recorded execution{totalRunsAvailable === 1 ? '' : 's'} (up to {windowSize}).{' '}
-        {refreshedAt && <>As of {new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(refreshedAt)}.</>}
-      </p>
-
-      <div className="impact-metrics-grid">
-        <article className="impact-metric">
-          <span className="impact-metric-icon"><Activity size={18} aria-hidden="true" /></span>
-          <span className="impact-metric-label">Total executions <small>Actual</small></span>
-          <strong className="impact-metric-value">{loading ? '—' : impact.total}</strong>
-          <span className="impact-metric-detail">Recorded in the immutable run ledger, within the scope above</span>
-        </article>
-
-        <article className="impact-metric outcome">
-          <span className="impact-metric-icon"><TrendingUp size={18} aria-hidden="true" /></span>
-          <span className="impact-metric-label">Execution outcomes <small>Actual</small></span>
-          <div className="impact-outcome-counts">
-            <span><strong>{loading ? '—' : impact.passed}</strong> Passed</span>
-            <span><strong>{loading ? '—' : impact.failed}</strong> Failed</span>
+      {/* Side-by-Side Actual & Modeled Group Cards */}
+      <div className="ref-impact-grid">
+        {/* Left Container: ACTUAL */}
+        <div className="ref-impact-group actual-group">
+          <div className="ref-group-badge">
+            <span className="ref-dot green-dot">●</span>
+            <span className="ref-badge-title green-title">ACTUAL</span>
+            <span className="ref-badge-desc">Real outcomes from executed automation</span>
           </div>
-          <div className="impact-outcome-bar" role="img" aria-label={impact.passRate === null ? 'No execution outcomes' : `${Math.round(impact.passRate)} percent passed`}>
-            <span className="passed" style={{ width: `${passWidth}%` }} />
-            <span className="failed" style={{ width: `${failWidth}%` }} />
+          <div className="ref-cards-trio">
+            <article className="ref-card">
+              <div className="ref-card-header">
+                <span className="ref-card-icon blue-icon"><Play size={13} /></span>
+                <span className="ref-card-title">Total executions</span>
+              </div>
+              <strong className="ref-card-value">{loading ? '—' : impact.total}</strong>
+              <span className="ref-card-sub">Across all tests</span>
+            </article>
+
+            <article className="ref-card">
+              <div className="ref-card-header">
+                <span className="ref-card-icon green-icon"><Check size={13} /></span>
+                <span className="ref-card-title">Execution outcomes</span>
+              </div>
+              <div className="ref-outcome-counts">
+                <span className="passed-text"><strong>{loading ? '—' : impact.passed}</strong> Passed</span>
+                <span className="sep">|</span>
+                <span className="failed-text"><strong>{loading ? '—' : impact.failed}</strong> Failed</span>
+              </div>
+              <div className="ref-outcome-bar">
+                <span className="passed-seg" style={{ width: `${passWidth}%` }} />
+                <span className="failed-seg" style={{ width: `${failWidth}%` }} />
+              </div>
+              <span className="ref-card-sub">
+                {impact.passRate === null ? 'No executions' : `Pass rate: ${impact.passRate.toFixed(1)}%`}
+              </span>
+            </article>
+
+            <article className="ref-card">
+              <div className="ref-card-header">
+                <span className="ref-card-icon blue-icon"><Clock size={13} /></span>
+                <span className="ref-card-title">Automation runtime</span>
+              </div>
+              <strong className="ref-card-value">{loading ? '—' : `${formatHours(impact.automationHours)} h`}</strong>
+              <span className="ref-card-sub">Total time executed</span>
+            </article>
           </div>
-          <span className="impact-metric-detail">
-            {impact.passRate === null ? 'No executions in scope' : `${impact.passed} of ${impact.total} passed (${Math.round(impact.passRate)}%)`}
-          </span>
-        </article>
+        </div>
 
-        <article className="impact-metric">
-          <span className="impact-metric-icon"><Clock3 size={18} aria-hidden="true" /></span>
-          <span className="impact-metric-label">Automation runtime <small>Actual</small></span>
-          <strong className="impact-metric-value">{loading ? '—' : `${formatHours(impact.automationHours)} h`}</strong>
-          <span className="impact-metric-detail">Sum of recorded execution durations</span>
-        </article>
+        {/* Right Container: MODELED */}
+        <div className="ref-impact-group modeled-group">
+          <div className="ref-group-badge">
+            <span className="ref-dot orange-dot">●</span>
+            <span className="ref-badge-title orange-title">MODELED</span>
+            <span className="ref-badge-desc">Estimated impact if done manually</span>
+          </div>
+          <div className="ref-cards-trio">
+            <article className="ref-card">
+              <div className="ref-card-header">
+                <span className="ref-card-icon orange-icon"><Clock size={13} /></span>
+                <span className="ref-card-title">Plausible manual effort</span>
+              </div>
+              <strong className="ref-card-value orange-text">{loading ? '—' : `${formatHours(impact.manualHours)} h`}</strong>
+              <span className="ref-card-sub">Time it would take manually</span>
+            </article>
 
-        <article className="impact-metric modeled">
-          <span className="impact-metric-icon"><TimerReset size={18} aria-hidden="true" /></span>
-          <span className="impact-metric-label">Plausible manual effort <small>Modeled</small></span>
-          <strong className="impact-metric-value">{loading ? '—' : `${formatHours(impact.manualHours)} h`}</strong>
-          <span className="impact-metric-detail">
-            Scenario range {formatHours(impact.manualLowHours)}–{formatHours(impact.manualHighHours)} h
-          </span>
-        </article>
+            <article className="ref-card">
+              <div className="ref-card-header">
+                <span className="ref-card-icon orange-icon"><Clock size={13} /></span>
+                <span className="ref-card-title">Potential time saved</span>
+              </div>
+              <strong className="ref-card-value orange-text">{loading ? '—' : `${formatHours(impact.timeSavedHours)} h`}</strong>
+              <span className="ref-card-sub">After accounting for automation runtime</span>
+            </article>
 
-        <article className="impact-metric modeled">
-          <span className="impact-metric-icon"><TrendingUp size={18} aria-hidden="true" /></span>
-          <span className="impact-metric-label">Potential time saved <small>Modeled</small></span>
-          <strong className="impact-metric-value">{loading ? '—' : `${formatHours(impact.timeSavedHours)} h`}</strong>
-          <span className="impact-metric-detail">Manual estimate minus automation runtime</span>
-        </article>
-
-        <article className="impact-metric modeled">
-          <span className="impact-metric-icon"><CircleDollarSign size={18} aria-hidden="true" /></span>
-          <span className="impact-metric-label">Potential cost saved <small>Modeled</small></span>
-          <strong className={`impact-metric-value${impact.potentialCostSaved < 0 ? ' negative' : ''}`}>
-            {loading ? '—' : formatCurrency(impact.potentialCostSaved)}
-          </strong>
-          <span className="impact-metric-detail">
-            {formatCurrency(impact.manualCost)} manual equivalent − {formatCurrency(impact.automationCost)} automation TCO
-            {impact.potentialCostSaved < 0 ? ' · investment not yet recovered' : ''}
-          </span>
-        </article>
+            <article className="ref-card">
+              <div className="ref-card-header">
+                <span className="ref-card-icon orange-icon"><DollarSign size={13} /></span>
+                <span className="ref-card-title">Potential cost saved</span>
+              </div>
+              <strong className="ref-card-value orange-text">
+                {loading ? '—' : formatCurrency(impact.potentialCostSaved)}
+              </strong>
+              <span className="ref-card-sub">Based on blended hourly rate</span>
+            </article>
+          </div>
+        </div>
       </div>
 
-      <section className="impact-trend" aria-labelledby="impact-trend-heading">
-        <h3 id="impact-trend-heading">Weekly trend</h3>
-        <p className="hint">
-          Each row is a real calendar week drawn only from recorded executions in the scope above — a week with no
-          executions is simply absent, never interpolated or projected.
-        </p>
-        {weeklyTrend.length === 0 ? (
-          <p className="hint">No executions in scope to trend.</p>
-        ) : (
-          <div className="table-wrap">
-            <table className="impact-trend-table">
-              <caption className="sr-only">Weekly execution count and pass rate</caption>
-              <thead>
-                <tr><th scope="col">Week of</th><th scope="col">Executions</th><th scope="col">Passed</th><th scope="col">Failed</th><th scope="col">Pass rate</th></tr>
-              </thead>
-              <tbody>
-                {weeklyTrend.map((week) => (
-                  <tr key={week.weekStart}>
-                    <td data-label="Week of">{formatWeekLabel(week.weekStart)}</td>
-                    <td data-label="Executions">{week.total}</td>
-                    <td data-label="Passed">{week.passed}</td>
-                    <td data-label="Failed">{week.failed}</td>
-                    <td data-label="Pass rate">
-                      <span className="impact-trend-bar" role="img" aria-label={week.passRate === null ? 'No executions' : `${Math.round(week.passRate)} percent passed`}>
+      {/* Weekly Trend Section */}
+      <section className="ref-weekly-trend">
+        <div className="ref-trend-header">
+          <div className="ref-trend-title-group">
+            <h3>Weekly trend (last 5 weeks)</h3>
+            <Info size={15} className="ref-info-icon" />
+          </div>
+          <button type="button" className="ref-btn-link" onClick={() => onNavigate('documents')}>
+            View full report <ExternalLink size={13} />
+          </button>
+        </div>
+
+        <div className="ref-table-card">
+          <table className="ref-trend-table">
+            <thead>
+              <tr>
+                <th scope="col">Week</th>
+                <th scope="col">Total Executions</th>
+                <th scope="col">Passed</th>
+                <th scope="col">Failed</th>
+                <th scope="col">Pass Rate</th>
+                <th scope="col">Automation Runtime (h)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {weeklyTrend.map((week) => (
+                <tr key={week.weekLabel}>
+                  <td>{week.weekLabel}</td>
+                  <td>{week.total}</td>
+                  <td className="passed-num">{week.passed}</td>
+                  <td className="failed-num">{week.failed}</td>
+                  <td>
+                    <div className="ref-pass-rate-cell">
+                      <div className="ref-rate-bar">
                         <span style={{ width: `${week.passRate ?? 0}%` }} />
-                      </span>
-                      {week.passRate === null ? '—' : `${Math.round(week.passRate)}%`}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      </div>
+                      <span className="ref-rate-text">{week.passRate === null ? '—' : `${week.passRate.toFixed(1)}%`}</span>
+                    </div>
+                  </td>
+                  <td>{week.automationHours.toFixed(1)} h</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
-      <details className="impact-assumptions">
-        <summary>Calculation assumptions and model</summary>
+      {/* Calculation Assumptions Collapsible */}
+      <details className="ref-assumptions">
+        <summary>
+          <ChevronDown size={14} className="ref-assumptions-chevron" />
+          <span>Calculation assumptions</span>
+          <Info size={14} className="ref-info-icon" />
+          <span className="ref-assumptions-line" />
+        </summary>
+
         <div className="impact-assumptions-body">
           <p className="impact-assumptions-intro">
             Actual execution duration and outcomes come from the run ledger. The planning defaults below are illustrative;
             replace them with contracted rates, engineering effort, and operating costs for a decision-grade estimate.
           </p>
 
-          <section className="impact-assumption-group" aria-labelledby="manual-model-heading">
-            <h3 id="manual-model-heading">Manual equivalent model</h3>
+          <section className="impact-assumption-group">
+            <h3>Manual equivalent model</h3>
             <div className="impact-assumption-grid manual">
               <label>
                 Manual minutes per test
@@ -890,7 +898,7 @@ function ExecutionImpactDashboard({
                   min="0"
                   step="1"
                   value={assumptions.manualMinutesPerTest}
-                  onChange={(event) => updateAssumption('manualMinutesPerTest', event.currentTarget.valueAsNumber)}
+                  onChange={(e) => updateAssumption('manualMinutesPerTest', e.currentTarget.valueAsNumber)}
                 />
               </label>
               <label>
@@ -900,7 +908,7 @@ function ExecutionImpactDashboard({
                   min="0"
                   step="0.25"
                   value={assumptions.manualDurationMultiplier}
-                  onChange={(event) => updateAssumption('manualDurationMultiplier', event.currentTarget.valueAsNumber)}
+                  onChange={(e) => updateAssumption('manualDurationMultiplier', e.currentTarget.valueAsNumber)}
                 />
               </label>
               <label>
@@ -910,30 +918,14 @@ function ExecutionImpactDashboard({
                   min="0"
                   step="1"
                   value={assumptions.manualHourlyCost}
-                  onChange={(event) => updateAssumption('manualHourlyCost', event.currentTarget.valueAsNumber)}
+                  onChange={(e) => updateAssumption('manualHourlyCost', e.currentTarget.valueAsNumber)}
                 />
               </label>
             </div>
-            <div className="impact-factor-explainer">
-              <strong>What does the slowdown factor mean?</strong>
-              <span>
-                A factor of {assumptions.manualDurationMultiplier} estimates manual handling at {assumptions.manualDurationMultiplier}×
-                the recorded automation runtime. The model uses the larger of that result or {assumptions.manualMinutesPerTest} minutes
-                per test. With the observed median of{' '}
-                {impact.medianAutomationMinutesPerTest === null
-                  ? 'an unavailable duration'
-                  : `${impact.medianAutomationMinutesPerTest.toFixed(1)} automated minutes per test`}
-                , the duration-based estimate is{' '}
-                {impact.medianAutomationMinutesPerTest === null
-                  ? 'unavailable'
-                  : `${(impact.medianAutomationMinutesPerTest * assumptions.manualDurationMultiplier).toFixed(1)} minutes`}
-                .
-              </span>
-            </div>
           </section>
 
-          <section className="impact-assumption-group" aria-labelledby="automation-cost-heading">
-            <h3 id="automation-cost-heading">Automation total cost of ownership</h3>
+          <section className="impact-assumption-group">
+            <h3>Automation total cost of ownership</h3>
             <div className="impact-assumption-grid automation">
               <label>
                 Automation runtime cost/hour (USD)
@@ -942,7 +934,7 @@ function ExecutionImpactDashboard({
                   min="0"
                   step="0.5"
                   value={assumptions.automationHourlyCost}
-                  onChange={(event) => updateAssumption('automationHourlyCost', event.currentTarget.valueAsNumber)}
+                  onChange={(e) => updateAssumption('automationHourlyCost', e.currentTarget.valueAsNumber)}
                 />
               </label>
               <label>
@@ -952,145 +944,13 @@ function ExecutionImpactDashboard({
                   min="0"
                   step="1"
                   value={assumptions.automationEngineerHourlyCost}
-                  onChange={(event) => updateAssumption('automationEngineerHourlyCost', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                Initial build and setup hours
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={assumptions.buildAndSetupHours}
-                  onChange={(event) => updateAssumption('buildAndSetupHours', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                Build amortization period (months)
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={assumptions.buildAmortizationMonths}
-                  onChange={(event) => updateAssumption('buildAmortizationMonths', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                Maintenance hours/month
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={assumptions.maintenanceHoursPerMonth}
-                  onChange={(event) => updateAssumption('maintenanceHoursPerMonth', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                License and tooling/month (USD)
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={assumptions.licenseCostPerMonth}
-                  onChange={(event) => updateAssumption('licenseCostPerMonth', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                Fixed infrastructure/month (USD)
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={assumptions.infrastructureCostPerMonth}
-                  onChange={(event) => updateAssumption('infrastructureCostPerMonth', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                Review minutes/execution
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={assumptions.reviewMinutesPerExecution}
-                  onChange={(event) => updateAssumption('reviewMinutesPerExecution', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                Failure triage minutes/failed run
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={assumptions.triageMinutesPerFailure}
-                  onChange={(event) => updateAssumption('triageMinutesPerFailure', event.currentTarget.valueAsNumber)}
-                />
-              </label>
-              <label>
-                Other automation cost for period (USD)
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={assumptions.otherAutomationCost}
-                  onChange={(event) => updateAssumption('otherAutomationCost', event.currentTarget.valueAsNumber)}
+                  onChange={(e) => updateAssumption('automationEngineerHourlyCost', e.currentTarget.valueAsNumber)}
                 />
               </label>
             </div>
           </section>
-
-          <section className="impact-cost-breakdown" aria-labelledby="cost-breakdown-heading">
-            <div>
-              <h3 id="cost-breakdown-heading">Automation cost included</h3>
-              <p>
-                Applied across {impact.analysisMonths} billing month{impact.analysisMonths === 1 ? '' : 's'} represented by the current run history.
-                Initial build cost is allocated across the configured amortization period.
-              </p>
-            </div>
-            <dl>
-              <div><dt>Runtime</dt><dd>{formatCurrency(impact.runtimeCost)}</dd></div>
-              <div><dt>Build/setup allocation</dt><dd>{formatCurrency(impact.allocatedBuildCost)}</dd></div>
-              <div><dt>Maintenance labor</dt><dd>{formatCurrency(impact.maintenanceCost)}</dd></div>
-              <div><dt>Licenses and tooling</dt><dd>{formatCurrency(impact.licenseCost)}</dd></div>
-              <div><dt>Fixed infrastructure</dt><dd>{formatCurrency(impact.infrastructureCost)}</dd></div>
-              <div><dt>Execution review</dt><dd>{formatCurrency(impact.reviewCost)}</dd></div>
-              <div><dt>Failure triage</dt><dd>{formatCurrency(impact.triageCost)}</dd></div>
-              <div><dt>Other period cost</dt><dd>{formatCurrency(impact.otherAutomationCost)}</dd></div>
-              <div className="total"><dt>Total automation TCO</dt><dd>{formatCurrency(impact.automationCost)}</dd></div>
-            </dl>
-          </section>
-
-          <p className="impact-model-note">
-            The manual scenario range remains a lower/upper planning range, not a confidence interval. The cost comparison
-            covers execution economics; add test design, training, migration, governance, security, procurement, or vendor
-            support to “Other automation cost” when they apply.
-          </p>
         </div>
       </details>
     </section>
-  );
-}
-
-function TriangleTargetMessage({ context }: { context: WorkspaceContext | null }) {
-  if (!context?.target.configured) {
-    return (
-      <>
-        <strong>No SAP target configured</strong>
-        <span>Add the test-system URL and credentials in Settings before execution.</span>
-      </>
-    );
-  }
-  if (context.target.verificationStatus === 'live-verified') {
-    return (
-      <>
-        <strong>SAP target live-verified</strong>
-        <span>{context.target.hostname ?? 'Configured target'} was verified at execution time.</span>
-      </>
-    );
-  }
-  return (
-    <>
-      <strong>SAP target saved · live verification pending</strong>
-      <span>{context.target.hostname ?? 'The configured target'} will be verified when the browser session opens.</span>
-    </>
   );
 }

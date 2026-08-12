@@ -36,19 +36,55 @@ function toInfo(s: ActiveSession): ScanSessionInfo {
   return { sessionId: s.sessionId, url: s.url, openedAt: s.openedAt };
 }
 
-export async function openScanSession(url: string): Promise<ScanSessionInfo> {
-  if (session) {
-    throw Object.assign(
-      new Error(`A scan session is already open (since ${session.openedAt}). Close it first.`),
-      { status: 409 }
-    );
+export async function openScanSession(rawUrl: string): Promise<ScanSessionInfo> {
+  let targetUrl = rawUrl.trim();
+  if (!targetUrl) {
+    throw Object.assign(new Error('A valid URL is required to open a scan session.'), { status: 400 });
   }
 
-  const browser = await chromium.launch({ headless: false });
+  // Prepend https:// if no protocol scheme is provided
+  if (!/^https?:\/\//i.test(targetUrl)) {
+    targetUrl = `https://${targetUrl}`;
+  }
+
+  // Automatically close any prior open scan session cleanly
+  if (session) {
+    await closeScanSession().catch(() => undefined);
+  }
+
+  // A headed browser needs an interactive desktop session to draw on. Started from a normal
+  // terminal that is always true; started as a service, inside a container, or under WSL it is
+  // not — and launch() still SUCCEEDS, it just shows nobody a window. That failure is otherwise
+  // completely silent, which is why it gets stated here rather than discovered by guesswork.
+  const headlessOnly = process.platform === 'win32'
+    ? !process.env.SESSIONNAME
+    : !process.env.DISPLAY && !process.env.WAYLAND_DISPLAY;
+  console.log(
+    `[scan] opening ${targetUrl} — headed Chrome, `
+    + (headlessOnly
+      ? 'NO interactive desktop session detected: a window will NOT be visible from this process'
+      : 'desktop session present')
+  );
+
+  let browser: Browser;
+  try {
+    browser = await chromium.launch({
+      headless: false,
+      args: ['--start-maximized'],
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[scan] chromium.launch failed: ${message}`);
+    throw Object.assign(
+      new Error(`Could not launch the scan browser: ${message}`),
+      { status: 500 }
+    );
+  }
   let page: Page;
   try {
-    page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
+    const context = await browser.newContext({ viewport: null });
+    page = await context.newPage();
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
   } catch (error) {
     await browser.close().catch(() => undefined);
     const message = error instanceof Error ? error.message : String(error);
@@ -61,12 +97,10 @@ export async function openScanSession(url: string): Promise<ScanSessionInfo> {
     throw error;
   }
 
-  const next: ActiveSession = { sessionId: randomUUID(), url, openedAt: new Date().toISOString(), browser, page };
+  const next: ActiveSession = { sessionId: randomUUID(), url: targetUrl, openedAt: new Date().toISOString(), browser, page };
   session = next;
 
-  // Fires if the human closes the window by hand instead of clicking "Close session" —
-  // without this, a later capture would throw a raw Playwright connection error instead
-  // of the same clean "no active session" message closeScanSession's callers already expect.
+  // Fires if the human closes the window by hand instead of clicking "Close session"
   browser.on('disconnected', () => {
     if (session?.sessionId === next.sessionId) session = null;
   });
@@ -348,10 +382,34 @@ export async function cancelPick(): Promise<void> {
   pickResult = { status: 'idle', picks: pickResult.picks };
 }
 
+/**
+ * Closes a browser without ever being able to block the caller.
+ *
+ * browser.close() can hang indefinitely rather than reject — a wedged renderer, a modal the
+ * page is blocked on, or a Chrome process that was killed from outside all produce a promise
+ * that simply never settles. A plain `.catch()` does not help: there is no rejection to catch.
+ *
+ * That mattered because openScanSession() awaits this before opening a new session. A hung
+ * close meant POST /api/scan/open never responded at all, so the client's await never resolved
+ * and its busy flag was never cleared — the "Open scan session" button went permanently dead
+ * with no error shown anywhere. Always on the SECOND open, never the first, which is what made
+ * it look intermittent.
+ *
+ * Racing the close against a timeout turns that into at worst a few seconds of delay. The
+ * session reference is dropped by the caller either way, so a browser we could not close
+ * cleanly is orphaned rather than allowed to block every future scan.
+ */
+async function closeBrowserSafely(browser: Browser, timeoutMs = 5000): Promise<void> {
+  await Promise.race([
+    browser.close().catch(() => undefined),
+    new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
+  ]);
+}
+
 export async function closeScanSession(): Promise<void> {
   if (!session) return;
   const current = session;
   session = null;
   pickResult = { status: 'idle', picks: [] };
-  await current.browser.close().catch(() => undefined);
+  await closeBrowserSafely(current.browser);
 }

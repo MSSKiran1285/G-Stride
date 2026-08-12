@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "name": "SO Creation",
+  "description": "",
+  "lifecycle": "published",
+  "members": [
+    {
+      "id": "member-1",
+      "kind": "test",
+      "file": "create-so.json",
+      "sessionPolicy": "fresh-per-iteration",
+      "iterationFailurePolicy": "stop-execution",
+      "dataFile": "o2c-e2e.csv"
+    }
+  ]
+}

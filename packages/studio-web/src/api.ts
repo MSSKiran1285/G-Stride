@@ -127,9 +127,15 @@ export const api = {
       body: JSON.stringify({ newName }),
     }),
   listAppIds: () => request<string[]>('/api/app-ids'),
+  deleteAppId: (appId: string) =>
+    request<{ ok: true }>(`/api/app-ids/${encodeURIComponent(appId)}`, { method: 'DELETE' }),
   getModuleUsage: (module: string, paramKey: string) =>
     request<string[]>(`/api/module-usage/${encodeURIComponent(module)}/${encodeURIComponent(paramKey)}`),
   listProcessAreas: () => request<string[]>('/api/process-areas'),
+  addProcessArea: (name: string) =>
+    request<{ ok: true }>('/api/process-areas', { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteProcessArea: (name: string) =>
+    request<{ ok: true }>(`/api/process-areas/${encodeURIComponent(name)}`, { method: 'DELETE' }),
   listTags: (kind: ArtifactKind) => request<Record<string, string>>(`/api/tags/${kind}`),
   setTag: (kind: ArtifactKind, name: string, processArea: string) =>
     request<{ ok: true }>(`/api/tags/${kind}/${encodeURIComponent(name)}`, { method: 'PUT', body: JSON.stringify({ processArea }) }),

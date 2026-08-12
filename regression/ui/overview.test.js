@@ -67,7 +67,7 @@ test('Canvas First Overview presents the approved shell and real workspace data'
       // BL-048 de-branded the shell: the brand area is now the product wordmark alone. Kept as an
       // assertion rather than deleted, so the persistent shell's branding stays covered — and
       // inverted, so a logo image reappearing would fail rather than pass unnoticed.
-      await page.locator('.lhs-brand-logo .brand-name').getByText('QA/4HANA Studio').waitFor();
+      await page.locator('.lhs-brand-logo .brand-name').getByText('G-Stride').waitFor();
       assert.equal(
         await page.locator('.lhs-brand-logo img').count(),
         0,

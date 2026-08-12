@@ -1420,6 +1420,28 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     res.json(tagStore.listProcessAreas());
   });
 
+  app.post('/api/process-areas', (req, res) => {
+    try {
+      const { name } = req.body ?? {};
+      if (typeof name !== 'string' || !name.trim()) {
+        return res.status(400).json({ error: 'Body must include name: string' });
+      }
+      tagStore.addProcessArea(name.trim());
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
+  app.delete('/api/process-areas/:name', (req, res) => {
+    try {
+      tagStore.deleteProcessArea(req.params.name);
+      res.json({ ok: true });
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
   app.get('/api/tags/:kind', (req, res) => {
     try {
       res.json(tagStore.listTags(safeTagKind(req.params.kind)));
@@ -1824,6 +1846,13 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       },
       auth.state(req).user?.name
     );
+    res.json({ ok: true });
+  });
+
+  app.delete('/api/app-ids/:appId', (req, res) => {
+    const appId = req.params.appId;
+    objectRepository.removeAppId(appId);
+    tagStore.setTag('appId', appId, '');
     res.json({ ok: true });
   });
 

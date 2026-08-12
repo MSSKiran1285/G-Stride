@@ -456,7 +456,7 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
 
   const cover = `
     <section class="cover">
-      <div class="cover-eyebrow">QA/4HANA STUDIO &nbsp;·&nbsp; TEST AUTOMATION EVIDENCE</div>
+      <div class="cover-eyebrow">G-STRIDE &nbsp;·&nbsp; TEST AUTOMATION EVIDENCE</div>
       <h1>${escapeHtml(documentTitle)}</h1>
       <p class="cover-subtitle">${escapeHtml(documentSubtitle)}</p>
       <div class="cover-status status-bg-${input.status}">
@@ -465,7 +465,7 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
       <table class="meta cover-meta">
         <tbody>${metadataRows}</tbody>
       </table>
-      <div class="cover-brand">QA/4HANA Studio <span>by <b>ai</b>elk</span></div>
+      <div class="cover-brand">G-Stride</div>
     </section>
   `;
 
@@ -802,7 +802,7 @@ export async function writeAuditEvidencePdf(input: AuditEvidenceInput, outPath: 
       headerTemplate: `
         <div style="position:relative;z-index:1000;display:flex;width:100%;align-items:center;gap:9px;margin:0 52px;padding:8px 0 5px;color:#0b3b60;border-bottom:1px solid #cbd5dc;background:#fff;font-family:Calibri,Arial,sans-serif;">
           <strong style="flex:1;overflow:hidden;font-size:8.5pt;letter-spacing:0.08em;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(documentSubtitle.toUpperCase())}</strong>
-          <span style="color:#f36f64;font-size:8pt;font-weight:700;white-space:nowrap;">QA/4HANA STUDIO</span>
+          <span style="color:#0284c7;font-size:8pt;font-weight:700;white-space:nowrap;">G-STRIDE</span>
         </div>
       `,
       footerTemplate: '<div></div>',

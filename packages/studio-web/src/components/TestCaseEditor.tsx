@@ -11,10 +11,26 @@ import { TestContractEditor } from './TestContractEditor';
 const UNTAGGED = '(untagged)';
 const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b));
 
-function summarizeParams(params: Record<string, string>): string {
+/** One chip per param so a step with several params reads as a scannable list
+ *  instead of one dense `key=value · key=value` run-on string. */
+function StepParamChips({ params }: { params: Record<string, string> }) {
   const entries = Object.entries(params).filter(([, v]) => v !== '');
-  if (entries.length === 0) return '(no params)';
-  return entries.map(([k, v]) => `${k}=${v}`).join('  ·  ');
+  if (entries.length === 0) return <span className="hint">No params</span>;
+  return (
+    <div className="step-param-chips">
+      {entries.map(([key, value]) => {
+        const isRunState = value.includes('${runState.') || value.includes('{{step') || key === 'captureAs' || key === 'amountKey';
+        const isDataVar = value.includes('${') || value.includes('{{data.');
+        const chipType = isRunState ? 'runstate' : isDataVar ? 'datavar' : 'literal';
+        return (
+          <span className={`step-param-chip ${chipType}`} key={key}>
+            <span className="step-param-chip-key">{key}</span>
+            <span className="step-param-chip-value">={value}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 
 // Param keys that name a runState key a step CAPTURES (hands off to later steps) rather than
@@ -339,7 +355,11 @@ export function TestCaseEditor({
             <div>
               <span className="eyebrow">Test lifecycle</span>
               <strong>{testCase.lifecycle === 'published' ? 'Published' : testCase.lifecycle === 'draft' ? 'Draft' : 'Legacy ready'}</strong>
-              <span className="hint">{testCase.lifecycle === 'published' ? 'Available for governed composition.' : 'Publishing requires a valid contract, parameters and objects.'}</span>
+              <span className="hint">
+                {testCase.lifecycle === 'published'
+                  ? 'Reviewed and available for other Tests and Processes to reuse.'
+                  : 'Runs today as-is. To publish it for reuse elsewhere, first review its inputs/outputs below and confirm its steps and objects.'}
+              </span>
             </div>
             <span className={`badge ${testCase.lifecycle === 'published' ? 'passed' : 'running'}`}>{testCase.lifecycle === 'published' ? 'Published' : 'Draft'}</span>
           </div>
@@ -372,8 +392,16 @@ export function TestCaseEditor({
             />
           ) : (
             <div className="contract-empty-state">
-              <div><strong>No declared Test contract</strong><p className="hint">Legacy inference keeps this Test executable, but publishing requires reviewed typed inputs and outputs.</p></div>
-              <button type="button" onClick={() => void declareContract()}>Use inferred contract</button>
+              <div>
+                <strong>Inputs and outputs not reviewed yet</strong>
+                <p className="hint">
+                  This Test still runs fine as-is. Reviewing its inputs/outputs (its "contract") is only needed before
+                  Publishing it, so other Tests and Processes can safely reuse it.
+                </p>
+              </div>
+              <button type="button" onClick={() => void declareContract()}>
+                Use inferred contract
+              </button>
             </div>
           )}
 
@@ -429,7 +457,7 @@ export function TestCaseEditor({
                         <td className="step-index" data-label="Step">{i + 1}</td>
                         <td className="step-module" data-label="Module">{step.module}</td>
                         <td data-label="App ID">{step.appId && <span className="badge running">{step.appId}</span>}</td>
-                        <td className="step-params" data-label="Parameters">{summarizeParams(step.params)}</td>
+                        <td className="step-params" data-label="Parameters"><StepParamChips params={step.params} /></td>
                         <td className="step-actions" data-label="Actions">
                           <button
                             className="ghost icon-only"

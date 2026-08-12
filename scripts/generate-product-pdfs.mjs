@@ -48,7 +48,7 @@ function sectionTitle(number, title, kicker = '') {
 function cover(title, subtitle, documentCode) {
   return `
     <section class="cover">
-      <div class="cover-brand"><div><strong>QA/4HANA Studio</strong></div></div>
+      <div class="cover-brand"><div><strong>G-Stride</strong></div></div>
       <div class="cover-copy">
         <p class="eyebrow">Product documentation · Current verified build</p>
         <h1>${html(title)}</h1>
@@ -56,7 +56,7 @@ function cover(title, subtitle, documentCode) {
       </div>
       <div class="cover-meta">
         <div><span>Document</span><strong>${html(documentCode)}</strong></div>
-        <div><span>Product baseline</span><strong>QA/4HANA Studio 2.1.0 development line; v2.0.0 remains frozen</strong></div>
+        <div><span>Product baseline</span><strong>G-Stride 2.1.0 development line; v2.0.0 remains frozen</strong></div>
         <div><span>Prepared</span><strong>${generatedDate}</strong></div>
         <div><span>Classification</span><strong>Internal product and training documentation</strong></div>
       </div>
@@ -333,7 +333,7 @@ const workspaceFeatures = [
     gap: 'Multi-user roles remain intentionally deferred; only SAP is integrated with execution and live scan.',
   },
   {
-    name: 'QA/4HANA Test Operations companion app',
+    name: 'G-Stride Test Operations companion app',
     purpose: 'Provide release-quality visibility across the automated product test estate.',
     features: [
       'Repository-generated 149-test catalogue grouped by feature and workspace.',
@@ -446,7 +446,7 @@ async function implementationReport({ backlog, quality, catalogCount }) {
 
     <section id="section-1">
       ${sectionTitle('1', 'Executive implementation summary', 'Current product position')}
-      <p class="lead">QA/4HANA Studio is a working, Canvas First SAP test-automation product spanning reusable authoring, controlled execution, immutable evidence and operational quality reporting.</p>
+      <p class="lead">G-Stride is a working, Canvas First SAP test-automation product spanning reusable authoring, controlled execution, immutable evidence and operational quality reporting.</p>
       <div class="metrics">
         ${metric(backlog.length, 'Backlog items')}
         ${metric(statusCounts.Implemented, 'Implemented')}
@@ -539,7 +539,7 @@ async function implementationReport({ backlog, quality, catalogCount }) {
       </div>
       <div class="callout"><strong>Change-control recommendation.</strong> Update the HTML tracker and regenerate this report after each accepted backlog tranche. Record every failed automated case in the durable ledger even when it is subsequently remediated.</div>
     </section>`;
-  return documentShell('QA/4HANA Studio — Product Implementation Status Report', body);
+  return documentShell('G-Stride — Product Implementation Status Report', body);
 }
 
 async function trainingWorkInstruction() {
@@ -745,7 +745,7 @@ async function trainingWorkInstruction() {
       </ol>
       <div class="callout success"><strong>Training pass condition.</strong> The learner completes the flow without exposing credentials, bypassing preflight, confusing Process hand-offs with Pack independence, or altering the original run during a rerun.</div>
     </section>`;
-  return documentShell('QA/4HANA Studio — User Training Work Instruction', body);
+  return documentShell('G-Stride — User Training Work Instruction', body);
 }
 
 async function howToAndFaq() {
@@ -795,11 +795,11 @@ async function howToAndFaq() {
     ['What does “Legacy ready” mean?', 'The existing Test remains executable through inferred legacy metadata, but publishing under the typed model requires a reviewed contract and current validation.'],
     ['How are secrets kept out of logs and snapshots?', 'Execution plans and data snapshots reject credential-shaped fields, the runtime redacts known and generic authorization values, and the repository runs a high-confidence secret scan.'],
     ['Are scheduled executions and notifications available?', 'No. Scheduling, notifications and controlled parallelism are deliberately deferred until target capacity, isolation, cancellation and queue governance are designed.'],
-    ['Where can I see product test quality?', 'Use the QA/4HANA Test Operations companion app. Its catalogue is generated from repository tests and recorded runs and retains historical failures even after remediation.'],
+    ['Where can I see product test quality?', 'Use the G-Stride Test Operations companion app. Its catalogue is generated from repository tests and recorded runs and retains historical failures even after remediation.'],
   ];
 
   const body = `
-    ${cover('How-to Guide and Frequently Asked Questions', 'Task recipes, operating guidance, safety rules, troubleshooting and concise answers for everyday QA/4HANA Studio use.', 'Q4H-HOWTO-FAQ-2.0')}
+    ${cover('How-to Guide and Frequently Asked Questions', 'Task recipes, operating guidance, safety rules, troubleshooting and concise answers for everyday G-Stride use.', 'Q4H-HOWTO-FAQ-2.0')}
     <section>
       <p class="eyebrow">Quick reference</p><h2>Golden path</h2>
       <div class="card"><ol>
@@ -856,7 +856,7 @@ async function howToAndFaq() {
         <tr><td>Fail-stop</td><td>Policy that stops later stages after failure while retaining earlier state and evidence.</td></tr>
       </tbody></table>
     </section>`;
-  return documentShell('QA/4HANA Studio — How-to Guide and FAQ', body);
+  return documentShell('G-Stride — How-to Guide and FAQ', body);
 }
 
 async function renderPdf(browser, htmlPath, pdfPath, title) {
@@ -869,7 +869,7 @@ async function renderPdf(browser, htmlPath, pdfPath, title) {
     printBackground: true,
     displayHeaderFooter: true,
     margin: { top: '18mm', right: '14mm', bottom: '18mm', left: '14mm' },
-    headerTemplate: `<div style="width:100%;font:8px 'Segoe UI',Arial;color:#587086;padding:0 14mm;display:flex;justify-content:space-between;"><span>QA/4HANA Studio</span><span>${html(title)}</span></div>`,
+    headerTemplate: `<div style="width:100%;font:8px 'Segoe UI',Arial;color:#587086;padding:0 14mm;display:flex;justify-content:space-between;"><span>G-Stride</span><span>${html(title)}</span></div>`,
     footerTemplate: `<div style="width:100%;font:8px 'Segoe UI',Arial;color:#587086;padding:0 14mm;display:flex;justify-content:space-between;"><span>Internal product documentation · ${generatedDate}</span><span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>`,
   });
   await page.close();

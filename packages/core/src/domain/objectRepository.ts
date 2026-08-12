@@ -279,6 +279,12 @@ export class ObjectRepository {
     this.db.prepare('DELETE FROM controls WHERE app_id = ? AND name = ?').run(appId, name);
   }
 
+  /** Permanently removes all saved objects and verifications for an App ID — there is no undo. */
+  removeAppId(appId: string): void {
+    this.db.prepare('DELETE FROM object_verifications WHERE app_id = ?').run(appId);
+    this.db.prepare('DELETE FROM controls WHERE app_id = ?').run(appId);
+  }
+
   /** Renames a saved object in place, keeping everything else (controlId, label, tableId,
    * createdAt, verification history...) — since the table's primary key is (app_id, name),
    * this is an insert-under-the-new-name-then-delete-the-old, not a column update, but

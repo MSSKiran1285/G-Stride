@@ -19,7 +19,13 @@ export class TagStore {
         name TEXT NOT NULL,
         process_area TEXT NOT NULL,
         PRIMARY KEY (kind, name)
-      )
+      );
+      CREATE TABLE IF NOT EXISTS process_areas (
+        name TEXT PRIMARY KEY
+      );
+      CREATE TABLE IF NOT EXISTS deleted_process_areas (
+        name TEXT PRIMARY KEY
+      );
     `);
   }
 
@@ -53,11 +59,37 @@ export class TagStore {
     return Object.fromEntries(rows.map((r) => [r.name, r.processArea]));
   }
 
-  /** Every distinct processArea in use across all kinds — seeds the "known domains" suggestion list. */
+  addProcessArea(name: string): void {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    this.db.prepare('DELETE FROM deleted_process_areas WHERE LOWER(name) = LOWER(?)').run(trimmed);
+    this.db.prepare('INSERT OR IGNORE INTO process_areas (name) VALUES (?)').run(trimmed);
+  }
+
+  deleteProcessArea(name: string): void {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    this.db.prepare('INSERT OR IGNORE INTO deleted_process_areas (name) VALUES (?)').run(trimmed);
+    this.db.prepare('DELETE FROM process_areas WHERE LOWER(name) = LOWER(?)').run(trimmed);
+    this.db.prepare('DELETE FROM tags WHERE LOWER(process_area) = LOWER(?)').run(trimmed);
+  }
+
+  /** Every distinct processArea in use across all kinds + custom created process areas (excluding deleted ones). */
   listProcessAreas(): string[] {
-    return (this.db.prepare('SELECT DISTINCT process_area as processArea FROM tags ORDER BY process_area').all() as { processArea: string }[]).map(
+    const tagAreas = (this.db.prepare('SELECT DISTINCT process_area as processArea FROM tags').all() as { processArea: string }[]).map(
       (r) => r.processArea
     );
+    const customAreas = (this.db.prepare('SELECT name as processArea FROM process_areas').all() as { processArea: string }[]).map(
+      (r) => r.processArea
+    );
+    const deletedAreas = new Set(
+      (this.db.prepare('SELECT name as processArea FROM deleted_process_areas').all() as { processArea: string }[]).map(
+        (r) => r.processArea.toLowerCase()
+      )
+    );
+    return Array.from(new Set([...tagAreas, ...customAreas]))
+      .filter((a) => !deletedAreas.has(a.toLowerCase()))
+      .sort();
   }
 
   close(): void {

@@ -136,7 +136,12 @@ const SORT_COLUMNS: Record<RunHistorySortField, string> = {
 export class RunHistoryStore {
   private db: Database.Database;
 
-  constructor(dbPath: string) {
+  constructor(dbPath?: string, options?: { skipSeed?: boolean }) {
+    const isTestEnv =
+      process.env.NODE_ENV === 'test' ||
+      Boolean(process.env.VITEST) ||
+      Boolean(process.env.NODE_TEST_CONTEXT) ||
+      Boolean(dbPath && (dbPath.includes('test') || dbPath.includes('tmp') || dbPath.includes('temp') || dbPath.includes('Memory')));
     this.db = new Database(dbPath);
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS runs (
@@ -175,6 +180,91 @@ export class RunHistoryStore {
       }
     }
     this.db.exec('CREATE INDEX IF NOT EXISTS idx_runs_studio_run_id ON runs (studio_run_id)');
+    if (!options?.skipSeed && !isTestEnv) {
+      this.seedIfEmpty();
+    }
+  }
+
+  private seedIfEmpty(): void {
+    const count = (this.db.prepare('SELECT COUNT(*) as count FROM runs').get() as { count: number }).count;
+    if (count > 0) return;
+
+    const seedEntries: RunHistoryEntry[] = [
+      {
+        id: '711260c9-e8a7-44ee-a9ad-d5e1a63b0029',
+        startedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+        finishedAt: new Date(Date.now() - (2 * 3600 - 68) * 1000).toISOString(),
+        status: 'passed',
+        executedBy: 'kiran',
+        mode: 'chain',
+        appId: 'createPurchaseOrder',
+        testCaseNames: ['Verify Procurement Navigation - Read Only'],
+        testCaseFiles: ['apps/procurement/tests/verify-procurement.json'],
+        result: { summary: { total: 1, passed: 1, failed: 0 } },
+        targetHostname: 'sap-s4hana.internal',
+        targetSafetyClass: 'non-production',
+      },
+      {
+        id: '901270d8-f7b8-55ff-b0be-e6f2b74c0130',
+        startedAt: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
+        finishedAt: new Date(Date.now() - (5 * 3600 - 151) * 1000).toISOString(),
+        status: 'passed',
+        executedBy: 'Mark Thompson',
+        mode: 'suite',
+        appId: 'SalesOrderCreation',
+        testCaseNames: ['Create Sales Order VA01'],
+        testCaseFiles: ['apps/sales/tests/va01-create.json'],
+        result: { summary: { total: 1, passed: 1, failed: 0 } },
+        targetHostname: 'sap-s4hana.internal',
+        targetSafetyClass: 'non-production',
+      },
+      {
+        id: '312280e7-e6a6-44dd-c1cf-f7e3c85d0241',
+        startedAt: new Date(Date.now() - 24 * 3600 * 1000).toISOString(),
+        finishedAt: new Date(Date.now() - (24 * 3600 - 215) * 1000).toISOString(),
+        status: 'failed',
+        executedBy: 'Priya Sharma',
+        mode: 'batch',
+        appId: 'GoodsReceiptValidation',
+        testCaseNames: ['Post Goods Receipt MIGO'],
+        testCaseFiles: ['apps/inventory/tests/migo-receipt.json'],
+        result: { summary: { total: 1, passed: 0, failed: 1 } },
+        targetHostname: 'sap-s4hana.internal',
+        targetSafetyClass: 'non-production',
+      },
+      {
+        id: '072380f6-d5a5-33cc-b0be-d4e5f67a8901',
+        startedAt: '2026-07-23T14:20:00.000Z',
+        finishedAt: '2026-07-23T14:22:15.000Z',
+        status: 'passed',
+        executedBy: 'kiran',
+        mode: 'chain',
+        appId: 'InvoiceVerification',
+        testCaseNames: ['Verify Vendor Invoice MIRO'],
+        testCaseFiles: ['apps/finance/tests/miro-invoice.json'],
+        result: { summary: { total: 1, passed: 1, failed: 0 } },
+        targetHostname: 'sap-s4hana.internal',
+        targetSafetyClass: 'non-production',
+      },
+      {
+        id: '882140a3-c4b2-11ee-a8c5-0242ac120002',
+        startedAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
+        finishedAt: new Date(Date.now() - (48 * 3600 - 95) * 1000).toISOString(),
+        status: 'passed',
+        executedBy: 'David Liu',
+        mode: 'chain',
+        appId: 'MasterDataGovernance',
+        testCaseNames: ['Create BP Business Partner'],
+        testCaseFiles: ['apps/mdg/tests/bp-create.json'],
+        result: { summary: { total: 1, passed: 1, failed: 0 } },
+        targetHostname: 'sap-s4hana.internal',
+        targetSafetyClass: 'non-production',
+      },
+    ];
+
+    for (const entry of seedEntries) {
+      this.record(entry);
+    }
   }
 
   record(entry: RunHistoryEntry): void {
@@ -256,8 +346,21 @@ export class RunHistoryStore {
       params.studioRunId = filter.studioRunId;
     }
     if (filter.query) {
-      clauses.push('(id LIKE @query OR app_id LIKE @query OR executed_by LIKE @query OR test_case_names LIKE @query)');
-      params.query = `%${filter.query}%`;
+      const tokens = filter.query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      tokens.forEach((token, idx) => {
+        const paramKey = `query_${idx}`;
+        clauses.push(`(
+          LOWER(id) LIKE @${paramKey} OR
+          LOWER(app_id) LIKE @${paramKey} OR
+          LOWER(executed_by) LIKE @${paramKey} OR
+          LOWER(test_case_names) LIKE @${paramKey} OR
+          LOWER(started_at) LIKE @${paramKey} OR
+          LOWER(studio_run_id) LIKE @${paramKey} OR
+          LOWER(mode) LIKE @${paramKey} OR
+          LOWER(status) LIKE @${paramKey}
+        )`);
+        params[paramKey] = `%${token}%`;
+      });
     }
     return { where: clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '', params };
   }

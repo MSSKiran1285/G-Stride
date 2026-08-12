@@ -2,14 +2,15 @@
   "name": "sap-taf",
   "private": true,
   "version": "2.1.0",
-  "description": "QA/4HANA Studio test automation platform.",
+  "description": "G-Stride test automation platform.",
   "workspaces": [
     "packages/*"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
+    "postinstall": "node -e \"if (!process.env.CI) { require('child_process').execSync('npx playwright install chromium', { stdio: 'inherit' }); }\"",
     "build": "tsc -b && npm run build:web",
     "build:web": "npm run build --workspace=@taf/studio-web",
     "dev": "npm run build:web && tsx packages/studio-server/src/standalone.ts",

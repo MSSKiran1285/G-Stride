@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
-import type { DiscoveredControl, SapIntegrationStatus, ScanSessionInfo } from '../types';
+import type { DiscoveredControl, ScanSessionInfo } from '../types';
 import { CurationList } from './CurationList';
 import type { CurationListHandle } from './CurationList';
 import { ObjectBrowser } from './ObjectBrowser';
+import { AsyncFeedback } from './WorkspacePrimitives';
 
 export function ObjectScanner({
   initialAppId,
@@ -20,8 +21,9 @@ export function ObjectScanner({
   captureTarget?: { appId: string; fieldLabel: string; onUse: (name: string) => void };
 } = {}) {
   const [url, setUrl] = useState('');
-  const [sapTarget, setSapTarget] = useState<SapIntegrationStatus | null>(null);
   const [appId, setAppId] = useState(captureTarget?.appId ?? '');
+  const [domain, setDomain] = useState(() => localStorage.getItem('taf.objectScanner.domain') ?? '');
+  const [processAreas, setProcessAreas] = useState<string[]>([]);
   const [session, setSession] = useState<ScanSessionInfo | null>(null);
   const [controls, setControls] = useState<DiscoveredControl[] | null>(null);
   const [pageUrl, setPageUrl] = useState<string | null>(null);
@@ -73,7 +75,6 @@ export function ObjectScanner({
     api
       .getIntegrationSettings()
       .then((settings) => {
-        setSapTarget(settings.sap);
         if (settings.sap.configured && settings.sap.url) setUrl(settings.sap.url);
       })
       .catch(() => undefined);
@@ -109,6 +110,20 @@ export function ObjectScanner({
     if (appId) localStorage.setItem('taf.objectScanner.appId', appId);
   }, [appId]);
 
+  useEffect(() => {
+    api.listProcessAreas().then(setProcessAreas).catch(() => undefined);
+  }, []);
+
+  useEffect(() => {
+    if (domain) localStorage.setItem('taf.objectScanner.domain', domain);
+  }, [domain]);
+
+  async function syncAppIdTag() {
+    if (appId.trim() && domain.trim()) {
+      await api.setTag('appId', appId.trim(), domain.trim()).catch(() => undefined);
+    }
+  }
+
   async function startPicking() {
     setError(null);
     try {
@@ -140,22 +155,24 @@ export function ObjectScanner({
   }
 
   async function open() {
-    if (!url.trim()) {
+    let formattedUrl = url.trim();
+    if (!formattedUrl) {
       setError('Enter a URL to open first.');
       return;
     }
-    if (!appId.trim()) {
-      setError('Enter an App ID first — this becomes the default when saving what you curate here (shell chrome saves separately either way).');
-      return;
+    if (!/^https?:\/\//i.test(formattedUrl)) {
+      formattedUrl = `https://${formattedUrl}`;
+      setUrl(formattedUrl);
     }
     setError(null);
     setBusy(true);
     try {
-      const info = await api.openScanSession(url.trim());
+      await syncAppIdTag();
+      const info = await api.openScanSession(formattedUrl);
       setSession(info);
       setControls(null);
     } catch (e) {
-      setError(String(e));
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -163,12 +180,13 @@ export function ObjectScanner({
 
   async function capture() {
     if (!appId.trim()) {
-      setError('Enter an App ID for this screen before capturing.');
+      setError('Enter an APP ID for this screen before capturing.');
       return;
     }
     setError(null);
     setBusy(true);
     try {
+      await syncAppIdTag();
       const result = await api.captureScan();
       setControls(result.controls);
       setPageUrl(result.pageUrl);
@@ -202,94 +220,98 @@ export function ObjectScanner({
     }
   }
 
-  return (
-    <div className="stack">
-      <div className="sticky-top stack">
-      <div className="panel stack">
-        <p className="section-title">Scan a live screen</p>
-
+  const scannerContent = (
+    <div className="stack" style={{ gap: '1rem' }}>
+      <div className="panel stack cozy-scanner-panel" style={{ gap: '0.6rem' }}>
         {captureTarget && (
           <p className="fiori-message-strip" role="status">
-            Capturing for <strong>{captureTarget.fieldLabel}</strong> (App ID: {captureTarget.appId}) — save an object below and use it to fill that field.
+            Capturing for <strong>{captureTarget.fieldLabel}</strong> (APP ID: {captureTarget.appId}) — save an object below and use it to fill that field.
           </p>
         )}
 
-        {!session ? (
-          <div className="stack">
-            <div className="row">
-              <input
-                type="text"
-                aria-label="SAP page URL to scan"
-                placeholder="Configure the SAP target in Settings"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                style={{ flex: 2 }}
-              />
-            <input aria-label="App ID for scan" type="text" placeholder="App ID, e.g. procurement" value={appId} onChange={(e) => setAppId(e.target.value)} style={{ flex: 1 }} />
-            <button className="primary" onClick={open} disabled={busy}>
-              Open scan session
-            </button>
-            </div>
-            <span className="hint">The initial URL comes from Settings → Test-system connections → SAP. You can append or replace the Fiori route for this scan.</span>
-            {sapTarget?.configured && (
-              <span className={`fiori-message-strip ${sapTarget.verificationStatus === 'live-verified' ? 'success' : 'warning'}`}>
-                Target: {sapTarget.safetyClass === 'non-production' ? 'Non-production' : sapTarget.safetyClass === 'production-like' ? 'Production-like' : 'Unclassified'}
-                {' · '}
-                {sapTarget.verificationStatus === 'live-verified' && sapTarget.verifiedAt
-                  ? `verified ${new Date(sapTarget.verifiedAt).toLocaleString()}`
-                  : 'verification required before execution'}
-              </span>
-            )}
-          </div>
-        ) : (
-          <div className="row" style={{ alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
-            <span className="badge running">open</span>
-            <span className="hint" style={{ flex: 1, minWidth: '10rem' }}>
-              Since {new Date(session.openedAt).toLocaleTimeString()} — {session.url}
-            </span>
+        <div className="cozy-scanner-grid">
+          <div className="cozy-field-group field-url">
+            <label className="cozy-label">Application URL</label>
             <input
               type="text"
-              aria-label="App ID for the next capture"
-              placeholder="App ID for the next capture"
+              aria-label="Application URL"
+              placeholder="Configure the SAP target URL, e.g. https://my-sap.corp/..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="cozy-input"
+            />
+          </div>
+
+          <div className="cozy-field-group field-domain">
+            <label className="cozy-label">Domain</label>
+            <div className="cozy-input-wrapper">
+              <input
+                type="text"
+                list="scanner-domain-options"
+                aria-label="Domain"
+                placeholder="Select or type new domain..."
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                className="cozy-input"
+              />
+              <datalist id="scanner-domain-options">
+                {processAreas.map((area) => (
+                  <option key={area} value={area} />
+                ))}
+              </datalist>
+            </div>
+          </div>
+
+          <div className="cozy-field-group field-appid">
+            <label className="cozy-label">APP ID</label>
+            <input
+              type="text"
+              aria-label="APP ID"
+              placeholder="e.g. C_SalesOrderManage"
               value={appId}
               onChange={(e) => setAppId(e.target.value)}
-              style={{ maxWidth: '14rem' }}
-              title="Change this before each Capture if you've navigated to a different app in the same window"
+              className="cozy-input"
             />
-            <button className="primary" onClick={capture} disabled={busy}>
-              Capture
-            </button>
-            <button
-              className={picking === 'waiting' ? 'danger-solid' : 'success'}
-              onClick={picking === 'waiting' ? stopPicking : startPicking}
-              disabled={busy}
-            >
-              {picking === 'waiting' ? 'Stop picking' : 'Select now'}
-            </button>
-            {pickedControls.length > 0 && (
-              <button
-                className="primary"
-                disabled={busy || pickSaveState.ready === 0 || pickSaveState.busy}
-                onClick={() => curationListRef.current?.saveAll()}
-              >
-                {pickSaveState.busy ? 'Saving…' : `Save all (${pickSaveState.ready})`}
-              </button>
-            )}
-            <button className="neutral-solid" onClick={close} disabled={busy}>
-              Close session
-            </button>
           </div>
-        )}
 
-        {error && <p className="error-text">{error}</p>}
-      </div>
-      </div>
+          <div className="cozy-field-group field-action">
+            <label className="cozy-label">&nbsp;</label>
+            <div className="cozy-btn-group">
+              <button className="cozy-btn cozy-btn-open" onClick={open} disabled={busy || Boolean(session)}>
+                {busy ? 'Opening…' : session ? 'Session Open' : 'Open scan session'}
+              </button>
 
-      <ObjectBrowser
-        initialAppId={initialAppId}
-        initialObjectName={initialObjectName}
-        onSelectionChange={onSelectionChange}
-      />
+              <button className="cozy-btn cozy-btn-capture" onClick={capture} disabled={busy || !session}>
+                Capture
+              </button>
+
+              <button
+                className={`cozy-btn ${picking === 'waiting' ? 'danger-solid' : 'cozy-btn-select'}`}
+                onClick={picking === 'waiting' ? stopPicking : startPicking}
+                disabled={busy || !session}
+              >
+                {picking === 'waiting' ? 'Stop picking' : 'Select Now'}
+              </button>
+
+              {pickedControls.length > 0 && session && (
+                <button
+                  className="cozy-btn cozy-btn-capture"
+                  disabled={busy || pickSaveState.ready === 0 || pickSaveState.busy}
+                  onClick={() => curationListRef.current?.saveAll()}
+                >
+                  {pickSaveState.busy ? 'Saving…' : `Save all (${pickSaveState.ready})`}
+                </button>
+              )}
+
+              <button className="cozy-btn cozy-btn-close" onClick={close} disabled={busy || !session}>
+                Close Session
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {error && <AsyncFeedback state="error" message={error} onRetry={open} compact />}
+      </div>
 
       {pickedControls.length > 0 && (
         <CurationList
@@ -310,22 +332,16 @@ export function ObjectScanner({
             {pageUrl && <span className="hint"> — {pageUrl}</span>}
           </p>
 
-          {(() => {
-            const shownCount = controls.filter((c) => c.category !== 'structural').length;
-            const hiddenCount = controls.length - shownCount;
-            return (
-              <div className="row" style={{ alignItems: 'center' }}>
-                <span className="hint" style={{ flex: 1 }}>
-                  {showAll
-                    ? `Showing all ${controls.length} controls, raw — including structural scaffolding.`
-                    : `${shownCount} of ${controls.length} shown, grouped by section — ${hiddenCount} structural control${hiddenCount === 1 ? '' : 's'} hidden.`}
-                </span>
-                <button className="ghost" onClick={() => setShowAll((v) => !v)}>
-                  {showAll ? 'Back to curation view' : `Show all ${controls.length} raw`}
-                </button>
-              </div>
-            );
-          })()}
+          <div className="row" style={{ alignItems: 'center' }}>
+            <span className="hint" style={{ flex: 1 }}>
+              {showAll
+                ? `Showing all ${controls.length} controls, raw.`
+                : `${controls.filter((c) => c.category !== 'structural').length} of ${controls.length} shown, grouped by section.`}
+            </span>
+            <button className="ghost" onClick={() => setShowAll((v) => !v)}>
+              {showAll ? 'Back to curation view' : 'Show all raw'}
+            </button>
+          </div>
 
           {!showAll && (
             <CurationList
@@ -336,36 +352,26 @@ export function ObjectScanner({
           )}
 
           {showAll && (
-            <div className="table-wrap">
-              <table>
+            <div className="table-responsive">
+              <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Category</th>
-                    <th>Scope</th>
-                    <th>Control id</th>
+                    <th>Control ID</th>
                     <th>Type</th>
-                    <th>Parent id</th>
-                    <th>Text</th>
+                    <th>Text / Label</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {controls.map((c, i) => (
-                    <tr key={i}>
-                      <td>
-                        <span className={`badge ${c.category}`}>{c.category}</span>
-                      </td>
-                      <td>{c.scope === 'shell' && <span className="badge shell">shell</span>}</td>
-                      <td style={{ wordBreak: 'break-all' }}>{c.controlId}</td>
-                      <td>{c.controlType}</td>
-                      <td style={{ wordBreak: 'break-all' }} className="hint">
-                        {c.parentId ?? ''}
-                      </td>
-                      <td>{c.text ?? ''}</td>
+                  {controls.map((c) => (
+                    <tr key={c.controlId}>
+                      <td><code>{c.controlId}</code></td>
+                      <td><code>{c.controlType}</code></td>
+                      <td>{c.text || '—'}</td>
                     </tr>
                   ))}
                   {controls.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="hint">
+                      <td colSpan={3} className="hint">
                         No UI5 controls found on the current page — is the app fully loaded?
                       </td>
                     </tr>
@@ -377,5 +383,14 @@ export function ObjectScanner({
         </div>
       )}
     </div>
+  );
+
+  return (
+    <ObjectBrowser
+      initialAppId={initialAppId}
+      initialObjectName={initialObjectName}
+      onSelectionChange={onSelectionChange}
+      scannerContent={scannerContent}
+    />
   );
 }

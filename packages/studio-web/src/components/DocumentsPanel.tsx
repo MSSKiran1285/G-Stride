@@ -1,36 +1,86 @@
-import { CheckCircle2, Download, History, Search, ShieldCheck, XCircle } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  FileText,
+  Search,
+  XCircle,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import type { CapturedDocument, EvidenceGovernance, RunHistoryEntry, RunHistoryFilter, RunHistorySummary, RunMode } from '../types';
+import type { CapturedDocument, RunHistoryEntry, RunHistoryFilter, RunHistorySummary, RunMode } from '../types';
 import { studioRoutes } from '../routes';
-import { AsyncFeedback, Card, EmptyState, PageHeader, Toolbar } from './WorkspacePrimitives';
+import { AsyncFeedback, Card, EmptyState } from './WorkspacePrimitives';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
-function formatTimestamp(iso: string): string {
+function formatDate(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
   return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
     month: 'short',
     day: 'numeric',
+    year: 'numeric',
+  }).format(date);
+}
+
+function formatTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return new Intl.DateTimeFormat('en-US', {
     hour: 'numeric',
     minute: '2-digit',
-    timeZoneName: 'short',
-  }).format(new Date(iso));
+    hour12: true,
+  }).format(date);
 }
 
 function formatDuration(durationMs: number): string {
   if (!Number.isFinite(durationMs) || durationMs < 0) return '—';
-  const seconds = Math.round(durationMs / 1000);
-  const minutes = Math.floor(seconds / 60);
-  return minutes > 0 ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
+  const totalSeconds = Math.round(durationMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0 ? `${minutes}m ${seconds.toString().padStart(2, '0')}s` : `${seconds}s`;
 }
 
 function evidencePdfUrl(path: string): string {
   return `/${path.replace(/\\/g, '/')}`;
 }
 
-/** Renders a run's Test/Group names, linking each one to its source file when known —
- *  BL-035 AC4's "source artifacts are linked from the run record". */
+function generateEvidenceId(run: RunHistorySummary, index: number): string {
+  const date = new Date(run.startedAt);
+  if (Number.isNaN(date.getTime())) return `EVD-${run.id.slice(0, 8).toUpperCase()}`;
+  const yyyy = date.getFullYear();
+  const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+  const dd = date.getDate().toString().padStart(2, '0');
+  const seq = (index + 1).toString().padStart(3, '0');
+  return `EVD-${yyyy}-${mm}${dd}-${seq}`;
+}
+
+function fuzzyMatchRun(run: RunHistorySummary, index: number, rawQuery: string): boolean {
+  if (!rawQuery || !rawQuery.trim()) return true;
+  const q = rawQuery.trim().toLowerCase();
+  const tokens = q.split(/\s+/).filter(Boolean);
+
+  const evidenceId = generateEvidenceId(run, index).toLowerCase();
+  const dateStr = formatDate(run.startedAt).toLowerCase();
+  const timeStr = formatTime(run.startedAt).toLowerCase();
+  const durationStr = formatDuration(run.durationMs).toLowerCase();
+  const statusStr = (run.status || '').toLowerCase();
+  const executedBy = (run.executedBy || '').toLowerCase();
+  const testName = (run.testCaseNames?.[0] || run.appId || '').toLowerCase();
+  const appId = (run.appId || '').toLowerCase();
+  const id = (run.id || '').toLowerCase();
+  const studioRunId = (run.studioRunId || '').toLowerCase();
+
+  const searchableBlob = `${evidenceId} ${dateStr} ${timeStr} ${durationStr} ${statusStr} ${executedBy} ${testName} ${appId} ${id} ${studioRunId}`;
+
+  return tokens.every((token) => searchableBlob.includes(token));
+}
+
 function ArtifactChips({ names, files, onOpen }: { names: string[]; files?: string[]; onOpen: (file: string) => void }) {
   return (
     <div className="audit-run-chips">
@@ -48,6 +98,8 @@ function ArtifactChips({ names, files, onOpen }: { names: string[]; files?: stri
   );
 }
 
+type SortColumnKey = 'startedAt' | 'durationMs' | 'status' | 'executedBy' | 'test';
+
 export function DocumentsPanel({
   selectedRunId,
   onSelectedRunChange,
@@ -57,8 +109,6 @@ export function DocumentsPanel({
   selectedRunId?: string;
   onSelectedRunChange?: (runId: string | null) => void;
   onNavigateToRoute?: (path: string) => void;
-  /** HC-008: seeds the status filter on mount (e.g. Overview's "Needs attention" failed-runs
-   *  link) — read once at mount, not kept in sync with later prop changes. */
   initialStatusFilter?: '' | 'passed' | 'failed';
 } = {}) {
   const [runs, setRuns] = useState<RunHistorySummary[]>([]);
@@ -69,12 +119,12 @@ export function DocumentsPanel({
   const [range, setRange] = useState<'all' | '7' | '30' | '90'>('all');
   const [environment, setEnvironment] = useState('');
   const [lineageStudioRunId, setLineageStudioRunId] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'startedAt' | 'durationMs' | 'status'>('startedAt');
+  const [sortBy, setSortBy] = useState<SortColumnKey>('startedAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [governance, setGovernance] = useState<EvidenceGovernance | null>(null);
+
   const [selectedRun, setSelectedRun] = useState<RunHistoryEntry | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<CapturedDocument[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -88,7 +138,7 @@ export function DocumentsPanel({
       environment: environment.trim() || undefined,
       dateFrom: cutoffDays ? new Date(Date.now() - cutoffDays * 86_400_000).toISOString() : undefined,
       studioRunId: lineageStudioRunId ?? undefined,
-      sortBy,
+      sortBy: sortBy === 'executedBy' || sortBy === 'test' ? 'startedAt' : sortBy,
       sortDirection,
       limit: PAGE_SIZE,
       offset: page * PAGE_SIZE,
@@ -98,10 +148,30 @@ export function DocumentsPanel({
   function loadRuns() {
     setLoading(true);
     setError(null);
-    api.listAuditRuns(currentFilter())
+    api
+      .listAuditRuns(currentFilter())
       .then(({ items, total: nextTotal }) => {
-        setRuns(items);
-        setTotal(nextTotal);
+        let processedItems = items;
+        if (query.trim()) {
+          processedItems = processedItems.filter((run, idx) => fuzzyMatchRun(run, idx, query));
+        }
+        if (sortBy === 'executedBy') {
+          processedItems = [...processedItems].sort((a, b) => {
+            const nameA = a.executedBy || '';
+            const nameB = b.executedBy || '';
+            const cmp = nameA.localeCompare(nameB);
+            return sortDirection === 'asc' ? cmp : -cmp;
+          });
+        } else if (sortBy === 'test') {
+          processedItems = [...processedItems].sort((a, b) => {
+            const nameA = a.testCaseNames?.[0] || a.appId || '';
+            const nameB = b.testCaseNames?.[0] || b.appId || '';
+            const cmp = nameA.localeCompare(nameB);
+            return sortDirection === 'asc' ? cmp : -cmp;
+          });
+        }
+        setRuns(processedItems);
+        setTotal(query.trim() ? processedItems.length : nextTotal);
       })
       .catch((reason) => setError(String(reason)))
       .finally(() => setLoading(false));
@@ -111,10 +181,6 @@ export function DocumentsPanel({
     loadRuns();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, status, mode, range, environment, lineageStudioRunId, sortBy, sortDirection, page]);
-
-  useEffect(() => {
-    api.getEvidenceGovernance().then(setGovernance).catch(() => setGovernance(null));
-  }, []);
 
   useEffect(() => {
     if (!selectedRunId) {
@@ -137,6 +203,39 @@ export function DocumentsPanel({
       .finally(() => setDetailLoading(false));
   }, [selectedRunId]);
 
+  function handleHeaderSort(colKey: SortColumnKey) {
+    if (sortBy === colKey) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(colKey);
+      setSortDirection('desc');
+    }
+    setPage(0);
+  }
+
+  function renderSortableTh(label: string, colKey: SortColumnKey, className?: string) {
+    const isActive = sortBy === colKey;
+    return (
+      <th
+        key={label}
+        className={`sortable-th ${isActive ? 'active' : ''} ${className ?? ''}`}
+        onClick={() => handleHeaderSort(colKey)}
+        title={`Sort by ${label}`}
+      >
+        <div className="th-content">
+          <span>{label}</span>
+          <span className="sort-icon-wrap" aria-hidden="true">
+            {isActive ? (
+              sortDirection === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />
+            ) : (
+              <ArrowUpDown size={13} className="sort-idle" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
+  }
+
   function viewExecution(studioRunId: string) {
     onSelectedRunChange?.(null);
     setLineageStudioRunId(studioRunId);
@@ -147,50 +246,145 @@ export function DocumentsPanel({
     onNavigateToRoute?.(studioRoutes.test(file));
   }
 
-  const passed = runs.filter((run) => run.status === 'passed').length;
-  const failed = runs.length - passed;
+  const passedCount = runs.filter((run) => run.status === 'passed').length;
+  const failedCount = runs.filter((run) => run.status === 'failed').length;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="audit-library">
-      <PageHeader
-        className="audit-library-header"
-        eyebrow="Immutable execution records"
-        title="Audit and Evidence"
-        description="Find a run by process, application, outcome, date, run ID, or executor—without navigating date folders."
-        actions={<button type="button" onClick={() => loadRuns()} disabled={loading}>{loading ? 'Refreshing…' : 'Refresh'}</button>}
-      />
+    <div className="audit-evidence-view">
+      {/* Header section */}
+      <header className="audit-header-container">
+        <h1 className="audit-main-title">Evidence Vault</h1>
+        <p className="audit-subtitle">
+          View and manage automated test execution evidence and audit trails for compliance and traceability.
+        </p>
+      </header>
 
-      <section className="audit-stat-strip" aria-label="Audit summary">
-        <div><History size={17} /><span><strong>{total}</strong> Total runs</span></div>
-        <div><CheckCircle2 size={17} /><span><strong>{passed}</strong> Passed on this page</span></div>
-        <div><XCircle size={17} /><span><strong>{failed}</strong> Failed on this page</span></div>
-      </section>
-
-      {governance && (
-        <section className="evidence-governance-strip" aria-label="Evidence governance">
-          <ShieldCheck size={18} aria-hidden="true" />
-          <div>
-            <strong>Canonical evidence is owner-protected and redaction is enforced</strong>
-            <span>
-              Retention: until the workspace owner deletes it · credentials excluded · execution logs filtered
-            </span>
+      {/* 3 Metric Cards Strip */}
+      <div className="audit-metrics-row">
+        <div className="audit-metric-card">
+          <div className="metric-icon-wrap total">
+            <FileText size={20} aria-hidden="true" />
           </div>
-        </section>
-      )}
+          <div className="metric-content">
+            <span className="metric-value">{loading ? '—' : total}</span>
+            <span className="metric-label">Total runs</span>
+          </div>
+        </div>
+
+        <div className="audit-metric-card">
+          <div className="metric-icon-wrap passed">
+            <CheckCircle2 size={20} aria-hidden="true" />
+          </div>
+          <div className="metric-content">
+            <span className="metric-value">{loading ? '—' : passedCount}</span>
+            <span className="metric-label">Passed</span>
+          </div>
+        </div>
+
+        <div className="audit-metric-card">
+          <div className="metric-icon-wrap failed">
+            <XCircle size={20} aria-hidden="true" />
+          </div>
+          <div className="metric-content">
+            <span className="metric-value">{loading ? '—' : failedCount}</span>
+            <span className="metric-label">Failed</span>
+          </div>
+        </div>
+      </div>
 
       {lineageStudioRunId && (
         <div className="fiori-message-strip info audit-lineage-strip">
           <span>Showing only runs from execution <code>{lineageStudioRunId}</code>.</span>
-          <button type="button" className="ghost" onClick={() => { setLineageStudioRunId(null); setPage(0); }}>Clear</button>
+          <button type="button" className="ghost" onClick={() => { setLineageStudioRunId(null); setPage(0); }}>
+            Clear
+          </button>
         </div>
       )}
 
+      {/* Structured Search Bar & Compact Side-by-Side Filters */}
+      <div className="audit-filter-stack">
+        <div className="audit-search-row">
+          <Search size={16} className="search-icon" aria-hidden="true" />
+          <input
+            type="search"
+            aria-label="Search evidence ID, executed by, date..."
+            placeholder="Search evidence ID, executed by, test name, date..."
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setPage(0);
+            }}
+          />
+        </div>
+
+        <div className="audit-filters-subrow">
+          <select
+            className="compact-select"
+            aria-label="Filter by environment"
+            value={environment}
+            onChange={(e) => {
+              setEnvironment(e.target.value);
+              setPage(0);
+            }}
+          >
+            <option value="">Environment: All</option>
+            <option value="non-production">Non-production</option>
+            <option value="production-like">Production-like</option>
+          </select>
+
+          <select
+            className="compact-select"
+            aria-label="Filter by outcome"
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value as '' | 'passed' | 'failed');
+              setPage(0);
+            }}
+          >
+            <option value="">Outcome: All</option>
+            <option value="passed">Passed</option>
+            <option value="failed">Failed</option>
+          </select>
+
+          <select
+            className="compact-select"
+            aria-label="Filter by mode"
+            value={mode}
+            onChange={(e) => {
+              setMode(e.target.value as '' | RunMode);
+              setPage(0);
+            }}
+          >
+            <option value="">Mode: All</option>
+            <option value="chain">Chain</option>
+            <option value="suite">Suite</option>
+            <option value="batch">Batch</option>
+          </select>
+
+          <select
+            className="compact-select"
+            aria-label="Filter by date range"
+            value={range}
+            onChange={(e) => {
+              setRange(e.target.value as 'all' | '7' | '30' | '90');
+              setPage(0);
+            }}
+          >
+            <option value="all">Date: All time</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Selected Run Detail Drawer */}
       {(selectedRunId || detailLoading) && (
         <Card className="audit-detail-panel" label="Selected audit record">
           <div className="audit-detail-heading">
             <div>
-              <span className="canvas-eyebrow">Stable audit record</span>
+              <span className="canvas-eyebrow">Audit record</span>
               <h3>{selectedRun?.testCaseNames[0] ?? (detailLoading ? 'Loading record…' : 'Record unavailable')}</h3>
             </div>
             <button type="button" onClick={() => onSelectedRunChange?.(null)}>Close</button>
@@ -201,13 +395,11 @@ export function DocumentsPanel({
               <dl className="run-review-summary">
                 <div><dt>Run ID</dt><dd><code>{selectedRun.id}</code></dd></div>
                 <div><dt>Outcome</dt><dd>{selectedRun.status.toUpperCase()}</dd></div>
-                <div><dt>Started</dt><dd>{formatTimestamp(selectedRun.startedAt)}</dd></div>
+                <div><dt>Date</dt><dd>{formatDate(selectedRun.startedAt)}</dd></div>
+                <div><dt>Time</dt><dd>{formatTime(selectedRun.startedAt)}</dd></div>
                 <div><dt>Duration</dt><dd>{formatDuration(selectedRun.durationMs)}</dd></div>
-                <div><dt>Executor</dt><dd>{selectedRun.executedBy}</dd></div>
+                <div><dt>Executed by</dt><dd>{selectedRun.executedBy}</dd></div>
                 <div><dt>Application</dt><dd>{selectedRun.appId || 'No App ID'}</dd></div>
-                {(selectedRun.targetHostname || selectedRun.targetSafetyClass) && (
-                  <div><dt>Environment</dt><dd>{[selectedRun.targetHostname, selectedRun.targetSafetyClass].filter(Boolean).join(' · ')}</dd></div>
-                )}
               </dl>
               <ArtifactChips names={selectedRun.testCaseNames} files={selectedRun.testCaseFiles} onOpen={openArtifact} />
               <div className="audit-lineage-actions">
@@ -221,15 +413,10 @@ export function DocumentsPanel({
                     View this execution's other runs
                   </button>
                 )}
-                {selectedRun.parentStudioRunId && (
-                  <button type="button" className="ghost" onClick={() => viewExecution(selectedRun.parentStudioRunId!)}>
-                    View source execution (this was a rerun)
-                  </button>
-                )}
               </div>
               {selectedRun.evidencePdfPath && (
-                <a className="button" href={evidencePdfUrl(selectedRun.evidencePdfPath)} target="_blank" rel="noreferrer">
-                  <Download size={15} /> Open canonical evidence
+                <a className="button primary" href={evidencePdfUrl(selectedRun.evidencePdfPath)} target="_blank" rel="noreferrer">
+                  <Download size={15} /> Open evidence PDF ↗
                 </a>
               )}
               {selectedDocuments.length > 0 && (
@@ -247,128 +434,141 @@ export function DocumentsPanel({
         </Card>
       )}
 
-      <Toolbar className="audit-toolbar" label="Filter audit runs">
-        <label className="audit-search">
-          <Search size={16} aria-hidden="true" />
-          <input
-            type="search"
-            aria-label="Search audit runs"
-            placeholder="Search process, App ID, run ID, or executor"
-            value={query}
-            onChange={(event) => { setQuery(event.currentTarget.value); setPage(0); }}
-          />
-        </label>
-        <input
-          type="search"
-          aria-label="Filter audit runs by environment"
-          placeholder="Environment (hostname or safety class)"
-          value={environment}
-          onChange={(event) => { setEnvironment(event.currentTarget.value); setPage(0); }}
-        />
-        <select aria-label="Filter audit runs by status" value={status} onChange={(event) => { setStatus(event.currentTarget.value as '' | 'passed' | 'failed'); setPage(0); }}>
-          <option value="">All outcomes</option>
-          <option value="passed">Passed</option>
-          <option value="failed">Failed</option>
-        </select>
-        <select aria-label="Filter audit runs by mode" value={mode} onChange={(event) => { setMode(event.currentTarget.value as '' | RunMode); setPage(0); }}>
-          <option value="">All modes</option>
-          <option value="chain">Chain</option>
-          <option value="suite">Suite</option>
-          <option value="batch">Batch</option>
-        </select>
-        <select aria-label="Filter audit runs by date range" value={range} onChange={(event) => { setRange(event.currentTarget.value as 'all' | '7' | '30' | '90'); setPage(0); }}>
-          <option value="all">All dates</option>
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
-        <select
-          aria-label="Sort audit runs"
-          value={`${sortBy}:${sortDirection}`}
-          onChange={(event) => {
-            const [nextSortBy, nextDirection] = event.currentTarget.value.split(':') as ['startedAt' | 'durationMs' | 'status', 'asc' | 'desc'];
-            setSortBy(nextSortBy);
-            setSortDirection(nextDirection);
-            setPage(0);
-          }}
-        >
-          <option value="startedAt:desc">Newest first</option>
-          <option value="startedAt:asc">Oldest first</option>
-          <option value="durationMs:desc">Longest duration first</option>
-          <option value="durationMs:asc">Shortest duration first</option>
-          <option value="status:asc">Outcome</option>
-        </select>
-      </Toolbar>
-
       {error && <AsyncFeedback state="error" message={error} onRetry={() => loadRuns()} />}
-      {loading && runs.length === 0 && <AsyncFeedback state="loading" message="Loading audit records…" />}
 
-      <div className="audit-result-heading">
-        <strong>{total} run{total === 1 ? '' : 's'}</strong>
-        <span>Page {page + 1} of {pageCount}</span>
+      {/* Main Datatable with Header Sorting */}
+      <div className="audit-table-card">
+        {loading && runs.length === 0 ? (
+          <AsyncFeedback state="loading" message="Loading audit records…" />
+        ) : runs.length === 0 ? (
+          <EmptyState
+            title={total === 0 ? 'No evidence records yet' : 'No matching evidence records'}
+            description={total === 0 ? 'Completed test runs will generate evidence records here.' : 'Adjust search query or filters.'}
+          />
+        ) : (
+          <table className="audit-evidence-table">
+            <thead>
+              <tr>
+                <th style={{ width: '16%' }}>{renderSortableTh('Evidence ID', 'startedAt')}</th>
+                <style>{`.audit-evidence-table th { padding: 0.4rem 0.55rem; }`}</style>
+                <th style={{ width: '13%' }}>{renderSortableTh('Execution Date', 'startedAt')}</th>
+                <th style={{ width: '11%' }}>{renderSortableTh('Execution Time', 'startedAt')}</th>
+                <th style={{ width: '9%' }}>{renderSortableTh('Duration', 'durationMs')}</th>
+                <th style={{ width: '9%' }}>{renderSortableTh('Status', 'status')}</th>
+                <th style={{ width: '12%' }}>{renderSortableTh('Executed by', 'executedBy')}</th>
+                <th style={{ width: '30%', textAlign: 'left' }}>{renderSortableTh('Test', 'test')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {runs.map((run, idx) => {
+                const evidenceId = generateEvidenceId(run, page * PAGE_SIZE + idx);
+                const hasPdf = Boolean(run.evidencePdfPath);
+                const testName = run.testCaseNames?.[0] || run.appId || '—';
+                const statusClass = run.status === 'passed' ? 'passed' : 'failed';
+                return (
+                  <tr key={run.id}>
+                    <td className="td-evidence-id">
+                      {hasPdf ? (
+                        <a
+                          href={evidencePdfUrl(run.evidencePdfPath!)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`evidence-id-link ${statusClass}`}
+                          title="Open evidence PDF document"
+                        >
+                          {evidenceId}
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`evidence-id-btn ${statusClass}`}
+                          onClick={() => onSelectedRunChange?.(run.id)}
+                        >
+                          {evidenceId}
+                        </button>
+                      )}
+                    </td>
+                    <td>{formatDate(run.startedAt)}</td>
+                    <td>{formatTime(run.startedAt)}</td>
+                    <td>{formatDuration(run.durationMs)}</td>
+                    <td>
+                      <span className={`status-pill ${run.status}`}>
+                        {run.status === 'passed' ? 'Passed' : 'Failed'}
+                      </span>
+                    </td>
+                    <td>{run.executedBy || 'QA Automation'}</td>
+                    <td className="td-test-name">
+                      <button
+                        type="button"
+                        className="btn-test-name"
+                        onClick={() => onSelectedRunChange?.(run.id)}
+                        title="Click to view audit record details"
+                      >
+                        {testName}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {!loading && runs.length === 0 ? (
-        <EmptyState
-          title={total === 0 ? 'No audit records yet' : 'No matching runs'}
-          description={total === 0
-            ? 'Completed executions will create immutable records here.'
-            : 'Adjust the search or filters to broaden the result.'}
-        />
-      ) : (
-        <div className="audit-run-list">
-          {runs.map((run) => (
-            <article className="audit-run-card" key={run.id}>
-              <div className={`audit-run-status ${run.status}`} aria-hidden="true" />
-              <div className="audit-run-main">
-                <div className="audit-run-title-row">
-                  <div>
-                    <h3>{run.testCaseNames[0] || 'Unnamed execution'}</h3>
-                    {run.testCaseNames.length > 1 && <span>+{run.testCaseNames.length - 1} linked test cases</span>}
-                  </div>
-                  <span className={`badge ${run.status}`}>{run.status}</span>
-                </div>
-                <div className="audit-run-meta">
-                  <span>{formatTimestamp(run.startedAt)}</span>
-                  <span>{formatDuration(run.durationMs)}</span>
-                  <span>{run.mode}</span>
-                  <span>{run.appId || 'No App ID'}</span>
-                  <span>{run.executedBy}</span>
-                  {(run.targetHostname || run.targetSafetyClass) && (
-                    <span>{[run.targetHostname, run.targetSafetyClass].filter(Boolean).join(' · ')}</span>
-                  )}
-                </div>
-                <ArtifactChips names={run.testCaseNames} files={run.testCaseFiles} onOpen={openArtifact} />
-                <code className="audit-run-id">{run.id}</code>
-              </div>
-              <div className="audit-run-action">
-                <button type="button" onClick={() => onSelectedRunChange?.(run.id)}>View record</button>
-                {run.evidencePdfPath ? (
-                  <a href={evidencePdfUrl(run.evidencePdfPath)} target="_blank" rel="noreferrer">
-                    <Download size={15} /> Evidence PDF
-                  </a>
-                ) : (
-                  <span title="No canonical PDF was archived for this run. This commonly applies to older runs or executions that failed before evidence generation.">
-                    No archived evidence
-                  </span>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
+      {/* Footer Pagination */}
+      <footer className="audit-pagination-bar">
+        <span className="pagination-info">
+          Page {page + 1} of {pageCount}
+        </span>
 
-      {total > PAGE_SIZE && (
-        <div className="audit-pagination">
-          <button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0}>
-            Previous
+        <div className="pagination-controls">
+          <button
+            type="button"
+            className="page-nav-btn"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            aria-label="Previous page"
+          >
+            <ChevronLeft size={16} aria-hidden="true" />
           </button>
-          <span>Page {page + 1} of {pageCount}</span>
-          <button type="button" onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))} disabled={page + 1 >= pageCount}>
-            Next
+
+          {Array.from({ length: Math.min(5, pageCount) }, (_, i) => {
+            const pageNum = i;
+            const isActive = page === pageNum;
+            return (
+              <button
+                key={pageNum}
+                type="button"
+                className={`page-num-btn ${isActive ? 'active' : ''}`}
+                onClick={() => setPage(pageNum)}
+              >
+                {pageNum + 1}
+              </button>
+            );
+          })}
+
+          {pageCount > 5 && <span className="pagination-ellipsis">…</span>}
+          {pageCount > 5 && (
+            <button
+              type="button"
+              className={`page-num-btn ${page === pageCount - 1 ? 'active' : ''}`}
+              onClick={() => setPage(pageCount - 1)}
+            >
+              {pageCount}
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="page-nav-btn"
+            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+            disabled={page + 1 >= pageCount}
+            aria-label="Next page"
+          >
+            <ChevronRight size={16} aria-hidden="true" />
           </button>
         </div>
-      )}
+      </footer>
     </div>
   );
 }

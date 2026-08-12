@@ -50,51 +50,45 @@ interface NavStep {
 const navSteps: NavStep[] = [
   {
     id: 'launchpad',
-    label: 'Automation Overview',
-    icon: <LayoutGrid size={19} />,
+    label: 'Overview',
+    icon: <LayoutGrid size={18} />,
     desc: 'Continue recent work and review execution activity',
   },
   {
     id: 'objects',
-    label: 'Control Object Repository',
-    num: 1,
-    icon: <Scan size={19} />,
+    label: 'Object Library',
+    icon: <Scan size={18} />,
     desc: 'Discover and curate reusable page controls',
   },
   {
     id: 'editor',
-    label: 'Compose',
-    num: 2,
-    icon: <FileCode2 size={19} />,
+    label: 'Compose Tests',
+    icon: <FileCode2 size={18} />,
     desc: 'Build modular, executable test cases',
   },
   {
     id: 'data',
     label: 'Test Data',
-    num: 3,
-    icon: <Database size={19} />,
+    icon: <Database size={18} />,
     desc: 'Manage datasets and variables',
   },
   {
     id: 'groups',
     label: 'Processes & Packs',
-    num: 4,
-    icon: <Layers size={19} />,
+    icon: <Layers size={18} />,
     desc: 'Compose sequenced Business Processes and independent Regression Packs',
   },
   {
     id: 'run',
     label: 'Execution Center',
-    num: 5,
-    icon: <Play size={19} />,
+    icon: <Play size={18} />,
     desc: 'Configure, review, and monitor executions',
   },
   {
     id: 'documents',
-    label: 'Audit and Evidence',
-    num: 6,
-    icon: <FileCheck2 size={19} />,
-    desc: 'Review captured evidence and immutable run history',
+    label: 'Evidence Vault',
+    icon: <FileCheck2 size={18} />,
+    desc: 'View and manage automated test execution evidence and audit trails',
   },
 ];
 
@@ -170,9 +164,7 @@ export function App() {
     return <LoginScreen auth={auth} onAuthenticated={setAuth} />;
   }
 
-  const pipelineSteps = navSteps.filter((step) => step.num !== undefined);
   const route = parseStudioRoute(routePath);
-  const currentPipelineIdx = pipelineSteps.findIndex((step) => step.id === view);
   const currentStep = navSteps.find((step) => step.id === view) ?? navSteps[0];
 
   const navigateTo = (nextView: View) => {
@@ -209,14 +201,17 @@ export function App() {
   };
 
   const goToNextStep = () => {
-    if (currentPipelineIdx !== -1 && currentPipelineIdx < pipelineSteps.length - 1) {
-      navigateTo(pipelineSteps[currentPipelineIdx + 1].id);
+    const idx = navSteps.findIndex((s) => s.id === view);
+    if (idx >= 0 && idx < navSteps.length - 1) {
+      navigateTo(navSteps[idx + 1].id);
     }
   };
 
   const goToPrevStep = () => {
-    if (currentPipelineIdx > 0) navigateTo(pipelineSteps[currentPipelineIdx - 1].id);
-    else if (currentPipelineIdx === 0) navigateTo('launchpad');
+    const idx = navSteps.findIndex((s) => s.id === view);
+    if (idx > 0) {
+      navigateTo(navSteps[idx - 1].id);
+    }
   };
 
   const openSettings = (integration: 'sap' | 'salesforce' | 'oracle' | 'servicenow' = 'sap') => {
@@ -257,11 +252,14 @@ export function App() {
             type="button"
             className="lhs-brand-logo"
             onClick={() => navigateTo('launchpad')}
-            aria-label="QA/4HANA Studio — go to Automation Overview"
+            aria-label="G-Stride — go to Automation Overview"
           >
-            <span className="brand-title-wrap">
-              <span className="brand-name">{sidebarCollapsed ? 'QA/4' : 'QA/4HANA Studio'}</span>
-            </span>
+            <img src="/g-stride-logo.png" alt="G-Stride" className="brand-logo-icon" width="22" height="22" />
+            {!sidebarCollapsed && (
+              <span className="brand-title-wrap">
+                <span className="brand-name">G-Stride</span>
+              </span>
+            )}
           </button>
           <button
             type="button"
@@ -318,42 +316,6 @@ export function App() {
               <span className="bc-current">{currentStep.label}</span>
             </div>
           </div>
-
-          <div className="workspace-header-right">
-            <button
-              type="button"
-              className="header-search-trigger"
-              onClick={() => setSearchOpen(true)}
-              title="Search Tests, Objects, Datasets, Processes, Packs and Runs"
-            >
-              <Search size={15} aria-hidden="true" /> Search
-            </button>
-            <button
-              type="button"
-              className={`context-target${workspaceContext?.target.configured ? ' configured' : ''}`}
-              onClick={() => openSettings('sap')}
-              title="Open SAP target settings"
-            >
-              <Sliders size={15} aria-hidden="true" />
-              <span>{targetLabel}</span>
-            </button>
-
-            {view !== 'launchpad' && (
-              <div className="workflow-step-actions" aria-label="Workflow navigation">
-                <button type="button" className="step-nav-btn" onClick={goToPrevStep}>
-                  <ArrowLeft size={14} aria-hidden="true" /> Previous
-                </button>
-                <button
-                  type="button"
-                  className="step-nav-btn primary"
-                  onClick={goToNextStep}
-                  disabled={currentPipelineIdx === pipelineSteps.length - 1}
-                >
-                  Next <ArrowRight size={14} aria-hidden="true" />
-                </button>
-              </div>
-            )}
-          </div>
         </header>
 
         <div className="workspace-stage">
@@ -375,7 +337,7 @@ export function App() {
                   <ObjectScanner
                     initialAppId={route.objectAppId}
                     initialObjectName={route.objectName}
-                    onSelectionChange={(appId, objectName) => updateDetailPath(studioRoutes.object(appId, objectName))}
+                    onSelectionChange={(appId, objectName) => updateDetailPath(studioRoutes.object(appId, objectName ?? undefined))}
                   />
                 ) : view === 'editor' ? (
                   <TestLibrary
@@ -558,6 +520,43 @@ export function App() {
             </aside>
           )}
         </div>
+
+        <footer className="workspace-bottom-bar" aria-label="Workspace navigation and context">
+          <div className="workspace-bottom-left">
+            <button
+              type="button"
+              className="header-search-trigger"
+              onClick={() => setSearchOpen(true)}
+              title="Search Tests, Objects, Datasets, Processes, Packs and Runs"
+            >
+              <Search size={13} aria-hidden="true" /> Search
+            </button>
+            <button
+              type="button"
+              className={`context-target${workspaceContext?.target.configured ? ' configured' : ''}`}
+              onClick={() => openSettings('sap')}
+              title="Open SAP target settings"
+            >
+              <Sliders size={13} aria-hidden="true" />
+              <span>{targetLabel}</span>
+            </button>
+          </div>
+
+          <div className="workspace-bottom-right">
+            <div className="workflow-step-actions" aria-label="Workflow navigation">
+              {view !== 'launchpad' && (
+                <button type="button" className="step-nav-btn" onClick={goToPrevStep}>
+                  <ArrowLeft size={13} aria-hidden="true" /> Back
+                </button>
+              )}
+              {view !== 'documents' && (
+                <button type="button" className="step-nav-btn primary" onClick={goToNextStep}>
+                  Next <ArrowRight size={13} aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          </div>
+        </footer>
       </div>
       {settingsOpen && (
         <SettingsPanel
