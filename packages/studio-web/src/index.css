@@ -6374,6 +6374,39 @@ button.text-action:hover {
   width: 100%;
 }
 
+/* The Test Library reuses the Object Library explorer shell, so the two workspaces read as one
+   product. Only the differences from that shell are declared here. */
+.test-library-explorer .obj-lib-tree-header h2 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.test-library-explorer .obj-lib-main-canvas > * {
+  /* Each of the three centre-pane modes owns the full canvas and scrolls on its own. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.test-library-detail-pane,
+.test-library-compose-pane,
+.test-library-results-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.test-library-compose-pane .test-create-panel,
+.test-library-results-pane .test-library-filters {
+  margin: 0;
+}
+
+.test-library-clear-folder {
+  display: flex;
+  align-items: flex-end;
+}
+
 .workspace-intro-row,
 .workspace-subheader,
 .section-heading-row {

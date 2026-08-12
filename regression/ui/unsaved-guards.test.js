@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
@@ -21,7 +21,7 @@ test('unsaved new test case is protected from shell navigation', async () => {
     await withPage(browser, 'unsaved-test-case-guard', async (page) => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Compose/ }).first().click();
-      await page.getByRole('button', { name: 'New Test' }).click();
+      await page.getByRole('button', { name: 'Compose New Test' }).click();
       await page.getByLabel('Business name').fill('Unsaved Test');
       await page.getByRole('button', { name: 'Create Test' }).click();
       await page.getByLabel('Test case name').fill('Unsaved Test edited locally');
@@ -63,7 +63,7 @@ test('browser Back cannot discard an unsaved route-selected artifact without con
     await withPage(browser, 'unsaved-browser-back-guard', async (page) => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Compose/ }).first().click();
-      await page.getByRole('button', { name: 'New Test' }).click();
+      await page.getByRole('button', { name: 'Compose New Test' }).click();
       await page.getByLabel('Business name').fill('Unsaved Back Route');
       await page.getByRole('button', { name: 'Create Test' }).click();
       await page.waitForURL('**/compose/tests/unsaved-back-route.json');

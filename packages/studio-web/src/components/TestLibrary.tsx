@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, FileCode2, Plus, Search } from 'lucide-react';
+import { ArrowLeft, ChevronDown, FileCode2, Folder, FolderOpen, Plus, Search } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, TestApplication, TestCase, TestLibraryItem, TestLibraryStatus } from '../types';
 import { TestCaseEditor } from './TestCaseEditor';
 import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
 
 const APPLICATIONS: TestApplication[] = ['SAP', 'Salesforce', 'Oracle', 'ServiceNow'];
+const UNTAGGED = '(untagged)';
 
 function fileStem(value: string): string {
   return value
@@ -20,6 +21,10 @@ function statusLabel(status: TestLibraryStatus): string {
   return status === 'published' ? 'Published' : status === 'ready' ? 'Legacy ready' : 'Draft';
 }
 
+function areaOf(item: TestLibraryItem): string {
+  return item.processArea || UNTAGGED;
+}
+
 interface TestLibraryProps {
   initialFile?: string;
   onSelectedFileChange: (file?: string) => void;
@@ -31,7 +36,7 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
   const [items, setItems] = useState<TestLibraryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [composing, setComposing] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [fileName, setFileName] = useState('');
   const [fileNameEdited, setFileNameEdited] = useState(false);
@@ -41,9 +46,12 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
   const [templateFile, setTemplateFile] = useState('');
   const [creating, setCreating] = useState(false);
   const [search, setSearch] = useState('');
-  const [areaFilter, setAreaFilter] = useState('all');
   const [applicationFilter, setApplicationFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  // The tree is the process-area filter, so there is no separate select for it.
+  const [selectedArea, setSelectedArea] = useState<string | null>(null);
+  const [rootExpanded, setRootExpanded] = useState(true);
+  const [expandedAreas, setExpandedAreas] = useState<Record<string, boolean>>({});
 
   function loadLibrary() {
     setLoading(true);
@@ -56,34 +64,62 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
       .finally(() => setLoading(false));
   }
 
-  useEffect(loadLibrary, []);
+  // Reloading whenever the centre pane returns to the list keeps the tree honest: a Test created or
+  // renamed in the editor shows up in its folder instead of the tree quietly going stale.
+  useEffect(() => {
+    if (!initialFile) loadLibrary();
+  }, [initialFile]);
 
   useEffect(() => {
     if (!initialFile) onDirtyChange?.(false);
   }, [initialFile, onDirtyChange]);
 
+  // Opening a Test from the tree keeps its folder open, so the centre pane and the tree agree.
+  useEffect(() => {
+    if (!initialFile) return;
+    const opened = items.find((item) => item.file === initialFile);
+    if (!opened) return;
+    setExpandedAreas((prev) => ({ ...prev, [areaOf(opened)]: true }));
+  }, [initialFile, items]);
+
   const processAreas = useMemo(
     () => Array.from(new Set(items.map((item) => item.processArea).filter(Boolean))).sort(),
     [items],
   );
+  // Folders mirror the Object Library tree: every real process area, plus (untagged) when it is used.
+  const treeAreas = useMemo(() => {
+    const areas = Array.from(new Set(items.map(areaOf)));
+    return areas.sort((a, b) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b)));
+  }, [items]);
+  const itemsByArea = useMemo(() => {
+    const grouped = new Map<string, TestLibraryItem[]>();
+    for (const item of items) {
+      const area = areaOf(item);
+      if (!grouped.has(area)) grouped.set(area, []);
+      grouped.get(area)!.push(item);
+    }
+    for (const list of grouped.values()) list.sort((a, b) => a.name.localeCompare(b.name));
+    return grouped;
+  }, [items]);
+
   const templateItems = useMemo(() => items.filter((item) => item.status !== 'draft'), [items]);
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return items.filter((item) => {
       const matchesSearch = !query || `${item.name} ${item.file}`.toLowerCase().includes(query);
-      const matchesArea = areaFilter === 'all' || (areaFilter === 'untagged' ? !item.processArea : item.processArea === areaFilter);
+      const matchesArea = selectedArea === null || areaOf(item) === selectedArea;
       const matchesApplication = applicationFilter === 'all' || item.application === applicationFilter;
       const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
       return matchesSearch && matchesArea && matchesApplication && matchesStatus;
     });
-  }, [applicationFilter, areaFilter, items, search, statusFilter]);
+  }, [applicationFilter, items, search, selectedArea, statusFilter]);
 
   function updateBusinessName(value: string) {
     setBusinessName(value);
     if (!fileNameEdited) setFileName(fileStem(value));
   }
 
-  function resetCreation() {
+  function resetCreationFields() {
     setBusinessName('');
     setFileName('');
     setFileNameEdited(false);
@@ -91,8 +127,24 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
     setProcessArea('');
     setStartingPoint('blank');
     setTemplateFile('');
-    setShowCreate(false);
     setError(null);
+  }
+
+  // Guided creation always opens on a blank canvas, never on the leftovers of a cancelled attempt.
+  function startComposing() {
+    resetCreationFields();
+    onSelectedFileChange(undefined);
+    setComposing(true);
+  }
+
+  function cancelComposing() {
+    resetCreationFields();
+    setComposing(false);
+  }
+
+  function openTest(file: string) {
+    setComposing(false);
+    onSelectedFileChange(file);
   }
 
   async function createTest(event: React.FormEvent) {
@@ -122,7 +174,8 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
       };
       const file = `${stem}.json`;
       await api.createTestCase(file, next, processArea.trim());
-      resetCreation();
+      resetCreationFields();
+      setComposing(false);
       onSelectedFileChange(file);
     } catch (reason) {
       setError(String(reason));
@@ -131,163 +184,280 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
     }
   }
 
-  if (initialFile) {
-    return (
-      <div className="stack test-detail-workspace">
-        <div className="workspace-subheader">
-          <button type="button" className="ghost" onClick={() => onSelectedFileChange(undefined)}>
-            <ArrowLeft size={16} aria-hidden="true" /> Back to Test Library
-          </button>
-          <span className="hint">Stable route · {initialFile}</span>
-        </div>
-        <TestCaseEditor
-          initialFile={initialFile}
-          onSelectedFileChange={(file) => onSelectedFileChange(file)}
-          onDirtyChange={onDirtyChange}
-          showLibraryControls={false}
-          onRequestCapture={onRequestCapture}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="stack test-library-workspace">
-      <section className="workspace-intro-row" aria-labelledby="testLibraryHeading">
-        <div>
-          <span className="eyebrow">Reusable automation assets</span>
-          <h2 id="testLibraryHeading">Test Library</h2>
-          <p className="hint">Find a Test by business meaning, application, process area or readiness.</p>
-        </div>
-        <button type="button" className="primary" onClick={() => setShowCreate((current) => !current)} aria-expanded={showCreate}>
-          <Plus size={16} aria-hidden="true" /> New Test
-        </button>
-      </section>
-
-      {showCreate && (
-        <form className="panel stack test-create-panel" onSubmit={createTest} aria-labelledby="newTestHeading">
-          <div className="section-heading-row">
-            <div>
-              <p className="eyebrow">Guided creation</p>
-              <h3 id="newTestHeading">Create a reusable Test</h3>
-            </div>
-            <button type="button" className="ghost" onClick={resetCreation}>Cancel</button>
+    <div className="obj-lib-split-container test-library-explorer">
+      {/* LEFT COLUMN: Windows Explorer style tree, matching the Object Library */}
+      <aside className="obj-lib-tree-aside">
+        <div className="obj-lib-tree-header">
+          <div className="title-group">
+            <Folder size={16} style={{ color: '#0284c7' }} />
+            <h2 id="testLibraryHeading">Test Library</h2>
           </div>
-          <div className="test-create-grid">
-            <div>
-              <label htmlFor="new-test-business-name">Business name</label>
-              <input id="new-test-business-name" value={businessName} onChange={(event) => updateBusinessName(event.target.value)} placeholder="Create purchase order" autoFocus />
-            </div>
-            <div>
-              <label htmlFor="new-test-file-name">File name</label>
-              <div className="input-suffix">
-                <input id="new-test-file-name" value={fileName} onChange={(event) => { setFileName(event.target.value); setFileNameEdited(true); }} placeholder="create-purchase-order" />
-                <span>.json</span>
-              </div>
-            </div>
-            <div>
-              <label htmlFor="new-test-application">Test application</label>
-              <select id="new-test-application" value={application} onChange={(event) => setApplication(event.target.value as TestApplication)}>
-                {APPLICATIONS.map((value) => <option key={value}>{value}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="new-test-process-area">Test process area</label>
-              <input id="new-test-process-area" list="test-process-areas" value={processArea} onChange={(event) => setProcessArea(event.target.value)} placeholder="e.g. Procurement" />
-              <datalist id="test-process-areas">{processAreas.map((value) => <option key={value} value={value} />)}</datalist>
-            </div>
-            <div>
-              <label htmlFor="new-test-starting-point">Starting point</label>
-              <select id="new-test-starting-point" value={startingPoint} onChange={(event) => setStartingPoint(event.target.value as 'blank' | 'template')}>
-                <option value="blank">Blank Test</option>
-                <option value="template">Copy an existing Test</option>
-              </select>
-            </div>
-            {startingPoint === 'template' && (
-              <div>
-                <label htmlFor="new-test-template">Template Test</label>
-                <select id="new-test-template" value={templateFile} onChange={(event) => setTemplateFile(event.target.value)}>
-                  <option value="">— choose a ready Test —</option>
-                  {templateItems.map((item) => <option key={item.file} value={item.file}>{item.name}</option>)}
-                </select>
-              </div>
+        </div>
+
+        <div className="obj-lib-tree-body">
+          <div className="obj-tree-folder-row root-repo-row" onClick={() => setRootExpanded((v) => !v)}>
+            <ChevronDown
+              size={14}
+              className="tree-chevron"
+              style={{ transform: rootExpanded ? 'none' : 'rotate(-90deg)', transition: 'transform 0.15s ease' }}
+            />
+            {rootExpanded ? (
+              <FolderOpen size={16} style={{ color: '#2563eb' }} />
+            ) : (
+              <Folder size={16} style={{ color: '#2563eb' }} />
             )}
+            <span className="folder-name" style={{ fontWeight: 700, color: '#0f172a' }}>Tests</span>
+            <span className="folder-count">{treeAreas.length}</span>
+            <div className="btn-tree-folder-delete-placeholder" />
           </div>
-          <div className="row">
-            <button type="submit" className="primary" disabled={creating}>{creating ? 'Creating…' : 'Create Test'}</button>
-            <span className="hint">Creation persists the initial Test and opens its stable route.</span>
-          </div>
-        </form>
-      )}
 
-      {error && <AsyncFeedback state="error" message={error} />}
-      {loading && <AsyncFeedback state="loading" message="Loading Test Library…" />}
+          {rootExpanded && (
+            <div className="obj-tree-children-list root-repo-children">
+              {treeAreas.map((area) => {
+                const isExpanded = expandedAreas[area] ?? false;
+                const areaItems = itemsByArea.get(area) ?? [];
+                const isAreaActive = selectedArea === area && !initialFile && !composing;
 
-      <section className="panel stack" aria-label="Test Library filters and results">
-        <div className="test-library-filters">
-          <div className="test-library-search">
-            <label htmlFor="test-library-search">Search</label>
-            <div className="input-with-icon">
-              <Search size={16} aria-hidden="true" />
-              <input id="test-library-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name or file" />
+                return (
+                  <div key={area} className="tree-folder-group">
+                    <div
+                      className={`obj-tree-folder-row ${isAreaActive ? 'active-domain' : ''}`}
+                      onClick={() => {
+                        setComposing(false);
+                        setSelectedArea(area);
+                        onSelectedFileChange(undefined);
+                        setExpandedAreas((prev) => ({ ...prev, [area]: !(prev[area] ?? false) }));
+                      }}
+                    >
+                      <ChevronDown
+                        size={14}
+                        className="tree-chevron"
+                        style={{
+                          transform: isExpanded ? 'none' : 'rotate(-90deg)',
+                          transition: 'transform 0.15s ease',
+                          opacity: areaItems.length > 0 ? 1 : 0.3,
+                        }}
+                      />
+                      {isExpanded ? (
+                        <FolderOpen size={15} style={{ color: '#0284c7' }} />
+                      ) : (
+                        <Folder size={15} style={{ color: '#0284c7' }} />
+                      )}
+                      <span className="folder-name">{area}</span>
+                      <span className="folder-count">{areaItems.length}</span>
+                      <div className="btn-tree-folder-delete-placeholder" />
+                    </div>
+
+                    {isExpanded && (
+                      <div className="obj-tree-children-list">
+                        {areaItems.length === 0 ? (
+                          <div className="tree-empty-item">(no Tests)</div>
+                        ) : (
+                          areaItems.map((item) => {
+                            const isOpen = initialFile === item.file;
+                            return (
+                              <div
+                                key={item.file}
+                                className={`obj-tree-child-item ${isOpen ? 'selected' : ''}`}
+                                title={item.file}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setSelectedArea(area);
+                                  openTest(item.file);
+                                }}
+                              >
+                                <FileCode2 size={14} style={{ color: isOpen ? '#2563eb' : '#64748b', flexShrink: 0 }} />
+                                <span
+                                  className="app-id-name"
+                                  style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                >
+                                  {item.name}
+                                </span>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          </div>
-          <div>
-            <label htmlFor="test-library-area">Filter by process area</label>
-            <select id="test-library-area" value={areaFilter} onChange={(event) => setAreaFilter(event.target.value)}>
-              <option value="all">All process areas</option>
-              {processAreas.map((value) => <option key={value} value={value}>{value}</option>)}
-              <option value="untagged">Untagged</option>
-            </select>
-          </div>
-          <div>
-            <label htmlFor="test-library-application">Filter by application</label>
-            <select id="test-library-application" value={applicationFilter} onChange={(event) => setApplicationFilter(event.target.value)}>
-              <option value="all">All applications</option>
-              {APPLICATIONS.map((value) => <option key={value}>{value}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="test-library-status">Filter by status</label>
-            <select id="test-library-status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-              <option value="all">All statuses</option>
-              <option value="ready">Ready</option>
-              <option value="published">Published</option>
-              <option value="draft">Draft</option>
-            </select>
-          </div>
+          )}
         </div>
 
-        <div className="test-library-result-summary" role="status" aria-live="polite">
-          <strong>{filtered.length}</strong> of {items.length} Tests
+        <div className="obj-lib-tree-action-bar">
+          <button
+            type="button"
+            className={`btn-scan-new-object ${composing ? 'active' : ''}`}
+            onClick={startComposing}
+          >
+            <Plus size={15} />
+            <span>Compose New Test</span>
+          </button>
         </div>
 
-        <TableFrame label="Test Library results">
-          <table className="responsive-table test-library-table">
-            <thead>
-              <tr><th>Test</th><th>Process area</th><th>Application</th><th>Steps</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr>
-            </thead>
-            <tbody>
-              {filtered.map((item) => (
-                <tr key={item.file}>
-                  <td data-label="Test">
-                    <strong>{item.name}</strong>
-                    <span className="test-library-file"><FileCode2 size={13} aria-hidden="true" /> {item.file}</span>
-                  </td>
-                  <td data-label="Process area">{item.processArea || <span className="hint">Untagged</span>}</td>
-                  <td data-label="Application">{item.application}</td>
-                  <td data-label="Steps">{item.stepCount}</td>
-                  <td data-label="Status"><span className={`badge ${item.status === 'published' ? 'passed' : 'running'}`}>{statusLabel(item.status)}</span></td>
-                  <td data-label="Actions"><button type="button" className="ghost" onClick={() => onSelectedFileChange(item.file)}>Open Test</button></td>
-                </tr>
-              ))}
-              {!loading && filtered.length === 0 && (
-                <tr><td colSpan={6} className="empty-table-state">No Tests match the current filters.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </TableFrame>
-      </section>
+        <div className="obj-lib-tree-footer">
+          {treeAreas.length} Process Areas · {items.length} Tests
+        </div>
+      </aside>
+
+      {/* CENTRE PANE: the open Test, guided creation, or the folder's results */}
+      <main className="obj-lib-main-canvas">
+        {initialFile ? (
+          <div className="test-library-detail-pane">
+            <div className="workspace-subheader">
+              <button type="button" className="ghost" onClick={() => onSelectedFileChange(undefined)}>
+                <ArrowLeft size={16} aria-hidden="true" /> Back to Test Library
+              </button>
+              <span className="hint">Stable route · {initialFile}</span>
+            </div>
+            <TestCaseEditor
+              initialFile={initialFile}
+              onSelectedFileChange={(file) => onSelectedFileChange(file)}
+              onDirtyChange={onDirtyChange}
+              showLibraryControls={false}
+              onRequestCapture={onRequestCapture}
+            />
+          </div>
+        ) : composing ? (
+          <div className="test-library-compose-pane stack">
+            <div className="obj-lib-top-header">
+              <div className="obj-lib-title-row">
+                <h2 id="newTestHeading">Compose New Test</h2>
+                <span
+                  className="app-id-pill-badge"
+                  style={{ background: '#eff6ff', color: '#1d4ed8', borderColor: '#bfdbfe' }}
+                >
+                  Guided creation
+                </span>
+              </div>
+            </div>
+
+            {error && <AsyncFeedback state="error" message={error} />}
+
+            <form className="panel stack test-create-panel" onSubmit={createTest} aria-labelledby="newTestHeading">
+              <div className="test-create-grid">
+                <div>
+                  <label htmlFor="new-test-business-name">Business name</label>
+                  <input id="new-test-business-name" value={businessName} onChange={(event) => updateBusinessName(event.target.value)} placeholder="Create purchase order" autoFocus />
+                </div>
+                <div>
+                  <label htmlFor="new-test-file-name">File name</label>
+                  <div className="input-suffix">
+                    <input id="new-test-file-name" value={fileName} onChange={(event) => { setFileName(event.target.value); setFileNameEdited(true); }} placeholder="create-purchase-order" />
+                    <span>.json</span>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="new-test-application">Test application</label>
+                  <select id="new-test-application" value={application} onChange={(event) => setApplication(event.target.value as TestApplication)}>
+                    {APPLICATIONS.map((value) => <option key={value}>{value}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="new-test-process-area">Test process area</label>
+                  <input id="new-test-process-area" list="test-process-areas" value={processArea} onChange={(event) => setProcessArea(event.target.value)} placeholder="e.g. Procurement" />
+                  <datalist id="test-process-areas">{processAreas.map((value) => <option key={value} value={value} />)}</datalist>
+                </div>
+                <div>
+                  <label htmlFor="new-test-starting-point">Starting point</label>
+                  <select id="new-test-starting-point" value={startingPoint} onChange={(event) => setStartingPoint(event.target.value as 'blank' | 'template')}>
+                    <option value="blank">Blank Test</option>
+                    <option value="template">Copy an existing Test</option>
+                  </select>
+                </div>
+                {startingPoint === 'template' && (
+                  <div>
+                    <label htmlFor="new-test-template">Template Test</label>
+                    <select id="new-test-template" value={templateFile} onChange={(event) => setTemplateFile(event.target.value)}>
+                      <option value="">— choose a ready Test —</option>
+                      {templateItems.map((item) => <option key={item.file} value={item.file}>{item.name}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+              <div className="row">
+                <button type="submit" className="primary" disabled={creating}>{creating ? 'Creating…' : 'Create Test'}</button>
+                <button type="button" className="ghost" onClick={cancelComposing}>Cancel</button>
+                <span className="hint">Creation persists the initial Test and opens its stable route.</span>
+              </div>
+            </form>
+          </div>
+        ) : (
+          <div className="test-library-results-pane stack">
+            <div className="obj-lib-top-header">
+              <div className="obj-lib-title-row">
+                <h2>{selectedArea ?? 'All Tests'}</h2>
+                <span className="obj-lib-controls-count">{filtered.length} of {items.length} Tests</span>
+              </div>
+            </div>
+
+            {error && <AsyncFeedback state="error" message={error} />}
+            {loading && <AsyncFeedback state="loading" message="Loading Test Library…" />}
+
+            <section className="stack" aria-label="Test Library filters and results">
+              <div className="test-library-filters">
+                <div className="test-library-search">
+                  <label htmlFor="test-library-search">Search</label>
+                  <div className="input-with-icon">
+                    <Search size={16} aria-hidden="true" />
+                    <input id="test-library-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name or file" />
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="test-library-application">Filter by application</label>
+                  <select id="test-library-application" value={applicationFilter} onChange={(event) => setApplicationFilter(event.target.value)}>
+                    <option value="all">All applications</option>
+                    {APPLICATIONS.map((value) => <option key={value}>{value}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="test-library-status">Filter by status</label>
+                  <select id="test-library-status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                    <option value="all">All statuses</option>
+                    <option value="ready">Ready</option>
+                    <option value="published">Published</option>
+                    <option value="draft">Draft</option>
+                  </select>
+                </div>
+                {selectedArea !== null && (
+                  <div className="test-library-clear-folder">
+                    <button type="button" className="ghost" onClick={() => setSelectedArea(null)}>Show all folders</button>
+                  </div>
+                )}
+              </div>
+
+              <TableFrame label="Test Library results">
+                <table className="responsive-table test-library-table">
+                  <thead>
+                    <tr><th>Test</th><th>Process area</th><th>Application</th><th>Steps</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((item) => (
+                      <tr key={item.file}>
+                        <td data-label="Test">
+                          <strong>{item.name}</strong>
+                          <span className="test-library-file"><FileCode2 size={13} aria-hidden="true" /> {item.file}</span>
+                        </td>
+                        <td data-label="Process area">{item.processArea || <span className="hint">Untagged</span>}</td>
+                        <td data-label="Application">{item.application}</td>
+                        <td data-label="Steps">{item.stepCount}</td>
+                        <td data-label="Status"><span className={`badge ${item.status === 'published' ? 'passed' : 'running'}`}>{statusLabel(item.status)}</span></td>
+                        <td data-label="Actions"><button type="button" className="ghost" onClick={() => openTest(item.file)}>Open Test</button></td>
+                      </tr>
+                    ))}
+                    {!loading && filtered.length === 0 && (
+                      <tr><td colSpan={6} className="empty-table-state">No Tests match the current filters.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </TableFrame>
+            </section>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

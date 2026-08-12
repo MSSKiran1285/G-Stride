@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
@@ -9,7 +9,7 @@ before(assertServerReachable);
 
 async function createBlankTest(page, name) {
   await page.goto(`${BASE_URL}/compose`);
-  await page.getByRole('button', { name: 'New Test' }).click();
+  await page.getByRole('button', { name: 'Compose New Test' }).click();
   await page.getByLabel('Business name').fill(name);
   await page.getByRole('button', { name: 'Create Test' }).click();
   await page.getByLabel('Test case name').waitFor();

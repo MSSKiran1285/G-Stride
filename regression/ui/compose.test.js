@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
@@ -14,7 +14,7 @@ test('Compose: create a test case, add a step, save, reload, reopen (required Co
       await page.getByRole('button', { name: /Compose/ }).first().click();
 
       // Create a new, clearly-marked throwaway Test through the guided library flow.
-      await page.getByRole('button', { name: 'New Test' }).click();
+      await page.getByRole('button', { name: 'Compose New Test' }).click();
       await page.getByLabel('Business name').fill('Regression Sample');
       await page.getByLabel('Test process area').fill('Quality Engineering');
       await page.getByRole('button', { name: 'Create Test' }).click();
@@ -46,7 +46,7 @@ test("Compose: contextual capture opens over an object field and returns without
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Compose/ }).first().click();
 
-      await page.getByRole('button', { name: 'New Test' }).click();
+      await page.getByRole('button', { name: 'Compose New Test' }).click();
       await page.getByLabel('Business name').fill('Regression Contextual Capture');
       await page.getByRole('button', { name: 'Create Test' }).click();
       await page.waitForURL('**/compose/tests/regression-contextual-capture.json');
@@ -59,7 +59,7 @@ test("Compose: contextual capture opens over an object field and returns without
       const controlField = page.getByPlaceholder('e.g. CreateButton');
       await page.getByRole('button', { name: '+ Capture' }).click();
 
-      // The overlay is a sibling panel, not a route change — the Compose route underneath
+      // The overlay is a sibling panel, not a route change â€” the Compose route underneath
       // must stay exactly where the in-progress step edit is.
       const overlay = page.getByRole('dialog', { name: 'For: Control name' });
       await overlay.waitFor({ timeout: 5000 });
@@ -70,7 +70,7 @@ test("Compose: contextual capture opens over an object field and returns without
       await overlay.getByRole('button', { name: 'Close capture and return to Compose without a change' }).click();
       await overlay.waitFor({ state: 'hidden', timeout: 5000 });
 
-      // Closing without capturing anything must not have discarded the step being edited —
+      // Closing without capturing anything must not have discarded the step being edited â€”
       // no navigation ever happened, so nothing was ever at risk.
       assert.equal(await page.getByLabel('App ID override').inputValue(), 'createPurchaseOrder');
       await controlField.fill('CreateButton');

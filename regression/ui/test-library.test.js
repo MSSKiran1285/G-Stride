@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { test, before } = require('node:test');
 const assert = require('node:assert/strict');
@@ -15,7 +15,8 @@ test('Test Library filters by name, process area, application and readiness', as
       await page.goto(`${BASE_URL}/compose`);
       await page.getByRole('heading', { name: 'Test Library' }).waitFor();
 
-      await page.getByLabel('Filter by process area').selectOption('Procurement');
+      // The explorer tree is the process-area filter now, so narrowing means opening the folder.
+      await page.locator('.obj-lib-tree-aside .obj-tree-folder-row', { hasText: 'Procurement' }).click();
       await page.getByLabel('Filter by application').selectOption('SAP');
       await page.getByLabel('Filter by status').selectOption('ready');
       await page.getByLabel('Search').fill('purchase order');
@@ -37,7 +38,7 @@ test('guided creation copies a template and restores the stable Test route', asy
   await withBrowser(async (browser) => {
     await withPage(browser, 'test-library-template-create', async (page) => {
       await page.goto(`${BASE_URL}/compose`);
-      await page.getByRole('button', { name: 'New Test' }).click();
+      await page.getByRole('button', { name: 'Compose New Test' }).click();
       await page.getByLabel('Business name').fill('Template Clone Regression');
       await page.getByLabel('Test application').selectOption('Oracle');
       await page.getByLabel('Test process area').fill('Finance');
@@ -56,7 +57,7 @@ test('guided creation copies a template and restores the stable Test route', asy
       await page.getByRole('button', { name: 'Back to Test Library' }).click();
 
       await page.getByLabel('Filter by application').selectOption('Oracle');
-      await page.getByLabel('Filter by process area').selectOption('Finance');
+      await page.locator('.obj-lib-tree-aside .obj-tree-folder-row', { hasText: 'Finance' }).click();
       const results = page.getByRole('region', { name: 'Test Library results' });
       const cloneRow = results.locator('tr', { hasText: 'template-clone-regression.json' });
       await cloneRow.waitFor();
