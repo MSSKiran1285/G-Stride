@@ -41,7 +41,10 @@ test('guided creation copies a template and restores the stable Test route', asy
       await page.getByRole('button', { name: 'Compose New Test' }).click();
       await page.getByLabel('Business name').fill('Template Clone Regression');
       await page.getByLabel('Test application').selectOption('Oracle');
-      await page.getByLabel('Test process area').fill('Finance');
+      // Process area is a folder dropdown now, so a brand-new area is created through it.
+      await page.getByLabel('Process area').selectOption('__new_process_area__');
+      await page.getByLabel('New folder name').fill('Finance');
+      await page.getByRole('button', { name: 'Create Folder' }).click();
       await page.getByLabel('Starting point').selectOption('template');
       await page.getByLabel('Template Test').selectOption('cleanup-abandoned-drafts.json');
       await page.getByRole('button', { name: 'Create Test' }).click();

@@ -16,7 +16,10 @@ test('Compose: create a test case, add a step, save, reload, reopen (required Co
       // Create a new, clearly-marked throwaway Test through the guided library flow.
       await page.getByRole('button', { name: 'Compose New Test' }).click();
       await page.getByLabel('Business name').fill('Regression Sample');
-      await page.getByLabel('Test process area').fill('Quality Engineering');
+      // Process area is a folder dropdown now, so a brand-new area is created through it.
+      await page.getByLabel('Process area').selectOption('__new_process_area__');
+      await page.getByLabel('New folder name').fill('Quality Engineering');
+      await page.getByRole('button', { name: 'Create Folder' }).click();
       await page.getByRole('button', { name: 'Create Test' }).click();
       await page.waitForURL('**/compose/tests/regression-sample.json');
 

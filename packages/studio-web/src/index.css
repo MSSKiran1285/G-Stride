@@ -689,7 +689,8 @@ button.pill,
   z-index: 40;
   width: 100%;
   box-sizing: border-box;
-  transform: translateY(-5mm); /* Raised up by 5 mm */
+  /* No transform here: the stage reserves exactly this bar's height, so nudging the bar upward
+     moved only its paint and left it covering the bottom of every workspace. */
   position: relative;
 }
 

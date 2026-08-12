@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ChevronDown, FileCode2, Folder, FolderOpen, Plus, Search } from 'lucide-react';
+import { ArrowLeft, ChevronDown, FileCode2, Folder, FolderOpen, FolderPlus, Plus, Search, X } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, TestApplication, TestCase, TestLibraryItem, TestLibraryStatus } from '../types';
 import { TestCaseEditor } from './TestCaseEditor';
@@ -7,6 +7,9 @@ import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
 
 const APPLICATIONS: TestApplication[] = ['SAP', 'Salesforce', 'Oracle', 'ServiceNow'];
 const UNTAGGED = '(untagged)';
+// Sentinel value for the "create one" entry at the bottom of the process area dropdown. It is not a
+// selectable area, so it must not collide with a real folder name.
+const NEW_AREA_OPTION = '__new_process_area__';
 
 function fileStem(value: string): string {
   return value
@@ -52,6 +55,11 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [rootExpanded, setRootExpanded] = useState(true);
   const [expandedAreas, setExpandedAreas] = useState<Record<string, boolean>>({});
+  // Folders come from the same registry the Object Library uses, so a folder created in either
+  // workspace exists in both, and a brand new empty folder is visible before anything is filed in it.
+  const [registeredAreas, setRegisteredAreas] = useState<string[]>([]);
+  const [showNewFolderModal, setShowNewFolderModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
 
   function loadLibrary() {
     setLoading(true);
@@ -62,6 +70,28 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
       })
       .catch((reason) => setError(String(reason)))
       .finally(() => setLoading(false));
+    api.listProcessAreas()
+      .then(setRegisteredAreas)
+      .catch(() => setRegisteredAreas([]));
+  }
+
+  async function createFolder() {
+    const name = newFolderName.trim();
+    if (!name) return;
+    try {
+      await api.addProcessArea(name);
+      const next = await api.listProcessAreas();
+      setRegisteredAreas(next);
+      setExpandedAreas((prev) => ({ ...prev, [name]: true }));
+      setSelectedArea(name);
+      // If the folder was created from the compose form's dropdown, land the selection on it.
+      setProcessArea(name);
+      setNewFolderName('');
+      setShowNewFolderModal(false);
+      setError(null);
+    } catch (reason) {
+      setError(String(reason));
+    }
   }
 
   // Reloading whenever the centre pane returns to the list keeps the tree honest: a Test created or
@@ -82,15 +112,17 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
     setExpandedAreas((prev) => ({ ...prev, [areaOf(opened)]: true }));
   }, [initialFile, items]);
 
-  const processAreas = useMemo(
-    () => Array.from(new Set(items.map((item) => item.processArea).filter(Boolean))).sort(),
-    [items],
-  );
-  // Folders mirror the Object Library tree: every real process area, plus (untagged) when it is used.
+  // Every folder that exists: registered in the shared registry, or in use by a Test, or both.
+  const processAreas = useMemo(() => {
+    const named = items.map((item) => item.processArea).filter((value): value is string => Boolean(value));
+    return Array.from(new Set([...registeredAreas, ...named])).sort((a, b) => a.localeCompare(b));
+  }, [items, registeredAreas]);
+  // Folders mirror the Object Library tree: every process area, plus (untagged) when it is used.
   const treeAreas = useMemo(() => {
-    const areas = Array.from(new Set(items.map(areaOf)));
-    return areas.sort((a, b) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b)));
-  }, [items]);
+    const areas = [...processAreas];
+    if (items.some((item) => !item.processArea)) areas.push(UNTAGGED);
+    return areas;
+  }, [items, processAreas]);
   const itemsByArea = useMemo(() => {
     const grouped = new Map<string, TestLibraryItem[]>();
     for (const item of items) {
@@ -193,6 +225,14 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
             <Folder size={16} style={{ color: '#0284c7' }} />
             <h2 id="testLibraryHeading">Test Library</h2>
           </div>
+          <button
+            type="button"
+            className="btn-tree-add-folder"
+            onClick={() => setShowNewFolderModal(true)}
+            title="Create New Folder"
+          >
+            <FolderPlus size={15} />
+          </button>
         </div>
 
         <div className="obj-lib-tree-body">
@@ -357,9 +397,22 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="new-test-process-area">Test process area</label>
-                  <input id="new-test-process-area" list="test-process-areas" value={processArea} onChange={(event) => setProcessArea(event.target.value)} placeholder="e.g. Procurement" />
-                  <datalist id="test-process-areas">{processAreas.map((value) => <option key={value} value={value} />)}</datalist>
+                  <label htmlFor="new-test-process-area">Process area</label>
+                  <select
+                    id="new-test-process-area"
+                    value={processArea}
+                    onChange={(event) => {
+                      if (event.target.value === NEW_AREA_OPTION) {
+                        setShowNewFolderModal(true);
+                        return;
+                      }
+                      setProcessArea(event.target.value);
+                    }}
+                  >
+                    <option value="">Untagged</option>
+                    {processAreas.map((value) => <option key={value} value={value}>{value}</option>)}
+                    <option value={NEW_AREA_OPTION}>+ New process area…</option>
+                  </select>
                 </div>
                 <div>
                   <label htmlFor="new-test-starting-point">Starting point</label>
@@ -458,6 +511,41 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
           </div>
         )}
       </main>
+
+      {showNewFolderModal && (
+        <div className="modal-backdrop" onClick={() => setShowNewFolderModal(false)}>
+          <div className="modal-card" style={{ maxWidth: '420px' }} onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Create New Process Area Folder</h3>
+              <button type="button" className="btn-close-aside" onClick={() => setShowNewFolderModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className="modal-body stack" style={{ gap: '0.85rem' }}>
+              <p className="hint" style={{ margin: 0 }}>
+                Enter a folder name to organise your Tests:
+              </p>
+              <input
+                type="text"
+                aria-label="New folder name"
+                placeholder="e.g. Sales, Procurement, Inventory"
+                value={newFolderName}
+                onChange={(event) => setNewFolderName(event.target.value)}
+                autoFocus
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && newFolderName.trim()) void createFolder();
+                }}
+              />
+            </div>
+            <div className="modal-footer row" style={{ justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button type="button" className="ghost" onClick={() => setShowNewFolderModal(false)}>Cancel</button>
+              <button type="button" className="primary" disabled={!newFolderName.trim()} onClick={() => void createFolder()}>
+                Create Folder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
