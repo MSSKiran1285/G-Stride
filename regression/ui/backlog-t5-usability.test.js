@@ -20,11 +20,16 @@ async function withTestCase(file, testCase, body) {
   }
 }
 
-// BL-044 — the Process area control is a combobox, not a plain text box and not a <select>.
-// The distinction carries the whole requirement: the set of process areas is a growing
-// convention, so the control has to offer what already exists AND still accept a brand-new
-// value. A <select> would make the first use of a new area impossible.
-test('BL-044: Process area offers known values as options while still accepting a new one', async () => {
+// BL-044 — the Process area control offers what already exists AND still reaches a brand-new
+// value, with the current value indicated.
+//
+// The control was a combobox backed by a datalist, with quick-pick chips beside it. It is a
+// dropdown of the process area folders now. The requirement itself is unchanged and still
+// asserted below: the original rationale for insisting on a combobox was that "a <select> would
+// make the first use of a new area impossible", and that is answered by the "+ New process area"
+// entry, which creates the folder and files the artifact into it without leaving the screen.
+// The current value is indicated by being the selected option rather than by a pressed chip.
+test('BL-044: Process area offers known values as options while still reaching a new one', async () => {
   const file = 'bl044-process-area.json';
   await withTestCase(file, { name: 'BL-044 process area', steps: [] }, async () => {
   // A known process area has to exist for there to be anything to offer.
@@ -36,28 +41,39 @@ test('BL-044: Process area offers known values as options while still accepting 
       const field = page.getByLabel(`Process area for ${file}`);
       await field.waitFor();
 
-      // A combobox backed by a datalist, so the browser shows the known values but does not
-      // restrict input to them.
-      assert.equal(await field.getAttribute('role'), 'combobox');
-      const listId = await field.getAttribute('list');
-      assert.ok(listId, 'expected the Process area field to be backed by a datalist');
-      const options = await page.locator(`datalist#${listId} option`).evaluateAll((nodes) => nodes.map((n) => n.value));
+      // Known areas are offered without retyping them.
+      const options = await field.locator('option').evaluateAll((nodes) => nodes.map((n) => n.value));
       assert.ok(options.includes('Procurement'), `expected known process areas as options, got ${JSON.stringify(options)}`);
 
-      // "with the current value indicated" — the quick-pick chip for the active area is marked
-      // pressed, so the current selection is stated rather than merely present in a list.
-      assert.equal(await page.getByRole('button', { name: 'Procurement', exact: true }).getAttribute('aria-pressed'), 'true');
+      // "with the current value indicated" — the stored area is the selected option.
+      assert.equal(await field.inputValue(), 'Procurement');
 
-      // Typing a value that is not in the list must remain possible.
-      await field.fill('BrandNewArea');
-      assert.equal(await field.inputValue(), 'BrandNewArea');
+      // Save is offered only once there is something to save.
+      const save = page.getByRole('button', { name: 'Save', exact: true });
+      assert.equal(await save.count(), 0, 'Save should be hidden while the selection is unchanged');
+
+      // Reaching a value that is not yet in the list must remain possible, and must persist.
+      await field.selectOption('__new_process_area__');
+      await page.getByLabel(`New process area name for ${file}`).fill('BrandNewArea');
+      await save.click();
+      await page.waitForFunction(
+        (id) => document.querySelector(`[aria-label="Process area for ${id}"]`)?.value === 'BrandNewArea',
+        file,
+      );
+      assert.equal((await api.get('/api/tags/testCase')).body[file], 'BrandNewArea', 'the new area should persist');
+      // ...and it becomes a real folder, not just this one artifact's tag.
+      assert.ok((await api.get('/api/process-areas')).body.includes('BrandNewArea'), 'expected the new area to be registered as a folder');
+      await api.delete('/api/process-areas/BrandNewArea').catch(() => undefined);
     });
   });
   });
 });
 
-// Several tagged artifacts can be on screen at once; a shared datalist id would let one field's
-// suggestions silently drive another's, which is the classic bug with duplicated ids.
+// This was written when the Process area control was a datalist-backed combobox and several could
+// share a screen: a duplicated datalist id would let one field's suggestions silently drive
+// another's. That control is a <select> now and owns its options outright, so this guards the
+// datalists that remain on the page (a step's contract-input suggestions) rather than the tag
+// field itself.
 test('BL-044: each Process area field owns its own option list', async () => {
   const first = 'bl044-unique-a.json';
   await withTestCase(first, { name: 'BL-044 A', steps: [] }, async () => {

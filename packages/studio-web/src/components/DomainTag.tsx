@@ -1,14 +1,16 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api';
 import type { ArtifactKind } from '../types';
+
+// Sentinel for the "create one" entry at the bottom of the list. It is not a selectable area, so
+// it must not collide with a real folder name.
+const NEW_AREA_OPTION = '__new_process_area__';
 
 interface DomainTagProps {
   kind: ArtifactKind;
   name: string;
   value: string;
-  /** Existing domains (across all artifact kinds), offered both as the combobox's own options
-   * and as one-click chips, so the second and later taggings of "Procurement" don't require
-   * retyping it. */
+  /** Existing process areas, across all artifact kinds, offered as the dropdown's options. */
   knownDomains: string[];
   onSaved: (processArea: string) => void;
 }
@@ -17,15 +19,14 @@ interface DomainTagProps {
  * Inline editor for BL-10's processArea tag on a single artifact (test case, group, data
  * file, or App ID).
  *
- * BL-044 turned the plain text field into a combobox — a real <input list=…>, not a <select>.
- * That distinction is the whole point: the set of process areas is a growing convention, not a
- * fixed enumeration, so the control has to offer what already exists AND accept something new
- * in the same keystroke. A <select> would have made the first use of a new area impossible.
+ * Process areas are folders now, created and managed in the library trees, so this control lists
+ * them rather than asking anyone to retype one. BL-044 originally required a combobox here on the
+ * grounds that "a <select> would make the first use of a new area impossible" — that objection is
+ * answered by the "+ New process area" entry, which creates the folder and files the artifact into
+ * it in one action, so a new area is still reachable without leaving the screen.
  *
- * The quick-pick chips stay alongside it rather than being replaced by the dropdown: the chips
- * save and commit in one click, whereas choosing from the list still requires pressing Save.
- * The chip matching the current value is marked with aria-pressed so the current selection is
- * indicated rather than merely present in a list.
+ * Save appears only once the selection actually differs from what is stored, so the control states
+ * plainly whether there is an unsaved change.
  *
  * This one component is what Compose, Business Processes, Test Data and the Control Object
  * Repository all render, which is why BL-044's "applied consistently everywhere" criterion is
@@ -33,63 +34,80 @@ interface DomainTagProps {
  */
 export function DomainTag({ kind, name, value, knownDomains, onSaved }: DomainTagProps) {
   const [draft, setDraft] = useState(value);
+  const [creatingNew, setCreatingNew] = useState(false);
+  const [newArea, setNewArea] = useState('');
   const [saving, setSaving] = useState(false);
-  // Several DomainTags can be on one screen; a shared datalist id would let one field's
-  // suggestions silently drive another's.
-  const listId = `${useId()}-process-areas`;
 
-  useEffect(() => setDraft(value), [value]);
+  useEffect(() => {
+    setDraft(value);
+    setCreatingNew(false);
+    setNewArea('');
+  }, [value, name]);
 
-  async function save(next: string) {
+  const pending = creatingNew ? newArea.trim() : draft;
+  const changed = pending !== value && (!creatingNew || pending !== '');
+
+  async function save() {
     setSaving(true);
     try {
-      await api.setTag(kind, name, next);
-      onSaved(next);
+      // A brand-new area is registered as a folder as well as tagged, so it appears in the trees
+      // straight away instead of existing only as this one artifact's tag.
+      if (creatingNew) await api.addProcessArea(pending).catch(() => undefined);
+      await api.setTag(kind, name, pending);
+      onSaved(pending);
+      setCreatingNew(false);
+      setNewArea('');
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="stack" style={{ gap: '0.3rem' }}>
-      <div className="row" style={{ gap: '0.3rem' }}>
+    <div className="row" style={{ gap: '0.3rem' }}>
+      <select
+        aria-label={`Process area for ${name}`}
+        value={creatingNew ? NEW_AREA_OPTION : draft}
+        disabled={saving}
+        onChange={(event) => {
+          if (event.target.value === NEW_AREA_OPTION) {
+            setCreatingNew(true);
+            setNewArea('');
+            return;
+          }
+          setCreatingNew(false);
+          setDraft(event.target.value);
+        }}
+        style={{ flex: 1 }}
+      >
+        <option value="">Untagged</option>
+        {knownDomains.map((d) => (
+          <option key={d} value={d}>{d}</option>
+        ))}
+        <option value={NEW_AREA_OPTION}>+ New process area…</option>
+      </select>
+
+      {creatingNew && (
         <input
-          aria-label={`Process area for ${name}`}
+          // Deliberately not "New process area for X": that would contain the select's own label as
+          // a substring, leaving two controls that match the same accessible-name lookup.
+          aria-label={`New process area name for ${name}`}
           type="text"
-          role="combobox"
-          list={listId}
-          value={draft}
+          value={newArea}
           placeholder="e.g. Procurement"
-          onChange={(e) => setDraft(e.target.value)}
+          autoFocus
+          disabled={saving}
+          onChange={(event) => setNewArea(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && changed) void save();
+          }}
           style={{ flex: 1 }}
         />
-        <datalist id={listId}>
-          {knownDomains.map((d) => (
-            <option key={d} value={d} />
-          ))}
-        </datalist>
-        <button className="ghost" disabled={saving || draft.trim() === value} onClick={() => save(draft.trim())}>
+      )}
+
+      {changed && (
+        <button className="ghost" disabled={saving} onClick={() => void save()}>
           {saving ? '…' : 'Save'}
         </button>
-      </div>
-      {knownDomains.length > 0 && (
-        <div className="row" style={{ gap: '0.3rem', flexWrap: 'wrap' }}>
-          {knownDomains.map((d) => (
-            <button
-              key={d}
-              className="ghost"
-              style={{ padding: '0.1rem 0.5rem' }}
-              disabled={saving}
-              aria-pressed={d === value}
-              onClick={() => {
-                setDraft(d);
-                save(d);
-              }}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
       )}
     </div>
   );
