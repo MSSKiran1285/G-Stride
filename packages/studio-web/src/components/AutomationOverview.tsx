@@ -727,6 +727,9 @@ function ExecutionImpactDashboard({
             <ChevronDown size={14} className="ref-pill-chevron" />
             <select
               className="ref-overlay-select"
+              // The visible "App ID" text is a sibling span on the styled pill, not a <label>, so
+              // this control reached a screen reader unnamed. Axe rates that critical.
+              aria-label="Filter by App ID"
               value={appIdFilter}
               onChange={(e) => onAppIdFilterChange(e.currentTarget.value)}
             >

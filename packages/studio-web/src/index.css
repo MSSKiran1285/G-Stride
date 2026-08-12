@@ -27,7 +27,7 @@
   --border-light-strong: #cbd5e1;
   --text-light: #112a46;
   --text-light-soft: #334b66;
-  --text-light-muted: #64748b;
+  --text-light-muted: #5b6b7f;
 
   /* Dark Slate Theme Palette */
   --bg-dark: #090d16;
@@ -4368,9 +4368,14 @@ button.template-card {
   box-shadow: none;
 }
 
+/* The sidebar brand bar and the content header form one visual band across the top of the app,
+   so they have to be the same height. They were 72px and 64px, which left the sidebar sitting 8px
+   proud of the header and made every element below it look out of true. Matched to the header's
+   64px rather than the other way round: it removes the extra space instead of adding more. */
 .canvas-shell .lhs-brand-header {
-  min-height: 72px;
-  padding: 0.55rem 0.8rem 0.55rem 0.9rem;
+  min-height: 64px;
+  height: 64px;
+  padding: 0 0.8rem 0 0.9rem;
 }
 
 .canvas-shell .brand-name {
@@ -4474,7 +4479,10 @@ button.template-card {
 
 .canvas-shell .workspace-header {
   min-height: 64px;
-  padding: 0.75rem 1.4rem;
+  height: 64px;
+  /* 1.5rem matches .ref-overview-canvas so the breadcrumb and the greeting below it start on
+     exactly the same vertical line. */
+  padding: 0 1.5rem;
   box-shadow: none;
 }
 
@@ -4607,7 +4615,7 @@ button.template-card {
 /* Header & Time Widget */
 .ref-overview-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 0.75rem;
@@ -4641,6 +4649,7 @@ button.template-card {
   align-items: center;
   gap: 0.35rem;
   line-height: 1;
+  min-height: calc(1.3rem * 1.2);
 }
 
 .ref-sun-icon {
@@ -5032,11 +5041,11 @@ button.template-card {
 }
 
 .ref-badge-title.green-title {
-  color: #16a34a;
+  color: #15803d;
 }
 
 .ref-badge-title.orange-title {
-  color: #ea580c;
+  color: #c2410c;
 }
 
 .ref-badge-desc {
@@ -5111,7 +5120,7 @@ button.template-card {
 }
 
 .ref-card-value.orange-text {
-  color: #ea580c;
+  color: #c2410c;
 }
 
 .ref-card-sub {
@@ -5128,7 +5137,7 @@ button.template-card {
 }
 
 .ref-outcome-counts .passed-text {
-  color: #16a34a;
+  color: #15803d;
 }
 
 .ref-outcome-counts .failed-text {
@@ -6184,6 +6193,7 @@ button.text-action:hover {
 
   .canvas-shell .lhs-brand-header {
     min-height: 112px;
+    height: auto;
     flex-direction: column;
     gap: 0.5rem;
     padding-inline: 0.35rem;
@@ -6241,6 +6251,8 @@ button.text-action:hover {
   .canvas-shell .workspace-header {
     align-items: flex-start;
     flex-direction: column;
+    height: auto;
+    padding-block: 0.6rem;
   }
 
   .canvas-shell .workspace-header-right {
@@ -6754,7 +6766,7 @@ button.text-action:hover {
   padding: 0.4rem 0.55rem !important;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--text-muted);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-bottom: 1px solid var(--border);
@@ -6828,7 +6840,7 @@ button.text-action:hover {
 
 .evidence-id-link.passed,
 .evidence-id-btn.passed {
-  color: #16a34a !important;
+  color: #15803d !important;
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -6866,13 +6878,13 @@ button.text-action:hover {
 
 .status-pill.passed {
   background: #f0fdf4;
-  color: #16a34a;
+  color: #15803d;
   border: 1px solid #bbf7d0;
 }
 
 .status-pill.failed {
   background: #fef2f2;
-  color: #dc2626;
+  color: #c81e1e;
   border: 1px solid #fecaca;
 }
 
