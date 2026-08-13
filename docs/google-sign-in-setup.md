@@ -1,6 +1,6 @@
 # Google sign-in setup
 
-QA/4HANA Studio uses Google Identity Services for authentication. The browser receives a Google ID token, the Studio server verifies it, and Studio creates its own secure, HTTP-only session cookie.
+G-Stride uses Google Identity Services for authentication. The browser receives a Google ID token, the Studio server verifies it, and Studio creates its own secure, HTTP-only session cookie.
 
 ## One-time setup
 
@@ -13,7 +13,7 @@ QA/4HANA Studio uses Google Identity Services for authentication. The browser re
 
    If Studio is started on a different port, add that origin instead.
 5. Copy the client ID ending in `.apps.googleusercontent.com`.
-6. In QA/4HANA Studio, open the user menu, choose **Settings**, paste the ID under **Owner account**, and select **Save client ID**.
+6. In G-Stride, open the user menu, choose **Settings**, paste the ID under **Owner account**, and select **Save client ID**.
 7. Use the official Google sign-in button. The first verified Google account becomes the single owner of this workspace.
 
 Do not create or paste a client secret. The browser-based Google Identity Services flow requires the public web client ID only.

@@ -887,17 +887,17 @@ const quality = JSON.parse(qualitySource);
 const catalog = JSON.parse(catalogSource);
 const documents = [
   {
-    stem: 'QA4HANA_Product_Implementation_Status_Report',
+    stem: 'GStride_Product_Implementation_Status_Report',
     title: 'Implementation status',
     content: await implementationReport({ backlog, quality, catalogCount: catalog.tests.length }),
   },
   {
-    stem: 'QA4HANA_User_Training_Work_Instruction',
+    stem: 'GStride_User_Training_Work_Instruction',
     title: 'User training work instruction',
     content: await trainingWorkInstruction(),
   },
   {
-    stem: 'QA4HANA_How_To_Guide_and_FAQ',
+    stem: 'GStride_How_To_Guide_and_FAQ',
     title: 'How-to guide and FAQ',
     content: await howToAndFaq(),
   },

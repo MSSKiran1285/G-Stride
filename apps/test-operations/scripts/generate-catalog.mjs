@@ -129,4 +129,4 @@ fs.writeFileSync(
   `${JSON.stringify(qualityDashboard, null, 2)}\n`,
   'utf8',
 );
-console.log(`Generated ${tests.length} QA/4HANA tests at ${destination}`);
+console.log(`Generated ${tests.length} G-Stride tests at ${destination}`);

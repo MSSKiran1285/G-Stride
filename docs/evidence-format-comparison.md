@@ -23,7 +23,7 @@
 
 The audit evidence generator now produces:
 
-1. A populated QA/4HANA Studio cover.
+1. A populated G-Stride cover.
 2. Complete execution metadata, including calculated duration and the tenant inferred from recorded navigation evidence.
 3. Business-document results rather than raw output names.
 4. Numbered process, scenario, traceability, training, and appendix sections.

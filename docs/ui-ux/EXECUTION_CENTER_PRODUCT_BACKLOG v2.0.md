@@ -1,6 +1,6 @@
 # Execution Center Product Backlog v2.0
 
-**Product:** QA/4HANA Studio  
+**Product:** G-Stride  
 **Scope:** Authoritative consolidated backlog for the Execution Center redesign  
 **Baseline:** Original EXC-001–EXC-028 backlog, implementation Stages 1–6, and closure assessment  
 **Date:** 29 July 2026  

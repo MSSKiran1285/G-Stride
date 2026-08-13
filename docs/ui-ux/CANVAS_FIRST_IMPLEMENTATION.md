@@ -1,7 +1,7 @@
 # Canvas First Implementation
 
 **Direction approved:** 28 July 2026
-**Brand:** QA/4HANA Studio
+**Brand:** G-Stride
 **Accent:** Coral
 **Primary light-surface text:** Deep navy
 

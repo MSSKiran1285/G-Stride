@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-11T17:22:51.226Z",
+  "generatedAt": "2026-08-13T11:35:23.913Z",
   "source": "Repository regression inventory and recorded Node test-run output",
   "tests": [
     {
@@ -2104,15 +2104,15 @@
     },
     {
       "id": "Q4H-176",
-      "name": "BL-044: Process area offers known values as options while still accepting a new one",
+      "name": "BL-044: Process area offers known values as options while still reaching a new one",
       "feature": "Workspace Experience",
       "area": "Process Suites",
       "mode": "Headless UI",
       "source": "regression/ui/backlog-t5-usability.test.js",
-      "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T08:03:38.212Z",
-      "durationMs": 569.9545,
-      "executionNote": "Passed in Isolated UI regression."
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
     },
     {
       "id": "Q4H-177",
@@ -2128,7 +2128,7 @@
     },
     {
       "id": "Q4H-178",
-      "name": "BL-042: a step\\'s free-form parameters can be reordered by keyboard, and the order persists",
+      "name": "a step can be reordered from the keyboard using the drag handle, and the move is announced",
       "feature": "Workspace Experience",
       "area": "Execution Center",
       "mode": "Headless UI",
@@ -2140,6 +2140,30 @@
     },
     {
       "id": "Q4H-179",
+      "name": "the steps toolbar removes the selected step and does not leave the selection dangling",
+      "feature": "Workspace Experience",
+      "area": "Execution Center",
+      "mode": "Headless UI",
+      "source": "regression/ui/backlog-t5-usability.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-180",
+      "name": "BL-042: a step\\'s free-form parameters can be reordered by keyboard, and the order persists",
+      "feature": "Workspace Experience",
+      "area": "Execution Center",
+      "mode": "Headless UI",
+      "source": "regression/ui/backlog-t5-usability.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-181",
       "name": "BL-043: Mass Capture rows are individually selectable and survive a Highlight round trip",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2151,7 +2175,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-180",
+      "id": "Q4H-182",
       "name": "Compose: create a test case, add a step, save, reload, reopen (required Compose positive)",
       "feature": "Workspace Experience",
       "area": "Compose",
@@ -2163,7 +2187,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-181",
+      "id": "Q4H-183",
       "name": "Compose: contextual capture opens over an object field and returns without losing the in-progress step (BL-023 AC4)",
       "feature": "Workspace Experience",
       "area": "Compose",
@@ -2175,7 +2199,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-182",
+      "id": "Q4H-184",
       "name": "Data: create a dataset, add a row, save, reload, reopen (required Data positive)",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2187,7 +2211,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-183",
+      "id": "Q4H-185",
       "name": "Data: author and preview nested JSON transactions before save",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2199,7 +2223,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-184",
+      "id": "Q4H-186",
       "name": "Data: relate header and child CSVs, preview counts, and persist the relationship",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2211,7 +2235,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-185",
+      "id": "Q4H-187",
       "name": "Dataset Library search actually filters by file name and does not silently look like a load failure (HC-023)",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2223,7 +2247,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-186",
+      "id": "Q4H-188",
       "name": "Global search finds a Test by name, shows typed domain/App ID/lifecycle, and opens its exact route (BL-037 AC1)",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -2235,7 +2259,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-187",
+      "id": "Q4H-189",
       "name": "Global search \"Show usage\" reports incoming Process/Pack dependencies and outgoing Object references for a Test (BL-037 AC2)",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2247,7 +2271,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-188",
+      "id": "Q4H-190",
       "name": "Global search delete asks for confirmation naming the referencing Process, then removes the Test (BL-037 AC3)",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2259,7 +2283,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-189",
+      "id": "Q4H-191",
       "name": "Global search deletes an unreferenced artifact without a dependency warning (BL-037 AC3)",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2271,7 +2295,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-190",
+      "id": "Q4H-192",
       "name": "Global search routes an unknown process to manual authoring with a suggested App ID (BL-047 Phase 1)",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2283,7 +2307,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-191",
+      "id": "Q4H-193",
       "name": "Business Processes: create, save, reload and reopen a process",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2295,7 +2319,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-192",
+      "id": "Q4H-194",
       "name": "Business Process canvas authors and restores a typed stage hand-off",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2307,7 +2331,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-193",
+      "id": "Q4H-195",
       "name": "Help drawer shows 2.1.0 candidate and 2.0.0 GA release notes with the accessibility caveat",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2319,7 +2343,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-194",
+      "id": "Q4H-196",
       "name": "Help topics are collapsible sections, closed by default for the new Guides topic (HC-010)",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2331,7 +2355,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-195",
+      "id": "Q4H-197",
       "name": "Reconcile all checks every Object for an App ID against the live screen instead of capturing new ones (BL-047 Phase 1)",
       "feature": "Workspace Experience",
       "area": "Object Repository",
@@ -2343,7 +2367,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-196",
+      "id": "Q4H-198",
       "name": "Reconcile all count tracks the current Object list, not a stale snapshot",
       "feature": "Workspace Experience",
       "area": "Object Repository",
@@ -2355,7 +2379,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-197",
+      "id": "Q4H-199",
       "name": "Canvas First Overview presents the approved shell and real workspace data",
       "feature": "Workspace Experience",
       "area": "Automation Overview",
@@ -2367,7 +2391,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-198",
+      "id": "Q4H-200",
       "name": "Canvas First Overview primary action opens Compose without execution",
       "feature": "Workspace Experience",
       "area": "Automation Overview",
@@ -2379,7 +2403,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-199",
+      "id": "Q4H-201",
       "name": "Automation Overview: Needs attention surfaces real alerts, recent runs and tests open exact routes (BL-018 AC1/AC3)",
       "feature": "Workspace Experience",
       "area": "Automation Overview",
@@ -2391,19 +2415,19 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-200",
-      "name": "Automation Overview: Needs attention \"failed executions\" link opens Audit and Evidence pre-filtered to failed runs (HC-008)",
+      "id": "Q4H-202",
+      "name": "Automation Overview: Needs attention \\\"failed executions\\\" link opens Audit and Evidence pre-filtered to failed runs (HC-008)",
       "feature": "Workspace Experience",
       "area": "Automation Overview",
       "mode": "Headless UI",
       "source": "regression/ui/overview.test.js",
-      "latestStatus": "Passed",
-      "lastExecutedAt": "2026-08-10T08:03:38.212Z",
-      "durationMs": 852.8799,
-      "executionNote": "Passed in Isolated UI regression."
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
     },
     {
-      "id": "Q4H-201",
+      "id": "Q4H-203",
       "name": "Automation Overview: execution impact filters, scope disclosure and weekly trend reflect real data (BL-019 AC1/AC3)",
       "feature": "Workspace Experience",
       "area": "Automation Overview",
@@ -2415,7 +2439,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-202",
+      "id": "Q4H-204",
       "name": "Regression Packs: create, bind independent members, save, reload and reopen",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2427,7 +2451,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-203",
+      "id": "Q4H-205",
       "name": "unsaved Regression Pack changes are protected from shell navigation",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -2439,7 +2463,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-204",
+      "id": "Q4H-206",
       "name": "Run tab: execution type switching renders the approved business language",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2451,7 +2475,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-205",
+      "id": "Q4H-207",
       "name": "Run tab: the file/group filter box narrows the available list",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2463,7 +2487,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-206",
+      "id": "Q4H-208",
       "name": "Run tab: preflight impact review can be opened and cancelled without execution",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2475,7 +2499,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-207",
+      "id": "Q4H-209",
       "name": "Run tab: filter recalculates and previews the exact approved data snapshot",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2487,7 +2511,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-208",
+      "id": "Q4H-210",
       "name": "Run tab: a preflight data finding opens the exact dataset route",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2499,7 +2523,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-209",
+      "id": "Q4H-211",
       "name": "Run tab: configuration remains usable at 320 CSS pixels and exposes keyboard focus",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2511,7 +2535,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-210",
+      "id": "Q4H-212",
       "name": "Run tab: Business Process completes a synthetic multi-stage Chain",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2523,7 +2547,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-211",
+      "id": "Q4H-213",
       "name": "Run tab: a failed Chain shows a focused diagnosis with a link to the exact object (BL-032 AC1/AC3)",
       "feature": "Workspace Experience",
       "area": "Object Repository",
@@ -2535,7 +2559,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-212",
+      "id": "Q4H-214",
       "name": "Run tab: Pack Tests completes a synthetic independent Suite",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2547,7 +2571,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-213",
+      "id": "Q4H-215",
       "name": "Run tab: Batch mode runs \"Cleanup Drafts\" to completion (execution opt-in)",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2559,7 +2583,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-214",
+      "id": "Q4H-216",
       "name": "Run tab: Pack Processes completes a synthetic multi-group Batch",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2571,7 +2595,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-215",
+      "id": "Q4H-217",
       "name": "Run tab: published Saved Pack preflights and executes mixed Test and Process members",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2583,7 +2607,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-216",
+      "id": "Q4H-218",
       "name": "Run tab: rerun review compares immutable inputs before creating lineage",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2595,7 +2619,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-217",
+      "id": "Q4H-219",
       "name": "live: Run tab read-only Chain authenticates and opens Manage Purchase Orders",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2607,7 +2631,7 @@
       "executionNote": "Passed in T1.3.1 live read-only Studio UI matrix final."
     },
     {
-      "id": "Q4H-218",
+      "id": "Q4H-220",
       "name": "live: Run tab read-only Suite runs two independent SAP smoke tests",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2619,7 +2643,7 @@
       "executionNote": "Passed in T1.3.1 live read-only Studio UI matrix final."
     },
     {
-      "id": "Q4H-219",
+      "id": "Q4H-221",
       "name": "live: Run tab read-only Batch runs two independent SAP smoke groups",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2631,7 +2655,7 @@
       "executionNote": "Passed in T1.3.1 live read-only Studio UI matrix final."
     },
     {
-      "id": "Q4H-220",
+      "id": "Q4H-222",
       "name": "live transactional: Run tab full PO -> GR -> Invoice via the UI",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2643,7 +2667,7 @@
       "executionNote": "set REGRESSION_LIVE_TRANSACTIONAL=1 only after test-data ownership, fail-stop retention, and live-run approval are confirmed"
     },
     {
-      "id": "Q4H-221",
+      "id": "Q4H-223",
       "name": "artifact detail routes restore Compose, Data, Process, Object, and Audit context after refresh",
       "feature": "Workspace Experience",
       "area": "Compose",
@@ -2655,7 +2679,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-222",
+      "id": "Q4H-224",
       "name": "browser back and forward restore route-selected artifacts",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -2667,7 +2691,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-223",
+      "id": "Q4H-225",
       "name": "T1.3 grouped picker supports search and selection without leaving the keyboard",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2679,7 +2703,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-224",
+      "id": "Q4H-226",
       "name": "T1.3 ordered transfer controls announce keyboard reorder operations",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2691,7 +2715,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-225",
+      "id": "Q4H-227",
       "name": "T1.3 shell and responsive tables remain operable at narrow widths",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -2703,7 +2727,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-226",
+      "id": "Q4H-228",
       "name": "T1.3 primary text and controls meet normal-text contrast in both themes",
       "feature": "Workspace Experience",
       "area": "Execution Center",
@@ -2715,7 +2739,19 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-227",
+      "id": "Q4H-229",
+      "name": "a Test can be dragged between process area folders, and out of one entirely",
+      "feature": "Workspace Experience",
+      "area": "Process Suites",
+      "mode": "Headless UI",
+      "source": "regression/ui/test-library.test.js",
+      "latestStatus": "Not run",
+      "lastExecutedAt": null,
+      "durationMs": null,
+      "executionNote": "No authoritative recorded execution."
+    },
+    {
+      "id": "Q4H-230",
       "name": "Test Library filters by name, process area, application and readiness",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2727,7 +2763,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-228",
+      "id": "Q4H-231",
       "name": "guided creation copies a template and restores the stable Test route",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -2739,7 +2775,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-229",
+      "id": "Q4H-232",
       "name": "typed Test publishes with a dataset binding and round-trips executable ModuleCall JSON",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2751,7 +2787,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-230",
+      "id": "Q4H-233",
       "name": "publishing is blocked by required parameters, missing objects and output collisions",
       "feature": "Workspace Experience",
       "area": "Object Repository",
@@ -2763,7 +2799,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-231",
+      "id": "Q4H-234",
       "name": "unsaved new test case is protected from shell navigation",
       "feature": "Workspace Experience",
       "area": "Application Shell",
@@ -2775,7 +2811,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-232",
+      "id": "Q4H-235",
       "name": "unsaved new dataset is protected from shell navigation",
       "feature": "Workspace Experience",
       "area": "Test Data",
@@ -2787,7 +2823,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-233",
+      "id": "Q4H-236",
       "name": "unsaved new group is protected from shell navigation",
       "feature": "Workspace Experience",
       "area": "Process Suites",
@@ -2799,7 +2835,7 @@
       "executionNote": "Passed in Isolated UI regression."
     },
     {
-      "id": "Q4H-234",
+      "id": "Q4H-237",
       "name": "browser Back cannot discard an unsaved route-selected artifact without confirmation",
       "feature": "Workspace Experience",
       "area": "Application Shell",

@@ -132,7 +132,7 @@ export function TestOperations({ snapshot }: { snapshot: Snapshot }) {
       <aside className="sidebar">
         <div className="brand">
           <div>
-            <strong>QA/4HANA</strong>
+            <strong>G-Stride</strong>
             <span>Test Operations</span>
           </div>
         </div>
@@ -356,7 +356,7 @@ function Catalog({ tests }: { tests: CatalogTest[] }) {
   return (
     <div className="page-stack">
       <section className="page-intro">
-        <div><span className="eyebrow">Repository-derived inventory</span><h2>All {tests.length} QA/4HANA tests</h2><p>Grouped by feature with the latest recorded status, source, execution mode, and duration.</p></div>
+        <div><span className="eyebrow">Repository-derived inventory</span><h2>All {tests.length} G-Stride tests</h2><p>Grouped by feature with the latest recorded status, source, execution mode, and duration.</p></div>
         <div className="catalog-summary"><span><i className="passed" /> {tests.filter((test) => test.latestStatus === 'Passed').length} passed</span><span><i className="failed" /> {tests.filter((test) => test.latestStatus === 'Failed').length} failed</span><span><i className="skipped" /> {tests.filter((test) => test.latestStatus === 'Skipped' || test.latestStatus === 'Not run').length} outstanding</span></div>
       </section>
 

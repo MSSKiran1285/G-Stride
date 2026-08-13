@@ -1,6 +1,6 @@
 # Execution Center Redesign — Product Backlog
 
-**Product:** QA/4HANA Studio  
+**Product:** G-Stride  
 **Scope:** Execution configuration, data binding, orchestration, monitoring, results, and evidence  
 **Status:** Superseded historical baseline — do not update independently  
 **Date:** 28 July 2026
