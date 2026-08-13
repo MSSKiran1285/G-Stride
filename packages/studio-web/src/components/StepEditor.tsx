@@ -41,6 +41,10 @@ interface Props {
   /** runState keys produced by earlier steps in this same test case — see BL-07/TestCaseEditor.computeHandoffKeys. */
   handoffKeys: Set<string>;
   contractInputKeys?: string[];
+  /** Column names that actually exist in the workspace's datasets, with the files they come from.
+   *  Without these, "Dataset input" offered only the Test's declared contract inputs — which is
+   *  empty on a new Test, so the author had to know the column names by heart. */
+  datasetColumns?: { name: string; files: string[] }[];
   onSave: (call: ModuleCall) => void;
   onCancel: () => void;
   /** Opens the app-level contextual capture overlay for an object-kind field — see
@@ -62,7 +66,7 @@ function inferValueBinding(value: string, handoffKeys: Set<string>): TestStepVal
   return { source: 'dataset', key: exact };
 }
 
-export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contractInputKeys = [], onSave, onCancel, onRequestCapture }: Props) {
+export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contractInputKeys = [], datasetColumns = [], onSave, onCancel, onRequestCapture }: Props) {
   const [moduleName, setModuleName] = useState(initial?.module ?? modules[0]?.name ?? '');
   const [appId, setAppId] = useState(initial?.appId ?? '');
   const [params, setParams] = useState<Record<string, string>>(initial?.params ?? {});
@@ -157,6 +161,20 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
 
   function renderValueField(p: ModuleParamDescriptor, value: string) {
     const binding = bindingFor(p.key, value);
+
+    // A timeout, a key name, a dialog title: there is only one possible answer, so asking "where
+    // does this value come from" first is a question with one option. One box, no dropdown.
+    if (p.literalOnly) {
+      return (
+        <input
+          aria-label={p.label}
+          value={value}
+          placeholder={p.placeholder}
+          onChange={(event) => setParam(p.key, event.target.value)}
+        />
+      );
+    }
+
     return (
       <div className="step-value-authoring">
         <label htmlFor={`source-${p.key}`}>Value source</label>
@@ -167,6 +185,8 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
           onChange={(event) => {
             const source = event.target.value as TestStepValueBinding['source'];
             if (source === 'literal') updateBinding(p.key, { source });
+            // Default to the Test's first declared input when it has one. With none declared the
+            // field stays empty rather than guessing at one of the workspace's dataset columns.
             if (source === 'dataset') updateBinding(p.key, { source, key: contractInputKeys[0] ?? '' });
             if (source === 'systemContext') updateBinding(p.key, { source, key: 'sap.url' });
             if (source === 'priorOutput') updateBinding(p.key, { source, output: [...handoffKeys][0] ?? '' });
@@ -190,7 +210,17 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
               placeholder="Declared input name"
               onChange={(event) => updateBinding(p.key, { source: 'dataset', key: event.target.value })}
             />
-            <datalist id={`contract-inputs-${p.key}`}>{contractInputKeys.map((key) => <option key={key} value={key} />)}</datalist>
+            {/* Real dataset columns first, each labelled with the file it lives in, then any
+                declared contract input that no dataset supplies yet. Still a combobox, so a
+                column that does not exist yet can be named ahead of the data. */}
+            <datalist id={`contract-inputs-${p.key}`}>
+              {datasetColumns.map((column) => (
+                <option key={column.name} value={column.name}>{column.files.join(', ')}</option>
+              ))}
+              {contractInputKeys
+                .filter((key) => !datasetColumns.some((column) => column.name === key))
+                .map((key) => <option key={key} value={key}>declared input</option>)}
+            </datalist>
           </>
         )}
         {binding.source === 'systemContext' && (

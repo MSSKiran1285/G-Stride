@@ -13,6 +13,12 @@ async function createBlankTest(page, name) {
   await page.getByLabel('Test name').fill(name);
   await page.getByRole('button', { name: 'Create Test' }).click();
   await page.getByLabel('Test name').waitFor();
+  // A Test with no declared contract shows the inputs/outputs panel collapsed, so that it does not
+  // occupy the top of the screen to report two zeroes. Declaring one means opening it first.
+  // Set `open` rather than clicking the summary: this is setup, not the behaviour under test.
+  const contract = page.locator('details.contract-collapsed');
+  await contract.waitFor({ timeout: 5000 }).catch(() => undefined);
+  if (await contract.count()) await contract.evaluate((node) => { node.open = true; });
 }
 
 test('typed Test publishes with a dataset binding and round-trips executable ModuleCall JSON', async () => {

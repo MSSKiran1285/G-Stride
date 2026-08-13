@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ChevronDown, FileCode2, Folder, FolderOpen, FolderPlus, Plus, Search, X } from 'lucide-react';
+import { ArrowLeft, ChevronDown, FileCode2, Folder, FolderOpen, FolderPlus, Plus, Search, Trash2, X } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, TestApplication, TestCase, TestLibraryItem, TestLibraryStatus } from '../types';
 import { TestCaseEditor } from './TestCaseEditor';
@@ -42,7 +42,6 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
   const [composing, setComposing] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [fileName, setFileName] = useState('');
-  const [fileNameEdited, setFileNameEdited] = useState(false);
   const [application, setApplication] = useState<TestApplication>('SAP');
   const [processArea, setProcessArea] = useState('');
   const [startingPoint, setStartingPoint] = useState<'blank' | 'template'>('blank');
@@ -62,6 +61,10 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
   const [newFolderName, setNewFolderName] = useState('');
   const [draggingFile, setDraggingFile] = useState<string | null>(null);
   const [dragOverArea, setDragOverArea] = useState<string | null>(null);
+  // Deletion is confirmed rather than immediate: both remove real files, and there is no undo.
+  const [testToDelete, setTestToDelete] = useState<TestLibraryItem | null>(null);
+  const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   function loadLibrary() {
     setLoading(true);
@@ -89,6 +92,50 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
       setError(null);
     } catch (reason) {
       setError(String(reason));
+    }
+  }
+
+  // Tried without force first: the server refuses when a Group or Pack still references the Test,
+  // and that refusal is information the author needs, not an obstacle to route around.
+  const [forceHint, setForceHint] = useState<string | null>(null);
+
+  async function deleteTest(force: boolean) {
+    if (!testToDelete) return;
+    setDeleting(true);
+    try {
+      await api.deleteTestCase(testToDelete.file, force);
+      if (initialFile === testToDelete.file) onSelectedFileChange(undefined);
+      setTestToDelete(null);
+      setForceHint(null);
+      setError(null);
+      loadLibrary();
+    } catch (reason) {
+      // A 409 means it is still referenced; offer the deliberate override rather than failing shut.
+      setForceHint(String(reason));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  // Folders are a tag, so removing one never deletes a Test - the Tests inside become untagged.
+  async function deleteFolder() {
+    if (!folderToDelete) return;
+    setDeleting(true);
+    try {
+      await Promise.all(
+        (itemsByArea.get(folderToDelete) ?? []).map((item) => api.setTag('testCase', item.file, '')),
+      );
+      await api.deleteProcessArea(folderToDelete).catch(() => undefined);
+      const next = await api.listProcessAreas().catch(() => registeredAreas);
+      setRegisteredAreas(next);
+      if (selectedArea === folderToDelete) setSelectedArea(null);
+      setFolderToDelete(null);
+      setError(null);
+      loadLibrary();
+    } catch (reason) {
+      setError(String(reason));
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -165,13 +212,12 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
 
   function updateBusinessName(value: string) {
     setBusinessName(value);
-    if (!fileNameEdited) setFileName(fileStem(value));
+    setFileName(fileStem(value));
   }
 
   function resetCreationFields() {
     setBusinessName('');
     setFileName('');
-    setFileNameEdited(false);
     setApplication('SAP');
     setProcessArea('');
     setStartingPoint('blank');
@@ -323,7 +369,22 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                       )}
                       <span className="folder-name">{area}</span>
                       <span className="folder-count">{areaItems.length}</span>
-                      <div className="btn-tree-folder-delete-placeholder" />
+                      {area === UNTAGGED ? (
+                        // (untagged) is not a real folder, it is the absence of one.
+                        <div className="btn-tree-folder-delete-placeholder" />
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn-tree-folder-delete"
+                          title={`Delete folder "${area}"`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setFolderToDelete(area);
+                          }}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                     </div>
 
                     {isExpanded && (
@@ -362,6 +423,18 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                                 >
                                   {item.name}
                                 </span>
+                                <button
+                                  type="button"
+                                  className="btn-tree-appid-delete"
+                                  title={`Delete Test "${item.name}"`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setForceHint(null);
+                                    setTestToDelete(item);
+                                  }}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
                               </div>
                             );
                           })
@@ -439,11 +512,11 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                   <input
                     id="new-test-file-name"
                     value={fileName}
-                    onChange={(event) => { setFileName(event.target.value); setFileNameEdited(true); }}
+                    readOnly
                     placeholder="create-purchase-order"
                     aria-describedby="new-test-file-name-hint"
                   />
-                  <span id="new-test-file-name-hint" className="hint field-hint">Used in the Test's stable route. Cannot be changed later.</span>
+                  <span id="new-test-file-name-hint" className="hint field-hint">Derived from the Test name. Used in the stable route.</span>
                 </div>
                 <div>
                   <label htmlFor="new-test-application">Test application</label>
@@ -566,6 +639,56 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
           </div>
         )}
       </main>
+
+      {testToDelete && (
+        <div className="modal-backdrop" onClick={() => setTestToDelete(null)}>
+          <div className="modal-card" style={{ maxWidth: '460px' }} onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Delete Test</h3>
+              <button type="button" className="btn-close-aside" onClick={() => setTestToDelete(null)}><X size={16} /></button>
+            </div>
+            <div className="modal-body stack" style={{ gap: '0.85rem' }}>
+              <p style={{ margin: 0 }}>
+                Delete <strong>{testToDelete.name}</strong> ({testToDelete.file})? This removes the file and cannot be undone.
+              </p>
+              {forceHint && <AsyncFeedback state="error" message={forceHint} />}
+            </div>
+            <div className="modal-footer row" style={{ justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button type="button" className="ghost" onClick={() => setTestToDelete(null)}>Cancel</button>
+              <button type="button" className="primary" disabled={deleting} onClick={() => void deleteTest(Boolean(forceHint))}>
+                {deleting ? 'Deleting…' : forceHint ? 'Delete anyway' : 'Delete Test'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {folderToDelete && (
+        <div className="modal-backdrop" onClick={() => setFolderToDelete(null)}>
+          <div className="modal-card" style={{ maxWidth: '460px' }} onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Delete folder</h3>
+              <button type="button" className="btn-close-aside" onClick={() => setFolderToDelete(null)}><X size={16} /></button>
+            </div>
+            <div className="modal-body stack" style={{ gap: '0.85rem' }}>
+              <p style={{ margin: 0 }}>
+                Delete the folder <strong>{folderToDelete}</strong>?
+              </p>
+              <p className="hint" style={{ margin: 0 }}>
+                {(itemsByArea.get(folderToDelete) ?? []).length === 0
+                  ? 'The folder is empty.'
+                  : `Its ${(itemsByArea.get(folderToDelete) ?? []).length} Test(s) are not deleted — they move to (untagged).`}
+              </p>
+            </div>
+            <div className="modal-footer row" style={{ justifyContent: 'flex-end', gap: '0.5rem' }}>
+              <button type="button" className="ghost" onClick={() => setFolderToDelete(null)}>Cancel</button>
+              <button type="button" className="primary" disabled={deleting} onClick={() => void deleteFolder()}>
+                {deleting ? 'Deleting…' : 'Delete folder'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showNewFolderModal && (
         <div className="modal-backdrop" onClick={() => setShowNewFolderModal(false)}>

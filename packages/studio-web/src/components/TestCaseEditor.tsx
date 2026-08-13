@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Copy, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, ModuleCall, ModuleInfo, TestApplication, TestCase, TestContract, TestValidationIssue } from '../types';
 import { StepEditor } from './StepEditor';
@@ -111,6 +111,9 @@ export function TestCaseEditor({
   // instead of one flat, ever-growing list.
   const [fileTags, setFileTags] = useState<Record<string, string>>({});
   const [processAreas, setProcessAreas] = useState<string[]>([]);
+  // Every column across every dataset, so "Dataset input" can offer what actually exists instead
+  // of only the Test's own declared inputs, which are empty on a Test that was just created.
+  const [datasetColumns, setDatasetColumns] = useState<{ name: string; files: string[] }[]>([]);
 
   function refreshTags() {
     api.listTags('testCase').then(setFileTags).catch(() => undefined);
@@ -126,6 +129,26 @@ export function TestCaseEditor({
       .catch((reason) => setError(String(reason)))
       .finally(() => setLoading(false));
     refreshTags();
+
+    // Suggestions only, so a dataset that fails to read is skipped rather than surfaced as an error.
+    api.listData()
+      .then(async (files) => {
+        const byColumn = new Map<string, string[]>();
+        for (const file of files) {
+          const dataset = await api.getDataset(file).catch(() => null);
+          const headers = dataset && 'headers' in dataset ? dataset.headers : [];
+          for (const header of headers ?? []) {
+            if (!byColumn.has(header)) byColumn.set(header, []);
+            byColumn.get(header)!.push(file);
+          }
+        }
+        setDatasetColumns(
+          [...byColumn.entries()]
+            .map(([name, columnFiles]) => ({ name, files: columnFiles }))
+            .sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      })
+      .catch(() => setDatasetColumns([]));
   }, []);
 
   useEffect(() => {
@@ -246,6 +269,17 @@ export function TestCaseEditor({
     document.getElementById(`step-handle-${pendingStepFocus}`)?.focus();
     setPendingStepFocus(null);
   }, [pendingStepFocus]);
+
+  // Consecutive steps are usually near-identical — four EnterHeaderField steps differing only in
+  // which control and which column. Duplicating one and changing two fields beats rebuilding it.
+  function duplicateStep(index: number) {
+    if (!testCase) return;
+    const steps = [...testCase.steps];
+    steps.splice(index + 1, 0, structuredClone(steps[index]));
+    updateTestCase({ ...testCase, steps });
+    setSelectedStep(index + 1);
+    setEditingIndex(index + 1);
+  }
 
   function reorderStep(from: number, to: number) {
     if (!testCase || from === to) return;
@@ -383,11 +417,28 @@ export function TestCaseEditor({
           </div>
 
           {testCase.contract ? (
-            <TestContractEditor
-              contract={testCase.contract}
-              stepNames={testCase.steps.map((step) => step.module)}
-              onChange={(contract) => updateTestCase({ ...testCase, contract })}
-            />
+            // A contract with nothing in it took the top of the screen to say "0" twice, above the
+            // steps that are the actual work. Collapsed until it has content; open once it does.
+            (testCase.contract.inputs?.length ?? 0) + (testCase.contract.outputs?.length ?? 0) === 0 ? (
+              <details className="panel contract-collapsed">
+                <summary className="section-title" style={{ cursor: 'pointer' }}>
+                  Inputs and outputs <span className="hint">— none declared, only needed before Publishing</span>
+                </summary>
+                <div style={{ marginTop: '0.6rem' }}>
+                  <TestContractEditor
+                    contract={testCase.contract}
+                    stepNames={testCase.steps.map((step) => step.module)}
+                    onChange={(contract) => updateTestCase({ ...testCase, contract })}
+                  />
+                </div>
+              </details>
+            ) : (
+              <TestContractEditor
+                contract={testCase.contract}
+                stepNames={testCase.steps.map((step) => step.module)}
+                onChange={(contract) => updateTestCase({ ...testCase, contract })}
+              />
+            )
           ) : (
             <div className="contract-empty-state">
               <div>
@@ -425,6 +476,14 @@ export function TestCaseEditor({
                   onClick={() => setEditingIndex(editingIndex === selectedStep ? null : selectedStep)}
                 >
                   {editingIndex !== null && editingIndex === selectedStep ? 'CLOSE' : 'EDIT'}
+                </button>
+                <button
+                  type="button"
+                  className="pill pill-neutral"
+                  disabled={selectedStep === null}
+                  onClick={() => selectedStep !== null && duplicateStep(selectedStep)}
+                >
+                  <Copy size={13} /> DUPLICATE
                 </button>
                 <button
                   type="button"
@@ -521,6 +580,7 @@ export function TestCaseEditor({
                               defaultAppId={defaultAppId}
                               handoffKeys={new Set([...computeHandoffKeys(testCase.steps, i, modules), ...crossFileHandoffKeys])}
                               contractInputKeys={contractInputKeys}
+                              datasetColumns={datasetColumns}
                               onSave={(call) => updateStep(i, call)}
                               onCancel={() => setEditingIndex(null)}
                               onRequestCapture={onRequestCapture}
@@ -539,6 +599,7 @@ export function TestCaseEditor({
                           defaultAppId={defaultAppId}
                           handoffKeys={new Set([...computeHandoffKeys(testCase.steps, testCase.steps.length, modules), ...crossFileHandoffKeys])}
                           contractInputKeys={contractInputKeys}
+                              datasetColumns={datasetColumns}
                           onSave={(call) => updateStep(editingIndex, call)}
                           onCancel={() => setEditingIndex(null)}
                           onRequestCapture={onRequestCapture}

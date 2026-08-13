@@ -40,6 +40,12 @@ export interface ModuleParamDescriptor {
    * like AssertControlText that legitimately reads many kinds of control).
    */
   objectKind?: ('clickable' | 'fillable' | 'toggleable' | 'readable' | 'tableColumn')[];
+  /**
+   * This param can only ever hold a fixed value — a timeout, a key name, a dialog title, a
+   * run-state key this module writes. Binding it to a dataset column or to system context is
+   * never meaningful, so the authoring form hides the value-source choice and shows one box.
+   */
+  literalOnly?: boolean;
 }
 
 /** Human-facing metadata for a module — optional, so modules can be described incrementally. */

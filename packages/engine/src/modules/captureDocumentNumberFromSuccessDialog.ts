@@ -29,11 +29,11 @@ export const CaptureDocumentNumberFromSuccessDialog: Module = {
     category: 'Procurement',
     description: 'Parses a generated document number (e.g. Material Document, Supplier Invoice) out of the generic Success/Warning dialog and dismisses it.',
     params: [
-      { key: 'captureAs', label: 'Capture as (runState key)', required: false, placeholder: 'materialDocumentNumber' },
+      { key: 'captureAs', label: 'Capture as (runState key)', required: false, placeholder: 'materialDocumentNumber', literalOnly: true },
       { key: 'label', label: 'Evidence label', required: false, placeholder: 'Material Document Number' },
       { key: 'buttonText', label: 'Dismiss button text', required: false, placeholder: 'OK' },
       { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '15000' },
-      { key: 'dialogTitles', label: 'Dialog title(s) to expect, ";"-separated', required: false, placeholder: 'Success' },
+      { key: 'dialogTitles', label: 'Dialog title(s) to expect, ";"-separated', required: false, placeholder: 'Success', literalOnly: true },
     ],
     narrate: ({ params, runState }) => {
       const value = runState[params.captureAs ?? 'documentNumber'];

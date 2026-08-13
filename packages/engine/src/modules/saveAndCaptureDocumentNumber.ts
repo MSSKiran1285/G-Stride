@@ -24,7 +24,7 @@ export const SaveAndCaptureDocumentNumber: Module = {
     description: 'Saves the document and polls the header title until the real document number replaces the placeholder.',
     params: [
       { key: 'placeholderTitle', label: 'Placeholder title to wait past', required: true, placeholder: 'New Purchase Order' },
-      { key: 'captureAs', label: 'Capture as (runState key)', required: false, placeholder: 'poNumber' },
+      { key: 'captureAs', label: 'Capture as (runState key)', required: false, placeholder: 'poNumber', literalOnly: true },
       { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '30000' },
       {
         key: 'saveButtonField',

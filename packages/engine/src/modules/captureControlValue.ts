@@ -29,7 +29,7 @@ export const CaptureControlValue: Module = {
       'place on the same page, rather than appearing in a dialog or a document title.',
     params: [
       { key: 'field', label: 'Field (object repository name)', required: true, objectKind: ['readable'] },
-      { key: 'captureAs', label: 'Capture as (runState key)', required: true },
+      { key: 'captureAs', label: 'Capture as (runState key)', required: true, literalOnly: true },
       { key: 'label', label: 'Evidence label', required: false },
       { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '15000' },
       { key: 'rowIndex', label: 'Row index (only if field is a table column)', required: false, placeholder: 'default: 0' },

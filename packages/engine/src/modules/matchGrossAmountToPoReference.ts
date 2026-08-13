@@ -19,7 +19,7 @@ export const MatchGrossAmountToPoReference: Module = {
     label: 'Match Gross Amount to PO Reference',
     category: 'Procurement',
     description: "Sums every assigned invoice line's amount into the header's Gross Invoice Amount so the document balances.",
-    params: [{ key: 'amountKey', label: 'Capture as (runState key)', required: false, placeholder: 'invoiceAmount' }],
+    params: [{ key: 'amountKey', label: 'Capture as (runState key)', required: false, placeholder: 'invoiceAmount', literalOnly: true }],
     narrate: ({ params, runState }) => {
       const value = runState[params.amountKey ?? 'invoiceAmount'];
       return value ? `Matched Gross Amount = ${value}` : 'Matched Gross Amount to PO reference';

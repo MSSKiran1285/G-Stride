@@ -17,7 +17,7 @@ export const EnterHeaderField: Module = {
         objectKind: ['fillable', 'toggleable'],
       },
       { key: 'value', label: 'Value', required: true },
-      { key: 'pressKey', label: 'Key to press after filling (e.g. Enter)', required: false, placeholder: 'none' },
+      { key: 'pressKey', label: 'Key to press after filling (e.g. Enter)', required: false, placeholder: 'none', literalOnly: true },
     ],
     narrate: ({ params }) => `Entered ${params.field} = "${params.value}"`,
   },

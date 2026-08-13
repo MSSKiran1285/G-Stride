@@ -33,7 +33,7 @@ export const AddLineItem: Module = {
         objectKind: ['clickable'],
       },
       { key: 'rows', label: 'Rows', required: true },
-      { key: 'lineItemCountKey', label: 'Line count (runState key)', required: false, placeholder: 'default: lineItemCount' },
+      { key: 'lineItemCountKey', label: 'Line count (runState key)', required: false, placeholder: 'default: lineItemCount', literalOnly: true },
       {
         key: 'addClickTiming',
         label: 'When to click Add relative to filling the row',

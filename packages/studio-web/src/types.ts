@@ -96,6 +96,9 @@ export interface ModuleParamDescriptor {
   placeholder?: string;
   /** Which kinds of captured control make sense for this param — see ObjectPicker.classifyObjectKind. */
   objectKind?: ObjectKind[];
+  /** Only ever a fixed value (timeout, key name, dialog title, run-state key this module writes),
+   *  so the authoring form shows one box instead of a value-source choice plus a box. */
+  literalOnly?: boolean;
 }
 
 export interface ModuleDescriptor {
