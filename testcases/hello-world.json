@@ -1,0 +1,12 @@
+{
+  "name": "Hello World",
+  "application": "SAP",
+  "version": 1,
+  "lifecycle": "draft",
+  "steps": [],
+  "contract": {
+    "version": 1,
+    "inputs": [],
+    "outputs": []
+  }
+}
