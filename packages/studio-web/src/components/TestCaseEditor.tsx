@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { Copy, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import type { CaptureRequest, ModuleCall, ModuleInfo, TestApplication, TestCase, TestContract, TestValidationIssue } from '../types';
@@ -7,6 +7,58 @@ import { DomainTag } from './DomainTag';
 import { GroupedPicker } from './GroupedPicker';
 import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
 import { TestContractEditor } from './TestContractEditor';
+
+/**
+ * Modal shell for the step editor. Editing a step is a task you enter and leave, not a region of
+ * the steps table, and it now looks like one.
+ *
+ * Escape closes it, but only when nothing nested has already consumed the key: GroupedPicker and
+ * ObjectPicker both stopPropagation on their own Escape, so closing a dropdown does not also
+ * discard the step being edited. The contextual-capture overlay (BL-023) sits at z-index 100 and
+ * this at 80, so capture still opens ON TOP of an open step editor rather than behind it.
+ */
+function StepEditorDialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Focus the panel itself rather than the first control: the heading should be what a screen
+    // reader announces on open, and the author still tabs straight into the form from here.
+    ref.current?.focus();
+  }, []);
+
+  return (
+    <div
+      className="step-dialog-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        // Backdrop click closes; a drag that STARTED inside the panel must not.
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={ref}
+        className="step-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="step-dialog-title"
+        tabIndex={-1}
+        onKeyDown={(event) => {
+          if (event.key !== 'Escape' || event.defaultPrevented) return;
+          event.preventDefault();
+          onClose();
+        }}
+      >
+        <header className="step-dialog-header">
+          <h2 id="step-dialog-title">{title}</h2>
+          <button type="button" className="ghost" onClick={onClose} aria-label="Close step editor without saving">
+            ✕
+          </button>
+        </header>
+        <div className="step-dialog-body">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 const UNTAGGED = '(untagged)';
 const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b));
@@ -497,6 +549,17 @@ export function TestCaseEditor({
             </div>
             <TableFrame label="Test steps">
               <table className="responsive-table steps-table">
+                {/* Explicit widths rather than auto layout: the header "App ID" was wrapping onto
+                    two lines while "#" took a full share of the width. Params gets the remainder
+                    because it is the only cell whose content genuinely varies in length. */}
+                <colgroup>
+                  <col style={{ width: '2rem' }} />
+                  <col style={{ width: '2rem' }} />
+                  <col style={{ width: '3rem' }} />
+                  <col style={{ width: '16rem' }} />
+                  <col style={{ width: '9rem' }} />
+                  <col />
+                </colgroup>
                 <thead>
                   <tr>
                     <th><span className="sr-only">Reorder</span></th>
@@ -567,50 +630,40 @@ export function TestCaseEditor({
                           />
                         </td>
                         <td className="step-index" data-label="Step">{i + 1}</td>
-                        <td className="step-module" data-label="Module">{step.module}</td>
+                        {/* title carries the full name: the column is fixed-width now, so a long
+                            module like CaptureDocumentNumberFromSuccessDialog ellipsises. */}
+                        <td className="step-module" data-label="Module" title={step.module}>{step.module}</td>
                         <td data-label="App ID">{step.appId && <span className="badge running">{step.appId}</span>}</td>
                         <td className="step-params" data-label="Parameters"><StepParamChips params={step.params} /></td>
                       </tr>
-                      {editingIndex === i && (
-                        <tr>
-                          <td colSpan={6} className="step-editor-cell">
-                            <StepEditor
-                              modules={modules}
-                              initial={step}
-                              defaultAppId={defaultAppId}
-                              handoffKeys={new Set([...computeHandoffKeys(testCase.steps, i, modules), ...crossFileHandoffKeys])}
-                              contractInputKeys={contractInputKeys}
-                              datasetColumns={datasetColumns}
-                              onSave={(call) => updateStep(i, call)}
-                              onCancel={() => setEditingIndex(null)}
-                              onRequestCapture={onRequestCapture}
-                            />
-                          </td>
-                        </tr>
-                      )}
                     </Fragment>
                   ))}
-                  {editingIndex === testCase.steps.length && (
-                    <tr>
-                      <td colSpan={6} className="step-editor-cell">
-                        <StepEditor
-                          modules={modules}
-                          initial={null}
-                          defaultAppId={defaultAppId}
-                          handoffKeys={new Set([...computeHandoffKeys(testCase.steps, testCase.steps.length, modules), ...crossFileHandoffKeys])}
-                          contractInputKeys={contractInputKeys}
-                              datasetColumns={datasetColumns}
-                          onSave={(call) => updateStep(editingIndex, call)}
-                          onCancel={() => setEditingIndex(null)}
-                          onRequestCapture={onRequestCapture}
-                        />
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </TableFrame>
           </div>
+
+          {/* Lifted out of the table. It used to render into a <td colSpan={6}> inside the very
+              table it was editing, which is why it read as more table rather than as a task you
+              had entered. One instance now serves both add and edit — the index decides which. */}
+          {editingIndex !== null && (
+            <StepEditorDialog
+              title={editingIndex === testCase.steps.length ? 'Add step' : `Edit step ${editingIndex + 1}`}
+              onClose={() => setEditingIndex(null)}
+            >
+              <StepEditor
+                modules={modules}
+                initial={editingIndex < testCase.steps.length ? testCase.steps[editingIndex] : null}
+                defaultAppId={defaultAppId}
+                handoffKeys={new Set([...computeHandoffKeys(testCase.steps, editingIndex, modules), ...crossFileHandoffKeys])}
+                contractInputKeys={contractInputKeys}
+                datasetColumns={datasetColumns}
+                onSave={(call) => updateStep(editingIndex, call)}
+                onCancel={() => setEditingIndex(null)}
+                onRequestCapture={onRequestCapture}
+              />
+            </StepEditorDialog>
+          )}
 
           <div className="row">
             <button onClick={() => setEditingIndex(testCase.steps.length)} disabled={editingIndex !== null}>

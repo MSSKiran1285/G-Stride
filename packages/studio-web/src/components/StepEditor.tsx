@@ -18,12 +18,34 @@ const SYSTEM_CONTEXT_RUNTIME: Record<TestSystemContextKey, string> = {
   'sap.password': 'password',
   'runtime.today': 'today',
 };
+/**
+ * `sap.url` and `sap.urlBase` resolve from the SAME configured target — the only difference is
+ * that urlBase has trailing slashes stripped (executionPlanRuntime.ts: `url.replace(/\/+$/, '')`).
+ * "target URL" vs "base URL" implied a semantic split that does not exist and left the author
+ * guessing, so the labels now say what actually differs: use urlBase when concatenating a path
+ * onto it, which is why create-so.json's NavigateToApp reads `${urlBase}/ui#...`.
+ */
 const SYSTEM_CONTEXT_LABELS: Record<TestSystemContextKey, string> = {
-  'sap.url': 'SAP target URL',
-  'sap.urlBase': 'SAP base URL',
+  'sap.url': 'SAP target URL — exactly as configured',
+  'sap.urlBase': 'SAP target URL — no trailing slash, for building a link',
   'sap.username': 'SAP username',
   'sap.password': 'SAP password',
   'runtime.today': 'Current date',
+};
+/** One-word names for the inline value-source chip. A native select always renders the
+ *  SELECTED option's text, and the chip is deliberately narrow, so these have to stay short
+ *  enough not to ellipsise — the longer prose lives in the chip's title. */
+const SOURCE_CHIPS: Record<TestStepValueBinding['source'], string> = {
+  literal: 'literal',
+  dataset: 'dataset',
+  systemContext: 'system',
+  priorOutput: 'prior step',
+};
+const SOURCE_LABELS: Record<TestStepValueBinding['source'], string> = {
+  literal: 'a literal value',
+  dataset: 'a dataset column',
+  systemContext: 'system context',
+  priorOutput: 'an earlier step’s output',
 };
 
 function sortModuleCategories(a: string, b: string): number {
@@ -55,6 +77,23 @@ interface Props {
 /** Every ${key} referenced in a param value. */
 function extractPlaceholderKeys(value: string): string[] {
   return [...value.matchAll(/\$\{([^}]+)\}/g)].map((m) => m[1]);
+}
+
+/**
+ * Which system value a param is asking for, from its own name and label.
+ *
+ * Switching a param to "system context" used to bind it to `sap.url` whatever the param was, so
+ * choosing it on Login's Username silently produced `username=${url}` — a wrong value that looks
+ * filled in. Returning '' where there is no confident match is the important half: the select
+ * then shows "choose one" and the author has to say, rather than being handed a plausible guess.
+ */
+function guessSystemContext(key: string, label: string): TestSystemContextKey | '' {
+  const text = `${key} ${label}`.toLowerCase();
+  if (/passw/.test(text)) return 'sap.password';
+  if (/user|account|login/.test(text)) return 'sap.username';
+  if (/today|date/.test(text)) return 'runtime.today';
+  if (/url|tenant|host|endpoint/.test(text)) return 'sap.url';
+  return '';
 }
 
 function inferValueBinding(value: string, handoffKeys: Set<string>): TestStepValueBinding {
@@ -144,7 +183,16 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
   }
 
   function save() {
-    onSave({ module: moduleName, appId: appId || undefined, params, ...(Object.keys(valueBindings).length ? { valueBindings } : {}) });
+    // Drop params the author cleared back to empty where the descriptor declares a default:
+    // absent and "" mean the same thing to the module, and absent is what keeps the Test free
+    // of values nobody chose. Params with no declared default are left exactly as typed.
+    const described = new Map((selected?.describe?.params ?? []).map((p) => [p.key, p]));
+    const persisted: Record<string, string> = {};
+    for (const [key, value] of Object.entries(params)) {
+      if (value === '' && described.get(key)?.default !== undefined) continue;
+      persisted[key] = value;
+    }
+    onSave({ module: moduleName, appId: appId || undefined, params: persisted, ...(Object.keys(valueBindings).length ? { valueBindings } : {}) });
   }
 
   function bindingFor(key: string, value: string): TestStepValueBinding {
@@ -159,28 +207,93 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
     if (binding.source === 'priorOutput') setParam(key, binding.output ? `\${${binding.output}}` : '');
   }
 
+  /**
+   * Soft fill: a param the author has not touched shows its module default AS THE VALUE, muted,
+   * rather than as a placeholder hint. "Reference capture key: automationReference" answers what
+   * the field will actually do; an empty box with grey ghost text does not.
+   *
+   * It stays soft — `isSoft` params are stripped in save(), so the Test records only what the
+   * author decided. Writing the default in would pin every Test to today's value and make a
+   * later change to that default silently not apply to anything already authored.
+   */
+  function isSet(p: ModuleParamDescriptor): boolean {
+    const v = params[p.key];
+    return v !== undefined && v !== '';
+  }
+  function isSoft(p: ModuleParamDescriptor): boolean {
+    return !isSet(p) && p.default !== undefined;
+  }
+  function shownValue(p: ModuleParamDescriptor): string {
+    return isSet(p) ? params[p.key] : (p.default ?? '');
+  }
+
   function renderValueField(p: ModuleParamDescriptor, value: string) {
     const binding = bindingFor(p.key, value);
+    const soft = isSoft(p);
 
-    // A timeout, a key name, a dialog title: there is only one possible answer, so asking "where
-    // does this value come from" first is a question with one option. One box, no dropdown.
+    // A checkbox or a two-option select has nowhere to PUT a ${placeholder}: rendering one for a
+    // value that already holds a binding would show it as unchecked/default and then write that
+    // back over the binding the moment the step is saved. So a param that is currently bound
+    // keeps the general text+chip control regardless of its declared type. Typed rendering is a
+    // presentation choice; it must never be able to destroy a value.
+    const isBound = /^\$\{[^}]+\}$/.test(value);
+
+    // A checkbox, a select over two options: there is one possible shape of answer and nowhere to
+    // put a ${placeholder}, so these never ask "where does this value come from".
+    if (p.type === 'boolean' && !isBound) {
+      const on = shownValue(p) === 'true';
+      return (
+        <label className={`step-check${soft ? ' is-soft' : ''}`}>
+          <input
+            type="checkbox"
+            aria-label={p.label}
+            checked={on}
+            onChange={(event) => setParam(p.key, event.target.checked ? 'true' : 'false')}
+          />
+          <span>{on ? 'Yes' : 'No'}{soft ? ' (default)' : ''}</span>
+        </label>
+      );
+    }
+
+    if (p.type === 'enum' && p.options?.length && !isBound) {
+      // First option is the default, and an unset param means exactly that — so the select
+      // shows it without writing it, keeping the saved Test free of redundant params.
+      return (
+        <select
+          className={value ? undefined : 'is-soft'}
+          aria-label={p.label}
+          value={value || p.default || p.options[0]}
+          onChange={(event) => setParam(p.key, event.target.value)}
+        >
+          {p.options.map((option, i) => (
+            <option key={option} value={option}>{i === 0 ? `${option} (default)` : option}</option>
+          ))}
+        </select>
+      );
+    }
+
     if (p.literalOnly) {
       return (
         <input
+          className={soft ? 'is-soft' : undefined}
           aria-label={p.label}
-          value={value}
+          type={p.type === 'number' ? 'number' : 'text'}
+          value={shownValue(p)}
           placeholder={p.placeholder}
           onChange={(event) => setParam(p.key, event.target.value)}
         />
       );
     }
 
+    // Everything else: the source as a compact chip, then ONE box — so the row reads left to
+    // right as "label, where it comes from, what it is". The chip leads in the DOM as well as
+    // visually, rather than being reordered in CSS, so tab order follows the same reading order.
     return (
       <div className="step-value-authoring">
-        <label htmlFor={`source-${p.key}`}>Value source</label>
         <select
-          id={`source-${p.key}`}
+          className="step-source-chip"
           aria-label={`Value source for ${p.label}`}
+          title={`${p.label} comes from: ${SOURCE_LABELS[binding.source]}`}
           value={binding.source}
           onChange={(event) => {
             const source = event.target.value as TestStepValueBinding['source'];
@@ -188,18 +301,25 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
             // Default to the Test's first declared input when it has one. With none declared the
             // field stays empty rather than guessing at one of the workspace's dataset columns.
             if (source === 'dataset') updateBinding(p.key, { source, key: contractInputKeys[0] ?? '' });
-            if (source === 'systemContext') updateBinding(p.key, { source, key: 'sap.url' });
+            if (source === 'systemContext') updateBinding(p.key, { source, key: guessSystemContext(p.key, p.label) as TestSystemContextKey });
             if (source === 'priorOutput') updateBinding(p.key, { source, output: [...handoffKeys][0] ?? '' });
           }}
         >
-          <option value="literal">Literal value</option>
-          <option value="dataset">Dataset input</option>
-          <option value="systemContext">System context</option>
-          <option value="priorOutput">Prior step output</option>
+          <option value="literal">{SOURCE_CHIPS.literal}</option>
+          <option value="dataset">{SOURCE_CHIPS.dataset}</option>
+          <option value="systemContext">{SOURCE_CHIPS.systemContext}</option>
+          <option value="priorOutput">{SOURCE_CHIPS.priorOutput}</option>
         </select>
 
         {binding.source === 'literal' && (
-          <input aria-label={p.label} type="text" value={value} placeholder={p.placeholder} onChange={(event) => setParam(p.key, event.target.value)} />
+          <input
+            className={soft ? 'is-soft' : undefined}
+            aria-label={p.label}
+            type={p.type === 'number' ? 'number' : 'text'}
+            value={shownValue(p)}
+            placeholder={p.placeholder}
+            onChange={(event) => setParam(p.key, event.target.value)}
+          />
         )}
         {binding.source === 'dataset' && (
           <>
@@ -207,7 +327,7 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
               aria-label={`Dataset input for ${p.label}`}
               list={`contract-inputs-${p.key}`}
               value={binding.key}
-              placeholder="Declared input name"
+              placeholder="Dataset column name"
               onChange={(event) => updateBinding(p.key, { source: 'dataset', key: event.target.value })}
             />
             {/* Real dataset columns first, each labelled with the file it lives in, then any
@@ -229,6 +349,7 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
             value={binding.key}
             onChange={(event) => updateBinding(p.key, { source: 'systemContext', key: event.target.value as TestSystemContextKey })}
           >
+            {!binding.key && <option value="">— choose a system value —</option>}
             {(Object.keys(SYSTEM_CONTEXT_LABELS) as TestSystemContextKey[]).map((key) => <option key={key} value={key}>{SYSTEM_CONTEXT_LABELS[key]}</option>)}
           </select>
         )}
@@ -278,11 +399,61 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
     );
   }
 
+  /**
+   * Orders a described module's fields by how much attention each actually needs, instead of
+   * giving all of them the same weight in a two-column grid.
+   *
+   * Required first, then optional-but-meaningful, then everything marked `advanced` folded into
+   * a closed <details>. The split is deliberately by `advanced` and not by `required`: an
+   * optional param the author has to think about (a dialog title to expect, a run-state key a
+   * later step reads) stays in the main form, because hiding those is how the 14 Aug 2026
+   * observed run silently lost `dialogTitles`. Only params whose default is the answer you'd
+   * want anyway get collapsed.
+   */
+  function renderDescribedParams(all: ModuleParamDescriptor[]) {
+    const main = all.filter((p) => !p.advanced);
+    const advanced = all.filter((p) => p.advanced);
+    const required = main.filter((p) => p.required);
+    const optional = main.filter((p) => !p.required);
+    // The collapsed row has to say what is inside AND that it is already settled, or it reads as
+    // an unanswered question. "Options (3)" is a closed box; "Using defaults · max length 16" is
+    // a statement of what the step will do. Parentheticals are dropped (they carry the SAP type
+    // name, not the meaning) and booleans read yes/no.
+    const changed = advanced.filter(isSet);
+    const summary = advanced
+      .map((p) => {
+        const short = p.label.replace(/\s*\([^)]*\)/g, '').replace(/\s+instead of.*$/i, '').trim();
+        const raw = shownValue(p);
+        const shown = p.type === 'boolean' ? (raw === 'true' ? 'yes' : 'no') : raw || '—';
+        return `${short} ${shown}${isSet(p) ? ' (changed)' : ''}`;
+      })
+      .join(' · ');
+    const heading = changed.length === 0
+      ? `Using defaults (${advanced.length})`
+      : `Defaults (${advanced.length}) · ${changed.length} changed`;
+
+    return (
+      <>
+        {required.length > 0 && <div className="param-grid">{required.map(renderField)}</div>}
+        {optional.length > 0 && <div className="param-grid">{optional.map(renderField)}</div>}
+        {advanced.length > 0 && (
+          <details className="step-advanced" open={changed.length > 0}>
+            <summary>
+              <span>{heading}</span>
+              <small>{summary}</small>
+            </summary>
+            <div className="param-grid">{advanced.map(renderField)}</div>
+          </details>
+        )}
+      </>
+    );
+  }
+
   return (
-    <div className="panel stack">
+    <div className="panel stack step-editor">
       <span className="sr-only" role="status" aria-live="polite">{paramOrderAnnouncement}</span>
-      <div className="row">
-        <div style={{ flex: 1 }}>
+      <div className="step-editor-head">
+        <div>
           <label>Module</label>
           <GroupedPicker
             ariaLabel="Module"
@@ -299,8 +470,10 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
             sortGroups={sortModuleCategories}
           />
         </div>
-        <div style={{ flex: 1 }}>
-          <label>App ID override (optional)</label>
+        <div>
+          {/* "(optional)" dropped: it wrapped the label onto two lines, and the placeholder
+              already says "inherit default", which makes the same point in the same glance. */}
+          <label>App ID override</label>
           <input aria-label="App ID override" type="text" value={appId} onChange={(e) => setAppId(e.target.value)} placeholder={defaultAppId || 'inherit default'} />
         </div>
       </div>
@@ -315,18 +488,13 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
             objectControls={objectControls}
             allowPlaceholderMode
           />
-          {selected?.describe && selected.describe.params.some((p) => p.key !== TABLE_ROWS_KEY) && (
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-              <p className="section-title">Other options</p>
-              <div className="param-grid">{selected.describe.params.filter((p) => p.key !== TABLE_ROWS_KEY).map(renderField)}</div>
-            </div>
-          )}
+          {selected?.describe && renderDescribedParams(selected.describe.params.filter((p) => p.key !== TABLE_ROWS_KEY))}
         </>
+      ) : selected?.describe ? (
+        renderDescribedParams(selected.describe.params)
       ) : (
         <div className="param-grid">
-          {selected?.describe
-            ? selected.describe.params.map(renderField)
-            : Object.keys(params).map((key, index, all) => (
+          {Object.keys(params).map((key, index, all) => (
                 <div key={key}>
                   <label>{key}</label>
                   <div className="row">

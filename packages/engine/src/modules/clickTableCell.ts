@@ -21,8 +21,8 @@ export const ClickTableCell: Module = {
     description: 'Clicks a single cell in a grid/table by (column object, row index) — for a cell that opens something rather than needing a typed value.',
     params: [
       { key: 'field', label: 'Column (object repository name)', required: true, objectKind: ['tableColumn'] },
-      { key: 'rowIndex', label: 'Row index', required: false, placeholder: 'default: 0' },
-      { key: 'gridTable', label: 'Grid table (sap.ui.table.Table) instead of responsive', required: false, placeholder: 'false' },
+      { key: 'rowIndex', label: 'Row index', required: false, placeholder: 'default: 0', type: 'number', advanced: true, default: '0' },
+      { key: 'gridTable', label: 'Grid table (sap.ui.table.Table) instead of responsive', required: false, placeholder: 'false', type: 'boolean', advanced: true, default: 'false' },
     ],
     narrate: ({ params }) => `Clicked ${params.field} (row ${params.rowIndex ?? '0'})`,
   },

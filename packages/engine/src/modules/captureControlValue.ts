@@ -31,9 +31,9 @@ export const CaptureControlValue: Module = {
       { key: 'field', label: 'Field (object repository name)', required: true, objectKind: ['readable'] },
       { key: 'captureAs', label: 'Capture as (runState key)', required: true, literalOnly: true },
       { key: 'label', label: 'Evidence label', required: false },
-      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '15000' },
-      { key: 'rowIndex', label: 'Row index (only if field is a table column)', required: false, placeholder: 'default: 0' },
-      { key: 'gridTable', label: 'Grid table (sap.ui.table.Table) instead of responsive', required: false, placeholder: 'false' },
+      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '15000', type: 'number', advanced: true, default: '15000' },
+      { key: 'rowIndex', label: 'Row index (only if field is a table column)', required: false, placeholder: 'default: 0', type: 'number', advanced: true, default: '0' },
+      { key: 'gridTable', label: 'Grid table (sap.ui.table.Table) instead of responsive', required: false, placeholder: 'false', type: 'boolean', advanced: true, default: 'false' },
       {
         key: 'retryWhilePrefix',
         label: 'Re-read while value starts with this prefix (e.g. "TMP")',
@@ -44,8 +44,7 @@ export const CaptureControlValue: Module = {
         key: 'allowEmpty',
         label: 'Allow an empty captured value',
         required: false,
-        placeholder: 'false — fails the step if the value is blank, since that almost always means the action that should have populated it silently failed (e.g. an error dialog blocked it)',
-      },
+        placeholder: 'false — fails the step if the value is blank, since that almost always means the action that should have populated it silently failed (e.g. an error dialog blocked it)', type: 'boolean', advanced: true, default: 'false' },
     ],
     narrate: ({ params, runState }) => {
       const value = runState[params.captureAs];

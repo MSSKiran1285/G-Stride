@@ -50,6 +50,37 @@ node packages/cli/dist/index.js studio --port 3000
 
 Then open `http://127.0.0.1:3000`.
 
+### Corporate TLS interception (Zscaler) breaks `npm install`
+
+On a machine behind Zscaler (the owner's work PC), `npm install` fails to fetch
+**better-sqlite3**'s prebuilt binary, because the TLS interception breaks the download. This is
+not optional to work around: `better-sqlite3` is a hard, top-level `import` in five core modules
+with no fallback path —
+
+```
+packages/core/src/domain/dataColumnSchema.ts
+packages/core/src/domain/documentLog.ts
+packages/core/src/domain/objectRepository.ts
+packages/core/src/domain/runHistoryStore.ts
+packages/core/src/domain/tagStore.ts
+```
+
+— so nothing that touches the object repository, run history, tags, documents or data-column
+schema will even load. The **same wall blocks the Playwright Chromium download**, which the
+`postinstall` hook runs.
+
+Fix either way:
+
+```bash
+# Point Node at the Zscaler root certificate
+export NODE_EXTRA_CA_CERTS=/path/to/zscaler-root.crt
+# …or, on Node 22+, trust the OS certificate store
+export NODE_OPTIONS=--use-system-ca
+```
+
+Not an issue on a machine outside the interception — verified working there on Node v24.11.1
+with better-sqlite3 11.10.0 and the Chromium build present.
+
 ### What does NOT come across with the clone
 
 `.studio/` is **gitignored** and holds machine-local state, including
@@ -126,6 +157,26 @@ These are not preferences. Several were set explicitly by the owner.
 5. **`.responsive-table` rules carry `!important` throughout.** Base `table` rules never win.
 6. **Playwright `dragTo` works** for the drag-and-drop features; assert the persisted result
    through the API, not just the DOM.
+7. **`literalOnly` on a param removes a real capability, not just a dropdown.** Marking
+   `Wait.ms` as `literalOnly` to tidy the form silently deleted the ability to bind a delay to a
+   dataset column — `typed-test-authoring.test.js` caught it. Presentation changes to the step
+   form must not narrow what can be bound. The same applies to `type: 'boolean' | 'enum'`: a
+   checkbox has nowhere to put a `${placeholder}`, so `StepEditor` falls back to the text+chip
+   control whenever the current value is already a binding, or saving the step would overwrite it.
+8. **The Bash tool's heredocs eat backslashes even when quoted** (`<<'EOF'`). A regex written as
+   `\\{\\s*` arrives as `{s*` and silently matches nothing. Write the script to a file and run
+   it, rather than piping it through a heredoc.
+9. **The shell's working directory silently drifts to the parent repo.** Both G-Stride and
+   `SAP-S4HANA-Studio-UI-Redesign` have the same `packages/studio-web` layout, so a bare
+   `npm run build --workspace @taf/studio-web` will happily build the *wrong product* and
+   report success. It cost a debugging cycle on 14 Aug 2026 — a rebuilt UI that "would not
+   apply" was being built into the parent while the server served G-Stride's older bundle.
+   **Prefix build/test commands with an absolute `cd`,** and if a change appears not to take,
+   check which `assets/index-*.js` the page actually loaded against `dist/index.html`.
+10. **The studio server reads `dist/index.html` once at startup.** Rebuilding the web app
+    while it runs leaves it serving the previous hashed bundle, so a verified-looking change
+    never reaches the browser. Restart the server after every web build, not just after
+    changing engine modules (trap #2).
 
 ---
 
@@ -156,7 +207,8 @@ Recent work, newest first — all committed and pushed to `gstride/main`:
 | **Automation run reference** | Owner asked whether it can be determined at runtime. Assessed: `automationReference`, `automationOwner` and `transactionFailureDisposition` are rendered into the **evidence PDF**, so automating it changes signed compliance evidence. **Governance decision, deliberately not taken.** |
 | **BL-045** | Held pending a design decision. |
 | **BL-046** | Not started. A previous implementation was reverted after owner review; what specifically made it worse was never established. |
-| **Compose redesign** | The owner asked for a ground-up redesign; the agreed plan was to fix the six causes first and **re-time the 16-step build** before deciding. That re-timing has not happened yet. |
+| **Compose redesign** | Re-timed 14 Aug 2026 via `regression/compose-authoring-timing.js`. Modelled expert floor **144 interactions / ~5m53s** for the 16-step build; **observed human run 25 min** (~4x the floor, first time, following a written checklist). UI latency is not a factor — the same 144 interactions run in ~5s of machine wall-clock. **Ground-up redesign NOT taken**; the step form was streamlined instead (see below). Decision on anything further still open. |
+| **Step form streamlining** | Done 14 Aug 2026, on owner direction after reviewing the Fill Table Cell form. `ModuleParamDescriptor` gained `type` / `options` / `advanced`; the value-source dropdown collapsed to an inline chip; booleans and enums render a checkbox/select; defaulted params fold into a collapsed "Options". **Controls on screen: −43% to −60% on the table/grid modules, −10% on the simpler Sales Order ones.** Interaction count is unchanged (a wash) — the gain is visual load, which KLM does not measure. |
 | **Docs vocabulary** | `docs/ui-ux/PRODUCT_BACKLOG.md` (BL-020 AC3) and `USER_JOURNEYS.md` still say "business name". Left for owner ratification. |
 | **`nanoid` advisory** | High-severity transitive vuln via `vite → postcss`. Build-time only, deliberately accepted. |
 

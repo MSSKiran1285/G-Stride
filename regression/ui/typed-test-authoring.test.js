@@ -35,12 +35,15 @@ test('typed Test publishes with a dataset binding and round-trips executable Mod
       await page.getByRole('button', { name: 'Module' }).click();
       await page.getByText('Wait', { exact: true }).last().click();
 
+      // The source control is now a compact chip beside the value box rather than a labelled
+      // dropdown above it, so its option text is one word each. All four sources must still be
+      // offered — the streamlining was presentational and must not narrow what can be bound.
       const source = page.getByLabel('Value source for Milliseconds');
       assert.deepEqual(await source.locator('option').allTextContents(), [
-        'Literal value',
-        'Dataset input',
-        'System context',
-        'Prior step output',
+        'literal',
+        'dataset',
+        'system',
+        'prior step',
       ]);
       await source.selectOption('dataset');
       assert.equal(await page.getByLabel('Dataset input for Milliseconds').inputValue(), 'delayMs');

@@ -20,9 +20,9 @@ export const CreateAutomationRunReference: Module = {
     params: [
       { key: 'prefix', label: 'Reference prefix', required: true, placeholder: 'Q4H' },
       { key: 'owner', label: 'Run owner', required: true },
-      { key: 'captureAs', label: 'Reference capture key', required: false, placeholder: 'automationReference', literalOnly: true },
-      { key: 'ownerCaptureAs', label: 'Owner capture key', required: false, placeholder: 'automationOwner', literalOnly: true },
-      { key: 'maxLength', label: 'Maximum reference length', required: false, placeholder: '16' },
+      { key: 'captureAs', label: 'Reference capture key', required: false, placeholder: 'automationReference', literalOnly: true, advanced: true, default: 'automationReference' },
+      { key: 'ownerCaptureAs', label: 'Owner capture key', required: false, placeholder: 'automationOwner', literalOnly: true, advanced: true, default: 'automationOwner' },
+      { key: 'maxLength', label: 'Maximum reference length', required: false, placeholder: '16', type: 'number', advanced: true, default: '16' },
     ],
     narrate: ({ params, runState }) =>
       `Created automation reference ${String(runState[params.captureAs || 'automationReference'] ?? '')} for ${params.owner}`,

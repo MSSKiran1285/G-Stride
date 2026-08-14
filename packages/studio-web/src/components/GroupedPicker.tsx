@@ -109,6 +109,9 @@ export function GroupedPicker<T>({
       select(activeKey);
     } else if (event.key === 'Escape') {
       event.preventDefault();
+      // The search field only exists while open, so Escape here always means "close this
+      // picker" — it must not also reach the step-editor dialog and discard the whole edit.
+      event.stopPropagation();
       setOpen(false);
     }
   }

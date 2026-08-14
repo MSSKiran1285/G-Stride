@@ -12,7 +12,7 @@ export const Wait: Module = {
     label: 'Wait',
     category: 'Built-In Modules',
     description: 'Pauses for a fixed duration — not for waiting on UI state, only for giving a pending operation time to settle.',
-    params: [{ key: 'ms', label: 'Milliseconds', required: false, placeholder: '1000' }],
+    params: [{ key: 'ms', label: 'Milliseconds', required: false, placeholder: '1000', type: 'number' }],
     narrate: ({ params }) => `Waited ${params.ms ?? '1000'} ms`,
   },
   async execute({ params }) {

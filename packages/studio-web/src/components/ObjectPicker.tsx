@@ -163,7 +163,15 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
         // leave the dropdown open indefinitely, visually covering whatever control sits below it.
         onBlur={() => setOpen(false)}
         onKeyDown={(e) => {
-          if (e.key === 'Escape') setOpen(false);
+          // Only swallow Escape when there is a dropdown to close — otherwise it must still
+          // reach the step-editor dialog, where Escape means "close the editor".
+          if (e.key === 'Escape') {
+            if (open) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            setOpen(false);
+          }
           else if (e.key === 'ArrowDown') {
             e.preventDefault();
             setOpen(true);

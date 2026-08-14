@@ -25,7 +25,7 @@ export const SaveAndCaptureDocumentNumber: Module = {
     params: [
       { key: 'placeholderTitle', label: 'Placeholder title to wait past', required: true, placeholder: 'New Purchase Order' },
       { key: 'captureAs', label: 'Capture as (runState key)', required: false, placeholder: 'poNumber', literalOnly: true },
-      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '30000' },
+      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '30000', type: 'number', advanced: true, default: '30000' },
       {
         key: 'saveButtonField',
         label: 'Save/Order button (object name)',

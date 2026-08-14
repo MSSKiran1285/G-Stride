@@ -70,8 +70,7 @@ export const AssertDocumentCreationBlocked: Module = {
         key: 'timeoutMs',
         label: 'Validation timeout (ms)',
         required: false,
-        placeholder: '10000',
-      },
+        placeholder: '10000', type: 'number', advanced: true, default: '10000' },
       {
         key: 'captureAs',
         label: 'Capture as (runState key)',

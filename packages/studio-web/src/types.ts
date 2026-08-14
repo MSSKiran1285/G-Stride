@@ -99,6 +99,18 @@ export interface ModuleParamDescriptor {
   /** Only ever a fixed value (timeout, key name, dialog title, run-state key this module writes),
    *  so the authoring form shows one box instead of a value-source choice plus a box. */
   literalOnly?: boolean;
+  /** What control the value needs. Absent means 'text'. Values stay strings on the wire;
+   *  'boolean'/'enum'/'number' render a checkbox/select/number input and never show a
+   *  value source, because none of them has anywhere to put a ${placeholder}. */
+  type?: 'text' | 'number' | 'boolean' | 'enum';
+  /** Allowed values for type: 'enum'. The first is the default. */
+  options?: string[];
+  /** Has a default that is right almost every time — collapsed into "Defaults" rather than
+   *  shown in the main form. NOT a synonym for optional; see the engine-side comment. */
+  advanced?: boolean;
+  /** The value the module falls back to when this param is absent. Shown in the field as a
+   *  soft value — visible and editable, but only written into the Test if actually changed. */
+  default?: string;
 }
 
 export interface ModuleDescriptor {

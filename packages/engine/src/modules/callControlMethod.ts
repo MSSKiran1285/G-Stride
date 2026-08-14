@@ -27,7 +27,7 @@ export const CallControlMethod: Module = {
     params: [
       { key: 'field', label: 'Field (object repository name)', required: true },
       { key: 'method', label: 'Method name', required: false, placeholder: 'default: selectAll' },
-      { key: 'target', label: 'Target', required: false, placeholder: "parent (default) or self" },
+      { key: 'target', label: 'Target', required: false, placeholder: "parent (default) or self", type: 'enum', options: ['parent', 'self'] },
     ],
     narrate: ({ params }) => `Called ${params.method ?? 'selectAll'}() on ${params.field}`,
   },

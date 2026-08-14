@@ -14,7 +14,7 @@ export const DismissDialogIfPresent: Module = {
     description: 'Clicks a button by visible text if a dialog happens to appear — finding nothing is success, not failure.',
     params: [
       { key: 'buttonText', label: 'Button text', required: true, placeholder: 'OK' },
-      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '8000' },
+      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '8000', type: 'number', advanced: true, default: '8000' },
     ],
     narrate: ({ params }) => `Dismissed "${params.buttonText}" dialog if present`,
   },

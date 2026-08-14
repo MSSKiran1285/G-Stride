@@ -20,7 +20,7 @@ export const SelectTableRow: Module = {
       "Selects (checks) a specific row's own checkbox in a table. Needs any captured column from that table, just to identify which table.",
     params: [
       { key: 'field', label: 'Any column in that table (object repository name)', required: true, objectKind: ['tableColumn'] },
-      { key: 'rowIndex', label: 'Row index', required: false, placeholder: 'default: 0' },
+      { key: 'rowIndex', label: 'Row index', required: false, placeholder: 'default: 0', type: 'number', advanced: true, default: '0' },
     ],
     narrate: ({ params }) => `Selected row ${params.rowIndex ?? '0'}`,
   },

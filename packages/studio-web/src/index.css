@@ -8366,3 +8366,303 @@ button.pill:disabled,
 }
 
 
+
+/* ---------------------------------------------------------------------------
+   Step editor: streamlined parameter form
+   ---------------------------------------------------------------------------
+   Before this, every param rendered the same three controls — a "VALUE SOURCE"
+   label, a source dropdown, and a value box — regardless of whether the answer
+   could ever be anything but one fixed value. A two-required-field step drew
+   eight controls and three identical dropdowns, which is what made the form read
+   as busy. Three changes carry the fix:
+
+     1. the source collapses to one compact chip BESIDE the input, not a labelled
+        dropdown above it, so a literal value (the overwhelmingly common case)
+        costs one control instead of three;
+     2. booleans and enums render a checkbox / select and no source at all;
+     3. params whose default is the answer you'd want fold into <details>.
+   --------------------------------------------------------------------------- */
+
+/* One field per row, label on the left, control on the right — so a row reads left to
+   right as "label, where the value comes from, what it is", and the controls all line up
+   on a single vertical edge down the form.
+   Two columns of FIELDS forced the eye to zig-zag: the required ones sat on the diagonal
+   with the defaulted ones interleaved. One field per row fixes the reading order; putting
+   the label beside rather than above the control is what stops that costing double the
+   height. Scoped to .step-editor because .param-grid is shared with GroupEditor,
+   PackEditor and RunPanel, which are not being restyled here. */
+.step-editor .param-grid {
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  max-width: 44rem;
+}
+
+.step-editor .param-grid > div {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.35rem 0.9rem;
+}
+
+.step-editor .param-grid > div > label {
+  margin-bottom: 0;
+  align-self: center;
+}
+
+/* The "captured earlier" hint belongs under the control, not under the label. */
+.step-editor .param-grid > div > .hint {
+  grid-column: 2;
+}
+
+.step-editor-head {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: 0.55rem 1.75rem;
+}
+
+.step-editor-head > div {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.step-editor-head > div > label {
+  margin-bottom: 0;
+}
+
+@media (max-width: 60rem) {
+  .step-editor .param-grid > div,
+  .step-editor-head > div {
+    grid-template-columns: 1fr;
+  }
+
+  .step-editor .param-grid > div > .hint {
+    grid-column: 1;
+  }
+}
+
+/* Module param labels are prose from the module descriptor — full sentences like
+   "Grid table (sap.ui.table.Table) instead of responsive". The global uppercase
+   label treatment is built for short field names and turns these into shouting,
+   so param labels (and only these) drop back to sentence case. */
+.step-editor .param-grid > div > label,
+.step-editor .step-advanced label {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.step-value-authoring {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.step-value-authoring > input,
+.step-value-authoring > select:not(.step-source-chip) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.step-source-chip {
+  flex: 0 0 auto;
+  width: 6.6rem;
+  padding: 0.35rem 0.4rem;
+  font-size: 0.74rem;
+  font-weight: 650;
+  color: var(--text-soft);
+  background: var(--panel-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.step-source-chip:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* Boolean params: a checkbox reading yes/no, sized to sit on the same baseline as
+   the text inputs beside it in the grid. */
+.step-check {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  min-height: 2.35rem;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.85rem;
+  font-weight: 550;
+  color: var(--text);
+}
+
+.step-check input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Defaulted params, folded away. The summary carries the current values so the
+   collapsed state still says what it is hiding — collapsing something into a box
+   labelled only "Options" is how an author stops believing the box is empty. */
+.step-editor .step-advanced {
+  max-width: 38rem;
+}
+
+.step-advanced {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-subtle);
+  padding: 0.5rem 0.75rem;
+}
+
+.step-advanced > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  list-style-position: outside;
+}
+
+.step-advanced > summary:hover {
+  color: var(--text);
+}
+
+.step-advanced > summary small {
+  font-weight: 500;
+  color: var(--text-soft);
+  opacity: 0.85;
+}
+
+.step-advanced[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+.step-advanced[open] > summary small {
+  display: none;
+}
+
+/* A soft value: the module's own default, shown in the field rather than as ghost
+   placeholder text, so the row states what the step will actually do. Muted and
+   italic to keep "this is inherited" distinguishable from "someone typed this" —
+   the difference matters, because only typed values are written into the Test. */
+.step-editor .is-soft,
+.step-editor .step-check.is-soft > span {
+  color: var(--text-soft);
+  font-style: italic;
+}
+
+.step-editor .is-soft:focus {
+  color: var(--text);
+  font-style: normal;
+}
+
+/* ---------------------------------------------------------------------------
+   Steps table: fixed columns
+   ---------------------------------------------------------------------------
+   Widths come from the <colgroup> in TestCaseEditor. table-layout: fixed is what
+   makes the browser honour them — with auto layout it re-derived widths from
+   content, which is how "App ID" ended up wrapped onto two lines while "#" held
+   a full share. Everything is nowrap except the params cell, whose chips are a
+   list and are supposed to wrap.
+   These rules carry !important because .responsive-table does throughout, and a
+   plain rule never wins against it (see HANDOVER trap 5). */
+.responsive-table.steps-table {
+  table-layout: fixed !important;
+}
+
+.responsive-table.steps-table th,
+.responsive-table.steps-table td {
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.responsive-table.steps-table td.step-params {
+  white-space: normal !important;
+  overflow: visible;
+}
+
+/* ---------------------------------------------------------------------------
+   Step editor dialog
+   ---------------------------------------------------------------------------
+   z-index sits BELOW .settings-backdrop (100) on purpose: contextual capture is
+   launched from inside this editor, so it has to land on top of it. */
+.step-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  overflow-y: auto;
+  background: rgba(7, 15, 28, 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.step-dialog {
+  width: min(60rem, 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.step-dialog:focus {
+  outline: none;
+}
+
+.step-dialog:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.step-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-subtle);
+}
+
+.step-dialog-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* The editor already draws itself as a .panel; inside the dialog that would be a
+   box within a box, so the inner chrome is dropped and the dialog provides it. */
+.step-dialog-body > .panel {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .step-dialog {
+    animation: step-dialog-in 120ms ease-out;
+  }
+}
+
+@keyframes step-dialog-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}

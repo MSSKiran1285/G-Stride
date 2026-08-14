@@ -16,13 +16,12 @@ export const ClickByText: Module = {
     description: 'Clicks any visible control by its text — for buttons on a transient view, or with an unstable id.',
     params: [
       { key: 'text', label: 'Button/control text', required: true },
-      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '10000' },
+      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '10000', type: 'number', advanced: true, default: '10000' },
       {
         key: 'matchMode',
         label: 'Match mode',
         required: false,
-        placeholder: 'exact (default) or contains — for text with a dynamic suffix, e.g. "Copy Picking Quantity (2)"',
-      },
+        placeholder: 'exact (default) or contains — for text with a dynamic suffix, e.g. "Copy Picking Quantity (2)"', type: 'enum', options: ['exact', 'contains'] },
     ],
     narrate: ({ params }) => `Clicked "${params.text}"`,
   },

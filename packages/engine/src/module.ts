@@ -46,6 +46,39 @@ export interface ModuleParamDescriptor {
    * never meaningful, so the authoring form hides the value-source choice and shows one box.
    */
   literalOnly?: boolean;
+  /**
+   * What kind of value this param holds, so the authoring form can render the control the
+   * answer actually needs instead of a text box for everything. Absent means 'text'.
+   *
+   * Params are strings on the wire either way — this only changes how the value is collected.
+   * 'boolean' renders a checkbox writing 'true'/'false'; 'enum' renders a select over
+   * `options`; 'number' renders a numeric input. All three imply literalOnly behaviour in the
+   * form (a checkbox has nowhere to put a ${placeholder}), so they never show a value source.
+   */
+  type?: 'text' | 'number' | 'boolean' | 'enum';
+  /** The allowed values for `type: 'enum'`. The first is treated as the default. */
+  options?: string[];
+  /**
+   * This param has a sensible default that is right almost every time, so the form collapses it
+   * into "Options" rather than spending prime vertical space on it.
+   *
+   * Deliberately NOT the same as `!required`. An optional param the author genuinely has to
+   * think about — a dialog title to expect, a run-state key another step consumes — stays in
+   * the main form. Hiding those is how a Test ends up silently missing a value it needed:
+   * the 14 Aug 2026 observed run skipped `dialogTitles` and `maxLength` exactly that way.
+   * Mark `advanced` only when leaving the param unset produces the behaviour you'd want.
+   */
+  advanced?: boolean;
+  /**
+   * The value this module falls back to when the param is absent — the SAME literal the
+   * module's own `execute` uses (`params.timeoutMs ?? '8000'`). Keep the two in step.
+   *
+   * The authoring form shows this in the field as a soft value: visible and editable, but not
+   * written into the Test unless the author actually changes it. That distinction is the point.
+   * Persisting a default would pin every Test to today's value, so raising a timeout later
+   * would silently not apply to any Test authored before the change.
+   */
+  default?: string;
 }
 
 /** Human-facing metadata for a module — optional, so modules can be described incrementally. */

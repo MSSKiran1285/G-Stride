@@ -32,7 +32,7 @@ export const CaptureDocumentNumberFromSuccessDialog: Module = {
       { key: 'captureAs', label: 'Capture as (runState key)', required: false, placeholder: 'materialDocumentNumber', literalOnly: true },
       { key: 'label', label: 'Evidence label', required: false, placeholder: 'Material Document Number' },
       { key: 'buttonText', label: 'Dismiss button text', required: false, placeholder: 'OK' },
-      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '15000' },
+      { key: 'timeoutMs', label: 'Timeout (ms)', required: false, placeholder: '15000', type: 'number', advanced: true, default: '15000' },
       { key: 'dialogTitles', label: 'Dialog title(s) to expect, ";"-separated', required: false, placeholder: 'Success', literalOnly: true },
     ],
     narrate: ({ params, runState }) => {
