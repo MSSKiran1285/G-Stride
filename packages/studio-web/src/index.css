@@ -77,6 +77,9 @@
   --lhs-text: #112a46;
   --lhs-text-soft: #334b66;
 
+  --rows-grid-head-bg: #e8edf4;
+  --rows-grid-head-border: #cbd5e1;
+
   /* Coral interaction palette */
   --brand-coral: #f06f61;
   --accent: #b9473d;
@@ -133,6 +136,8 @@
   --lhs-text: #f8fafc;
   --lhs-text-soft: #94a3b8;
 
+  --rows-grid-head-bg: #1c2735;
+  --rows-grid-head-border: #334155;
   --accent: #ff8a7e;
   --accent-hover: #ff9f95;
   --on-accent: #112a46;
@@ -8612,8 +8617,15 @@ button.pill:disabled,
   backdrop-filter: blur(2px);
 }
 
+/* Sized to its content between a floor and a ceiling, rather than one fixed width.
+   AddLineItem's row editor gives every column an 11rem minimum, so five columns need real
+   width before the object names truncate to "lineItemProd…" — but a two-field module pinned
+   to that same width would be mostly empty space. max-content lets the grid modules grow and
+   leaves the ordinary ones at the floor. */
 .step-dialog {
-  width: min(60rem, 100%);
+  width: max-content;
+  min-width: min(52rem, 100%);
+  max-width: min(84rem, 100%);
   border: 1px solid var(--border);
   border-radius: var(--radius-md, 12px);
   background: var(--panel);
@@ -8665,4 +8677,57 @@ button.pill:disabled,
 @keyframes step-dialog-in {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   AddLineItem row grid
+   ---------------------------------------------------------------------------
+   Its column headers are not chrome — they hold the object pickers that DEFINE
+   what each column is, so they are as editable as the cells below them. The
+   generic table header treatment (--panel-subtle, the same rgb(241,245,249) as
+   the dialog bar and the steps table) made all three read as one surface. This
+   header gets its own tint so "the part you fill in to say what the columns are"
+   is distinguishable from the surrounding chrome at a glance. */
+.rows-grid thead th {
+  background: var(--rows-grid-head-bg) !important;
+  border-bottom: 2px solid var(--rows-grid-head-border) !important;
+  vertical-align: bottom !important;
+  padding: 0.4rem 0.5rem !important;
+}
+
+.rows-grid tbody td {
+  background: var(--panel) !important;
+}
+
+/* The column number and its remove control, sitting above the field so the field
+   itself stays full width and lines up with the cells beneath it. */
+.rows-grid-colhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  min-height: 1.15rem;
+}
+
+.rows-grid-colhead > span {
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.rows-grid-colhead > button {
+  padding: 0 0.25rem !important;
+  line-height: 1;
+  font-size: 0.72rem;
+}
+
+/* Row-number gutter, so the data columns between it and the trailing action
+   column are what actually varies. */
+.rows-grid thead th:first-child,
+.rows-grid tbody td:first-child {
+  width: 2.25rem !important;
+  text-align: center !important;
 }

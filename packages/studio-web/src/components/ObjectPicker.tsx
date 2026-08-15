@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../api';
 import type { CaptureRequest, ObjectControl, ObjectKind } from '../types';
 
@@ -87,10 +88,43 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
   // the full unfiltered list.
   const [showHiddenAnyway, setShowHiddenAnyway] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  // Viewport coordinates of the input, so the dropdown can be positioned as a portal.
+  const [anchor, setAnchor] = useState<{ top: number; left: number; width: number } | null>(null);
+
+  /**
+   * The dropdown renders into document.body rather than next to its input.
+   *
+   * An absolutely-positioned panel is clipped by the nearest scrolling ancestor, and the
+   * table-column pickers in TableRowsEditor sit inside `.table-wrap`, which sets
+   * `overflow-x: auto` — and per spec a non-visible overflow on one axis forces the other to
+   * compute to `auto` too. So the list was being cut off vertically by a container that only
+   * ever meant to scroll sideways. A portal has no such ancestor; position: fixed against the
+   * input's own rect keeps it anchored.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const measure = () => {
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) setAnchor({ top: rect.bottom + 3, left: rect.left, width: rect.width });
+    };
+    measure();
+    // `true` so it also fires for scrolls of inner containers, not just the window.
+    window.addEventListener('scroll', measure, true);
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('scroll', measure, true);
+      window.removeEventListener('resize', measure);
+    };
+  }, [open]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      // The dropdown is no longer a DOM descendant of the input, so it has to be checked
+      // separately or clicking "Show anyway" would close the list it is trying to expand.
+      if (containerRef.current?.contains(target) || dropdownRef.current?.contains(target)) return;
+      setOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -185,15 +219,18 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
           }
         }}
       />
-      {open && (textFiltered.length > 0 || hiddenByKindCount > 0) && (
+      {open && anchor && (textFiltered.length > 0 || hiddenByKindCount > 0) && createPortal(
         <div
-          className="panel"
+          ref={dropdownRef}
+          className="panel object-picker-dropdown"
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 0.2rem)',
-            left: 0,
-            zIndex: 20,
-            minWidth: '100%',
+            position: 'fixed',
+            top: anchor.top,
+            left: anchor.left,
+            // z-index clears the step-editor dialog (80) and its backdrop, so a picker opened
+            // inside the dialog is not painted underneath it.
+            zIndex: 120,
+            minWidth: anchor.width,
             width: 'max-content',
             maxWidth: 'min(38rem, 90vw)',
             maxHeight: '16rem',
@@ -294,7 +331,8 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
               Showing every object for this App ID, including the wrong kind for this field.
             </p>
           )}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
     {onRequestCapture && appId && (

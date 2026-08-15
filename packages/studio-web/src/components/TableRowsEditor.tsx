@@ -119,30 +119,32 @@ export function TableRowsEditor({ value, onChange, objectControls, allowPlacehol
         </div>
       )}
       <div className="table-wrap">
-        <table>
+        <table className="rows-grid">
           <thead>
             <tr>
               <th></th>
               {state.columns.map((col, ci) => (
                 <th key={ci} style={{ minWidth: '11rem' }}>
-                  <div className="row" style={{ alignItems: 'center', gap: '0.3rem' }}>
-                    <div style={{ flex: 1 }}>
-                      {objectControls ? (
-                        <ObjectPicker
-                          value={col}
-                          onChange={(v) => setColumnName(ci, v)}
-                          options={objectControls}
-                          kind={['tableColumn']}
-                          placeholder="column object name"
-                        />
-                      ) : (
-                        <input aria-label={`${ariaLabel}, column ${ci + 1} name`} type="text" value={col} onChange={(e) => setColumnName(ci, e.target.value)} placeholder="object name" />
-                      )}
-                    </div>
+                  {/* The remove control sits ABOVE the field rather than beside it. Inline, it
+                      shortened the header input by its own width, so the column header and the
+                      cells beneath it stopped lining up — 46px adrift at the right edge. */}
+                  <div className="rows-grid-colhead">
+                    <span>Column {ci + 1}</span>
                     <button className="ghost danger" aria-label={`Remove column ${ci + 1}`} onClick={() => removeColumn(ci)} disabled={state.columns.length <= 1} title="Remove column">
                       ✕
                     </button>
                   </div>
+                  {objectControls ? (
+                    <ObjectPicker
+                      value={col}
+                      onChange={(v) => setColumnName(ci, v)}
+                      options={objectControls}
+                      kind={['tableColumn']}
+                      placeholder="column object name"
+                    />
+                  ) : (
+                    <input aria-label={`${ariaLabel}, column ${ci + 1} name`} type="text" value={col} onChange={(e) => setColumnName(ci, e.target.value)} placeholder="object name" />
+                  )}
                 </th>
               ))}
               <th>

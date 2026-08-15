@@ -27,10 +27,14 @@ export const AddLineItem: Module = {
     params: [
       {
         key: 'addButtonField',
-        label: 'Add button (object name)',
+        // "Add button (object name)" said what to type, not what it does. The control this
+        // names is the grid's own add-a-row button — the "Add Row" / "Create" control in the
+        // table toolbar — and it is what "When to click Add" is timed against.
+        label: 'The grid’s add-a-row button',
         required: false,
         placeholder: 'default: AddLineItemButton',
         objectKind: ['clickable'],
+        default: 'AddLineItemButton',
       },
       { key: 'rows', label: 'Rows', required: true },
       { key: 'lineItemCountKey', label: 'Line count (runState key)', required: false, placeholder: 'default: lineItemCount', literalOnly: true, advanced: true, default: 'lineItemCount' },
