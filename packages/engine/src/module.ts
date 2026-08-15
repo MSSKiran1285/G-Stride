@@ -55,7 +55,7 @@ export interface ModuleParamDescriptor {
    * `options`; 'number' renders a numeric input. All three imply literalOnly behaviour in the
    * form (a checkbox has nowhere to put a ${placeholder}), so they never show a value source.
    */
-  type?: 'text' | 'number' | 'boolean' | 'enum';
+  type?: 'text' | 'number' | 'boolean' | 'enum' | 'appUrl';
   /** The allowed values for `type: 'enum'`. The first is treated as the default. */
   options?: string[];
   /**

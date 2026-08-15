@@ -322,6 +322,7 @@ export function ObjectScanner({
           showSaveAll={false}
           onSaveAllStateChange={setPickSaveState}
           captureTarget={captureTarget && { fieldLabel: captureTarget.fieldLabel, onUse: captureTarget.onUse }}
+          pageUrl={pageUrl}
         />
       )}
 
@@ -348,6 +349,7 @@ export function ObjectScanner({
               controls={controls}
               defaultAppId={appId}
               captureTarget={captureTarget && { fieldLabel: captureTarget.fieldLabel, onUse: captureTarget.onUse }}
+          pageUrl={pageUrl}
             />
           )}
 

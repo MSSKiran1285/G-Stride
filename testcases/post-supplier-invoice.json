@@ -21,7 +21,7 @@
   "steps": [
     { "module": "CreateAutomationRunReference", "params": { "prefix": "${automationReferencePrefix}", "owner": "${automationOwner}" } },
     { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
-    { "module": "NavigateToApp", "params": { "url": "${url}ui#SupplierInvoice-create" } },
+    { "module": "NavigateToApp", "params": { "url": "${urlBase}/ui#SupplierInvoice-create" } },
     { "module": "DismissDialogIfPresent", "appId": "postSupplierInvoice", "params": { "buttonText": "No", "timeoutMs": "8000" } },
     { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "InvoicingPartyField", "value": "${supplier}" } },
     { "module": "EnterHeaderField", "appId": "postSupplierInvoice", "params": { "field": "InvoiceDateField", "value": "${today}" } },

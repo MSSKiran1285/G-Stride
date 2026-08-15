@@ -136,6 +136,29 @@ export class ObjectRepository {
         // column already exists on a repository created before this field was added
       }
     }
+    /**
+     * Where an App ID's controls were captured from.
+     *
+     * The scan session already knows this — it holds the session URL and returns `pageUrl` with
+     * every capture — but it was thrown away, so an author who had just captured twelve controls
+     * from a screen still had to retype that screen's URL from memory into NavigateToApp. It was
+     * the single most expensive field in the 16-step Sales Order build: 39s of a modelled 353s,
+     * nearly 29s of it typing 103 characters.
+     *
+     * Many rows per app_id, deliberately: an App ID is a scope of captured controls and one
+     * scope legitimately spans several Fiori screens. create-delivery navigates to
+     * OutboundDelivery-createFromDueList and then OutboundDelivery-pick under a single App ID,
+     * so a one-URL-per-app mapping would have quietly sent it to the wrong screen.
+     */
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS app_entry_points (
+        app_id TEXT NOT NULL,
+        url TEXT NOT NULL,
+        first_seen_at TEXT NOT NULL,
+        last_seen_at TEXT NOT NULL,
+        PRIMARY KEY (app_id, url)
+      )
+    `);
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS object_verifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -282,7 +305,36 @@ export class ObjectRepository {
   /** Permanently removes all saved objects and verifications for an App ID — there is no undo. */
   removeAppId(appId: string): void {
     this.db.prepare('DELETE FROM object_verifications WHERE app_id = ?').run(appId);
+    this.db.prepare('DELETE FROM app_entry_points WHERE app_id = ?').run(appId);
     this.db.prepare('DELETE FROM controls WHERE app_id = ?').run(appId);
+  }
+
+  /**
+   * Notes that this App ID's controls were captured from `url`. Called when a scanned control is
+   * saved, so the entry point is learned as a side effect of ordinary capture rather than being
+   * another thing to maintain. Re-capturing from the same screen refreshes lastSeenAt only.
+   */
+  recordEntryPoint(appId: string, url: string): void {
+    const trimmed = url.trim();
+    if (!appId.trim() || !trimmed) return;
+    const now = new Date().toISOString();
+    this.db
+      .prepare(
+        `INSERT INTO app_entry_points (app_id, url, first_seen_at, last_seen_at)
+         VALUES (@appId, @url, @now, @now)
+         ON CONFLICT(app_id, url) DO UPDATE SET last_seen_at = @now`
+      )
+      .run({ appId, url: trimmed, now });
+  }
+
+  /** Known entry points for an App ID, most recently seen first. */
+  listEntryPoints(appId: string): { url: string; firstSeenAt: string; lastSeenAt: string }[] {
+    return this.db
+      .prepare(
+        `SELECT url, first_seen_at AS firstSeenAt, last_seen_at AS lastSeenAt
+         FROM app_entry_points WHERE app_id = ? ORDER BY last_seen_at DESC`
+      )
+      .all(appId) as { url: string; firstSeenAt: string; lastSeenAt: string }[];
   }
 
   /** Renames a saved object in place, keeping everything else (controlId, label, tableId,

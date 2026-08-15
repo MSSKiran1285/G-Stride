@@ -1854,8 +1854,37 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     res.json({ ok: true });
   });
 
+  /**
+   * Rewrites a captured absolute URL into the portable form a Test should hold.
+   *
+   * Every Fiori launchpad URL in this workspace has the shape `<base>/ui#<intent>`, so the split
+   * is at the first `/ui#` — no need to know the configured tenant. `${urlBase}` rather than
+   * `${url}` on purpose: urlBase has trailing slashes stripped, which is exactly the trap
+   * post-supplier-invoice fell into with `${url}ui#...` (fine only if the configured target
+   * happens to end in a slash, otherwise it builds "https://host.comui#...").
+   */
+  function toPortableAppUrl(raw: string): string {
+    const at = raw.indexOf('/ui#');
+    return at === -1 ? raw : `\${urlBase}${raw.slice(at)}`;
+  }
+
+  app.get('/api/objects/:appId/entry-points', (req, res) => {
+    res.json(
+      objectRepository.listEntryPoints(req.params.appId).map((entry) => ({
+        ...entry,
+        template: toPortableAppUrl(entry.url),
+      }))
+    );
+  });
+
   app.put('/api/objects/:appId/:name', (req, res) => {
-    const { controlId, controlType, bindingPath, label, parentControlId, tableId, scope } = req.body ?? {};
+    const { controlId, controlType, bindingPath, label, parentControlId, tableId, scope, pageUrl } = req.body ?? {};
+    // Learned as a side effect of saving a captured control: the scanner already knows which
+    // screen it was on, and this is the only moment where that URL and the App ID are both in
+    // hand. Optional, so a control curated by hand without a live scan still saves fine.
+    if (typeof pageUrl === 'string' && pageUrl.trim()) {
+      objectRepository.recordEntryPoint(req.params.appId, pageUrl);
+    }
     if (typeof controlId !== 'string' || !controlId || typeof controlType !== 'string' || !controlType) {
       return res.status(400).json({ error: 'Body must include controlId: string and controlType: string' });
     }

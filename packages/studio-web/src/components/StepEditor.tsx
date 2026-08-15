@@ -112,6 +112,8 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
   const [valueBindings, setValueBindings] = useState<Record<string, TestStepValueBinding>>(initial?.valueBindings ?? {});
   const [genericKey, setGenericKey] = useState('');
   const [objectControls, setObjectControls] = useState<ObjectControl[]>([]);
+  /** Screens this step's App ID has been captured from — see the appUrl field below. */
+  const [entryPoints, setEntryPoints] = useState<{ url: string; template: string }[]>([]);
   // Announced rather than only shown, matching how TestCaseEditor already reports step
   // reordering — a reorder that is only visible is invisible to a screen-reader user.
   const [paramOrderAnnouncement, setParamOrderAnnouncement] = useState('');
@@ -125,6 +127,10 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
       .listObjects(effectiveAppId)
       .then(setObjectControls)
       .catch(() => setObjectControls([]));
+    api
+      .listAppEntryPoints(effectiveAppId)
+      .then(setEntryPoints)
+      .catch(() => setEntryPoints([]));
   }, [effectiveAppId]);
 
   /** Wraps the field's own capture request so the just-saved object shows up in this picker's
@@ -312,14 +318,29 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
         </select>
 
         {binding.source === 'literal' && (
-          <input
-            className={soft ? 'is-soft' : undefined}
-            aria-label={p.label}
-            type={p.type === 'number' ? 'number' : 'text'}
-            value={shownValue(p)}
-            placeholder={p.placeholder}
-            onChange={(event) => setParam(p.key, event.target.value)}
-          />
+          <>
+            <input
+              className={soft ? 'is-soft' : undefined}
+              aria-label={p.label}
+              type={p.type === 'number' ? 'number' : 'text'}
+              value={shownValue(p)}
+              placeholder={p.type === 'appUrl' && entryPoints.length > 0 ? 'pick a screen, or type a URL' : p.placeholder}
+              // A datalist rather than a closed dropdown: the known entry points are a
+              // shortcut, not the whole world — a Test may legitimately deep-link somewhere
+              // this App ID has never been scanned from.
+              list={p.type === 'appUrl' && entryPoints.length > 0 ? `entry-points-${p.key}` : undefined}
+              onChange={(event) => setParam(p.key, event.target.value)}
+            />
+            {p.type === 'appUrl' && entryPoints.length > 0 && (
+              <datalist id={`entry-points-${p.key}`}>
+                {/* The portable ${urlBase}/ui#… form, not the absolute URL that was captured —
+                    a Test pinned to one tenant's hostname is not reusable against another. */}
+                {entryPoints.map((entry) => (
+                  <option key={entry.url} value={entry.template}>{entry.url}</option>
+                ))}
+              </datalist>
+            )}
+          </>
         )}
         {binding.source === 'dataset' && (
           <>

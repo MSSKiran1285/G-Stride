@@ -143,12 +143,18 @@ export const api = {
   saveObject: (
     appId: string,
     name: string,
-    body: { controlId: string; controlType: string; bindingPath?: string; label?: string; parentControlId?: string; tableId?: string; scope?: 'shell' | 'app' }
+    body: { controlId: string; controlType: string; bindingPath?: string; label?: string; parentControlId?: string; tableId?: string; scope?: 'shell' | 'app'; pageUrl?: string }
   ) =>
     request<{ ok: true }>(`/api/objects/${encodeURIComponent(appId)}/${encodeURIComponent(name)}`, {
       method: 'PUT',
       body: JSON.stringify(body),
     }),
+  /** Screens this App ID's controls were captured from — offered by NavigateToApp's URL field
+   *  so the author recognises the entry point instead of retyping it. */
+  listAppEntryPoints: (appId: string) =>
+    request<{ url: string; template: string; firstSeenAt: string; lastSeenAt: string }[]>(
+      `/api/objects/${encodeURIComponent(appId)}/entry-points`
+    ),
   /** Blocked with a 409 (surfaced as a thrown error whose message includes usedBy's count) unless
    *  force is true — see server's dependency-aware delete (BL-022 AC3). */
   deleteObject: (appId: string, name: string, force = false) =>

@@ -102,7 +102,7 @@ export interface ModuleParamDescriptor {
   /** What control the value needs. Absent means 'text'. Values stay strings on the wire;
    *  'boolean'/'enum'/'number' render a checkbox/select/number input and never show a
    *  value source, because none of them has anywhere to put a ${placeholder}. */
-  type?: 'text' | 'number' | 'boolean' | 'enum';
+  type?: 'text' | 'number' | 'boolean' | 'enum' | 'appUrl';
   /** Allowed values for type: 'enum'. The first is the default. */
   options?: string[];
   /** Has a default that is right almost every time — collapsed into "Defaults" rather than

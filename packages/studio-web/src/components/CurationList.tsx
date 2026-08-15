@@ -22,6 +22,10 @@ interface CurationListProps {
   /** When set, every saved (or already-saved) row gets a "Use for <field>" action that hands
    *  its name back to the field that requested this capture session — see BL-023 AC4. */
   captureTarget?: { fieldLabel: string; onUse: (name: string) => void };
+  /** The screen these controls were captured from. Sent with each save so the App ID learns its
+   *  entry points, which is what lets NavigateToApp offer the URL instead of asking the author to
+   *  remember it. Absent when curating without a live scan. */
+  pageUrl?: string | null;
 }
 
 interface RowState {
@@ -66,7 +70,7 @@ function groupLabel(control: DiscoveredControl, byId: Map<string, DiscoveredCont
 }
 
 export const CurationList = forwardRef<CurationListHandle, CurationListProps>(function CurationList(
-  { controls, defaultAppId, onDismiss, showSaveAll = true, onSaveAllStateChange, captureTarget },
+  { controls, defaultAppId, onDismiss, showSaveAll = true, onSaveAllStateChange, captureTarget, pageUrl },
   ref
 ) {
   const [existing, setExisting] = useState<Map<string, { appId: string; name: string }>>(new Map());
@@ -174,6 +178,7 @@ export const CurationList = forwardRef<CurationListHandle, CurationListProps>(fu
         parentControlId: c.parentId,
         tableId: c.tableId,
         scope: c.scope,
+        pageUrl: pageUrl ?? undefined,
       });
       updateRow(c.controlId, { saving: false, saved: true, error: null });
       setExisting((prev) => new Map(prev).set(c.controlId, { appId: row.appId, name: row.name.trim() }));
