@@ -622,14 +622,23 @@ export class ExecutionPreflightService {
       }
     }
 
-    if (!tests.some((asset) => asset.testCase.steps.some((step) => step.module === 'CreateAutomationRunReference'))) {
-      findings.push({
-        code: 'automation-reference-required',
-        severity: 'blocking',
-        message: 'Transactional execution must create an owner-linked automation reference before it starts creating SAP documents.',
-        area: 'policy',
-        correction: 'scope',
-      });
+    // Per transactional asset, NOT `tests.some(...)`. The previous form passed as soon as any
+    // one Test in the run carried the step, so a Process could satisfy the control with its
+    // first member and still create documents unreferenced in every later one — o2c-e2e did
+    // exactly that: create-so had the reference, create-delivery and create-billing did not,
+    // and the group passed. Every Test that creates a document needs its own reference, the
+    // same way the retention and ownership checks above are evaluated per asset.
+    for (const asset of transactional) {
+      if (!asset.testCase.steps.some((step) => step.module === 'CreateAutomationRunReference')) {
+        findings.push({
+          code: 'automation-reference-required',
+          severity: 'blocking',
+          message: `Test "${asset.testCase.name}" creates SAP documents but never creates an owner-linked automation reference.`,
+          area: 'policy',
+          reference: asset.file,
+          correction: 'scope',
+        });
+      }
     }
 
     findings.push({

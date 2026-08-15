@@ -19,6 +19,7 @@
     "ownershipRequired": true
   },
   "steps": [
+    { "module": "CreateAutomationRunReference", "params": { "prefix": "${automationReferencePrefix}", "owner": "${automationOwner}" } },
     { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
     { "module": "NavigateToApp", "params": { "url": "${url}ui#SupplierInvoice-create" } },
     { "module": "DismissDialogIfPresent", "appId": "postSupplierInvoice", "params": { "buttonText": "No", "timeoutMs": "8000" } },

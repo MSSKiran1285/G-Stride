@@ -173,10 +173,16 @@ These are not preferences. Several were set explicitly by the owner.
    apply" was being built into the parent while the server served G-Stride's older bundle.
    **Prefix build/test commands with an absolute `cd`,** and if a change appears not to take,
    check which `assets/index-*.js` the page actually loaded against `dist/index.html`.
-10. **The studio server reads `dist/index.html` once at startup.** Rebuilding the web app
-    while it runs leaves it serving the previous hashed bundle, so a verified-looking change
-    never reaches the browser. Restart the server after every web build, not just after
-    changing engine modules (trap #2).
+10. **A web rebuild does NOT need a server restart.** `dist/index.html` is read from disk per
+    request, so a running Studio picks up a new hashed bundle on the next page load. This entry
+    previously claimed the opposite; it was wrong, and the correction matters because believing
+    it hides trap 9. A server that appears to serve a stale bundle is almost always trap 9 —
+    the build went to the parent repo — not a caching server. Verified 15 Aug 2026 against a
+    Studio started before that day's builds, which served the current bundle without restarting.
+    **Trap #2 still stands and is the real one:** engine module metadata IS cached in memory at
+    startup, so after changing anything under `packages/engine/src/modules/` the server must be
+    restarted or the UI keeps serving the old parameter descriptors. Check with
+    `curl -s http://127.0.0.1:3000/api/modules` and look for the fields you just added.
 
 ---
 
@@ -204,7 +210,7 @@ Recent work, newest first — all committed and pushed to `gstride/main`:
 |---|---|
 | **NVDA accessibility gate** | Open, LOW priority by owner direction. Explicitly **not** closed. The recorded run at `regression/results/nvda/primary-workspaces-2026-07-29.log` is now **stale** — it announces "Open test case" and "New test case file name", which the vocabulary change renamed. Re-record when next run. |
 | **BL-044 divergence** | The Process area control is a dropdown now, not the combobox its criteria specify. The criteria's *intent* is still met (see the tracker entry). **Needs owner ratification.** |
-| **Automation run reference** | Owner asked whether it can be determined at runtime. Assessed: `automationReference`, `automationOwner` and `transactionFailureDisposition` are rendered into the **evidence PDF**, so automating it changes signed compliance evidence. **Governance decision, deliberately not taken.** |
+| **Automation run reference** | **Decided 15 Aug 2026 by the owner: auto-insert, pre-filled.** A Test declaring `transaction.creates` gets `CreateAutomationRunReference` as step 1 on save (`server.ts withAutomationRunReference`), bound to the `automationReferencePrefix` / `automationOwner` dataset columns. The step is **inserted, not implied**, so the Test file stays the full account of the run and preflight still has something to inspect — that was the reason not to make it purely runtime-implicit. Prompted by finding that opt-in had already failed: four Tests that create SAP documents carried no reference, and the evidence PDF omits the accountable-owner block silently when it is absent (`evidencePdf.ts:531`). All seven transactional Tests are backfilled. |
 | **BL-045** | Held pending a design decision. |
 | **BL-046** | Not started. A previous implementation was reverted after owner review; what specifically made it worse was never established. |
 | **Compose redesign** | Re-timed 14 Aug 2026 via `regression/compose-authoring-timing.js`. Modelled expert floor **144 interactions / ~5m53s** for the 16-step build; **observed human run 25 min** (~4x the floor, first time, following a written checklist). UI latency is not a factor — the same 144 interactions run in ~5s of machine wall-clock. **Ground-up redesign NOT taken**; the step form was streamlined instead (see below). Decision on anything further still open. |

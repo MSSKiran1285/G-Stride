@@ -19,6 +19,7 @@
     "ownershipRequired": true
   },
   "steps": [
+    { "module": "CreateAutomationRunReference", "params": { "prefix": "${automationReferencePrefix}", "owner": "${automationOwner}" } },
     { "module": "Login", "params": { "url": "${url}", "username": "${username}", "password": "${password}" } },
     {
       "module": "OpenAppFromCatalog",

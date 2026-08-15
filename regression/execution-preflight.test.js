@@ -327,6 +327,56 @@ test('transactional preflight enforces non-production, fail-stop, owner referenc
   }
 });
 
+test('every transactional Test needs its own automation reference, not just one in the run', async () => {
+  // Regression for a real hole: the check was `tests.some(step is CreateAutomationRunReference)`,
+  // so a Process satisfied the control with its FIRST member and every later member could create
+  // SAP documents unreferenced. The o2c-e2e group did exactly that in the shipped workspace —
+  // create-so carried the reference, create-delivery and create-billing did not, and it passed.
+  const context = fixture();
+  try {
+    const transaction = (name, withReference) => ({
+      name,
+      transaction: { creates: ['purchaseOrder'], failureDisposition: 'retain-for-review', ownershipRequired: true },
+      steps: [
+        ...(withReference
+          ? [{ module: 'CreateAutomationRunReference', params: { prefix: '${automationReferencePrefix}', owner: '${automationOwner}' } }]
+          : []),
+        { module: 'Wait', params: { ms: '1' } },
+      ],
+    });
+    writeFileSync(path.join(context.root, 'testcases', 'referenced.json'), JSON.stringify(transaction('Referenced', true)));
+    writeFileSync(path.join(context.root, 'testcases', 'unreferenced.json'), JSON.stringify(transaction('Unreferenced', false)));
+    writeFileSync(
+      path.join(context.root, 'data', 'transaction.csv'),
+      'automationReferencePrefix,automationOwner\nQ4HP2P,kiran\n'
+    );
+
+    // businessProcess, not singleTest: a Single Test is exactly one Test by definition, and the
+    // hole only shows with several ordered Tests in one run — which is what o2c-e2e is.
+    const draft = singleDraft({
+      kind: 'businessProcess',
+      testCaseFiles: ['referenced.json', 'unreferenced.json'],
+      dataFile: 'transaction.csv',
+      iterationFailurePolicy: 'stop-execution',
+    });
+    const result = await context.service.preflight(draft, configuredTarget);
+
+    assert.equal(result.ready, false, 'a run containing an unreferenced transactional Test must be blocked');
+    const findings = result.findings.filter((f) => f.code === 'automation-reference-required');
+    assert.equal(findings.length, 1, 'exactly the offending Test should be reported');
+    // asset.file is a workspace-relative path, and the separator differs by platform.
+    assert.ok(findings[0].reference.endsWith('unreferenced.json'), `unexpected reference: ${findings[0].reference}`);
+    assert.equal(findings[0].severity, 'blocking');
+
+    // And the control still passes once every transactional member carries its own.
+    writeFileSync(path.join(context.root, 'testcases', 'unreferenced.json'), JSON.stringify(transaction('Unreferenced', true)));
+    const fixed = await context.service.preflight(draft, configuredTarget);
+    assert.ok(!fixed.findings.some((f) => f.code === 'automation-reference-required'));
+  } finally {
+    context.close();
+  }
+});
+
 test('preflight joins relational CSV into transaction snapshots with owned child rows', async () => {
   const context = fixture();
   try {

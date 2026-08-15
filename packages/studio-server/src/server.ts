@@ -744,6 +744,37 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  /**
+   * A Test that creates SAP documents gets its owner-linked automation reference as step 1,
+   * inserted here rather than left to the author to remember.
+   *
+   * Why on save and not in Compose: `transaction.creates` is not editable in the UI at all —
+   * it is hand-authored in the JSON — so Compose has no way to know a Test is transactional at
+   * the point the author is building it. The save path is the one place every route through the
+   * product converges on. Opt-in demonstrably did not hold: on 15 Aug 2026 four of the Tests
+   * that create documents (create-delivery, create-billing, post-goods-receipt,
+   * post-supplier-invoice) had no reference, and the evidence PDF omits the accountable-owner
+   * block silently when it is missing.
+   *
+   * The step is INSERTED, not implied, so the Test file remains the full account of the run:
+   * it still diffs, reviews and audits, and executionPreflight still has something to inspect.
+   */
+  function withAutomationRunReference<T extends { steps?: any[]; transaction?: { creates?: unknown[] } }>(body: T): T {
+    const creates = body?.transaction?.creates;
+    if (!Array.isArray(creates) || creates.length === 0) return body;
+    if (body.steps?.some((step) => step?.module === 'CreateAutomationRunReference')) return body;
+    return {
+      ...body,
+      steps: [
+        {
+          module: 'CreateAutomationRunReference',
+          params: { prefix: '${automationReferencePrefix}', owner: '${automationOwner}' },
+        },
+        ...(body.steps ?? []),
+      ],
+    };
+  }
+
   app.put('/api/testcases/:file', (req, res) => {
     try {
       const file = safeTestCaseName(req.params.file);
@@ -763,8 +794,9 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
         if (issues.length > 0) return res.status(400).json({ error: 'Test is not ready to publish.', issues });
       }
       mkdirSync(testCasesDir, { recursive: true });
-      writeFileSync(path.join(testCasesDir, file), JSON.stringify(body, null, 2) + '\n');
-      res.json({ ok: true });
+      const normalised = withAutomationRunReference(body);
+      writeFileSync(path.join(testCasesDir, file), JSON.stringify(normalised, null, 2) + '\n');
+      res.json({ ok: true, ...(normalised !== body ? { addedAutomationReference: true } : {}) });
     } catch (err: any) {
       res.status(err.status ?? 500).json({ error: err.message });
     }
