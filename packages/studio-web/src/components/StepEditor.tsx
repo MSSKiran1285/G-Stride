@@ -82,7 +82,7 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
   const [genericKey, setGenericKey] = useState('');
   const [objectControls, setObjectControls] = useState<ObjectControl[]>([]);
   /** Screens this step's App ID has been captured from — see the appUrl field below. */
-  const [entryPoints, setEntryPoints] = useState<{ url: string; template: string }[]>([]);
+  const [entryPoints, setEntryPoints] = useState<{ url: string; template: string; appId?: string }[]>([]);
   // Announced rather than only shown, matching how TestCaseEditor already reports step
   // reordering — a reorder that is only visible is invisible to a screen-reader user.
   const [paramOrderAnnouncement, setParamOrderAnnouncement] = useState('');
@@ -91,15 +91,29 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
   const effectiveAppId = appId || defaultAppId;
 
   useEffect(() => {
-    if (!effectiveAppId) return;
+    if (!effectiveAppId) {
+      setObjectControls([]);
+      return;
+    }
     api
       .listObjects(effectiveAppId)
       .then(setObjectControls)
       .catch(() => setObjectControls([]));
-    api
-      .listAppEntryPoints(effectiveAppId)
-      .then(setEntryPoints)
-      .catch(() => setEntryPoints([]));
+  }, [effectiveAppId]);
+
+  /**
+   * Entry points for this step's App ID — or, when it has none yet, every known screen.
+   *
+   * NavigateToApp is normally the FIRST step in a Test, authored before anything has said which
+   * app the Test is for, so scoping strictly to the App ID left the field empty exactly when it
+   * was most useful and sent the author back to typing a launchpad URL. Falling back to all of
+   * them keeps the offer available; once the App ID is set the list narrows to that app's own.
+   */
+  useEffect(() => {
+    const load = effectiveAppId
+      ? api.listAppEntryPoints(effectiveAppId).then((entries) => entries.map((e) => ({ ...e, appId: effectiveAppId })))
+      : api.listAllAppEntryPoints();
+    load.then(setEntryPoints).catch(() => setEntryPoints([]));
   }, [effectiveAppId]);
 
   /** Wraps the field's own capture request so the just-saved object shows up in this picker's
@@ -221,9 +235,10 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
       key: entry.template,
       label: entry.template,
       detail: entry.url,
-      group: 'Screen captured for this App ID',
+      // When the step has no App ID yet the list spans apps, so each entry has to say which.
+      group: effectiveAppId ? 'Screen captured for this App ID' : `Screen captured for ${entry.appId ?? 'another app'}`,
     })),
-    [entryPoints],
+    [entryPoints, effectiveAppId],
   );
 
   function bindingFor(key: string, value: string): TestStepValueBinding {

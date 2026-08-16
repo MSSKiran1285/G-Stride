@@ -151,6 +151,9 @@ export const api = {
     }),
   /** Screens this App ID's controls were captured from — offered by NavigateToApp's URL field
    *  so the author recognises the entry point instead of retyping it. */
+  /** Every learned screen, across all App IDs — used before a step has an App ID of its own. */
+  listAllAppEntryPoints: () =>
+    request<{ url: string; template: string; appId: string; firstSeenAt: string; lastSeenAt: string }[]>('/api/app-entry-points'),
   listAppEntryPoints: (appId: string) =>
     request<{ url: string; template: string; firstSeenAt: string; lastSeenAt: string }[]>(
       `/api/objects/${encodeURIComponent(appId)}/entry-points`

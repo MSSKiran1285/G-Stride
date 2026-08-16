@@ -1897,6 +1897,15 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     return at === -1 ? raw : `\${urlBase}${raw.slice(at)}`;
   }
 
+  /** Every learned screen across every App ID. NavigateToApp offers these while a step has no
+   *  App ID yet — which is its normal state, since navigation is usually the first step authored. */
+  app.get('/api/app-entry-points', (_req, res) => {
+    const all = objectRepository.listAppIds().flatMap((appId) =>
+      objectRepository.listEntryPoints(appId).map((entry) => ({ ...entry, appId, template: toPortableAppUrl(entry.url) })));
+    all.sort((a, b) => (a.lastSeenAt < b.lastSeenAt ? 1 : -1));
+    res.json(all);
+  });
+
   app.get('/api/objects/:appId/entry-points', (req, res) => {
     res.json(
       objectRepository.listEntryPoints(req.params.appId).map((entry) => ({

@@ -31,6 +31,29 @@ export const CreateAutomationRunReference: Module = {
     const owner = params.owner?.trim();
     if (!owner) throw new Error('CreateAutomationRunReference requires a non-empty owner.');
 
+    /**
+     * One reference per EXECUTION, not per Test.
+     *
+     * executeTestCaseChain shares a single runState across every stage, and this module used to
+     * assign unconditionally — so a Process that ran three transactional Tests minted three
+     * references, each overwriting the last. The audit trail then pointed at three unrelated
+     * identifiers for one run, which is the opposite of what an owner-linked correlation
+     * reference is for. It became reachable the moment every transactional Test was given its
+     * own step (15 Aug 2026); before that only the lead Test carried one and the chain inherited
+     * it by accident rather than by design.
+     *
+     * Keeping the first one is what makes both true at once: a Test still creates its own
+     * reference when run standalone, and a chain of them shares the first stage's. runState is
+     * fresh per execution, so nothing leaks between runs.
+     */
+    const referenceKey = params.captureAs || 'automationReference';
+    const existing = runState[referenceKey];
+    if (typeof existing === 'string' && existing.trim()) {
+      // Still assert the disposition — a later stage must not be able to weaken it.
+      runState.transactionFailureDisposition = 'retain-for-review';
+      return;
+    }
+
     const maxLength = Number(params.maxLength ?? '16');
     if (!Number.isInteger(maxLength) || maxLength < 12 || maxLength > 64) {
       throw new Error('CreateAutomationRunReference maxLength must be an integer from 12 to 64.');
