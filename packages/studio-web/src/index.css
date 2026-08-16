@@ -8848,3 +8848,46 @@ button.pill:disabled,
   color: var(--text-soft);
   white-space: nowrap;
 }
+
+/* ---------------------------------------------------------------------------
+   Help drawer — Process Guides
+   ---------------------------------------------------------------------------
+   Matches .help-guide-item's shape so the two sections read as one family, but
+   these are links out of the product rather than disclosures, so they carry an
+   external-link mark and never collapse. */
+.help-process-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-subtle);
+  text-decoration: none;
+  color: var(--text);
+}
+
+.help-process-guide:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-soft);
+}
+
+.help-process-guide:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.help-process-guide-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 650;
+  color: var(--accent);
+}
+
+.help-process-guide-detail {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: var(--text-soft);
+}

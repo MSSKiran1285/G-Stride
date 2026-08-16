@@ -9,6 +9,8 @@ import {
   HelpCircle,
   Layers,
   LayoutGrid,
+  ExternalLink,
+  Map as MapIcon,
   PanelLeftClose,
   PanelLeftOpen,
   Play,
@@ -89,6 +91,29 @@ const navSteps: NavStep[] = [
     label: 'Evidence Vault',
     icon: <FileCheck2 size={18} />,
     desc: 'View and manage automated test execution evidence and audit trails',
+  },
+];
+
+/**
+ * End-to-end walkthroughs for building one business process, start to finish.
+ *
+ * Hosted outside the product rather than written into the drawer: they are long, illustrated,
+ * and revised far more often than the app ships. The drawer's "Guides" section stays for the
+ * short conceptual answers, which belong next to the controls they explain.
+ *
+ * These are private links by default — a teammate opening one will be refused until the document
+ * itself is shared. Worth knowing before pointing anyone at this section.
+ */
+const PROCESS_GUIDES: { title: string; detail: string; href: string }[] = [
+  {
+    title: 'Create Purchase Order',
+    detail: 'Seven steps, end to end — supplier, a four-column line-item grid, and capturing the PO number.',
+    href: 'https://claude.ai/code/artifact/0f85f2ea-3499-48b1-954a-bd1d87f712e1',
+  },
+  {
+    title: 'Create Sales Order',
+    detail: 'Sixteen steps, end to end — order header, sold-to party, line items, and capturing the SO number.',
+    href: 'https://claude.ai/code/artifact/35d92fea-3766-4bd2-99f2-1e0e7e81faa6',
   },
 ];
 
@@ -421,6 +446,31 @@ export function App() {
                       <span className="code-badge error">ME 023</span>
                       <span>Supplier not maintained in Purchasing Org</span>
                     </div>
+                  </div>
+                </details>
+
+                {/* End-to-end walkthroughs for building a specific business process, as opposed to
+                    the Guides below, which answer one concept at a time. These open outside the
+                    product, so each one says so rather than looking like an in-app page. */}
+                <details className="drawer-section" open>
+                  <summary><MapIcon size={14} aria-hidden="true" /> Process Guides</summary>
+                  <div className="help-guide-list">
+                    {PROCESS_GUIDES.map((guide) => (
+                      <a
+                        key={guide.href}
+                        className="help-process-guide"
+                        href={guide.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="help-process-guide-title">
+                          {guide.title}
+                          <ExternalLink size={12} aria-hidden="true" />
+                        </span>
+                        <span className="help-process-guide-detail">{guide.detail}</span>
+                        <span className="sr-only"> (opens in a new tab)</span>
+                      </a>
+                    ))}
                   </div>
                 </details>
 

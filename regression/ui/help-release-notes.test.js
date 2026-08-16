@@ -34,7 +34,10 @@ test('Help topics are collapsible sections, closed by default for the new Guides
       await page.locator('.account-trigger').click();
       await page.getByRole('menuitem', { name: 'Help' }).click();
 
-      const guidesSection = page.locator('.drawer-section', { has: page.locator('> summary', { hasText: 'Guides' }) });
+      // Anchored: "Process Guides" is a separate section whose name contains this one, so a
+      // substring match now resolves to two elements and silently asserts against the wrong one.
+      // The \s* matters — the summary's textContent carries a leading space from its icon.
+      const guidesSection = page.locator('.drawer-section', { has: page.locator('> summary', { hasText: /^\s*Guides\s*$/ }) });
       await guidesSection.waitFor();
       assert.equal(await guidesSection.getAttribute('open'), null, 'expected the Guides section to start collapsed');
 
@@ -44,6 +47,37 @@ test('Help topics are collapsible sections, closed by default for the new Guides
       const publishGuide = guidesSection.locator('.help-guide-item', { hasText: 'What does publishing a Test do?' });
       await publishGuide.locator('summary').click();
       await publishGuide.getByText(/Only Published Tests can be used as members of a Regression Pack/).waitFor();
+    });
+  });
+});
+
+test('Process Guides lists the end-to-end walkthroughs as external links', async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'help-process-guides', async (page) => {
+      await page.goto(BASE_URL);
+      await page.locator('.account-trigger').click();
+      await page.getByRole('menuitem', { name: 'Help' }).click();
+
+      const section = page.locator('.drawer-section', { has: page.locator('> summary', { hasText: 'Process Guides' }) });
+      await section.waitFor();
+      // Two links, short enough to read at a glance, so this one starts expanded — unlike the
+      // long conceptual Guides list below it (HC-010).
+      assert.notEqual(await section.getAttribute('open'), null, 'expected Process Guides to start expanded');
+
+      const guides = section.locator('.help-process-guide');
+      assert.equal(await guides.count(), 2);
+      assert.deepEqual(
+        await section.locator('.help-process-guide-title').allInnerTexts(),
+        ['Create Purchase Order', 'Create Sales Order']
+      );
+
+      // They leave the product, so every one must open in a new tab and carry noopener —
+      // without it the opened page gets a handle back to the Studio window.
+      for (const link of await guides.all()) {
+        assert.equal(await link.getAttribute('target'), '_blank');
+        assert.match(await link.getAttribute('rel'), /noopener/);
+        assert.match(await link.getAttribute('href'), /^https:\/\//);
+      }
     });
   });
 });
