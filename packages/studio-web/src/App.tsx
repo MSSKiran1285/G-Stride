@@ -117,6 +117,11 @@ const PROCESS_GUIDES: { title: string; detail: string; href: string }[] = [
     detail: 'Sixteen steps, end to end — order header, sold-to party, line items, and capturing the SO number.',
     href: '/guides/create-sales-order.html',
   },
+  {
+    title: 'Test Data',
+    detail: 'Build and find datasets, type their columns, bulk-edit in a spreadsheet, and join two files.',
+    href: '/guides/test-data.html',
+  },
 ];
 
 export function App() {

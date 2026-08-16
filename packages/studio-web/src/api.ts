@@ -247,6 +247,13 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(patch),
     }),
+  /** Parses uploaded CSV text with the server's own RFC4180 parser — a cell can hold a JSON
+   *  blob full of commas, so a simpler client-side split would corrupt it. Writes nothing. */
+  parseCsvUpload: (text: string) =>
+    request<{ format: 'csv'; headers: string[]; rows: Record<string, string>[] }>('/api/data/parse-csv', {
+      method: 'POST',
+      body: JSON.stringify({ text }),
+    }),
   listDataRelations: () => request<string[]>('/api/data-relations'),
   getDataRelation: (file: string) =>
     request<DataRelationDefinition>(`/api/data-relations/${encodeURIComponent(file)}`),

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Data — G-Stride Process Guide</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="stylesheet" href="guides.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">G-Stride · Process Guide</p>
+    <h1>Test Data</h1>
+    <p class="standfirst">
+      Datasets are what let one Test run many scenarios. This is how to find them, build them,
+      type their columns, bulk-edit them in a spreadsheet, and join two of them without flattening
+      line items.
+    </p>
+  </header>
+
+  <section class="facts">
+    <div><span class="k">Where</span><span class="v">Test Data</span></div>
+    <div><span class="k">Formats</span><span class="v">Flat CSV · Nested JSON</span></div>
+    <div><span class="k">Lives in</span><span class="v">data/</span></div>
+    <div><span class="k">Used by</span><span class="v">Tests, Processes, Packs</span></div>
+  </section>
+
+  <section>
+    <h2>How the workspace is laid out</h2>
+    <p style="margin:0;max-width:70ch;color:var(--ink-soft)">
+      Two tabs over one subject. <strong>Dataset library</strong> is every dataset file;
+      <strong>Relationships</strong> is the joins between them. Selecting a dataset explains it
+      before you act on it — what it holds, and what breaks if you rename or delete it.
+    </p>
+    <p class="note">
+      <b>Selection is a radio, not a highlight.</b> The selected dataset is what Rename and Delete
+      act on, so it is shown explicitly rather than left to whichever row you clicked last.
+    </p>
+  </section>
+
+  <section>
+    <h2>Finding a dataset</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">01</div>
+        <div class="step-body">
+          <h3>Search and filter</h3>
+          <p>Search matches the file name. The process-area filter narrows to one area; datasets you have not tagged appear as <strong>Untagged</strong>.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">02</div>
+        <div class="step-body">
+          <h3>Select a row to inspect it</h3>
+          <p>The rail on the right gives format, process area, row count, and <strong>Used by</strong> — the Processes, Packs and relationships that reference this file. Its column names appear under the table.</p>
+          <p class="note"><b>Read "Used by" before renaming or deleting.</b> Renaming updates every reference for you. Deleting a referenced dataset needs confirmation, and the rail says plainly when nothing depends on it.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Building a dataset</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">03</div>
+        <div class="step-body">
+          <h3>New dataset</h3>
+          <dl class="fields">
+            <div class="field"><dt>Format</dt><dd><span class="pill pick">pick</span><code>Flat CSV</code> for rows and columns, <code>Nested JSON</code> when a transaction owns child arrays</dd></div>
+            <div class="field"><dt>File name</dt><dd><span class="pill type">type</span>no extension needed</dd></div>
+            <div class="field"><dt>Columns</dt><dd><span class="pill type">type</span>comma-separated; CSV only</dd></div>
+          </dl>
+          <p class="note"><b>Column names are the contract.</b> A Test binds to a column BY NAME, so these are what you will pick from when authoring a step. Name them for the business field, not the screen.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">04</div>
+        <div class="step-body">
+          <h3>Fill it in</h3>
+          <p><strong>+ Add row</strong> adds a scenario. Each row is one independent transaction at run time. <strong>Save dataset</strong> writes it — nothing is on disk until you do.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">05</div>
+        <div class="step-body">
+          <h3>Type the columns</h3>
+          <p>Expand <strong>Column schema</strong> to declare each column's type, sensitivity and an example. This is what lets a Test's typed contract validate a binding before it runs, and it keeps sensitive columns flagged everywhere they are used.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Bulk editing in a spreadsheet</h2>
+    <p style="margin:0;max-width:70ch;color:var(--ink-soft)">
+      A browser grid is the wrong tool for fifty scenarios. Take the data out, work on it where
+      you are fast, bring it back.
+    </p>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">06</div>
+        <div class="step-body">
+          <h3>Download CSV</h3>
+          <p>Exports <strong>what is on screen</strong>, including edits you have not saved. Open it in Excel, Sheets, or anything else — edit values, add rows, delete rows.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">07</div>
+        <div class="step-body">
+          <h3>Upload CSV</h3>
+          <p><strong>Replaces every row</strong> in the open dataset. The result is loaded into the grid for review and is <em>not</em> written until you press <strong>Save dataset</strong> — so an upload can be abandoned like any other edit.</p>
+          <p class="note">
+            <b>Watch the note it prints.</b> It reports how many rows loaded and, in amber, any
+            column that appeared or vanished. A column that vanished is the dangerous case: a Test
+            binding it will fail at run time, and nothing else will tell you. Rename columns in the
+            spreadsheet only when you mean to, and re-point the Tests afterwards.
+          </p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Two shapes beyond a flat table</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">08</div>
+        <div class="step-body">
+          <h3>A cell holding a list or a table</h3>
+          <p>Every cell has two small buttons. <code>⋯</code> turns it into a <strong>list</strong>, stored as <code>a;b;c</code> — used by params that accept several values, such as the dialog titles a capture step will accept. <code>⊞</code> turns it into a <strong>table of rows</strong>, stored as JSON.</p>
+          <p class="note"><b>What the table mode is for.</b> An <em>Add Line Item(s)</em> step can point its whole row grid at one column via a single <code>${placeholder}</code>. That lets the data file decide how many line items each run creates — a 2-item order and a 7-item order become two rows of one dataset instead of two Tests.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">09</div>
+        <div class="step-body">
+          <h3>Relationships — one header, many owned children</h3>
+          <p>When line items belong in their own file, join two CSVs instead of flattening them.</p>
+          <dl class="fields">
+            <div class="field"><dt>Header CSV / Header key</dt><dd>the parent file, and the column that identifies each row</dd></div>
+            <div class="field"><dt>Child CSV / Child foreign key</dt><dd>the children, and the column pointing back at the parent</dd></div>
+            <div class="field"><dt>Child collection name</dt><dd>what the children are called inside each transaction, e.g. <code>items</code></dd></div>
+          </dl>
+          <p><strong>Validate</strong> first, then <strong>Save relationship</strong>. Validation blocks duplicate header keys, missing keys, orphan children and collection-name collisions — it will not let you save a join that would silently drop rows.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Using it from a Test</h2>
+    <ol class="prep">
+      <li>Open any step's <strong>Value</strong> field in Compose. Dataset columns are listed there, grouped by the file they come from.</li>
+      <li>Picking one creates the binding. Typing instead makes the value fixed — the tag beside the box always says which you have.</li>
+      <li>A column that exists in several files is labelled with the others, so you can tell two same-named columns apart.</li>
+    </ol>
+    <p class="note">
+      <b>The mistake worth knowing about.</b> Typing a column's name into a value box does not bind
+      it — it stores that text. The tag reads <code>literal</code> rather than <code>dataset</code>,
+      and publishing now rejects it, but it is easier to pick from the list in the first place.
+    </p>
+  </section>
+
+  <section>
+    <h2>Related</h2>
+    <div class="related">
+      <a href="create-purchase-order.html">Create Purchase Order →</a>
+      <a href="create-sales-order.html">Create Sales Order →</a>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

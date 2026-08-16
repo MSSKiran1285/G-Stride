@@ -137,3 +137,29 @@ test('relational CSV preview and persistence reject ambiguous data and preserve 
   assert.match(invalid.body.error, /unknown header key/i);
   assert.ok(invalid.body.issues.some((issue) => issue.code === 'orphan-child-record'));
 });
+
+test('POST /api/data/parse-csv reads uploaded CSV with the same parser that reads files off disk', async () => {
+  // A dataset cell can hold a JSON blob full of commas (BL-06's per-row line-item editor), which
+  // is exactly what a naive split-on-comma parser destroys. Upload goes through the server so
+  // there is only ever one parser, and this is the case that proves it.
+  const rowsJson = '[{"material":"M1","qty":"2"},{"material":"M2","qty":"3"}]';
+  const csv = [
+    'supplier,lineItems,note',
+    `USSU-TRL07,"${rowsJson.replace(/"/g, '""')}","says ""hello"", twice"`,
+    '',
+  ].join('\n');
+
+  const parsed = await api.post('/api/data/parse-csv', { text: csv });
+  assert.equal(parsed.status, 200);
+  assert.deepEqual(parsed.body.headers, ['supplier', 'lineItems', 'note']);
+  assert.equal(parsed.body.rows.length, 1);
+  assert.equal(parsed.body.rows[0].lineItems, rowsJson, 'a JSON cell must survive the round trip intact');
+  assert.equal(parsed.body.rows[0].note, 'says "hello", twice');
+
+  // Nothing is written by parsing — the client reviews it and the ordinary save commits it.
+  const listed = await api.get('/api/data');
+  assert.ok(!listed.body.includes('undefined.csv'));
+
+  const empty = await api.post('/api/data/parse-csv', { text: '   ' });
+  assert.equal(empty.status, 400);
+});

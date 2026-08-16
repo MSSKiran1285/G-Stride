@@ -70,6 +70,8 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
   const [selectedUsage, setSelectedUsage] = useState<DataFileUsage | null>(null);
   const [busyFile, setBusyFile] = useState<string | null>(null);
   const [newDatasetOpen, setNewDatasetOpen] = useState(false);
+  /** What an upload just did — row count, and any column that appeared or vanished. */
+  const [uploadNote, setUploadNote] = useState<string | null>(null);
   /** Saved relationships with their definitions, so the rail can say what each one joins
    *  without the reader opening it first. */
   const [relationSummaries, setRelationSummaries] = useState<{ file: string; definition: DataRelationDefinition | null }[]>([]);
@@ -402,6 +404,70 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
       setError(String(e));
     } finally {
       setSavingRelation(false);
+    }
+  }
+
+  /**
+   * Quotes a field the RFC4180 way. Serialising is the easy half — a field is wrapped only when
+   * it contains a comma, a quote or a newline, with embedded quotes doubled — so it lives here,
+   * while PARSING an uploaded file goes to the server's own parser rather than a second
+   * implementation that could drift from it.
+   */
+  function toCsvField(value: string): string {
+    return /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  }
+
+  /** Downloads what is on screen, including unsaved edits — that is what "export" has to mean
+   *  when the grid is editable, or you would export a file you are not looking at. */
+  function downloadDataset() {
+    if (!dataset || !selectedFile) return;
+    const text = dataset.format === 'csv'
+      ? [dataset.headers.map(toCsvField).join(','), ...dataset.rows.map((row) => dataset.headers.map((h) => toCsvField(row[h] ?? '')).join(','))].join('\n') + '\n'
+      : `${JSON.stringify(dataset.records, null, 2)}\n`;
+    const blob = new Blob([text], { type: dataset.format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = selectedFile;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /**
+   * Replaces the open recordset with an uploaded CSV, into memory only — the ordinary Save
+   * button still commits it, so an upload can be reviewed and abandoned like any other edit.
+   *
+   * Column changes are surfaced rather than applied silently: a Test binds to a column BY NAME,
+   * so a spreadsheet round trip that renames or drops one breaks that Test at run time with
+   * nothing on screen to say why. Added columns are harmless and are reported the same way.
+   */
+  async function uploadDataset(file: File) {
+    if (!dataset || dataset.format !== 'csv') return;
+    setUploadNote(null);
+    try {
+      const parsed = await api.parseCsvUpload(await file.text());
+      const before = dataset.headers;
+      const removed = before.filter((h) => !parsed.headers.includes(h));
+      const added = parsed.headers.filter((h) => !before.includes(h));
+      applyDataset({ format: 'csv', headers: parsed.headers, rows: parsed.rows });
+      setDirty(true);
+      setSavedAt(null);
+      setError(null);
+      const changes = [
+        removed.length ? `removed ${removed.join(', ')}` : '',
+        added.length ? `added ${added.join(', ')}` : '',
+      ].filter(Boolean);
+      setUploadNote(
+        `Loaded ${parsed.rows.length} row${parsed.rows.length === 1 ? '' : 's'} from ${file.name}. `
+        + (changes.length
+          ? `Columns changed — ${changes.join('; ')}. Any Test binding a removed column will fail until it is re-pointed. `
+          : 'Columns unchanged. ')
+        + 'Nothing is written until you press Save dataset.'
+      );
+    } catch (e) {
+      setError(String(e));
     }
   }
 
@@ -825,12 +891,49 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
               </div>
             )}
 
+            {/* Its own element rather than AsyncFeedback: this note is a success when the columns
+                match and a warning when they do not, and AsyncFeedback has no state that means
+                "it worked, but read this". */}
+            {uploadNote && (
+              <p className={`data-upload-note${uploadNote.includes('Columns changed') ? ' warn' : ''}`} role="status">
+                {uploadNote}
+              </p>
+            )}
+
             <div className="row">
               {dataset.format === 'csv' && <button onClick={addRow}>+ Add row</button>}
               <button className="primary" onClick={save} disabled={saving || (dataset.format === 'json' && !preview)}>
                 {saving ? 'Saving…' : 'Save dataset'}
               </button>
               {savedAt && !dirty && <AsyncFeedback state="success" message={`${selectedFile} — Saved at ${savedAt}`} compact />}
+            </div>
+
+            {/* Bulk editing happens in a spreadsheet, not a browser grid: download, edit or add
+                rows in whatever tool you like, and bring it back. The upload lands in memory so
+                it can be reviewed against the Save button like any other change. */}
+            <div className="row data-transfer">
+              <button type="button" onClick={downloadDataset}>
+                Download {dataset.format === 'csv' ? 'CSV' : 'JSON'}
+              </button>
+              {dataset.format === 'csv' && (
+                <>
+                  <input
+                    id="dataset-upload"
+                    className="sr-only"
+                    type="file"
+                    accept=".csv,text/csv"
+                    aria-label="Upload a CSV to replace these rows"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      // Cleared so re-uploading the same file after an edit still fires onChange.
+                      event.target.value = '';
+                      if (file) void uploadDataset(file);
+                    }}
+                  />
+                  <label className="button-like" htmlFor="dataset-upload">Upload CSV</label>
+                  <span className="hint">Replaces every row here — review, then Save dataset.</span>
+                </>
+              )}
             </div>
           </div>
         </PopDialog>

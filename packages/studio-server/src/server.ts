@@ -2095,6 +2095,29 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  /**
+   * Parses uploaded CSV text into the dataset shape, using the SAME RFC4180 parser that reads
+   * these files off disk. Deliberately server-side: a cell can hold a JSON blob full of commas
+   * (BL-06's per-row line-item editor), so a second, simpler parser on the client would corrupt
+   * exactly the datasets that are hardest to rebuild by hand. Nothing is written here — the
+   * client shows the result for review and the ordinary Save path commits it.
+   */
+  app.post('/api/data/parse-csv', (req, res) => {
+    const { text } = req.body ?? {};
+    if (typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ error: 'Body must include the CSV text to parse.' });
+    }
+    try {
+      const parsed = parseCsv(text);
+      if (parsed.headers.length === 0) {
+        return res.status(400).json({ error: 'That file has no header row, so its columns cannot be identified.' });
+      }
+      res.json({ format: 'csv', headers: parsed.headers, rows: parsed.rows });
+    } catch (err: any) {
+      res.status(400).json({ error: `That file could not be read as CSV: ${err.message}` });
+    }
+  });
+
   app.put('/api/data/:file', (req, res) => {
     try {
       const file = safeDataFileName(req.params.file);

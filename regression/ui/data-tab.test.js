@@ -155,3 +155,56 @@ test('Dataset Library search actually filters by file name and does not silently
     });
   });
 });
+
+test('Data: a dataset round-trips through download and upload, and a lost column is called out', async () => {
+  await withBrowser(async (browser) => {
+    await withPage(browser, 'data-download-upload', async (page) => {
+      await page.request.put(`${BASE_URL}/api/data/ui-transfer.csv`, {
+        headers: { 'Content-Type': 'application/json' },
+        data: {
+          format: 'csv',
+          headers: ['supplier', 'quantity'],
+          rows: [{ supplier: 'S1', quantity: '1' }],
+        },
+      });
+
+      await page.goto(`${BASE_URL}/data/ui-transfer.csv`);
+      const editor = page.locator('.pop-dialog.data-dialog');
+      await editor.waitFor({ timeout: 5000 });
+
+      // Download hands back exactly what is on screen, so bulk editing can happen in a spreadsheet.
+      const download = page.waitForEvent('download');
+      await page.getByRole('button', { name: /Download CSV/ }).click();
+      const text = await (await (await download).createReadStream()).toArray().then((c) => Buffer.concat(c).toString('utf8'));
+      assert.match(text, /^supplier,quantity/);
+      assert.match(text, /^S1,1$/m);
+
+      // Bring back an edited file: a row added, and a column renamed out from under any Test
+      // that binds it. The rename is the dangerous half and has to be said out loud.
+      await page.locator('#dataset-upload').setInputFiles({
+        name: 'edited.csv',
+        mimeType: 'text/csv',
+        buffer: Buffer.from('supplier,qty\nS1,1\nS2,2\n', 'utf8'),
+      });
+
+      const note = page.locator('.data-upload-note');
+      await note.waitFor({ timeout: 5000 });
+      const message = await note.innerText();
+      assert.match(message, /Loaded 2 rows/);
+      assert.match(message, /removed quantity/);
+      assert.match(message, /added qty/);
+      assert.match(message, /Nothing is written until you press Save dataset/);
+      assert.ok(await note.evaluate((el) => el.classList.contains('warn')), 'a column change must read as a warning');
+
+      // And it really is only in memory until saved.
+      const onDisk = await page.request.get(`${BASE_URL}/api/data/ui-transfer.csv`);
+      assert.deepEqual((await onDisk.json()).headers, ['supplier', 'quantity']);
+
+      await page.getByRole('button', { name: 'Save dataset' }).click();
+      await page.locator('text=/Saved at/').waitFor({ timeout: 5000 });
+      const saved = await (await page.request.get(`${BASE_URL}/api/data/ui-transfer.csv`)).json();
+      assert.deepEqual(saved.headers, ['supplier', 'qty']);
+      assert.equal(saved.rows.length, 2);
+    });
+  });
+});

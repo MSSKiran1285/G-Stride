@@ -9111,3 +9111,48 @@ button.pill:disabled,
 .data-split .workspace-table-frame {
   border-color: var(--border-strong);
 }
+
+/* Download / upload row in the dataset pop-out. A <label> drives the hidden file input, so it
+   has to look and behave like the button beside it. */
+.data-transfer { align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+
+.button-like {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full, 999px);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.button-like:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Keyboard focus lands on the hidden input, so the visible label is what has to show it. */
+#dataset-upload:focus-visible + .button-like,
+.button-like:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.data-upload-note {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  border-left: 3px solid var(--success);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--success-bg);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.data-upload-note.warn {
+  border-left-color: var(--warning);
+  background: var(--warning-bg);
+}

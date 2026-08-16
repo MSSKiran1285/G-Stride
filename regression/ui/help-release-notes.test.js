@@ -65,10 +65,10 @@ test('Process Guides lists the end-to-end walkthroughs and each one resolves', a
       assert.notEqual(await section.getAttribute('open'), null, 'expected Process Guides to start expanded');
 
       const guides = section.locator('.help-process-guide');
-      assert.equal(await guides.count(), 2);
+      assert.equal(await guides.count(), 3);
       assert.deepEqual(
         await section.locator('.help-process-guide-title').allInnerTexts(),
-        ['Create Purchase Order', 'Create Sales Order']
+        ['Create Purchase Order', 'Create Sales Order', 'Test Data']
       );
 
       // Served by the Studio itself, not by an external host — a documentation link that needs a
