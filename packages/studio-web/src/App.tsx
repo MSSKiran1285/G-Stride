@@ -376,7 +376,10 @@ export function App() {
                 ) : view === 'data' ? (
                   <DataEditor
                     initialFile={route.dataFile}
-                    onSelectedFileChange={(file) => updateDetailPath(studioRoutes.data(file))}
+                    // Closing the dataset pop-out reports an empty file. studioRoutes.data('')
+                    // would build "/data/", which matches no route and renders nothing — the
+                    // list route is what "no dataset open" actually means.
+                    onSelectedFileChange={(file) => updateDetailPath(file ? studioRoutes.data(file) : VIEW_PATHS.data)}
                     onDirtyChange={setActiveViewDirty}
                   />
                 ) : view === 'groups' ? (

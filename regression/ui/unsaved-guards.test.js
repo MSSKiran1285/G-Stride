@@ -36,11 +36,25 @@ test('unsaved new dataset is protected from shell navigation', async () => {
     await withPage(browser, 'unsaved-dataset-guard', async (page) => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Test Data/ }).first().click();
+      await page.getByRole('button', { name: 'New dataset' }).click();
       await page.getByLabel('New dataset file name').fill('unsaved-data');
       await page.getByLabel('New dataset column names').fill('value');
       await page.getByRole('button', { name: 'Create' }).click();
-      await expectDiscardGuard(page, () => page.getByRole('button', { name: /Processes & Packs/ }).first().click());
-      await page.getByRole('heading', { name: 'Test Data' }).waitFor();
+
+      // The dataset opens as a pop-out, so its backdrop covers the shell — you cannot navigate
+      // past an unsaved dataset without first dismissing it, and dismissing is what asks. The
+      // guard did not weaken when the editor became modal; it moved to the way out.
+      const editor = page.locator('.pop-dialog.data-dialog');
+      await editor.waitFor();
+      await expectDiscardGuard(page, () => page.getByRole('button', { name: 'Close dataset' }).click());
+      await editor.waitFor();
+      assert.equal(await page.getByLabel('New dataset file name').count(), 0, 'the create dialog should be gone');
+
+      // Confirming does close it, and the workspace is still Test Data.
+      page.once('dialog', (dialog) => dialog.accept());
+      await page.getByRole('button', { name: 'Close dataset' }).click();
+      await editor.waitFor({ state: 'detached' });
+      await page.getByRole('heading', { name: 'Datasets' }).waitFor();
     });
   });
 });

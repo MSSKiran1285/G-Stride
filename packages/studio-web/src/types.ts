@@ -234,6 +234,8 @@ export interface DataLibraryItem {
   format: 'csv' | 'json';
   processArea: string;
   rowCount: number;
+  /** Column names, so the library's detail rail can list them without loading the dataset. */
+  columns: string[];
 }
 
 /** A dataset column's declared shape (BL-025 AC2) — reuses the same type/sensitivity

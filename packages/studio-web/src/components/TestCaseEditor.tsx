@@ -28,7 +28,7 @@ function StepEditorDialog({ title, onClose, children }: { title: string; onClose
 
   return (
     <div
-      className="step-dialog-backdrop"
+      className="pop-dialog-backdrop step-dialog-backdrop"
       role="presentation"
       onMouseDown={(event) => {
         // Backdrop click closes; a drag that STARTED inside the panel must not.
@@ -37,7 +37,7 @@ function StepEditorDialog({ title, onClose, children }: { title: string; onClose
     >
       <div
         ref={ref}
-        className="step-dialog"
+        className="pop-dialog step-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="step-dialog-title"

@@ -1667,18 +1667,26 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
         .map((file) => {
           const format: 'csv' | 'json' = file.endsWith('.json') ? 'json' : 'csv';
           let rowCount = 0;
+          // Column names come free here — the file is already parsed for the row count — and the
+          // library's detail rail lists them, so fetching the whole dataset again just to read its
+          // headers would re-read a file already open.
+          let columns: string[] = [];
           try {
             const full = path.join(dataDir, file);
             if (format === 'json') {
               const records = JSON.parse(readFileSync(full, 'utf-8'));
               rowCount = Array.isArray(records) ? records.length : 0;
+              const first = Array.isArray(records) ? records[0] : null;
+              columns = first && typeof first === 'object' && !Array.isArray(first) ? Object.keys(first) : [];
             } else {
-              rowCount = parseCsv(readFileSync(full, 'utf-8')).rows.length;
+              const parsed = parseCsv(readFileSync(full, 'utf-8'));
+              rowCount = parsed.rows.length;
+              columns = parsed.headers;
             }
           } catch {
             rowCount = 0; // malformed file — still listed, just without a row count
           }
-          return { file, format, processArea: tags[file] ?? '', rowCount };
+          return { file, format, processArea: tags[file] ?? '', rowCount, columns };
         });
       res.json(items);
     } catch (err: any) {

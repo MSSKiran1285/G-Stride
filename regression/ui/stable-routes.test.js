@@ -77,10 +77,11 @@ test('browser back and forward restore route-selected artifacts', async () => {
       await regressionTestRow.getByRole('button', { name: 'Open Test' }).click();
       assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
 
+      // A dataset is now selected in the library first — which shows what depends on it — and
+      // then opened, so the route only changes once you actually open one.
       await page.getByRole('button', { name: /Test Data/ }).first().click();
+      await page.getByRole('button', { name: 'regression-sample.csv' }).click();
       await page.getByRole('button', { name: 'Open dataset' }).click();
-      await page.getByText('(untagged)', { exact: true }).click();
-      await page.getByRole('listbox', { name: 'Open dataset' }).getByRole('option', { name: 'regression-sample.csv', exact: true }).click();
       assert.equal(new URL(page.url()).pathname, '/data/regression-sample.csv');
 
       await page.goBack();
@@ -89,7 +90,7 @@ test('browser back and forward restore route-selected artifacts', async () => {
       await page.getByLabel('Test name').waitFor();
       assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
       await page.goForward();
-      await page.getByRole('button', { name: 'Open dataset' }).waitFor();
+      await page.getByRole('heading', { name: 'Datasets' }).waitFor();
       assert.equal(new URL(page.url()).pathname, '/data');
     });
   });

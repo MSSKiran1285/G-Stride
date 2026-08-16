@@ -8604,7 +8604,7 @@ button.pill:disabled,
    ---------------------------------------------------------------------------
    z-index sits BELOW .settings-backdrop (100) on purpose: contextual capture is
    launched from inside this editor, so it has to land on top of it. */
-.step-dialog-backdrop {
+.pop-dialog-backdrop {
   position: fixed;
   inset: 0;
   z-index: 80;
@@ -8617,6 +8617,16 @@ button.pill:disabled,
   backdrop-filter: blur(2px);
 }
 
+/* The dialog shell itself — shared by Compose's step editor and Test Data's dataset editor, so
+   entering a task looks the same wherever you do it. Only the sizing is per-dialog. */
+.pop-dialog {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--panel);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
 /* Sized to its content between a floor and a ceiling, rather than one fixed width.
    AddLineItem's row editor gives every column an 11rem minimum, so five columns need real
    width before the object names truncate to "lineItemProd…" — but a two-field module pinned
@@ -8626,23 +8636,24 @@ button.pill:disabled,
   width: max-content;
   min-width: min(52rem, 100%);
   max-width: min(84rem, 100%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md, 12px);
-  background: var(--panel);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
 }
 
-.step-dialog:focus {
+/* A dataset grid is wide and scrolls sideways rather than growing to fit, so it takes a fixed
+   generous width instead of max-content. */
+.data-dialog {
+  width: min(92rem, 100%);
+}
+
+.pop-dialog:focus {
   outline: none;
 }
 
-.step-dialog:focus-visible {
+.pop-dialog:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.step-dialog-header {
+.pop-dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8652,7 +8663,7 @@ button.pill:disabled,
   background: var(--panel-subtle);
 }
 
-.step-dialog-header h2 {
+.pop-dialog-header h2 {
   margin: 0;
   font-size: 1rem;
   font-weight: 700;
@@ -8661,7 +8672,7 @@ button.pill:disabled,
 
 /* The editor already draws itself as a .panel; inside the dialog that would be a
    box within a box, so the inner chrome is dropped and the dialog provides it. */
-.step-dialog-body > .panel {
+.pop-dialog-body > .panel {
   border: 0;
   border-radius: 0;
   box-shadow: none;
@@ -8669,12 +8680,12 @@ button.pill:disabled,
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .step-dialog {
-    animation: step-dialog-in 120ms ease-out;
+  .pop-dialog {
+    animation: pop-dialog-in 120ms ease-out;
   }
 }
 
-@keyframes step-dialog-in {
+@keyframes pop-dialog-in {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: none; }
 }
@@ -8890,4 +8901,161 @@ button.pill:disabled,
   font-size: 0.72rem;
   line-height: 1.45;
   color: var(--text-soft);
+}
+
+/* ---------------------------------------------------------------------------
+   Test Data workspace
+   ---------------------------------------------------------------------------
+   Two tabs over one subject: the datasets themselves, and the relationships
+   between them. Each pairs a working area with a detail rail, so selecting a
+   row explains it — what it holds, what depends on it — before you act on it.
+   Editing a dataset is a task you enter, so it opens as a pop-out rather than
+   growing the page, the same way Compose edits a step. */
+.data-workspace-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.data-workspace-heading h1 {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.data-workspace-heading .hint { margin: 0; }
+
+.workspace-tabs {
+  display: flex;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.workspace-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.workspace-tab:hover { color: var(--text); }
+
+.workspace-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.workspace-tab-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.workspace-tab.active .workspace-tab-count { color: var(--accent); }
+
+/* Working area beside a detail rail. The rail is fixed-width so the table keeps
+   the space it needs as the window narrows, and drops below on a small screen. */
+.data-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22rem;
+  gap: 1rem;
+  align-items: start;
+}
+
+.data-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12rem;
+  gap: 0.75rem;
+}
+
+.data-library-table tbody tr { cursor: pointer; }
+.data-library-table tbody tr.selected-row > td { background: var(--accent-soft) !important; }
+
+.data-library-name {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.data-library-name[aria-pressed='true'] { color: var(--accent); }
+
+.data-rail { position: sticky; top: 1rem; }
+
+.data-rail-title {
+  margin: 0.1rem 0 0;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 1.05rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.data-rail-facts { margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.data-rail-facts > div {
+  display: grid;
+  grid-template-columns: 8rem minmax(0, 1fr);
+  gap: 0.6rem;
+  align-items: baseline;
+}
+.data-rail-facts dt { font-size: 0.82rem; color: var(--text-soft); }
+.data-rail-facts dd { margin: 0; font-size: 0.85rem; font-weight: 600; overflow-wrap: anywhere; }
+
+.data-rail-columns { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.data-rail-columns code {
+  font-size: 0.72rem;
+  padding: 0.12rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-subtle);
+  color: var(--text-soft);
+}
+
+.data-relation-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-subtle);
+  cursor: pointer;
+}
+.data-relation-card:hover { border-color: var(--accent-border); }
+.data-relation-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+.data-relation-name { font-weight: 660; font-size: 0.85rem; color: var(--text); }
+
+/* The dataset grid can be far wider than the dialog, so it scrolls inside it
+   rather than stretching the dialog past the viewport. */
+.data-dialog .pop-dialog-body { max-height: 74vh; overflow: auto; }
+
+@media (max-width: 68rem) {
+  .data-split { grid-template-columns: minmax(0, 1fr); }
+  .data-rail { position: static; }
+}
+
+@media (max-width: 40rem) {
+  .data-filters { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Inside the Relationships tab the builder sits beside a rail, so five fields across is far too
+   narrow. Two-up pairs each file with the key that joins it, which is how you actually read it:
+   header CSV + header key, then child CSV + child foreign key. */
+.data-split .relation-grid {
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }

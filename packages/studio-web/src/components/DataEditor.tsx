@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
-import type { DataColumnSchema, DataLibraryItem, DataPreview, DataRelationDefinition, Dataset, DataSensitivity, JsonDataValue, TestValueType } from '../types';
+import type { DataColumnSchema, DataFileUsage, DataLibraryItem, DataPreview, DataRelationDefinition, Dataset, DataSensitivity, JsonDataValue, TestValueType } from '../types';
 import { ListCell } from './ListCell';
 import { DomainTag } from './DomainTag';
-import { DataLibrary } from './DataLibrary';
-import { GroupedPicker } from './GroupedPicker';
+import { PopDialog } from './PopDialog';
 import { AsyncFeedback, TableFrame } from './WorkspacePrimitives';
 
-const UNTAGGED = '(untagged)';
-const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b));
+/** Plain-language list of what references a dataset — 'safe to delete' is the empty case. */
+function usageSummary(usage: DataFileUsage): string {
+  const parts: string[] = [];
+  if (usage.groups.length) parts.push(`${usage.groups.length} Process${usage.groups.length === 1 ? '' : 'es'}: ${usage.groups.join(', ')}`);
+  if (usage.packs.length) parts.push(`${usage.packs.length} Regression Pack${usage.packs.length === 1 ? '' : 's'}: ${usage.packs.join(', ')}`);
+  if (usage.relations.length) parts.push(`${usage.relations.length} relationship${usage.relations.length === 1 ? '' : 's'}: ${usage.relations.join(', ')}`);
+  return parts.length ? parts.join('; ') : 'No tests yet';
+}
+
 const EMPTY_RELATION: DataRelationDefinition = {
   headerFile: '',
   childFile: '',
@@ -54,6 +60,19 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
   const [columnSchema, setColumnSchema] = useState<Record<string, DataColumnSchema>>({});
   // BL-025 AC1/AC3: search/format/process-area facets and dependency-safe rename/removal.
   const [libraryItems, setLibraryItems] = useState<DataLibraryItem[]>([]);
+  const [activeTab, setActiveTab] = useState<'library' | 'relationships'>('library');
+  const [search, setSearch] = useState('');
+  const [areaFilter, setAreaFilter] = useState('');
+  /** The row highlighted in the library table — what the detail rail describes. Distinct from
+   *  selectedFile, which is the dataset actually OPEN in the editor dialog: you inspect a
+   *  dataset's dependencies before deciding to open, rename or delete it. */
+  const [selectedLibraryFile, setSelectedLibraryFile] = useState('');
+  const [selectedUsage, setSelectedUsage] = useState<DataFileUsage | null>(null);
+  const [busyFile, setBusyFile] = useState<string | null>(null);
+  const [newDatasetOpen, setNewDatasetOpen] = useState(false);
+  /** Saved relationships with their definitions, so the rail can say what each one joins
+   *  without the reader opening it first. */
+  const [relationSummaries, setRelationSummaries] = useState<{ file: string; definition: DataRelationDefinition | null }[]>([]);
 
   function refreshTags() {
     api.listTags('dataFile').then(setFileTags).catch(() => undefined);
@@ -83,7 +102,99 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
   }
 
   function refreshRelations() {
-    api.listDataRelations().then(setRelationFiles).catch(() => undefined);
+    api
+      .listDataRelations()
+      .then(async (relFiles) => {
+        setRelationFiles(relFiles);
+        // Each definition is fetched so the rail can show what the relationship actually joins.
+        // One failure must not blank the whole list, so each resolves to null independently.
+        setRelationSummaries(
+          await Promise.all(
+            relFiles.map(async (file) => ({
+              file,
+              definition: await api.getDataRelation(file).catch(() => null),
+            }))
+          )
+        );
+      })
+      .catch(() => undefined);
+  }
+
+  /** True when anything at all references this dataset — the rail's "safe to delete" line. */
+  function hasDependencies(usage: DataFileUsage): boolean {
+    return usage.groups.length > 0 || usage.packs.length > 0 || usage.relations.length > 0;
+  }
+
+  function selectLibraryFile(file: string) {
+    setSelectedLibraryFile(file);
+    setSelectedUsage(null);
+    api.getDataUsage(file).then(setSelectedUsage).catch(() => setSelectedUsage(null));
+  }
+
+  function startNewRelationship() {
+    setActiveTab('relationships');
+    setSelectedRelationFile('');
+    setRelationFileName('');
+    setRelation(EMPTY_RELATION);
+    setRelationPreview(null);
+    setError(null);
+  }
+
+  function closeDataset() {
+    if (!confirmDiscardIfDirty()) return;
+    setSelectedFile('');
+    setDataset(null);
+    setDirty(false);
+    setSavedAt(null);
+    onSelectedFileChange?.('');
+  }
+
+  async function renameSelected(file: string) {
+    const next = window.prompt(`Rename ${file} to:`, file);
+    if (!next || next.trim() === file) return;
+    setBusyFile(file);
+    try {
+      await api.renameData(file, next.trim());
+      if (selectedFile === file) openFile(next.trim());
+      setSelectedLibraryFile(next.trim());
+      refreshFiles();
+      refreshTags();
+      refreshLibrary();
+      selectLibraryFile(next.trim());
+      setError(null);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusyFile(null);
+    }
+  }
+
+  async function deleteSelected(file: string) {
+    const usage = selectedUsage ?? (await api.getDataUsage(file).catch(() => null));
+    const summary = usage ? usageSummary(usage) : 'unknown dependencies';
+    const dependent = usage ? hasDependencies(usage) : true;
+    const message = dependent
+      ? `${file} is used by ${summary}. Delete it anyway?`
+      : `Delete ${file}? ${summary}.`;
+    if (!window.confirm(message)) return;
+    setBusyFile(file);
+    try {
+      await api.deleteData(file, dependent);
+      if (selectedFile === file) {
+        setSelectedFile('');
+        setDataset(null);
+      }
+      setSelectedLibraryFile('');
+      setSelectedUsage(null);
+      refreshFiles();
+      refreshTags();
+      refreshLibrary();
+      setError(null);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusyFile(null);
+    }
   }
 
   function applyDataset(next: Dataset) {
@@ -180,6 +291,7 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
     setSavedAt(null);
     setError(null);
     setDirty(true);
+    setNewDatasetOpen(false);
     onSelectedFileChange?.(file);
   }
 
@@ -305,258 +417,420 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
     }
   }
 
-  return (
-    <div className="stack">
-      <DataLibrary
-        items={libraryItems}
-        onOpen={openFile}
-        onChanged={(event) => {
-          if (event.kind === 'renamed') {
-            if (selectedFile === event.oldFile) openFile(event.newFile);
-          } else if (selectedFile === event.file) {
-            setSelectedFile('');
-            setDataset(null);
-          }
-          refreshFiles();
-          refreshTags();
-          refreshLibrary();
-        }}
-      />
+  const visibleItems = libraryItems.filter((item) => {
+    const matchesSearch = item.file.toLowerCase().includes(search.trim().toLowerCase());
+    const matchesArea = !areaFilter || (item.processArea || 'Untagged') === areaFilter;
+    return matchesSearch && matchesArea;
+  });
+  const selectedItem = libraryItems.find((item) => item.file === selectedLibraryFile) ?? null;
+  const libraryAreas = [...new Set(libraryItems.map((item) => item.processArea || 'Untagged'))].sort();
 
-      <div className="panel row">
-        <div style={{ flex: 1 }}>
-          <label>Open dataset</label>
-          <GroupedPicker
-            ariaLabel="Open dataset"
-            value={selectedFile}
-            onChange={openFile}
-            items={files}
-            getKey={(f) => f}
-            getLabel={(f) => f}
-            getGroup={(f) => fileTags[f] || UNTAGGED}
-            sortGroups={sortDomains}
-          />
+  return (
+    <div className="stack data-workspace">
+      <header className="data-workspace-heading">
+        <div>
+          <p className="eyebrow">Reusable Test Data</p>
+          <h1>Datasets</h1>
+          <p className="hint">Find a dataset, inspect what depends on it, then rename or remove it safely.</p>
         </div>
-        <div style={{ flex: 2 }}>
-          <label>Or create new</label>
-          <div className="row">
-            <select aria-label="New dataset format" value={newFormat} onChange={(e) => setNewFormat(e.target.value as 'csv' | 'json')}>
-              <option value="csv">Flat CSV</option>
-              <option value="json">Nested JSON</option>
-            </select>
-            <input aria-label="New dataset file name" type="text" placeholder="my-new-dataset" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} style={{ flex: 1 }} />
-            {newFormat === 'csv' && (
-              <input
-                type="text"
-                aria-label="New dataset column names"
-                placeholder="columns, e.g. supplier,material,plant,quantity"
-                value={newHeaders}
-                onChange={(e) => setNewHeaders(e.target.value)}
-                style={{ flex: 2 }}
-              />
-            )}
-            <button onClick={createNew}>Create</button>
-          </div>
+        <div className="row" style={{ flex: '0 0 auto' }}>
+          <button type="button" onClick={startNewRelationship}>New relationship</button>
+          <button type="button" className="primary" onClick={() => { setNewDatasetOpen(true); setError(null); }}>
+            New dataset
+          </button>
         </div>
-      </div>
+      </header>
 
       {error && <AsyncFeedback state="error" message={error} />}
       {loading && <AsyncFeedback state="loading" message="Loading datasets…" />}
-      {loadingArtifact && <AsyncFeedback state="loading" message={`Loading ${selectedFile}…`} compact />}
 
-      {dataset && (
-        <div className="panel stack">
-          <div className="row" style={{ alignItems: 'flex-start', gap: '1rem' }}>
-            <p className="section-title" style={{ flex: 1, margin: 0 }}>
-              {selectedFile} — {dataset.format === 'csv'
-                ? `${dataset.rows.length} row${dataset.rows.length === 1 ? '' : 's'}`
-                : `${dataset.records.length} transaction${dataset.records.length === 1 ? '' : 's'}`}
-              {dirty && <span className="hint"> — unsaved changes</span>}
-            </p>
-            <div style={{ flex: 1, maxWidth: '20rem' }}>
-              <DomainTag kind="dataFile" name={selectedFile} value={fileTags[selectedFile] ?? ''} knownDomains={processAreas} onSaved={refreshTags} />
+      <div className="workspace-tabs" role="tablist" aria-label="Test Data sections">
+        <button
+          type="button"
+          role="tab"
+          id="tab-dataset-library"
+          aria-selected={activeTab === 'library'}
+          aria-controls="panel-dataset-library"
+          className={activeTab === 'library' ? 'workspace-tab active' : 'workspace-tab'}
+          onClick={() => setActiveTab('library')}
+        >
+          Dataset library <span className="workspace-tab-count">{libraryItems.length}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="tab-relationships"
+          aria-selected={activeTab === 'relationships'}
+          aria-controls="panel-relationships"
+          className={activeTab === 'relationships' ? 'workspace-tab active' : 'workspace-tab'}
+          onClick={() => setActiveTab('relationships')}
+        >
+          Relationships <span className="workspace-tab-count">{relationFiles.length}</span>
+        </button>
+      </div>
+
+      {activeTab === 'library' ? (
+        <div className="data-split" role="tabpanel" id="panel-dataset-library" aria-labelledby="tab-dataset-library">
+          <section className="panel stack">
+            <div className="data-filters">
+              <input
+                type="search"
+                aria-label="Search file name"
+                placeholder="Search file name"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+              <select aria-label="Filter by process area" value={areaFilter} onChange={(event) => setAreaFilter(event.target.value)}>
+                <option value="">All process areas</option>
+                {libraryAreas.map((area) => <option key={area} value={area}>{area}</option>)}
+              </select>
             </div>
-          </div>
 
-          {dataset.format === 'csv' ? (
-            <TableFrame label={`${selectedFile} dataset`}>
-              <table className="responsive-table">
+            <TableFrame label="Dataset library">
+              <table className="responsive-table data-library-table">
                 <thead>
                   <tr>
-                    <th></th>
-                    {dataset.headers.map((h) => (
-                      <th key={h}>{h}</th>
-                    ))}
-                    <th></th>
+                    <th>Dataset</th>
+                    <th>Process area</th>
+                    <th>Format</th>
+                    <th>Rows</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {dataset.rows.map((row, ri) => (
-                    <tr key={ri}>
-                      <td className="hint" data-label="Row">{ri + 1}</td>
-                      {dataset.headers.map((h) => (
-                        <td key={h} data-label={h}>
-                          <ListCell ariaLabel={`${h}, row ${ri + 1}`} value={row[h] ?? ''} onChange={(v) => setCell(ri, h, v)} />
-                        </td>
-                      ))}
-                      <td data-label="Actions">
-                        <button className="ghost danger" aria-label={`Remove dataset row ${ri + 1}`} onClick={() => removeRow(ri)} title="Remove row">
-                          ✕
+                  {visibleItems.map((item) => (
+                    <tr
+                      key={item.file}
+                      className={item.file === selectedLibraryFile ? 'selected-row' : undefined}
+                      onClick={() => selectLibraryFile(item.file)}
+                    >
+                      <td data-label="Dataset">
+                        <button
+                          type="button"
+                          className="data-library-name"
+                          aria-pressed={item.file === selectedLibraryFile}
+                          onClick={(event) => { event.stopPropagation(); selectLibraryFile(item.file); }}
+                        >
+                          {item.file}
                         </button>
                       </td>
+                      <td data-label="Process area">{item.processArea || <span className="hint">Untagged</span>}</td>
+                      <td data-label="Format">{item.format === 'json' ? 'Nested JSON' : 'Flat CSV'}</td>
+                      <td data-label="Rows">{item.rowCount}</td>
                     </tr>
                   ))}
-                  {dataset.rows.length === 0 && (
-                    <tr>
-                      <td colSpan={dataset.headers.length + 2} className="hint">
-                        No rows yet.
-                      </td>
-                    </tr>
+                  {visibleItems.length === 0 && (
+                    <tr><td colSpan={4} className="hint">No datasets match.</td></tr>
                   )}
                 </tbody>
               </table>
             </TableFrame>
-          ) : null}
+            <p className="hint">{visibleItems.length} of {libraryItems.length} datasets</p>
+          </section>
 
-          {dataset.format === 'csv' && (
-            <details className="stack">
-              <summary>Column schema ({dataset.headers.length} column{dataset.headers.length === 1 ? '' : 's'})</summary>
-              <p className="hint">Declare each column's type, sensitivity and an example value — reused wherever this dataset feeds a Test's contract inputs.</p>
-              <TableFrame label={`${selectedFile} column schema`}>
-                <table className="responsive-table">
-                  <thead>
-                    <tr><th>Column</th><th>Type</th><th>Sensitivity</th><th>Example</th></tr>
-                  </thead>
-                  <tbody>
-                    {dataset.headers.map((header) => (
-                      <ColumnSchemaRow
-                        key={header}
-                        column={header}
-                        schema={columnSchema[header]}
-                        onSave={(patch) => saveColumnSchema(header, patch)}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </TableFrame>
-            </details>
-          )}
-
-          {dataset.format === 'json' && (
-            <div className="stack">
-              <label htmlFor="nested-json-editor">Nested transaction JSON</label>
-              <textarea
-                id="nested-json-editor"
-                className="json-data-editor"
-                rows={18}
-                value={jsonText}
-                onChange={(event) => {
-                  setJsonText(event.target.value);
-                  setPreview(null);
-                  setDirty(true);
-                }}
-                spellCheck={false}
-              />
-              <p className="hint">Use one root object per business transaction. Child arrays remain owned by that transaction and are not flattened.</p>
-              <div className="row">
-                <button type="button" onClick={() => void previewJson()} disabled={previewing}>
-                  {previewing ? 'Validating…' : 'Validate and preview'}
+          <aside className="panel stack data-rail" aria-label="Selected dataset">
+            {selectedItem ? (
+              <>
+                <div>
+                  <p className="eyebrow">Selected dataset</p>
+                  <h2 className="data-rail-title">{selectedItem.file}</h2>
+                </div>
+                <dl className="data-rail-facts">
+                  <div><dt>Format</dt><dd>{selectedItem.format === 'json' ? 'Nested JSON' : 'Flat CSV'}</dd></div>
+                  <div><dt>Process area</dt><dd>{selectedItem.processArea || 'Untagged'}</dd></div>
+                  <div><dt>Rows</dt><dd>{selectedItem.rowCount}</dd></div>
+                  <div>
+                    <dt>Used by</dt>
+                    <dd>{selectedUsage ? usageSummary(selectedUsage) : 'Checking…'}</dd>
+                  </div>
+                </dl>
+                {selectedItem.columns.length > 0 && (
+                  <div className="stack" style={{ gap: '0.4rem' }}>
+                    <p className="eyebrow">Columns</p>
+                    <div className="data-rail-columns">
+                      {selectedItem.columns.map((column) => <code key={column}>{column}</code>)}
+                    </div>
+                  </div>
+                )}
+                <button type="button" className="primary" onClick={() => openFile(selectedItem.file)}>
+                  Open dataset
                 </button>
-                {preview && <PreviewSummary preview={preview} />}
+                <div className="row">
+                  <button type="button" onClick={() => void renameSelected(selectedItem.file)} disabled={busyFile === selectedItem.file}>
+                    Rename
+                  </button>
+                  <button type="button" className="ghost danger" onClick={() => void deleteSelected(selectedItem.file)} disabled={busyFile === selectedItem.file}>
+                    Delete
+                  </button>
+                </div>
+                <p className="hint">
+                  {selectedUsage
+                    ? (hasDependencies(selectedUsage)
+                        ? 'Renaming updates every reference; deleting needs confirmation.'
+                        : 'No dependencies — safe to delete.')
+                    : 'Checking dependencies…'}
+                </p>
+              </>
+            ) : (
+              <p className="hint">Select a dataset to see what it holds and what depends on it.</p>
+            )}
+          </aside>
+        </div>
+      ) : (
+        <div className="data-split" role="tabpanel" id="panel-relationships" aria-labelledby="tab-relationships">
+          <section className="panel stack" aria-labelledby="relational-builder-heading">
+            <div>
+              <p className="eyebrow">One header · many owned children</p>
+              <h2 id="relational-builder-heading">{relationFileName.trim() || 'New relationship'}</h2>
+              <p className="hint">Join two CSV files without flattening line items.</p>
+            </div>
+            <div>
+              <label htmlFor="relation-name">Relationship name</label>
+              <input id="relation-name" value={relationFileName} onChange={(event) => setRelationFileName(event.target.value)} placeholder="sales-orders-with-items" />
+            </div>
+            <div className="relation-grid">
+              <div>
+                <label htmlFor="relation-header-file">Header CSV</label>
+                <select id="relation-header-file" value={relation.headerFile} onChange={(event) => {
+                  setRelation({ ...relation, headerFile: event.target.value });
+                  setRelationPreview(null);
+                }}>
+                  <option value="">Select header file</option>
+                  {files.filter((file) => file.endsWith('.csv')).map((file) => <option key={file} value={file}>{file}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="relation-header-key">Header key</label>
+                <input id="relation-header-key" value={relation.headerKey} onChange={(event) => {
+                  setRelation({ ...relation, headerKey: event.target.value });
+                  setRelationPreview(null);
+                }} placeholder="scenarioKey" />
+              </div>
+              <div>
+                <label htmlFor="relation-child-file">Child CSV</label>
+                <select id="relation-child-file" value={relation.childFile} onChange={(event) => {
+                  setRelation({ ...relation, childFile: event.target.value });
+                  setRelationPreview(null);
+                }}>
+                  <option value="">Select child file</option>
+                  {files.filter((file) => file.endsWith('.csv')).map((file) => <option key={file} value={file}>{file}</option>)}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="relation-child-key">Child foreign key</label>
+                <input id="relation-child-key" value={relation.childForeignKey} onChange={(event) => {
+                  setRelation({ ...relation, childForeignKey: event.target.value });
+                  setRelationPreview(null);
+                }} placeholder="scenarioKey" />
+              </div>
+              <div>
+                <label htmlFor="relation-collection">Child collection name</label>
+                <input id="relation-collection" value={relation.collectionPath} onChange={(event) => {
+                  setRelation({ ...relation, collectionPath: event.target.value });
+                  setRelationPreview(null);
+                }} placeholder="items" />
               </div>
             </div>
-          )}
+            <div className="row">
+              <button type="button" onClick={() => void previewRelation()} disabled={previewing}>
+                {previewing ? 'Validating…' : 'Validate'}
+              </button>
+              <button type="button" className="primary" onClick={() => void saveRelation()} disabled={savingRelation || !relationPreview}>
+                {savingRelation ? 'Saving…' : 'Save relationship'}
+              </button>
+              {relationPreview && <PreviewSummary preview={relationPreview} />}
+            </div>
+            {relationPreview?.sample && (
+              <details>
+                <summary>Preview joined transactions</summary>
+                <pre className="data-preview-json">{JSON.stringify(relationPreview.sample, null, 2)}</pre>
+              </details>
+            )}
+          </section>
 
-          <div className="row">
-            {dataset.format === 'csv' && <button onClick={addRow}>+ Add row</button>}
-            <button className="primary" onClick={save} disabled={saving || (dataset.format === 'json' && !preview)}>
-              {saving ? 'Saving…' : 'Save dataset'}
-            </button>
-            {savedAt && !dirty && <AsyncFeedback state="success" message={`${selectedFile} — Saved at ${savedAt}`} compact />}
-          </div>
+          <aside className="panel stack data-rail" aria-label="Saved relationships">
+            <p className="eyebrow">Saved relationships</p>
+            {relationSummaries.length === 0 && <p className="hint">None yet.</p>}
+            <div className="stack" style={{ gap: '0.5rem' }}>
+              {relationSummaries.map((entry) => (
+                <button
+                  key={entry.file}
+                  type="button"
+                  className={entry.file === selectedRelationFile ? 'data-relation-card selected' : 'data-relation-card'}
+                  onClick={() => void openRelation(entry.file)}
+                >
+                  <span className="data-relation-name">{entry.file.replace(/\.json$/i, '')}</span>
+                  {entry.definition && (
+                    <span className="hint">
+                      {entry.definition.headerFile} → {entry.definition.collectionPath} · key {entry.definition.headerKey}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <p className="hint">
+              Validation blocks duplicate header keys, missing keys, orphan children and collection-name
+              collisions before a relationship can be saved.
+            </p>
+          </aside>
         </div>
       )}
 
-      <section className="panel stack" aria-labelledby="relational-builder-heading">
-        <div>
-          <p className="eyebrow">One header · many owned children</p>
-          <h2 id="relational-builder-heading">Relational CSV builder</h2>
-          <p className="hint">Join two CSV files without flattening line items. Validation blocks duplicate header keys, missing keys, orphan children, and collection-name collisions.</p>
-        </div>
-        <div className="row">
-          <div style={{ flex: 1 }}>
-            <label htmlFor="saved-relation">Open relationship</label>
-            <select id="saved-relation" value={selectedRelationFile} onChange={(event) => void openRelation(event.target.value)}>
-              <option value="">— New relationship —</option>
-              {relationFiles.map((file) => <option key={file} value={file}>{file}</option>)}
-            </select>
+      {newDatasetOpen && (
+        <PopDialog title="New dataset" closeLabel="Close without creating a dataset" onClose={() => setNewDatasetOpen(false)}>
+          <div className="panel stack">
+            <div>
+              <label htmlFor="new-dataset-format">Format</label>
+              <select id="new-dataset-format" aria-label="New dataset format" value={newFormat} onChange={(e) => setNewFormat(e.target.value as 'csv' | 'json')}>
+                <option value="csv">Flat CSV</option>
+                <option value="json">Nested JSON</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="new-dataset-name">File name</label>
+              <input id="new-dataset-name" aria-label="New dataset file name" type="text" placeholder="my-new-dataset" value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
+            </div>
+            {newFormat === 'csv' && (
+              <div>
+                <label htmlFor="new-dataset-columns">Columns</label>
+                <input
+                  id="new-dataset-columns"
+                  aria-label="New dataset column names"
+                  type="text"
+                  placeholder="columns, e.g. supplier,material,plant,quantity"
+                  value={newHeaders}
+                  onChange={(e) => setNewHeaders(e.target.value)}
+                />
+                <p className="hint">Comma-separated. You can add more later.</p>
+              </div>
+            )}
+            <div className="row">
+              <button type="button" className="primary" onClick={createNew}>Create</button>
+              <button type="button" onClick={() => setNewDatasetOpen(false)}>Cancel</button>
+            </div>
           </div>
-          <div style={{ flex: 1 }}>
-            <label htmlFor="relation-name">Relationship name</label>
-            <input id="relation-name" value={relationFileName} onChange={(event) => setRelationFileName(event.target.value)} placeholder="sales-orders-with-items" />
+        </PopDialog>
+      )}
+
+      {dataset && selectedFile && (
+        <PopDialog
+          className="data-dialog"
+          title={`${selectedFile} — ${dataset.format === 'csv'
+            ? `${dataset.rows.length} row${dataset.rows.length === 1 ? '' : 's'}`
+            : `${dataset.records.length} transaction${dataset.records.length === 1 ? '' : 's'}`}${dirty ? ' · unsaved changes' : ''}`}
+          closeLabel="Close dataset"
+          onClose={closeDataset}
+        >
+          <div className="panel stack">
+            {loadingArtifact && <AsyncFeedback state="loading" message={`Loading ${selectedFile}…`} compact />}
+
+            <div className="row" style={{ alignItems: 'flex-start', gap: '1rem' }}>
+              <div style={{ flex: 1, maxWidth: '20rem' }}>
+                <DomainTag kind="dataFile" name={selectedFile} value={fileTags[selectedFile] ?? ''} knownDomains={processAreas} onSaved={refreshTags} />
+              </div>
+            </div>
+
+            {dataset.format === 'csv' ? (
+              <TableFrame label={`${selectedFile} dataset`}>
+                <table className="responsive-table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      {dataset.headers.map((h) => (
+                        <th key={h}>{h}</th>
+                      ))}
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dataset.rows.map((row, ri) => (
+                      <tr key={ri}>
+                        <td className="hint" data-label="Row">{ri + 1}</td>
+                        {dataset.headers.map((h) => (
+                          <td key={h} data-label={h}>
+                            <ListCell ariaLabel={`${h}, row ${ri + 1}`} value={row[h] ?? ''} onChange={(v) => setCell(ri, h, v)} />
+                          </td>
+                        ))}
+                        <td data-label="Actions">
+                          <button className="ghost danger" aria-label={`Remove dataset row ${ri + 1}`} onClick={() => removeRow(ri)} title="Remove row">
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {dataset.rows.length === 0 && (
+                      <tr>
+                        <td colSpan={dataset.headers.length + 2} className="hint">
+                          No rows yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </TableFrame>
+            ) : null}
+
+            {dataset.format === 'csv' && (
+              <details className="stack">
+                <summary>Column schema ({dataset.headers.length} column{dataset.headers.length === 1 ? '' : 's'})</summary>
+                <p className="hint">Declare each column's type, sensitivity and an example value — reused wherever this dataset feeds a Test's contract inputs.</p>
+                <TableFrame label={`${selectedFile} column schema`}>
+                  <table className="responsive-table">
+                    <thead>
+                      <tr><th>Column</th><th>Type</th><th>Sensitivity</th><th>Example</th></tr>
+                    </thead>
+                    <tbody>
+                      {dataset.headers.map((header) => (
+                        <ColumnSchemaRow
+                          key={header}
+                          column={header}
+                          schema={columnSchema[header]}
+                          onSave={(patch) => saveColumnSchema(header, patch)}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </TableFrame>
+              </details>
+            )}
+
+            {dataset.format === 'json' && (
+              <div className="stack">
+                <label htmlFor="nested-json-editor">Nested transaction JSON</label>
+                <textarea
+                  id="nested-json-editor"
+                  className="json-data-editor"
+                  rows={18}
+                  value={jsonText}
+                  onChange={(event) => {
+                    setJsonText(event.target.value);
+                    setPreview(null);
+                    setDirty(true);
+                  }}
+                  spellCheck={false}
+                />
+                <p className="hint">Use one root object per business transaction. Child arrays remain owned by that transaction and are not flattened.</p>
+                <div className="row">
+                  <button type="button" onClick={() => void previewJson()} disabled={previewing}>
+                    {previewing ? 'Validating…' : 'Validate and preview'}
+                  </button>
+                  {preview && <PreviewSummary preview={preview} />}
+                </div>
+              </div>
+            )}
+
+            <div className="row">
+              {dataset.format === 'csv' && <button onClick={addRow}>+ Add row</button>}
+              <button className="primary" onClick={save} disabled={saving || (dataset.format === 'json' && !preview)}>
+                {saving ? 'Saving…' : 'Save dataset'}
+              </button>
+              {savedAt && !dirty && <AsyncFeedback state="success" message={`${selectedFile} — Saved at ${savedAt}`} compact />}
+            </div>
           </div>
-        </div>
-        <div className="relation-grid">
-          <div>
-            <label htmlFor="relation-header-file">Header CSV</label>
-            <select id="relation-header-file" value={relation.headerFile} onChange={(event) => {
-              setRelation({ ...relation, headerFile: event.target.value });
-              setRelationPreview(null);
-            }}>
-              <option value="">Select header file</option>
-              {files.filter((file) => file.endsWith('.csv')).map((file) => <option key={file} value={file}>{file}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="relation-header-key">Header key</label>
-            <input id="relation-header-key" value={relation.headerKey} onChange={(event) => {
-              setRelation({ ...relation, headerKey: event.target.value });
-              setRelationPreview(null);
-            }} placeholder="scenarioKey" />
-          </div>
-          <div>
-            <label htmlFor="relation-child-file">Child CSV</label>
-            <select id="relation-child-file" value={relation.childFile} onChange={(event) => {
-              setRelation({ ...relation, childFile: event.target.value });
-              setRelationPreview(null);
-            }}>
-              <option value="">Select child file</option>
-              {files.filter((file) => file.endsWith('.csv')).map((file) => <option key={file} value={file}>{file}</option>)}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="relation-child-key">Child foreign key</label>
-            <input id="relation-child-key" value={relation.childForeignKey} onChange={(event) => {
-              setRelation({ ...relation, childForeignKey: event.target.value });
-              setRelationPreview(null);
-            }} placeholder="scenarioKey" />
-          </div>
-          <div>
-            <label htmlFor="relation-collection">Child collection name</label>
-            <input id="relation-collection" value={relation.collectionPath} onChange={(event) => {
-              setRelation({ ...relation, collectionPath: event.target.value });
-              setRelationPreview(null);
-            }} placeholder="items" />
-          </div>
-        </div>
-        <div className="row">
-          <button type="button" onClick={() => void previewRelation()} disabled={previewing}>
-            {previewing ? 'Validating…' : 'Validate relationship'}
-          </button>
-          <button type="button" className="primary" onClick={() => void saveRelation()} disabled={savingRelation || !relationPreview}>
-            {savingRelation ? 'Saving…' : 'Save relationship'}
-          </button>
-          {relationPreview && <PreviewSummary preview={relationPreview} />}
-        </div>
-        {relationPreview?.sample && (
-          <details>
-            <summary>Preview joined transactions</summary>
-            <pre className="data-preview-json">{JSON.stringify(relationPreview.sample, null, 2)}</pre>
-          </details>
-        )}
-      </section>
+        </PopDialog>
+      )}
     </div>
   );
+
 }
 
 interface ColumnSchemaRowProps {
