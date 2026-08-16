@@ -30,7 +30,7 @@ These journeys were traced through React event handlers, API calls, Express rout
 - **Risk of user error:** **Critical** — real business documents may be created in an unintended system.
 - **Recommended target journey:** Shell loads context from server → shows workspace and environment badge with DEV/QA/PROD safety level → user can inspect details → execution uses the same context or blocks on mismatch.
 
-## Journey 3 — Create a test case
+## Journey 3 — Create a Test
 
 - **Starting point:** Overview “Compose Test Case” or Test Step Composer navigation.
 - **User goal:** Create a named test artifact ready for step authoring.
@@ -41,11 +41,11 @@ These journeys were traced through React event handlers, API calls, Express rout
 - **Missing feedback:** No duplicate-name check before save, naming guidance, required-field indicators, create success announcement, or explicit unsaved state immediately after creation (`dirty` starts false).
 - **Opportunities for simplification:** Use a focused creation dialog with name, process area, optional template, and target application; generate the technical file identifier.
 - **Risk of user error:** **High** — users may believe a template has created a runnable test or navigate away from an unsaved new file without warning.
-- **Recommended target journey:** Tests list → New test → choose blank/template → enter business name/process area/application → create draft with stable route → guided first-step empty state → save/publish status.
+- **Recommended target journey:** Tests list → New test → choose blank/template → enter Test name/process area/application → create draft with stable route → guided first-step empty state → save/publish status.
 
 ## Journey 4 — Add or edit test steps
 
-- **Starting point:** An open test case in Composer.
+- **Starting point:** An open Test in Composer.
 - **User goal:** Define a clear, correctly ordered automation sequence.
 - **Required decisions:** Module, App ID scope, object references, literal/data/handoff parameters, table-row structure, step order.
 - **Major interactions:** 4–10 per step depending on module.

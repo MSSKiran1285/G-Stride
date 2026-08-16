@@ -82,7 +82,7 @@ Implementation and validation detail is recorded in `P0_IMPLEMENTATION_REPORT.md
 | PB-015 | Feedback | Standardise loading, empty, error, warning, and success states | P1 | 8 | 1 | PB-011 |
 | PB-016 | Accessibility | Upgrade pickers, ordering, live status, and overlays | P1 | 13 | 1 | PB-011 |
 | PB-017 | Dashboard | Provide a task-focused trustworthy Overview | P1 | 8 | 2 | PB-014, PB-015 |
-| PB-018 | Test management | Find, create, and open test cases | P1 | 8 | 2 | PB-012, PB-015 |
+| PB-018 | Test management | Find, create, and open Tests | P1 | 8 | 2 | PB-012, PB-015 |
 | PB-019 | Test composer | Create valid understandable test steps | P1 | 13 | 2 | PB-016, shared contracts |
 | PB-020 | Object repository | Find and maintain reusable UI5 objects | P1 | 13 | 2 | PB-012, PB-016 |
 | PB-021 | Object capture | Capture a UI5 object through a guided flow | P1 | 13 | 2 | PB-020, capture-agent health |
@@ -369,18 +369,18 @@ Implementation and validation detail is recorded in `P0_IMPLEMENTATION_REPORT.md
 
 **Traceability:** UX-003, UX-006, UX-025; DASH-01.
 
-### PB-018 — Find, create, and open test cases
+### PB-018 — Find, create, and open Tests
 
-**User story:** As a test author, I want a searchable test-case list with business names and process areas so that I can find existing automation before creating duplicates.
+**User story:** As a test author, I want a searchable Test list with Test names and process areas so that I can find existing automation before creating duplicates.
 
 **Acceptance criteria:**
 
 1. Test Cases has a routeable list with search and process-area filtering.
 2. Business test name is primary; file name is visible as technical metadata.
-3. New Test collects business name, process area, application context, and blank/template choice.
+3. New Test collects Test name, process area, application context, and blank/template choice.
 4. Duplicate technical identifiers are detected before save.
 5. Opening or creating navigates to a stable test route.
-6. Existing JSON test cases load and save without contract changes.
+6. Existing JSON Tests load and save without contract changes.
 
 **Traceability:** TEST-01.
 
