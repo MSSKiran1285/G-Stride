@@ -9059,3 +9059,55 @@ button.pill:disabled,
 .data-split .relation-grid {
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
+
+/* ---------------------------------------------------------------------------
+   Dataset pop-out: every value fully readable
+   ---------------------------------------------------------------------------
+   The grid squeezed each cell to whatever was left after its two mode buttons,
+   so "USSU-TRL07" rendered as "USSI" and "15.00" as "15.0C" — the value, which
+   is the entire point of the row, lost its space to controls that are almost
+   never used. The table now sizes to its content and scrolls sideways inside
+   the dialog instead of compressing, and each cell gets a floor wide enough for
+   a real SAP identifier. */
+.data-dialog .responsive-table {
+  width: max-content !important;
+  min-width: 100% !important;
+}
+
+.data-dialog .responsive-table td .row > input[type='text'] {
+  min-width: 11rem;
+}
+
+.data-dialog .responsive-table th,
+.data-dialog .responsive-table td {
+  white-space: nowrap !important;
+}
+
+/* The two per-cell mode buttons stay reachable but stop competing with the
+   value for width — they are an escape hatch, not the main event. */
+.data-dialog .responsive-table td .row > button.ghost {
+  padding: 0 0.2rem !important;
+  opacity: 0.55;
+}
+
+.data-dialog .responsive-table td .row > button.ghost:hover,
+.data-dialog .responsive-table td .row > button.ghost:focus-visible {
+  opacity: 1;
+}
+
+/* The library table's radio column stays tight so the dataset name leads. */
+.data-library-select { width: 2.25rem !important; text-align: center !important; }
+
+.data-columns-panel {
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-subtle);
+}
+
+/* The dataset table reads as its own bounded object, the way the Test Library's does — the side
+   edges are what tell you where the table stops and the panel around it begins. */
+.data-split .workspace-table-frame {
+  border-color: var(--border-strong);
+}

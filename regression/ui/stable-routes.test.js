@@ -80,7 +80,7 @@ test('browser back and forward restore route-selected artifacts', async () => {
       // A dataset is now selected in the library first — which shows what depends on it — and
       // then opened, so the route only changes once you actually open one.
       await page.getByRole('button', { name: /Test Data/ }).first().click();
-      await page.getByRole('button', { name: 'regression-sample.csv' }).click();
+      await page.getByRole('radio', { name: 'Select regression-sample.csv' }).check();
       await page.getByRole('button', { name: 'Open dataset' }).click();
       assert.equal(new URL(page.url()).pathname, '/data/regression-sample.csv');
 

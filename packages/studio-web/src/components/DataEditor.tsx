@@ -429,15 +429,14 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
     <div className="stack data-workspace">
       <header className="data-workspace-heading">
         <div>
-          <p className="eyebrow">Reusable Test Data</p>
           <h1>Datasets</h1>
           <p className="hint">Find a dataset, inspect what depends on it, then rename or remove it safely.</p>
         </div>
         <div className="row" style={{ flex: '0 0 auto' }}>
-          <button type="button" onClick={startNewRelationship}>New relationship</button>
           <button type="button" className="primary" onClick={() => { setNewDatasetOpen(true); setError(null); }}>
             New dataset
           </button>
+          <button type="button" onClick={startNewRelationship}>New relationship</button>
         </div>
       </header>
 
@@ -490,6 +489,7 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
               <table className="responsive-table data-library-table">
                 <thead>
                   <tr>
+                    <th><span className="sr-only">Select</span></th>
                     <th>Dataset</th>
                     <th>Process area</th>
                     <th>Format</th>
@@ -503,28 +503,43 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
                       className={item.file === selectedLibraryFile ? 'selected-row' : undefined}
                       onClick={() => selectLibraryFile(item.file)}
                     >
-                      <td data-label="Dataset">
-                        <button
-                          type="button"
-                          className="data-library-name"
-                          aria-pressed={item.file === selectedLibraryFile}
-                          onClick={(event) => { event.stopPropagation(); selectLibraryFile(item.file); }}
-                        >
-                          {item.file}
-                        </button>
+                      {/* An explicit radio rather than "the row you last clicked": selection drives
+                          rename and delete, so which dataset is armed has to be visible without
+                          relying on a highlight the reader might not have noticed. */}
+                      <td className="data-library-select" data-label="Select" onClick={(event) => event.stopPropagation()}>
+                        <input
+                          type="radio"
+                          name="selected-dataset"
+                          checked={item.file === selectedLibraryFile}
+                          onChange={() => selectLibraryFile(item.file)}
+                          aria-label={`Select ${item.file}`}
+                        />
                       </td>
+                      <td data-label="Dataset"><span className="data-library-name">{item.file}</span></td>
                       <td data-label="Process area">{item.processArea || <span className="hint">Untagged</span>}</td>
                       <td data-label="Format">{item.format === 'json' ? 'Nested JSON' : 'Flat CSV'}</td>
                       <td data-label="Rows">{item.rowCount}</td>
                     </tr>
                   ))}
                   {visibleItems.length === 0 && (
-                    <tr><td colSpan={4} className="hint">No datasets match.</td></tr>
+                    <tr><td colSpan={5} className="hint">No datasets match.</td></tr>
                   )}
                 </tbody>
               </table>
             </TableFrame>
             <p className="hint">{visibleItems.length} of {libraryItems.length} datasets</p>
+
+            {/* Columns sit under the table, not in the rail: there can be a dozen of them and the
+                rail is narrow, so they wrapped into a tall ragged block exactly where the actions
+                needed to stay reachable. */}
+            {selectedItem && selectedItem.columns.length > 0 && (
+              <div className="stack data-columns-panel">
+                <p className="eyebrow">Columns in {selectedItem.file}</p>
+                <div className="data-rail-columns">
+                  {selectedItem.columns.map((column) => <code key={column}>{column}</code>)}
+                </div>
+              </div>
+            )}
           </section>
 
           <aside className="panel stack data-rail" aria-label="Selected dataset">
@@ -543,14 +558,6 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
                     <dd>{selectedUsage ? usageSummary(selectedUsage) : 'Checking…'}</dd>
                   </div>
                 </dl>
-                {selectedItem.columns.length > 0 && (
-                  <div className="stack" style={{ gap: '0.4rem' }}>
-                    <p className="eyebrow">Columns</p>
-                    <div className="data-rail-columns">
-                      {selectedItem.columns.map((column) => <code key={column}>{column}</code>)}
-                    </div>
-                  </div>
-                )}
                 <button type="button" className="primary" onClick={() => openFile(selectedItem.file)}>
                   Open dataset
                 </button>
