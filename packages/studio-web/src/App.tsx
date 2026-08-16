@@ -97,23 +97,25 @@ const navSteps: NavStep[] = [
 /**
  * End-to-end walkthroughs for building one business process, start to finish.
  *
- * Hosted outside the product rather than written into the drawer: they are long, illustrated,
- * and revised far more often than the app ships. The drawer's "Guides" section stays for the
- * short conceptual answers, which belong next to the controls they explain.
+ * Served from the Studio's own static directory (packages/studio-web/public/guides/), NOT from an
+ * external host. Every reader of these is someone already running the product, and a documentation
+ * link that needs a second service — and an account on it — is a link most of them cannot open.
+ * This way they work offline, need no sign-in, version with the code that they describe, and keep
+ * working on an air-gapped machine.
  *
- * These are private links by default — a teammate opening one will be refused until the document
- * itself is shared. Worth knowing before pointing anyone at this section.
+ * Separate files rather than drawer content because they are long and illustrated; the "Guides"
+ * section below stays for the short conceptual answers, which belong next to the controls.
  */
 const PROCESS_GUIDES: { title: string; detail: string; href: string }[] = [
   {
     title: 'Create Purchase Order',
     detail: 'Seven steps, end to end — supplier, a four-column line-item grid, and capturing the PO number.',
-    href: 'https://claude.ai/code/artifact/0f85f2ea-3499-48b1-954a-bd1d87f712e1',
+    href: '/guides/create-purchase-order.html',
   },
   {
     title: 'Create Sales Order',
     detail: 'Sixteen steps, end to end — order header, sold-to party, line items, and capturing the SO number.',
-    href: 'https://claude.ai/code/artifact/35d92fea-3766-4bd2-99f2-1e0e7e81faa6',
+    href: '/guides/create-sales-order.html',
   },
 ];
 

@@ -51,7 +51,7 @@ test('Help topics are collapsible sections, closed by default for the new Guides
   });
 });
 
-test('Process Guides lists the end-to-end walkthroughs as external links', async () => {
+test('Process Guides lists the end-to-end walkthroughs and each one resolves', async () => {
   await withBrowser(async (browser) => {
     await withPage(browser, 'help-process-guides', async (page) => {
       await page.goto(BASE_URL);
@@ -71,12 +71,19 @@ test('Process Guides lists the end-to-end walkthroughs as external links', async
         ['Create Purchase Order', 'Create Sales Order']
       );
 
-      // They leave the product, so every one must open in a new tab and carry noopener —
-      // without it the opened page gets a handle back to the Studio window.
+      // Served by the Studio itself, not by an external host — a documentation link that needs a
+      // second service, and an account on it, is a link most readers cannot open. Each still opens
+      // in a new tab so the reader does not lose their place in the app.
       for (const link of await guides.all()) {
         assert.equal(await link.getAttribute('target'), '_blank');
         assert.match(await link.getAttribute('rel'), /noopener/);
-        assert.match(await link.getAttribute('href'), /^https:\/\//);
+        const href = await link.getAttribute('href');
+        assert.match(href, /^\/guides\/[a-z-]+\.html$/, `expected an in-product guide path, got ${href}`);
+
+        // And it must actually resolve — a 404 behind a tidy-looking link is worse than no link.
+        const served = await page.request.get(new URL(href, BASE_URL).toString());
+        assert.equal(served.status(), 200, `${href} did not resolve`);
+        assert.match(await served.text(), /G-Stride · Process Guide/);
       }
     });
   });

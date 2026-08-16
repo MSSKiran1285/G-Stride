@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Sales Order — G-Stride Process Guide</title>
+  <link rel="icon" href="../favicon.png">
+  <link rel="stylesheet" href="guides.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">G-Stride · Process Guide</p>
+    <h1>Create Sales Order</h1>
+    <p class="standfirst">
+      Build a sixteen-step Test that logs into SAP, opens Manage Sales Orders V2, fills the order
+      header across two screens, adds line items, and captures the sales order number as evidence.
+      The longest of the standard Order-to-Cash Tests.
+    </p>
+  </header>
+
+  <section class="facts">
+    <div><span class="k">Steps</span><span class="v">16</span></div>
+    <div><span class="k">App ID</span><span class="v">createSalesOrder</span></div>
+    <div><span class="k">Dataset</span><span class="v">o2c-e2e.csv</span></div>
+    <div><span class="k">Captures</span><span class="v">soNumber</span></div>
+  </section>
+
+  <section>
+    <h2>Before you start</h2>
+    <ol class="prep">
+      <li>The <strong>createSalesOrder</strong> objects must exist in the Object Library — the four
+        header fields, <code>continueButton</code>, <code>soldToPartyField</code>,
+        <code>itemsTabButton</code>, <code>createButton</code>, and the two line-item columns.</li>
+      <li>A dataset must supply <code>orderType</code>, <code>salesOrg</code>,
+        <code>distributionChannel</code>, <code>division</code>, <code>soldToParty</code>,
+        <code>product</code>, <code>quantity</code>, <code>automationReferencePrefix</code> and
+        <code>automationOwner</code>. <code>o2c-e2e.csv</code> already does.</li>
+      <li>An SAP target must be configured and classified <strong>Non-production</strong> — this Test
+        creates real documents.</li>
+    </ol>
+    <p class="legend">
+      <span class="item"><span class="pill pick">pick</span> choose from the list the field offers</span>
+      <span class="item"><span class="pill type">type</span> type the value</span>
+      <span class="item"><span class="pill leave">leave</span> already correct — don't touch it</span>
+    </p>
+    <p class="note">
+      <b>How values work.</b> Click into a value field and it lists everything it can be bound to —
+      dataset columns grouped by file, SAP system values, and anything an earlier step captured.
+      <strong>Picking one creates the binding.</strong> Typing instead makes it a fixed value. The tag
+      to the left of the box always says which you've got.
+    </p>
+  </section>
+
+  <section>
+    <h2>Create the Test</h2>
+    <ol class="prep">
+      <li><strong>Compose Tests</strong> → <strong>Compose New Test</strong>.</li>
+      <li>Test name: <code>Create Sales Order - Happy Path</code></li>
+      <li>Process area: pick <strong>Order to Cash</strong>, or create it.</li>
+      <li><strong>Create Test</strong>.</li>
+    </ol>
+    <p class="note">
+      <b>Steps 4–7 repeat the same module.</b> Build step 4, then select it and use
+      <strong>DUPLICATE</strong> for 5, 6 and 7 — the clone opens ready to edit and you only change
+      the two values. It only helps for a consecutive run of the same module, which is what these are.
+    </p>
+  </section>
+
+  <section>
+    <h2>The sixteen steps</h2>
+    <ol class="steps">
+
+      <li class="step">
+        <div class="step-n">01</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Create Automation Run Reference</h3><span class="via">Governance</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Reference prefix</dt><dd><span class="pill pick">pick</span><code>automationReferencePrefix</code></dd></div>
+            <div class="field"><dt>Run owner</dt><dd><span class="pill pick">pick</span><code>automationOwner</code></dd></div>
+            <div class="field"><dt>Using defaults (3)</dt><dd><span class="pill leave">leave</span></dd></div>
+          </dl>
+          <p class="note"><b>Check both tags read <strong>dataset</strong>.</b> A <code>literal</code> here puts the column's name into the signed evidence instead of the owner's.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">02</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Login</h3><span class="via">Built-In</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Tenant URL</dt><dd><span class="pill pick">pick</span><code>SAP target URL</code></dd></div>
+            <div class="field"><dt>Username</dt><dd><span class="pill pick">pick</span><code>SAP username</code></dd></div>
+            <div class="field"><dt>Password</dt><dd><span class="pill pick">pick</span><code>SAP password</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">03</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Navigate to App</h3><span class="via">Built-In</span></div>
+          <dl class="fields">
+            <div class="field"><dt>App ID override</dt><dd><span class="pill type">type</span><code>createSalesOrder</code></dd></div>
+            <div class="field"><dt>App URL</dt><dd><span class="pill pick">pick</span> the Manage Sales Orders V2 create screen</dd></div>
+          </dl>
+          <p class="note"><b>Set the App ID here.</b> Steps 4 onward inherit it, so you type it once — and with it set, the App URL field can offer the screens already captured for this app.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">04</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Enter Header Field</h3><span class="via">order type</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Field</dt><dd><span class="pill pick">pick</span><code>salesOrderTypeField</code></dd></div>
+            <div class="field"><dt>Value</dt><dd><span class="pill pick">pick</span><code>orderType</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">05</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Enter Header Field</h3><span class="via">sales organisation</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Field</dt><dd><span class="pill pick">pick</span><code>SalesOrganizationField</code></dd></div>
+            <div class="field"><dt>Value</dt><dd><span class="pill pick">pick</span><code>salesOrg</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">06</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Enter Header Field</h3><span class="via">distribution channel</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Field</dt><dd><span class="pill pick">pick</span><code>distributionChannelField</code></dd></div>
+            <div class="field"><dt>Value</dt><dd><span class="pill pick">pick</span><code>distributionChannel</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">07</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Enter Header Field</h3><span class="via">division</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Field</dt><dd><span class="pill pick">pick</span><code>divisionField</code></dd></div>
+            <div class="field"><dt>Value</dt><dd><span class="pill pick">pick</span><code>division</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">08</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Click Button</h3><span class="via">leaves the create dialog</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Control name</dt><dd><span class="pill pick">pick</span><code>continueButton</code></dd></div>
+          </dl>
+          <p class="note"><b>This is the screen change.</b> Steps 4–7 fill the initial create dialog; everything after this happens on the object page.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">09</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Enter Header Field</h3><span class="via">sold-to party</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Field</dt><dd><span class="pill pick">pick</span><code>soldToPartyField</code></dd></div>
+            <div class="field"><dt>Value</dt><dd><span class="pill pick">pick</span><code>soldToParty</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">10</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Click Button</h3><span class="via">opens the Items tab</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Control name</dt><dd><span class="pill pick">pick</span><code>itemsTabButton</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">11</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Add Line Item(s)</h3><span class="via">Procurement · row grid</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Column 1</dt><dd><span class="pill pick">pick</span><code>lineItemProductField</code></dd></div>
+            <div class="field"><dt>Column 2</dt><dd><span class="pill pick">pick</span> <strong>+ Col</strong>, then <code>lineItemQuantityField</code></dd></div>
+            <div class="field"><dt>Row 1</dt><dd><span class="pill type">type</span><code>${product}</code><code>${quantity}</code></dd></div>
+            <div class="field"><dt>When to click Add</dt><dd><span class="pill pick">pick</span><code>after</code></dd></div>
+          </dl>
+          <p class="note"><b>This table wants <code>after</code>, not the default.</b> Manage Sales Orders V2 uses a Fiori Elements creation row — an always-present inline form you fill first and then commit. Purchase Order's table is the other way round.</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">12</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Click Button</h3><span class="via">creates the order</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Control name</dt><dd><span class="pill pick">pick</span><code>createButton</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">13</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Wait</h3><span class="via">Built-In</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Milliseconds</dt><dd><span class="pill type">type</span><code>5000</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">14</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Dismiss Dialog If Present</h3><span class="via">Built-In</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Button text</dt><dd><span class="pill type">type</span><code>Save</code></dd></div>
+            <div class="field"><dt>Timeout (ms)</dt><dd><span class="pill type">type</span><code>15000</code> — under <strong>Options</strong></dd></div>
+          </dl>
+          <p class="note"><b>Optional dialog.</b> SAP sometimes raises a confirmation here and sometimes doesn't; this step passes either way, which is why it is "if present".</p>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">15</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Wait</h3><span class="via">Built-In</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Milliseconds</dt><dd><span class="pill type">type</span><code>3000</code></dd></div>
+          </dl>
+        </div>
+      </li>
+
+      <li class="step">
+        <div class="step-n">16</div>
+        <div class="step-body">
+          <div class="step-head"><h3>Capture Document Number from Success Dialog</h3><span class="via">Procurement</span></div>
+          <dl class="fields">
+            <div class="field"><dt>Dialog title(s) to expect</dt><dd><span class="pill type">type</span><code>Success;Warning</code></dd></div>
+            <div class="field"><dt>Capture as (runState key)</dt><dd><span class="pill type">type</span><code>soNumber</code></dd></div>
+            <div class="field"><dt>Evidence label</dt><dd><span class="pill type">type</span><code>Sales Order Number</code></dd></div>
+            <div class="field"><dt>Dismiss button text</dt><dd><span class="pill type">type</span><code>Close</code></dd></div>
+          </dl>
+          <p class="note"><b>Both titles matter.</b> SAP raises the number under a Success dialog on a clean run and a Warning dialog when it has something to say — listing only one means the other run silently fails to capture.</p>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <section class="finish">
+    <p><strong>Save Test.</strong> Each step needs its own <strong>Save step</strong> first — the Test isn't written to disk until you press Save Test and see the "Saved at" confirmation.</p>
+  </section>
+
+  <section>
+    <h2>After you build it</h2>
+    <ol class="prep">
+      <li><strong>Check the tags down the steps list.</strong> Every value that should come from data should read <code>dataset</code>. A stray <code>literal</code> is the most common authoring mistake.</li>
+      <li><strong>Publish the Test</strong> once its contract is declared.</li>
+      <li><strong>Chain it</strong> — this Test is the first stage of the Order-to-Cash process, feeding Create Outbound Delivery and Create Billing Document. A later stage can bind to <code>soNumber</code> as a prior-step output.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Related</h2>
+    <div class="related">
+      <a href="create-purchase-order.html">Create Purchase Order →</a>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
