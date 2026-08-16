@@ -62,6 +62,10 @@ interface ObjectPickerProps {
   /** Opens the app-level contextual capture overlay (BL-023 AC4) instead of navigating away
    *  from Compose. Omit to hide the "Capture a new object" action entirely. */
   onRequestCapture?: (request: CaptureRequest) => void;
+  /** This param has a module default and the author has not overridden it, so the placeholder is
+   *  the value that will ACTUALLY be used — styled like every other soft default rather than
+   *  like an example. */
+  soft?: boolean;
 }
 
 /**
@@ -76,7 +80,7 @@ interface ObjectPickerProps {
  * "highlight on screen" action — the only fully reliable disambiguator when text
  * alone still leaves two options looking identical.
  */
-export function ObjectPicker({ value, onChange, options, kind, placeholder, module, paramKey, appId, fieldLabel, onRequestCapture }: ObjectPickerProps) {
+export function ObjectPicker({ value, onChange, options, kind, placeholder, module, paramKey, appId, fieldLabel, onRequestCapture, soft }: ObjectPickerProps) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [highlightingName, setHighlightingName] = useState<string | null>(null);
@@ -182,6 +186,7 @@ export function ObjectPicker({ value, onChange, options, kind, placeholder, modu
     <div ref={containerRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
       <input
         type="text"
+        className={soft && !value ? 'is-soft' : undefined}
         aria-label={placeholder || 'Object name'}
         value={value}
         placeholder={placeholder}

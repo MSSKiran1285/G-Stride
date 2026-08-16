@@ -53,6 +53,13 @@ const RESULTS_DIR = path.join(__dirname, 'results', 'compose-timing');
  */
 const VARIANT = process.argv.includes('--duplicate') ? 'duplicate' : 'scratch';
 
+/** Which Test to author: the 16-step Sales Order build, or the 7-step Purchase Order one. */
+const BUILD = process.argv.includes('--po') ? 'po' : 'so';
+/** Everything the report needs to describe whichever build is being timed. */
+const REFERENCE_FILE = BUILD === 'po' ? 'create-po.json' : 'create-so.json';
+const REFERENCE_LABEL = BUILD === 'po' ? '7-step Purchase Order build' : '16-step Sales Order build';
+const STEP_COUNT = BUILD === 'po' ? 7 : 16;
+
 // ---------------------------------------------------------------------------
 // KLM operators (seconds). Card, Moran & Newell 1983.
 // ---------------------------------------------------------------------------
@@ -90,6 +97,33 @@ const O2C_CSV = [
 ].join('\n');
 
 const NAVIGATE_URL = '${urlBase}/ui#SalesOrder-manageSalesOrderV2?preferredMode=create&/SalesOrderManage(...)?i-action=create';
+
+const PURCHASE_ORDER_OBJECTS = [
+  ['CreateButton', 'PurchaseOrder::Create', 'sap.m.Button', null, 'Create'],
+  ['SupplierField', 'PurchaseOrder::Supplier', 'sap.ui.comp.smartfield.SmartField', null, 'Supplier'],
+  ['AddLineItemButton', 'PurchaseOrder::Items::CreationRow-applyBtn', 'sap.m.Button', null, 'Create'],
+  ['LineItemMaterialField', 'PurchaseOrder::Items::C::Material-innerColumn', 'sap.ui.table.Column', 'PO-Items-innerTable', 'Material'],
+  ['LineItemPlantField', 'PurchaseOrder::Items::C::Plant-innerColumn', 'sap.ui.table.Column', 'PO-Items-innerTable', 'Plant'],
+  ['LineItemQuantityField', 'PurchaseOrder::Items::C::Quantity-innerColumn', 'sap.ui.table.Column', 'PO-Items-innerTable', 'Order Quantity'],
+  ['LineItemNetPriceField', 'PurchaseOrder::Items::C::NetPrice-innerColumn', 'sap.ui.table.Column', 'PO-Items-innerTable', 'Net Order Price'],
+  ['SaveButton', 'PurchaseOrder::FooterBar::Order', 'sap.m.Button', null, 'Order'],
+  ['PoNumberDisplay', 'PurchaseOrder::ObjectPage::Title', 'sap.m.Title', null, 'PO Number'],
+];
+
+const P2P_CSV = [
+  'supplier,material,plant,quantity,netPrice,deliveredQuantity,automationReferencePrefix,automationOwner',
+  'USSU-TRL07,TR-TG-Y300,1710,10,15.00,10,Q4HP2P,kiran',
+  '',
+].join('\n');
+
+const PO_NAVIGATE_URL = '${urlBase}/ui#PurchaseOrder-manage';
+
+/** Entry points the App IDs would have learned from their own capture sessions, so a timed run
+ *  exercises NavigateToApp's screen picker rather than a field that has never seen a scan. */
+const SEEDED_ENTRY_POINTS = [
+  ['createSalesOrder', 'https://tenant.example/ui#SalesOrder-manageSalesOrderV2?preferredMode=create&/SalesOrderManage(...)?i-action=create'],
+  ['createPurchaseOrder', 'https://tenant.example/ui#PurchaseOrder-manage'],
+];
 
 // ---------------------------------------------------------------------------
 // Interaction recorder
@@ -193,21 +227,27 @@ function seedWorkspace() {
     fs.mkdirSync(path.join(tempRoot, dir), { recursive: true });
   }
   fs.writeFileSync(path.join(tempRoot, 'data', 'o2c-e2e.csv'), O2C_CSV, 'utf8');
+  fs.writeFileSync(path.join(tempRoot, 'data', 'p2p-e2e.csv'), P2P_CSV, 'utf8');
 
   const { ObjectRepository } = require('../packages/core/dist');
   const repo = new ObjectRepository(path.join(tempRoot, 'objects.db'));
-  for (const [name, controlId, controlType, tableId, label] of SALES_ORDER_OBJECTS) {
-    repo.upsert({
-      appId: 'createSalesOrder',
-      name,
-      controlId,
-      controlType,
-      bindingPath: undefined,
-      tableId: tableId ?? undefined,
-      label,
-      parentControlId: undefined,
-    });
-  }
+  const seed = (appId, objects) => {
+    for (const [name, controlId, controlType, tableId, label] of objects) {
+      repo.upsert({
+        appId,
+        name,
+        controlId,
+        controlType,
+        bindingPath: undefined,
+        tableId: tableId ?? undefined,
+        label,
+        parentControlId: undefined,
+      });
+    }
+  };
+  seed('createSalesOrder', SALES_ORDER_OBJECTS);
+  seed('createPurchaseOrder', PURCHASE_ORDER_OBJECTS);
+  for (const [appId, url] of SEEDED_ENTRY_POINTS) repo.recordEntryPoint(appId, url);
   repo.close();
   return tempRoot;
 }
@@ -260,31 +300,48 @@ async function chooseModule(page, ui, moduleLabel, query) {
  * selects were literal, so the recorded floor was ~34s too high). Only a genuine change of
  * source costs an interaction.
  */
+const SYSTEM_OPTION_LABEL = {
+  'sap.url': 'SAP target URL — exactly as configured',
+  'sap.urlBase': 'SAP target URL — no trailing slash, for building a link',
+  'sap.username': 'SAP username',
+  'sap.password': 'SAP password',
+  'runtime.today': 'Current date',
+};
+
 async function setSourcedParam(page, ui, label, source, value, opts = {}) {
-  if (source !== 'literal') {
-    const sourceSelect = page.getByRole('combobox', { name: `Value source for ${label}` });
-    await ui.select(sourceSelect, source, `${label} — value source = ${source}`, { mental: true });
-  }
+  const input = page.getByLabel(label, { exact: true }).first();
 
   if (source === 'literal') {
-    await ui.fill(page.getByLabel(label, { exact: true }), value, `${label} = ${value}`, {
-      knowledge: opts.knowledge ?? 'recall',
-    });
-  } else if (source === 'dataset') {
-    // Combobox backed by a datalist of the workspace's REAL dataset columns — the author
-    // recognises the column rather than remembering it. Typing it is still the mechanic.
-    await ui.fill(page.getByLabel(`Dataset input for ${label}`), value, `${label} <- dataset.${value}`, {
-      knowledge: 'recognise',
-    });
-  } else if (source === 'systemContext') {
-    await ui.select(page.getByRole('combobox', { name: `System context for ${label}` }), value, `${label} <- ${value}`, {
-      knowledge: 'recognise',
-    });
-  } else if (source === 'priorOutput') {
-    await ui.select(page.getByRole('combobox', { name: `Prior output for ${label}` }), value, `${label} <- ${value}`, {
-      knowledge: 'recognise',
-    });
+    await ui.fill(input, value, `${label} = ${value}`, { knowledge: opts.knowledge ?? 'recall' });
+    return;
   }
+
+  // One control now: open the list, narrow it, pick. Picking IS the binding — there is no
+  // separate source to set first, which is the whole point of the change.
+  const optionLabel = source === 'systemContext' ? SYSTEM_OPTION_LABEL[value] : value;
+  await ui.click(input, `${label} (open value list)`, { mental: true });
+  const filter = optionLabel.slice(0, 10);
+  await ui.fill(input, filter, `${label} (filter "${filter}")`);
+  await ui.click(
+    page.locator('.value-picker-option', { hasText: new RegExp(escapeRegExp(optionLabel)) }).first(),
+    `${label} <- ${source}.${value}`,
+    { knowledge: 'recognise' },
+  );
+}
+
+function escapeRegExp(text) {
+  return text.replace(/[.*+?^${}()|[\]\\—]/g, '\\$&');
+}
+
+/** Picks a suggested literal (a learned App-ID screen) out of the same list. */
+async function pickSuggestedLiteral(page, ui, label, value) {
+  const input = page.getByLabel(label, { exact: true }).first();
+  await ui.click(input, `${label} (open value list)`, { mental: true });
+  await ui.click(
+    page.locator('.value-picker-option', { hasText: new RegExp(escapeRegExp(value)) }).first(),
+    `${label} <- ${value}`,
+    { knowledge: 'recognise' },
+  );
 }
 
 /** Picks from an enum param's select. One act, no source chip — the descriptor's `options`
@@ -333,6 +390,95 @@ const OBJECT_FIELD = {
   tableColumn: ['column object name', 'Table column object'],
 };
 
+/**
+ * The 7-step Purchase Order build (`testcases/create-po.json`).
+ *
+ * Shorter than the Sales Order one and differently shaped: one header field instead of five, but
+ * a four-column line-item grid instead of two. Useful as a second data point precisely because
+ * the mix is different — if the per-step cost holds across both, it is a property of the form
+ * rather than of one Test.
+ */
+async function authorPurchaseOrder(page, ui, trace, addStep, saveStep) {
+  // 1 — CreateAutomationRunReference. maxLength is advanced and defaults to the 16 the
+  // reference Test spells out, so the streamlined form correctly steers past it.
+  trace.begin('01 CreateAutomationRunReference');
+  await addStep();
+  await chooseModule(page, ui, 'Create Automation Run Reference', 'automation');
+  await setSourcedParam(page, ui, 'Reference prefix', 'dataset', 'automationReferencePrefix');
+  await setSourcedParam(page, ui, 'Run owner', 'dataset', 'automationOwner');
+  await saveStep();
+
+  // 2 — Login. The system-context key is now inferred per param, so choosing the source is the
+  // whole interaction; there is no second dropdown to set url/username/password individually.
+  trace.begin('02 Login');
+  await addStep();
+  await chooseModule(page, ui, 'Login', 'login');
+  for (const [label, key] of [['Tenant URL', 'sap.url'], ['Username', 'sap.username'], ['Password', 'sap.password']]) {
+    await setSourcedParam(page, ui, label, 'systemContext', key);
+  }
+  await saveStep();
+
+  // 3 — NavigateToApp. The App ID has a learned entry point, so this is a pick, not 40 characters.
+  trace.begin('03 NavigateToApp');
+  await addStep();
+  await chooseModule(page, ui, 'Navigate to App', 'navigate');
+  await ui.fill(page.getByLabel('App ID override'), 'createPurchaseOrder', 'App ID override', {
+    mental: true,
+    knowledge: 'recall',
+  });
+  // The App ID has a learned entry point, so this is a pick out of the value list, not 40
+  // characters of launchpad URL.
+  await pickSuggestedLiteral(page, ui, 'App URL', PO_NAVIGATE_URL);
+  await saveStep();
+
+  // 4 — ClickButton CreateButton
+  trace.begin('04 ClickButton CreateButton');
+  await addStep();
+  await chooseModule(page, ui, 'Click Button', 'click');
+  await setObjectParam(page, ui, ...OBJECT_FIELD.clickControl, 'CreateButton');
+  await saveStep();
+
+  // 5 — EnterHeaderField SupplierField
+  trace.begin('05 EnterHeaderField SupplierField');
+  await addStep();
+  await chooseModule(page, ui, 'Enter Header Field', 'header');
+  await setObjectParam(page, ui, ...OBJECT_FIELD.headerField, 'SupplierField');
+  await setSourcedParam(page, ui, 'Value', 'dataset', 'supplier');
+  await saveStep();
+
+  // 6 — AddLineItem, four columns
+  trace.begin('06 AddLineItem');
+  await addStep();
+  await chooseModule(page, ui, 'Add Line Item(s)', 'line item');
+  const columns = [
+    ['LineItemMaterialField', '${material}'],
+    ['LineItemPlantField', '${plant}'],
+    ['LineItemQuantityField', '${quantity}'],
+    ['LineItemNetPriceField', '${netPrice}'],
+  ];
+  for (const [index, [object]] of columns.entries()) {
+    if (index > 0) await ui.click(page.getByRole('button', { name: '+ Col' }), '+ Col');
+    await setObjectParam(page, ui, ...OBJECT_FIELD.tableColumn, object, index);
+  }
+  for (const [index, [, value]] of columns.entries()) {
+    await ui.fill(
+      page.getByLabel(`Table rows, row 1, column ${index + 1}`),
+      value,
+      `row 1 col ${index + 1} = ${value}`,
+      { knowledge: 'recall' },
+    );
+  }
+  await saveStep();
+
+  // 7 — SaveAndCaptureDocumentNumber
+  trace.begin('07 SaveAndCaptureDocumentNumber');
+  await addStep();
+  await chooseModule(page, ui, 'Save & Capture Document Number', 'save');
+  await setSourcedParam(page, ui, 'Placeholder title to wait past', 'literal', 'New Purchase Order');
+  await setLiteralOnlyParam(page, ui, 'Capture as (runState key)', 'poNumber');
+  await saveStep();
+}
+
 async function main() {
   const tempRoot = seedWorkspace();
   const { child, url: urlPromise } = startServer(tempRoot);
@@ -357,19 +503,22 @@ async function main() {
     const authoringStart = Date.now();
     await ui.click(page.getByRole('button', { name: /Compose/ }).first(), 'Compose tab');
     await ui.click(page.getByRole('button', { name: 'Compose New Test' }), 'Compose New Test');
-    await ui.fill(page.getByLabel('Test name'), 'Create Sales Order - Happy Path', 'Test name', {
-      mental: true,
-      knowledge: 'recall',
-    });
+    const testName = BUILD === 'po' ? 'Create Purchase Order - Happy Path' : 'Create Sales Order - Happy Path';
+    const folder = BUILD === 'po' ? 'Procure to Pay' : 'Order to Cash';
+    await ui.fill(page.getByLabel('Test name'), testName, 'Test name', { mental: true, knowledge: 'recall' });
     await ui.select(page.getByLabel('Process area'), '__new_process_area__', 'Process area = new folder', { mental: true });
-    await ui.fill(page.getByLabel('New folder name'), 'Order to Cash', 'New folder name', { knowledge: 'recall' });
+    await ui.fill(page.getByLabel('New folder name'), folder, 'New folder name', { knowledge: 'recall' });
     await ui.click(page.getByRole('button', { name: 'Create Folder' }), 'Create Folder');
     await ui.click(page.getByRole('button', { name: 'Create Test' }), 'Create Test');
-    await page.waitForURL('**/compose/tests/create-sales-order-happy-path.json');
+    await page.waitForURL(`**/compose/tests/${testName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`);
 
-    // ---- The 16 steps ----------------------------------------------------
+    // ---- The steps -------------------------------------------------------
     const addStep = () => ui.click(page.getByRole('button', { name: '+ Add step' }), '+ Add step');
     const saveStep = () => ui.click(page.getByRole('button', { name: 'Save step' }), 'Save step');
+
+    if (BUILD === 'po') {
+      await authorPurchaseOrder(page, ui, trace, addStep, saveStep);
+    } else {
 
     // 1 — CreateAutomationRunReference
     trace.begin('01 CreateAutomationRunReference');
@@ -520,15 +669,19 @@ async function main() {
     await setSourcedParam(page, ui, 'Evidence label', 'literal', 'Sales Order Number');
     await setSourcedParam(page, ui, 'Dismiss button text', 'literal', 'Close');
     await saveStep();
+    }
 
     // ---- Save ------------------------------------------------------------
-    trace.begin('17 save Test');
+    trace.begin(`${BUILD === 'po' ? '08' : '17'} save Test`);
     await ui.click(page.getByRole('button', { name: 'Save Test' }), 'Save Test');
     await page.locator('text=/Saved at/').waitFor({ timeout: 10000 });
     const authoringMs = Date.now() - authoringStart;
 
     savedTest = JSON.parse(
-      fs.readFileSync(path.join(tempRoot, 'testcases', 'create-sales-order-happy-path.json'), 'utf8'),
+      fs.readFileSync(
+        path.join(tempRoot, 'testcases', `${testName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`),
+        'utf8',
+      ),
     );
 
     await context.close();
@@ -585,7 +738,7 @@ function report(trace, savedTest, authoringMs, totalMs) {
   const fmt = (sec) => `${Math.floor(sec / 60)}m ${String(Math.round(sec % 60)).padStart(2, '0')}s`;
 
   console.log('\n' + '='.repeat(78));
-  console.log(`COMPOSE AUTHORING RE-TIMING — 16-step Sales Order build [variant: ${VARIANT}]`);
+  console.log(`COMPOSE AUTHORING RE-TIMING — ${REFERENCE_LABEL} [variant: ${VARIANT}]`);
   console.log('='.repeat(78));
   console.log('\nPer step:\n');
   console.log('  step                                    acts    KLM   recall  recog');
@@ -602,19 +755,19 @@ function report(trace, savedTest, authoringMs, totalMs) {
 
   console.log('\nHeadline numbers');
   console.log('  ' + '-'.repeat(70));
-  console.log(`  UI interactions to author 16 steps ......... ${totals.interactions}`);
+  console.log(`  UI interactions to author ${STEP_COUNT} steps  ${totals.interactions}`);
   console.log(`  KLM modelled human time ................... ${fmt(totals.klm)}  (author who knows what to build)`);
   console.log(`  Machine wall-clock (mechanical floor) ..... ${fmt(authoringMs / 1000)}  (NOT a human time)`);
   console.log(`  Values needing RECALL ..................... ${totals.recall}`);
   console.log(`  Values offered on screen (RECOGNISE) ...... ${totals.recognise}`);
   console.log(`  Decision points (KLM M charged) ........... ${totals.mental}`);
-  console.log(`  Per-step average .......................... ${(totals.interactions / 16).toFixed(1)} acts, ${fmt(totals.klm / 16)}`);
+  console.log(`  Per-step average .......................... ${(totals.interactions / STEP_COUNT).toFixed(1)} acts, ${fmt(totals.klm / STEP_COUNT)}`);
 
   console.log('\nBaseline');
   console.log('  ' + '-'.repeat(70));
-  const perStepKlm = totals.klm / 16;
+  const perStepKlm = totals.klm / STEP_COUNT;
   console.log(`  Owner's pre-fix run ....................... ~60m for 4 steps = ~15m/step`);
-  console.log(`  This run, modelled (KLM) .................. ${fmt(totals.klm)} for 16 steps = ${fmt(perStepKlm)}/step`);
+  console.log(`  This run, modelled (KLM) .................. ${fmt(totals.klm)} for ${STEP_COUNT} steps = ${fmt(perStepKlm)}/step`);
   console.log('');
   console.log('  These two are NOT the same measurement and their ratio is not a speedup.');
   console.log('  The pre-fix run was a FIRST-TIME author against a UI with six known defects:');
@@ -635,7 +788,7 @@ function report(trace, savedTest, authoringMs, totalMs) {
   const MODULE_DEFAULTS = {
     CreateAutomationRunReference: { maxLength: '16' },
   };
-  const real = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'testcases', 'create-so.json'), 'utf8'));
+  const real = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'testcases', REFERENCE_FILE), 'utf8'));
   const dropped = [];
   const norm = (t, side) => t.steps.map((s) => {
     const defaults = MODULE_DEFAULTS[s.module] ?? {};
@@ -650,20 +803,20 @@ function report(trace, savedTest, authoringMs, totalMs) {
   const b = JSON.stringify(norm(savedTest, 'authored'));
   console.log('\nFidelity');
   console.log('  ' + '-'.repeat(70));
-  console.log(`  Steps authored ............................ ${savedTest.steps.length} (target 16)`);
-  console.log(`  Equivalent to create-so.json .............. ${a === b ? 'YES' : 'NO — see trace file'}`);
+  console.log(`  Steps authored ............................ ${savedTest.steps.length} (target ${STEP_COUNT})`);
+  console.log(`  Equivalent to ${REFERENCE_FILE} .......... ${a === b ? 'YES' : 'NO — see trace file'}`);
   if (dropped.length) {
     console.log(`  Default-valued params normalised away ..... ${dropped.join(', ')}`);
   }
 
   fs.mkdirSync(RESULTS_DIR, { recursive: true });
-  const out = path.join(RESULTS_DIR, `${VARIANT}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+  const out = path.join(RESULTS_DIR, `${BUILD}-${VARIANT}-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
   fs.writeFileSync(
     out,
     JSON.stringify(
       {
         recordedAt: new Date().toISOString(),
-        subject: 'testcases/create-so.json — 16 steps',
+        subject: BUILD === 'po' ? 'testcases/create-po.json — 7 steps' : 'testcases/create-so.json — 16 steps',
         variant: VARIANT,
         totals: { ...totals, klm: Number(totals.klm.toFixed(1)) },
         authoringWallClockMs: authoringMs,

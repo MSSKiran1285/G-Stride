@@ -219,12 +219,29 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     return executionTargetContext(status, governance.getSap(status));
   };
 
+  /** Every column name across every dataset in the workspace, for the literal-looks-like-a-column
+   *  check below. Read per validation rather than cached — datasets change under a long-running
+   *  Studio, and a stale set would either miss a real mistake or invent one. */
+  const knownDatasetColumns = (): Set<string> => {
+    const columns = new Set<string>();
+    try {
+      for (const file of readdirSync(dataDir).filter((f) => f.toLowerCase().endsWith('.csv'))) {
+        const header = readFileSync(path.join(dataDir, file), 'utf-8').split(/\r?\n/)[0] ?? '';
+        for (const name of header.split(',')) if (name.trim()) columns.add(name.trim());
+      }
+    } catch {
+      // no data directory yet — the check simply finds nothing
+    }
+    return columns;
+  };
+
   const validateTestForPublishing = (testCase: TestCase) => {
     const issues: Array<{ code: string; path: string; message: string }> = [];
     if (!testCase.contract) {
       issues.push({ code: 'missing-test-contract', path: 'contract', message: 'Declare typed Test inputs and outputs before publishing.' });
       return issues;
     }
+    const datasetColumns = knownDatasetColumns();
     issues.push(...validateTestContract(testCase.contract));
     if (!Array.isArray(testCase.steps) || testCase.steps.length === 0) {
       issues.push({ code: 'missing-test-steps', path: 'steps', message: 'Add at least one executable step before publishing.' });
@@ -279,6 +296,18 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
       }
 
       for (const [paramKey, value] of Object.entries(step.params)) {
+        // A literal that is exactly a dataset column name is almost always a binding that never
+        // got made: the column was typed into the value box while the source was still Literal.
+        // Nothing else catches it — a literal is by definition a valid literal — and the cost is
+        // silent. On 16 Aug 2026 it put the string "automationOwner" where the accountable run
+        // owner belongs, all the way into signed evidence.
+        if (typeof value === 'string' && !/\$\{/.test(value) && datasetColumns.has(value.trim())) {
+          issues.push({
+            code: 'literal-matches-dataset-column',
+            path: `${stepPath}.params.${paramKey}`,
+            message: `"${value}" is the name of a dataset column, but it is saved as a fixed value — the step will use that text, not the column. Bind it to the column, or rename it if the text is genuinely what you meant.`,
+          });
+        }
         if (typeof value !== 'string') {
           issues.push({ code: 'invalid-parameter-value', path: `${stepPath}.params.${paramKey}`, message: 'Executable parameter values must be strings.' });
           continue;

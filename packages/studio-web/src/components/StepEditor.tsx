@@ -5,6 +5,7 @@ import type { CaptureRequest, ModuleCall, ModuleInfo, ModuleParamDescriptor, Obj
 import { TableRowsEditor } from './TableRowsEditor';
 import { ObjectPicker } from './ObjectPicker';
 import { GroupedPicker } from './GroupedPicker';
+import { ValuePicker, type ValueOption } from './ValuePicker';
 
 // Modules whose "rows" param is a dynamic table grid — gets TableRowsEditor instead
 // of the generic one-text-box-per-param grid. The key it owns within that module's
@@ -31,21 +32,6 @@ const SYSTEM_CONTEXT_LABELS: Record<TestSystemContextKey, string> = {
   'sap.username': 'SAP username',
   'sap.password': 'SAP password',
   'runtime.today': 'Current date',
-};
-/** One-word names for the inline value-source chip. A native select always renders the
- *  SELECTED option's text, and the chip is deliberately narrow, so these have to stay short
- *  enough not to ellipsise — the longer prose lives in the chip's title. */
-const SOURCE_CHIPS: Record<TestStepValueBinding['source'], string> = {
-  literal: 'literal',
-  dataset: 'dataset',
-  systemContext: 'system',
-  priorOutput: 'prior step',
-};
-const SOURCE_LABELS: Record<TestStepValueBinding['source'], string> = {
-  literal: 'a literal value',
-  dataset: 'a dataset column',
-  systemContext: 'system context',
-  priorOutput: 'an earlier step’s output',
 };
 
 function sortModuleCategories(a: string, b: string): number {
@@ -77,23 +63,6 @@ interface Props {
 /** Every ${key} referenced in a param value. */
 function extractPlaceholderKeys(value: string): string[] {
   return [...value.matchAll(/\$\{([^}]+)\}/g)].map((m) => m[1]);
-}
-
-/**
- * Which system value a param is asking for, from its own name and label.
- *
- * Switching a param to "system context" used to bind it to `sap.url` whatever the param was, so
- * choosing it on Login's Username silently produced `username=${url}` — a wrong value that looks
- * filled in. Returning '' where there is no confident match is the important half: the select
- * then shows "choose one" and the author has to say, rather than being handed a plausible guess.
- */
-function guessSystemContext(key: string, label: string): TestSystemContextKey | '' {
-  const text = `${key} ${label}`.toLowerCase();
-  if (/passw/.test(text)) return 'sap.password';
-  if (/user|account|login/.test(text)) return 'sap.username';
-  if (/today|date/.test(text)) return 'runtime.today';
-  if (/url|tenant|host|endpoint/.test(text)) return 'sap.url';
-  return '';
 }
 
 function inferValueBinding(value: string, handoffKeys: Set<string>): TestStepValueBinding {
@@ -201,6 +170,62 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
     onSave({ module: moduleName, appId: appId || undefined, params: persisted, ...(Object.keys(valueBindings).length ? { valueBindings } : {}) });
   }
 
+  /**
+   * Everything a step value can be bound to, grouped by where it comes from.
+   *
+   * Dataset columns group BY FILE rather than into one "Dataset" bucket: the workspace's three
+   * CSVs already share eight column names — `quantity` is in all three — so a flat list cannot
+   * say which file a column belongs to, and that ambiguity gets worse with every dataset added,
+   * not better.
+   */
+  const valueOptions = useMemo<ValueOption[]>(() => {
+    const options: ValueOption[] = [];
+    const byFile = new Map<string, { name: string; files: string[] }[]>();
+    for (const column of datasetColumns) {
+      for (const file of column.files.length ? column.files : ['(no file)']) {
+        (byFile.get(file) ?? byFile.set(file, []).get(file)!).push(column);
+      }
+    }
+    for (const file of [...byFile.keys()].sort()) {
+      for (const column of byFile.get(file)!) {
+        options.push({
+          source: 'dataset',
+          key: column.name,
+          label: column.name,
+          detail: column.files.length > 1 ? `also in ${column.files.filter((f) => f !== file).join(', ')}` : undefined,
+          group: `Dataset column · ${file}`,
+        });
+      }
+    }
+    // Contract inputs no dataset supplies yet — still bindable, so a column can be named ahead
+    // of the data that will carry it.
+    for (const key of contractInputKeys) {
+      if (datasetColumns.some((c) => c.name === key)) continue;
+      options.push({ source: 'dataset', key, label: key, detail: 'declared input, no dataset yet', group: 'Dataset column · declared only' });
+    }
+    for (const key of Object.keys(SYSTEM_CONTEXT_LABELS) as TestSystemContextKey[]) {
+      options.push({ source: 'systemContext', key, label: SYSTEM_CONTEXT_LABELS[key], group: 'System value' });
+    }
+    for (const key of [...handoffKeys].sort()) {
+      options.push({ source: 'priorOutput', key, label: key, group: 'Captured by an earlier step' });
+    }
+    return options;
+  }, [datasetColumns, contractInputKeys, handoffKeys]);
+
+  /** An `appUrl` param additionally offers the screens this App ID has been captured from.
+   *  They are LITERAL suggestions, not bindings — picking one fills the box with the portable
+   *  ${urlBase}/ui#… form and the value stays a plain literal. */
+  const entryPointOptions = useMemo<ValueOption[]>(
+    () => entryPoints.map((entry) => ({
+      source: 'literal' as const,
+      key: entry.template,
+      label: entry.template,
+      detail: entry.url,
+      group: 'Screen captured for this App ID',
+    })),
+    [entryPoints],
+  );
+
   function bindingFor(key: string, value: string): TestStepValueBinding {
     return valueBindings[key] ?? inferValueBinding(value, handoffKeys);
   }
@@ -291,100 +316,29 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
       );
     }
 
-    // Everything else: the source as a compact chip, then ONE box — so the row reads left to
-    // right as "label, where it comes from, what it is". The chip leads in the DOM as well as
-    // visually, rather than being reordered in CSS, so tab order follows the same reading order.
+    // Everything else: ONE control. Picking a dataset column, a system value or an earlier
+    // step's output IS the binding; typing is what makes a value literal. Splitting those into
+    // a source chip plus a separate box let a column name be typed while the source was still
+    // Literal — a value that looks filled in, publishes clean, and silently reaches evidence.
     return (
-      <div className="step-value-authoring">
-        <select
-          className="step-source-chip"
-          aria-label={`Value source for ${p.label}`}
-          title={`${p.label} comes from: ${SOURCE_LABELS[binding.source]}`}
-          value={binding.source}
-          onChange={(event) => {
-            const source = event.target.value as TestStepValueBinding['source'];
-            if (source === 'literal') updateBinding(p.key, { source });
-            // Default to the Test's first declared input when it has one. With none declared the
-            // field stays empty rather than guessing at one of the workspace's dataset columns.
-            if (source === 'dataset') updateBinding(p.key, { source, key: contractInputKeys[0] ?? '' });
-            if (source === 'systemContext') updateBinding(p.key, { source, key: guessSystemContext(p.key, p.label) as TestSystemContextKey });
-            if (source === 'priorOutput') updateBinding(p.key, { source, output: [...handoffKeys][0] ?? '' });
-          }}
-        >
-          <option value="literal">{SOURCE_CHIPS.literal}</option>
-          <option value="dataset">{SOURCE_CHIPS.dataset}</option>
-          <option value="systemContext">{SOURCE_CHIPS.systemContext}</option>
-          <option value="priorOutput">{SOURCE_CHIPS.priorOutput}</option>
-        </select>
-
-        {binding.source === 'literal' && (
-          <>
-            <input
-              className={soft ? 'is-soft' : undefined}
-              aria-label={p.label}
-              type={p.type === 'number' ? 'number' : 'text'}
-              value={shownValue(p)}
-              placeholder={p.type === 'appUrl' && entryPoints.length > 0 ? 'pick a screen, or type a URL' : p.placeholder}
-              // A datalist rather than a closed dropdown: the known entry points are a
-              // shortcut, not the whole world — a Test may legitimately deep-link somewhere
-              // this App ID has never been scanned from.
-              list={p.type === 'appUrl' && entryPoints.length > 0 ? `entry-points-${p.key}` : undefined}
-              onChange={(event) => setParam(p.key, event.target.value)}
-            />
-            {p.type === 'appUrl' && entryPoints.length > 0 && (
-              <datalist id={`entry-points-${p.key}`}>
-                {/* The portable ${urlBase}/ui#… form, not the absolute URL that was captured —
-                    a Test pinned to one tenant's hostname is not reusable against another. */}
-                {entryPoints.map((entry) => (
-                  <option key={entry.url} value={entry.template}>{entry.url}</option>
-                ))}
-              </datalist>
-            )}
-          </>
-        )}
-        {binding.source === 'dataset' && (
-          <>
-            <input
-              aria-label={`Dataset input for ${p.label}`}
-              list={`contract-inputs-${p.key}`}
-              value={binding.key}
-              placeholder="Dataset column name"
-              onChange={(event) => updateBinding(p.key, { source: 'dataset', key: event.target.value })}
-            />
-            {/* Real dataset columns first, each labelled with the file it lives in, then any
-                declared contract input that no dataset supplies yet. Still a combobox, so a
-                column that does not exist yet can be named ahead of the data. */}
-            <datalist id={`contract-inputs-${p.key}`}>
-              {datasetColumns.map((column) => (
-                <option key={column.name} value={column.name}>{column.files.join(', ')}</option>
-              ))}
-              {contractInputKeys
-                .filter((key) => !datasetColumns.some((column) => column.name === key))
-                .map((key) => <option key={key} value={key}>declared input</option>)}
-            </datalist>
-          </>
-        )}
-        {binding.source === 'systemContext' && (
-          <select
-            aria-label={`System context for ${p.label}`}
-            value={binding.key}
-            onChange={(event) => updateBinding(p.key, { source: 'systemContext', key: event.target.value as TestSystemContextKey })}
-          >
-            {!binding.key && <option value="">— choose a system value —</option>}
-            {(Object.keys(SYSTEM_CONTEXT_LABELS) as TestSystemContextKey[]).map((key) => <option key={key} value={key}>{SYSTEM_CONTEXT_LABELS[key]}</option>)}
-          </select>
-        )}
-        {binding.source === 'priorOutput' && (
-          <select
-            aria-label={`Prior output for ${p.label}`}
-            value={binding.output}
-            onChange={(event) => updateBinding(p.key, { source: 'priorOutput', output: event.target.value })}
-          >
-            <option value="">— choose an earlier output —</option>
-            {[...handoffKeys].sort().map((key) => <option key={key} value={key}>{key}</option>)}
-          </select>
-        )}
-      </div>
+      <ValuePicker
+        value={value}
+        binding={binding}
+        ariaLabel={p.label}
+        placeholder={p.placeholder}
+        soft={soft}
+        numeric={p.type === 'number'}
+        options={p.type === 'appUrl' ? [...entryPointOptions, ...valueOptions] : valueOptions}
+        onLiteral={(text) => {
+          setValueBindings((prev) => {
+            const next = { ...prev };
+            delete next[p.key];
+            return next;
+          });
+          setParam(p.key, text);
+        }}
+        onBind={(next) => updateBinding(p.key, next)}
+      />
     );
   }
 
@@ -403,7 +357,15 @@ export function StepEditor({ modules, initial, defaultAppId, handoffKeys, contra
             onChange={(v) => setParam(p.key, v)}
             options={objectControls}
             kind={p.objectKind}
-            placeholder={p.placeholder}
+            /* An object param with a default shows it the way every other defaulted field does.
+               As a PLACEHOLDER rather than a soft value, though: ObjectPicker filters its own
+               option list by whatever is in the box, so seeding "AddLineItemButton" as a value
+               would hide every other clickable object until the author cleared it — the opposite
+               of helpful. An empty box reading AddLineItemButton says the same thing and leaves
+               the list whole. `default` wins over `placeholder`, which for these params was the
+               redundant "default: AddLineItemButton". */
+            placeholder={p.default ?? p.placeholder}
+            soft={isSoft(p)}
             module={moduleName}
             paramKey={p.key}
             appId={effectiveAppId || undefined}

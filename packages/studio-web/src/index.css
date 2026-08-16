@@ -77,8 +77,8 @@
   --lhs-text: #112a46;
   --lhs-text-soft: #334b66;
 
-  --rows-grid-head-bg: #e8edf4;
-  --rows-grid-head-border: #cbd5e1;
+  --rows-grid-head-bg: #cbd7e8;
+  --rows-grid-head-border: #94a8c4;
 
   /* Coral interaction palette */
   --brand-coral: #f06f61;
@@ -136,8 +136,8 @@
   --lhs-text: #f8fafc;
   --lhs-text-soft: #94a3b8;
 
-  --rows-grid-head-bg: #1c2735;
-  --rows-grid-head-border: #334155;
+  --rows-grid-head-bg: #33455c;
+  --rows-grid-head-border: #56708f;
   --accent: #ff8a7e;
   --accent-hover: #ff9f95;
   --on-accent: #112a46;
@@ -8730,4 +8730,121 @@ button.pill:disabled,
 .rows-grid tbody td:first-child {
   width: 2.25rem !important;
   text-align: center !important;
+}
+
+/* An object-picker field showing a module default does it through the placeholder (see
+   StepEditor's renderField for why a real value would break the option filtering), so the
+   soft styling has to reach the placeholder rather than the input's own text colour. */
+.step-editor .is-soft::placeholder {
+  color: var(--text-soft);
+  font-style: italic;
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------------------
+   ValuePicker — one control per step value
+   ---------------------------------------------------------------------------
+   The tag on the left is a READOUT, not a control: it says what the current
+   value is (literal / dataset / system / earlier step). Changing the kind is
+   done by picking from the list or by typing, never by setting a source first
+   and naming a column second — that pair is what let a column name be saved as
+   a literal. */
+.value-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.value-picker > input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.value-picker-tag {
+  flex: 0 0 auto;
+  min-width: 5.4rem;
+  text-align: center;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--panel-subtle);
+  color: var(--text-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* A bound value is the notable state — a literal is the ordinary one. */
+.value-picker-tag.kind-dataset,
+.value-picker-tag.kind-systemContext,
+.value-picker-tag.kind-priorOutput {
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+.value-picker-dropdown {
+  max-width: min(34rem, 92vw);
+  max-height: 20rem;
+  overflow-y: auto;
+  padding: 0.3rem;
+}
+
+.value-picker-hint {
+  margin: 0.1rem 0.45rem 0.4rem;
+  font-size: 0.74rem;
+  color: var(--text-soft);
+}
+
+.value-picker-group + .value-picker-group {
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.35rem;
+}
+
+.value-picker-group-label {
+  margin: 0.1rem 0.45rem 0.2rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.value-picker-option {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.32rem 0.45rem;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.value-picker-option.active {
+  background: var(--accent-soft);
+}
+
+.value-picker-option.selected {
+  font-weight: 700;
+}
+
+.value-picker-option-label {
+  overflow-wrap: anywhere;
+}
+
+.value-picker-option-detail {
+  flex: 0 0 auto;
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  white-space: nowrap;
 }

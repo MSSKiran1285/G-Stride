@@ -1,0 +1,1085 @@
+{
+  "recordedAt": "2026-08-16T02:52:52.306Z",
+  "subject": "testcases/create-po.json — 7 steps",
+  "variant": "scratch",
+  "totals": {
+    "interactions": 81,
+    "klm": 206,
+    "recall": 16,
+    "recognise": 10,
+    "mental": 23
+  },
+  "authoringWallClockMs": 5605,
+  "harnessWallClockMs": 5812,
+  "perStep": [
+    {
+      "step": "00 create Test",
+      "interactions": 7,
+      "klm": 24.9,
+      "ms": 883,
+      "recall": 2,
+      "recognise": 0,
+      "mental": 2
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "interactions": 9,
+      "klm": 30.1,
+      "ms": 570,
+      "recall": 1,
+      "recognise": 2,
+      "mental": 3
+    },
+    {
+      "step": "02 Login",
+      "interactions": 8,
+      "klm": 19.6,
+      "ms": 514,
+      "recall": 1,
+      "recognise": 0,
+      "mental": 4
+    },
+    {
+      "step": "03 NavigateToApp",
+      "interactions": 7,
+      "klm": 26.2,
+      "ms": 481,
+      "recall": 2,
+      "recognise": 1,
+      "mental": 2
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "interactions": 8,
+      "klm": 14.6,
+      "ms": 636,
+      "recall": 1,
+      "recognise": 1,
+      "mental": 2
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "interactions": 10,
+      "klm": 21.7,
+      "ms": 673,
+      "recall": 1,
+      "recognise": 2,
+      "mental": 3
+    },
+    {
+      "step": "06 AddLineItem",
+      "interactions": 24,
+      "klm": 50.3,
+      "ms": 1299,
+      "recall": 5,
+      "recognise": 4,
+      "mental": 5
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "interactions": 7,
+      "klm": 17.5,
+      "ms": 402,
+      "recall": 3,
+      "recognise": 0,
+      "mental": 2
+    },
+    {
+      "step": "08 save Test",
+      "interactions": 1,
+      "klm": 1.2,
+      "ms": 73,
+      "recall": 0,
+      "recognise": 0,
+      "mental": 0
+    }
+  ],
+  "fidelity": {
+    "steps": 7,
+    "matchesReference": true
+  },
+  "events": [
+    {
+      "step": "00 create Test",
+      "kind": "click",
+      "target": "Compose tab",
+      "ms": 249,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "00 create Test",
+      "kind": "click",
+      "target": "Compose New Test",
+      "ms": 261,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "00 create Test",
+      "kind": "fill",
+      "target": "Test name",
+      "ms": 14,
+      "klm": 11.27,
+      "ops": "M+H+34K",
+      "mental": true,
+      "knowledge": "recall",
+      "value": "Create Purchase Order - Happy Path"
+    },
+    {
+      "step": "00 create Test",
+      "kind": "select",
+      "target": "Process area = new folder",
+      "ms": 11,
+      "klm": 4.15,
+      "ops": "M+H+P+B+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": "__new_process_area__"
+    },
+    {
+      "step": "00 create Test",
+      "kind": "fill",
+      "target": "New folder name",
+      "ms": 8,
+      "klm": 4.32,
+      "ops": "H+14K",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Procure to Pay"
+    },
+    {
+      "step": "00 create Test",
+      "kind": "click",
+      "target": "Create Folder",
+      "ms": 298,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "00 create Test",
+      "kind": "click",
+      "target": "Create Test",
+      "ms": 42,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "click",
+      "target": "+ Add step",
+      "ms": 99,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "click",
+      "target": "Module = Create Automation Run Reference (open)",
+      "ms": 255,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "fill",
+      "target": "Module = Create Automation Run Reference (filter)",
+      "ms": 12,
+      "klm": 3.2,
+      "ops": "H+10K",
+      "mental": false,
+      "knowledge": null,
+      "value": "automation"
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "click",
+      "target": "Module = Create Automation Run Reference (choose)",
+      "ms": 74,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Create Automation Run Reference"
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "select",
+      "target": "Reference prefix — value source = dataset",
+      "ms": 11,
+      "klm": 3.75,
+      "ops": "M+P+B+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": "dataset"
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "fill",
+      "target": "Reference prefix <- dataset.automationReferencePrefix",
+      "ms": 14,
+      "klm": 7.4,
+      "ops": "H+25K",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "automationReferencePrefix"
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "select",
+      "target": "Run owner — value source = dataset",
+      "ms": 13,
+      "klm": 4.15,
+      "ops": "M+H+P+B+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": "dataset"
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "fill",
+      "target": "Run owner <- dataset.automationOwner",
+      "ms": 11,
+      "klm": 4.6,
+      "ops": "H+15K",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "automationOwner"
+    },
+    {
+      "step": "01 CreateAutomationRunReference",
+      "kind": "click",
+      "target": "Save step",
+      "ms": 81,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "02 Login",
+      "kind": "click",
+      "target": "+ Add step",
+      "ms": 71,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "02 Login",
+      "kind": "click",
+      "target": "Module = Login (open)",
+      "ms": 226,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "02 Login",
+      "kind": "fill",
+      "target": "Module = Login (filter)",
+      "ms": 7,
+      "klm": 1.8,
+      "ops": "H+5K",
+      "mental": false,
+      "knowledge": null,
+      "value": "login"
+    },
+    {
+      "step": "02 Login",
+      "kind": "click",
+      "target": "Module = Login (choose)",
+      "ms": 105,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Login"
+    },
+    {
+      "step": "02 Login",
+      "kind": "select",
+      "target": "Tenant URL — value source = systemContext",
+      "ms": 7,
+      "klm": 3.75,
+      "ops": "M+P+B+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": "systemContext"
+    },
+    {
+      "step": "02 Login",
+      "kind": "select",
+      "target": "Username — value source = systemContext",
+      "ms": 7,
+      "klm": 3.75,
+      "ops": "M+P+B+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": "systemContext"
+    },
+    {
+      "step": "02 Login",
+      "kind": "select",
+      "target": "Password — value source = systemContext",
+      "ms": 9,
+      "klm": 3.75,
+      "ops": "M+P+B+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": "systemContext"
+    },
+    {
+      "step": "02 Login",
+      "kind": "click",
+      "target": "Save step",
+      "ms": 82,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "03 NavigateToApp",
+      "kind": "click",
+      "target": "+ Add step",
+      "ms": 98,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "03 NavigateToApp",
+      "kind": "click",
+      "target": "Module = Navigate to App (open)",
+      "ms": 225,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "03 NavigateToApp",
+      "kind": "fill",
+      "target": "Module = Navigate to App (filter)",
+      "ms": 8,
+      "klm": 2.64,
+      "ops": "H+8K",
+      "mental": false,
+      "knowledge": null,
+      "value": "navigate"
+    },
+    {
+      "step": "03 NavigateToApp",
+      "kind": "click",
+      "target": "Module = Navigate to App (choose)",
+      "ms": 62,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Navigate to App"
+    },
+    {
+      "step": "03 NavigateToApp",
+      "kind": "fill",
+      "target": "App ID override",
+      "ms": 7,
+      "klm": 7.07,
+      "ops": "M+H+19K",
+      "mental": true,
+      "knowledge": "recall",
+      "value": "createPurchaseOrder"
+    },
+    {
+      "step": "03 NavigateToApp",
+      "kind": "fill",
+      "target": "App URL = ${urlBase}/ui#PurchaseOrder-manage",
+      "ms": 10,
+      "klm": 9.52,
+      "ops": "34K",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "${urlBase}/ui#PurchaseOrder-manage"
+    },
+    {
+      "step": "03 NavigateToApp",
+      "kind": "click",
+      "target": "Save step",
+      "ms": 71,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "click",
+      "target": "+ Add step",
+      "ms": 72,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "click",
+      "target": "Module = Click Button (open)",
+      "ms": 242,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "fill",
+      "target": "Module = Click Button (filter)",
+      "ms": 11,
+      "klm": 1.8,
+      "ops": "H+5K",
+      "mental": false,
+      "knowledge": null,
+      "value": "click"
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "click",
+      "target": "Module = Click Button (choose)",
+      "ms": 73,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Click Button"
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "click",
+      "target": "Control name (open)",
+      "ms": 80,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "fill",
+      "target": "Control name (filter \"Create\")",
+      "ms": 14,
+      "klm": 2.08,
+      "ops": "H+6K",
+      "mental": false,
+      "knowledge": null,
+      "value": "Create"
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "click",
+      "target": "Control name = CreateButton",
+      "ms": 62,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "CreateButton"
+    },
+    {
+      "step": "04 ClickButton CreateButton",
+      "kind": "click",
+      "target": "Save step",
+      "ms": 82,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "click",
+      "target": "+ Add step",
+      "ms": 84,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "click",
+      "target": "Module = Enter Header Field (open)",
+      "ms": 247,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "fill",
+      "target": "Module = Enter Header Field (filter)",
+      "ms": 10,
+      "klm": 2.08,
+      "ops": "H+6K",
+      "mental": false,
+      "knowledge": null,
+      "value": "header"
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "click",
+      "target": "Module = Enter Header Field (choose)",
+      "ms": 76,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Enter Header Field"
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "click",
+      "target": "Field (object repository name) (open)",
+      "ms": 81,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "fill",
+      "target": "Field (object repository name) (filter \"Suppli\")",
+      "ms": 11,
+      "klm": 2.08,
+      "ops": "H+6K",
+      "mental": false,
+      "knowledge": null,
+      "value": "Suppli"
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "click",
+      "target": "Field (object repository name) = SupplierField",
+      "ms": 75,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "SupplierField"
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "select",
+      "target": "Value — value source = dataset",
+      "ms": 6,
+      "klm": 3.75,
+      "ops": "M+P+B+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": "dataset"
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "fill",
+      "target": "Value <- dataset.supplier",
+      "ms": 7,
+      "klm": 2.64,
+      "ops": "H+8K",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "supplier"
+    },
+    {
+      "step": "05 EnterHeaderField SupplierField",
+      "kind": "click",
+      "target": "Save step",
+      "ms": 76,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "+ Add step",
+      "ms": 45,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Module = Add Line Item(s) (open)",
+      "ms": 262,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "Module = Add Line Item(s) (filter)",
+      "ms": 11,
+      "klm": 2.92,
+      "ops": "H+9K",
+      "mental": false,
+      "knowledge": null,
+      "value": "line item"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Module = Add Line Item(s) (choose)",
+      "ms": 87,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Add Line Item(s)"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object (open)",
+      "ms": 68,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "Table column object (filter \"LineIt\")",
+      "ms": 11,
+      "klm": 2.08,
+      "ops": "H+6K",
+      "mental": false,
+      "knowledge": null,
+      "value": "LineIt"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object = LineItemMaterialField",
+      "ms": 83,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "LineItemMaterialField"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "+ Col",
+      "ms": 81,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object (open)",
+      "ms": 71,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "Table column object (filter \"LineIt\")",
+      "ms": 11,
+      "klm": 2.08,
+      "ops": "H+6K",
+      "mental": false,
+      "knowledge": null,
+      "value": "LineIt"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object = LineItemPlantField",
+      "ms": 46,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "LineItemPlantField"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "+ Col",
+      "ms": 75,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object (open)",
+      "ms": 68,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "Table column object (filter \"LineIt\")",
+      "ms": 8,
+      "klm": 2.08,
+      "ops": "H+6K",
+      "mental": false,
+      "knowledge": null,
+      "value": "LineIt"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object = LineItemQuantityField",
+      "ms": 49,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "LineItemQuantityField"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "+ Col",
+      "ms": 72,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object (open)",
+      "ms": 55,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "Table column object (filter \"LineIt\")",
+      "ms": 11,
+      "klm": 2.08,
+      "ops": "H+6K",
+      "mental": false,
+      "knowledge": null,
+      "value": "LineIt"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Table column object = LineItemNetPriceField",
+      "ms": 73,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recognise",
+      "value": "LineItemNetPriceField"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "row 1 col 1 = ${material}",
+      "ms": 8,
+      "klm": 3.48,
+      "ops": "H+11K",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "${material}"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "row 1 col 2 = ${plant}",
+      "ms": 6,
+      "klm": 2.24,
+      "ops": "8K",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "${plant}"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "row 1 col 3 = ${quantity}",
+      "ms": 7,
+      "klm": 3.08,
+      "ops": "11K",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "${quantity}"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "fill",
+      "target": "row 1 col 4 = ${netPrice}",
+      "ms": 13,
+      "klm": 3.08,
+      "ops": "11K",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "${netPrice}"
+    },
+    {
+      "step": "06 AddLineItem",
+      "kind": "click",
+      "target": "Save step",
+      "ms": 78,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "kind": "click",
+      "target": "+ Add step",
+      "ms": 70,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "kind": "click",
+      "target": "Module = Save & Capture Document Number (open)",
+      "ms": 197,
+      "klm": 2.55,
+      "ops": "M+P+B",
+      "mental": true,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "kind": "fill",
+      "target": "Module = Save & Capture Document Number (filter)",
+      "ms": 6,
+      "klm": 1.52,
+      "ops": "H+4K",
+      "mental": false,
+      "knowledge": null,
+      "value": "save"
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "kind": "click",
+      "target": "Module = Save & Capture Document Number (choose)",
+      "ms": 59,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "Save & Capture Document Number"
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "kind": "fill",
+      "target": "Placeholder title to wait past = New Purchase Order",
+      "ms": 6,
+      "klm": 5.44,
+      "ops": "H+18K",
+      "mental": false,
+      "knowledge": "recall",
+      "value": "New Purchase Order"
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "kind": "fill",
+      "target": "Capture as (runState key) = poNumber",
+      "ms": 8,
+      "klm": 3.59,
+      "ops": "M+8K",
+      "mental": true,
+      "knowledge": "recall",
+      "value": "poNumber"
+    },
+    {
+      "step": "07 SaveAndCaptureDocumentNumber",
+      "kind": "click",
+      "target": "Save step",
+      "ms": 56,
+      "klm": 1.6,
+      "ops": "H+P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    },
+    {
+      "step": "08 save Test",
+      "kind": "click",
+      "target": "Save Test",
+      "ms": 73,
+      "klm": 1.2,
+      "ops": "P+B",
+      "mental": false,
+      "knowledge": null,
+      "value": null
+    }
+  ],
+  "savedTest": {
+    "name": "Create Purchase Order - Happy Path",
+    "application": "SAP",
+    "version": 1,
+    "lifecycle": "draft",
+    "steps": [
+      {
+        "module": "CreateAutomationRunReference",
+        "params": {
+          "prefix": "${automationReferencePrefix}",
+          "owner": "${automationOwner}"
+        },
+        "valueBindings": {
+          "prefix": {
+            "source": "dataset",
+            "key": "automationReferencePrefix"
+          },
+          "owner": {
+            "source": "dataset",
+            "key": "automationOwner"
+          }
+        }
+      },
+      {
+        "module": "Login",
+        "params": {
+          "url": "${url}",
+          "username": "${username}",
+          "password": "${password}"
+        },
+        "valueBindings": {
+          "url": {
+            "source": "systemContext",
+            "key": "sap.url"
+          },
+          "username": {
+            "source": "systemContext",
+            "key": "sap.username"
+          },
+          "password": {
+            "source": "systemContext",
+            "key": "sap.password"
+          }
+        }
+      },
+      {
+        "module": "NavigateToApp",
+        "appId": "createPurchaseOrder",
+        "params": {
+          "url": "${urlBase}/ui#PurchaseOrder-manage"
+        }
+      },
+      {
+        "module": "ClickButton",
+        "params": {
+          "control": "CreateButton"
+        }
+      },
+      {
+        "module": "EnterHeaderField",
+        "params": {
+          "field": "SupplierField",
+          "value": "${supplier}"
+        },
+        "valueBindings": {
+          "value": {
+            "source": "dataset",
+            "key": "supplier"
+          }
+        }
+      },
+      {
+        "module": "AddLineItem",
+        "params": {
+          "rows": "[{\"LineItemMaterialField\":\"${material}\",\"LineItemPlantField\":\"${plant}\",\"LineItemQuantityField\":\"${quantity}\",\"LineItemNetPriceField\":\"${netPrice}\"}]"
+        }
+      },
+      {
+        "module": "SaveAndCaptureDocumentNumber",
+        "params": {
+          "placeholderTitle": "New Purchase Order",
+          "captureAs": "poNumber"
+        }
+      }
+    ],
+    "contract": {
+      "version": 1,
+      "inputs": [],
+      "outputs": []
+    }
+  }
+}

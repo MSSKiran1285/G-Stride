@@ -35,18 +35,28 @@ test('typed Test publishes with a dataset binding and round-trips executable Mod
       await page.getByRole('button', { name: 'Module' }).click();
       await page.getByText('Wait', { exact: true }).last().click();
 
-      // The source control is now a compact chip beside the value box rather than a labelled
-      // dropdown above it, so its option text is one word each. All four sources must still be
-      // offered — the streamlining was presentational and must not narrow what can be bound.
-      const source = page.getByLabel('Value source for Milliseconds');
-      assert.deepEqual(await source.locator('option').allTextContents(), [
-        'literal',
-        'dataset',
-        'system',
-        'prior step',
-      ]);
-      await source.selectOption('dataset');
-      assert.equal(await page.getByLabel('Dataset input for Milliseconds').inputValue(), 'delayMs');
+      // Source and value are one control now: opening the field lists everything bindable,
+      // grouped by where it comes from, and PICKING one is what creates the binding. There is no
+      // separate source to set first — that pair is what allowed a column name to be saved as a
+      // literal (see 'literal-matches-dataset-column').
+      const value = page.getByLabel('Milliseconds', { exact: true }).first();
+      await value.click();
+      // The dropdown is portaled and positions itself from a measured anchor, so it appears on
+      // the render AFTER the click — assert on it only once it is actually there.
+      await page.locator('.value-picker-dropdown').waitFor({ timeout: 5000 });
+      const groups = await page.locator('.value-picker-group-label').allTextContents();
+      assert.ok(groups.some((g) => /Dataset column/i.test(g)), `expected a dataset group, got ${groups.join(' | ')}`);
+      assert.ok(groups.some((g) => /System value/i.test(g)), `expected a system group, got ${groups.join(' | ')}`);
+
+      // Match the label span, not the option button: the button also contains the detail text
+      // ("declared input, no dataset yet"), so an anchored regex never matches the whole button.
+      await page.locator('.value-picker-option-label', { hasText: /^delayMs$/ }).first().click();
+      // The tag is a readout of what the value now IS, so a binding is visible without opening
+      // anything — the state that used to be silent.
+      // innerText reflects the rendered casing (the tag is uppercased in CSS); the assertion is
+      // about which state the value is in, not how it is styled.
+      assert.equal((await page.locator('.value-picker-tag').first().innerText()).toLowerCase(), 'dataset');
+      assert.equal(await value.inputValue(), 'delayMs');
       await page.getByRole('button', { name: 'Save step' }).click();
 
       await page.getByRole('button', { name: 'Publish Test' }).click();
@@ -67,7 +77,10 @@ test('typed Test publishes with a dataset binding and round-trips executable Mod
       // Steps are picked with a radio and acted on from the toolbar, as in the Object Library.
       await page.getByRole('radio', { name: 'Select step 1: Wait' }).check();
       await page.getByRole('button', { name: 'EDIT' }).click();
-      assert.equal(await page.getByLabel('Value source for Milliseconds').inputValue(), 'dataset');
+      // Reopened from disk, the value still reads as a dataset binding rather than as the raw
+      // "${delayMs}" text — inferValueBinding restoring it from the saved param.
+      assert.equal((await page.locator('.value-picker-tag').first().innerText()).toLowerCase(), 'dataset');
+      assert.equal(await page.getByLabel('Milliseconds', { exact: true }).first().inputValue(), 'delayMs');
     });
   });
 });

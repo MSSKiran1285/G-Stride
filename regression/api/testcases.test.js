@@ -294,3 +294,60 @@ test('PUT /api/testcases/:file/rename rejects a missing source or a name collisi
   const collision = await api.put(`/api/testcases/${sourceFile}/rename`, { newName: 'create-po.json' });
   assert.equal(collision.status, 409);
 });
+
+test('publishing rejects a literal that is really an unbound dataset column', async () => {
+  // The failure this exists for: on 16 Aug 2026 an observed authoring run saved
+  // CreateAutomationRunReference with prefix/owner typed as plain text while the value source
+  // was still Literal. Every other check passes it — a literal is by definition a valid literal
+  // — so the step reads as filled in and puts the string "automationOwner" where the accountable
+  // run owner belongs, all the way into signed evidence.
+  const file = 'regression-literal-column.json';
+  const candidate = {
+    name: 'Literal column regression',
+    lifecycle: 'published',
+    contract: { version: 1, inputs: [], outputs: [] },
+    steps: [
+      {
+        module: 'CreateAutomationRunReference',
+            // 'supplier' is a real column in this harness's p2p-e2e.csv fixture. The live incident
+        // used 'automationOwner'; the mechanism is identical — a column name saved as fixed text.
+        params: { prefix: 'automationReference', owner: 'supplier' },
+      },
+    ],
+  };
+
+  const blocked = await api.put(`/api/testcases/${file}`, candidate);
+  assert.equal(blocked.status, 400);
+  const flagged = blocked.body.issues.filter((issue) => issue.code === 'literal-matches-dataset-column');
+  // Only "supplier" collides with a real column, so only it is caught. "automationReference" is
+  // nobody's column name and passes — which is exactly why the merged picker matters more than
+  // this backstop: the check can only ever see the half that collides with a column that exists.
+  assert.equal(flagged.length, 1);
+  assert.equal(flagged[0].path, 'steps[0].params.owner');
+
+  // Bound properly, the same step publishes without that finding.
+  const bound = await api.put(`/api/testcases/${file}`, {
+    ...candidate,
+    contract: {
+      version: 1,
+      inputs: [
+        { name: 'automationReferencePrefix', type: 'string', required: true },
+        { name: 'supplier', type: 'string', required: true },
+      ],
+      outputs: [],
+    },
+    steps: [
+      {
+        module: 'CreateAutomationRunReference',
+        params: { prefix: '${automationReferencePrefix}', owner: '${supplier}' },
+        valueBindings: {
+          prefix: { source: 'dataset', key: 'automationReferencePrefix' },
+          owner: { source: 'dataset', key: 'supplier' },
+        },
+      },
+    ],
+  });
+  assert.equal(bound.status, 200);
+
+  await api.delete(`/api/testcases/${file}`);
+});
