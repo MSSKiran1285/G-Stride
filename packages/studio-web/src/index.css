@@ -6655,14 +6655,16 @@ button.text-action:hover {
   color: var(--text);
 }
 
-.test-library-table td:first-child strong,
+/* The file name is its own column rather than a second line under the Test name, so a row is
+   one line and the list can be scanned by eye. Mono because it is a file name — something you
+   could paste into a command — not prose. */
 .test-library-file {
-  display: block;
-}
-
-.test-library-file {
-  margin-top: .25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
   color: var(--text-muted);
+  font-family: var(--font-mono);
   font-size: .78rem;
 }
 

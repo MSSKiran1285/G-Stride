@@ -627,7 +627,7 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
               <TableFrame label="Test Library results">
                 <table className="responsive-table test-library-table">
                   <thead>
-                    <tr><th><span className="sr-only">Select</span></th><th>Test</th><th>Process area</th><th>Application</th><th className="numeric">Steps</th><th>Status</th></tr>
+                    <tr><th><span className="sr-only">Select</span></th><th>Test</th><th>File</th><th>Process area</th><th>Application</th><th className="numeric">Steps</th><th>Status</th></tr>
                   </thead>
                   <tbody>
                     {filtered.map((item) => (
@@ -649,8 +649,8 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                             aria-label={`Select ${item.name}`}
                           />
                         </td>
-                        <td data-label="Test">
-                          <strong>{item.name}</strong>
+                        <td data-label="Test"><strong>{item.name}</strong></td>
+                        <td data-label="File">
                           <span className="test-library-file"><FileCode2 size={13} aria-hidden="true" /> {item.file}</span>
                         </td>
                         <td data-label="Process area">{item.processArea || <span className="hint">Untagged</span>}</td>
@@ -660,7 +660,7 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                       </tr>
                     ))}
                     {!loading && filtered.length === 0 && (
-                      <tr><td colSpan={6} className="empty-table-state">No Tests match the current filters.</td></tr>
+                      <tr><td colSpan={7} className="empty-table-state">No Tests match the current filters.</td></tr>
                     )}
                   </tbody>
                 </table>
