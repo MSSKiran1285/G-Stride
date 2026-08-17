@@ -7588,6 +7588,62 @@ button.pill:disabled,
 
 /* "What are you orchestrating?" — the two answers produce different artifacts with different
    rules, so each option carries the sentence that distinguishes them rather than a bare name. */
+/* A Pack member is one lane, and it reads across rather than down: label to the left of its
+   control, four to a row, so a Pack with six members is six lines instead of six blocks. The
+   two-column stack it replaced made every member the height of a form.
+
+   The rows wrap rather than scroll — a lane that cannot fit its four fields should fold onto the
+   next line, not put a scrollbar inside a dialog that already scrolls. */
+.pack-member-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+}
+
+.pack-member-row + .pack-member-row {
+  margin-top: 0.6rem;
+}
+
+.pack-member-field {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+/* Labels share one width so the controls line up down the two rows instead of stepping in and
+   out with the length of each word. */
+.pack-member-field > label {
+  flex: 0 0 auto;
+  width: 7.5rem;
+  margin: 0;
+  text-align: left;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-soft);
+}
+
+.pack-member-field > input,
+.pack-member-field > select {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Remove sits at the end of the policy row rather than on a line of its own. */
+.pack-member-remove {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+@media (max-width: 70rem) {
+  .pack-member-field { flex-basis: 100%; }
+}
+
 .create-kind-choice {
   display: flex;
   flex-direction: column;

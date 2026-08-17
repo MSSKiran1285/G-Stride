@@ -265,53 +265,64 @@ export function PackEditor({
             return (
               <fieldset key={`${member.id}-${index}`} className="panel stack" aria-label={`Pack member ${index + 1}`}>
                 <legend>Member {index + 1}</legend>
-                <div className="param-grid">
-                  <div>
+                {/* One lane reads left to right: what it is called, what it runs, and what data it
+                    runs on. The policies sit on the row beneath, because they are the part you
+                    set once and rarely revisit. */}
+                <div className="pack-member-row">
+                  <div className="pack-member-field">
                     <label>Member ID</label>
                     <input aria-label={`Member ${index + 1} ID`} value={member.id} onChange={(event) => updateMember(index, { id: event.target.value })} />
                   </div>
-                  <div>
+                  <div className="pack-member-field">
                     <label>Artifact type</label>
                     <select aria-label={`Member ${index + 1} type`} value={member.kind} onChange={(event) => setMemberKind(index, event.target.value as RegressionPackMember['kind'])}>
                       <option value="test">Test</option>
                       <option value="process">Business Process</option>
                     </select>
                   </div>
-                  <div>
+                  <div className="pack-member-field">
                     <label>Artifact</label>
                     <select aria-label={`Member ${index + 1} artifact`} value={member.file} onChange={(event) => updateMember(index, { file: event.target.value })}>
                       <option value="">— select —</option>
                       {available.map((file) => <option key={file} value={file}>{file}</option>)}
                     </select>
                   </div>
-                  <div>
+                  <div className="pack-member-field">
                     <label>Data binding</label>
                     <select aria-label={`Member ${index + 1} data`} value={member.dataFile ?? ''} onChange={(event) => updateMember(index, { dataFile: event.target.value || undefined })}>
                       <option value="">— inherit artifact/default —</option>
                       {dataFiles.map((file) => <option key={file} value={file}>{file}</option>)}
                     </select>
                   </div>
-                  <div>
+                </div>
+
+                <div className="pack-member-row">
+                  <div className="pack-member-field">
                     <label>App ID override</label>
                     <input aria-label={`Member ${index + 1} App ID`} value={member.appId ?? ''} onChange={(event) => updateMember(index, { appId: event.target.value || undefined })} />
                   </div>
-                  <div>
+                  <div className="pack-member-field">
                     <label>Session policy</label>
                     <select aria-label={`Member ${index + 1} session policy`} value={member.sessionPolicy} onChange={(event) => updateMember(index, { sessionPolicy: event.target.value as RegressionPackMember['sessionPolicy'] })}>
                       <option value="fresh-per-iteration">Fresh per iteration</option>
                       {member.kind === 'process' && <option value="reuse-within-process">Reuse within Process</option>}
                     </select>
                   </div>
-                  <div>
+                  <div className="pack-member-field">
                     <label>On iteration failure</label>
                     <select aria-label={`Member ${index + 1} failure policy`} value={member.iterationFailurePolicy} onChange={(event) => updateMember(index, { iterationFailurePolicy: event.target.value as RegressionPackMember['iterationFailurePolicy'] })}>
                       <option value="continue-next-iteration">Continue next iteration</option>
                       <option value="stop-execution">Stop execution</option>
                     </select>
                   </div>
-                </div>
-                <div>
-                  <button type="button" onClick={() => removeMember(index)} disabled={pack.members.length === 1}>Remove member</button>
+                  <button
+                    type="button"
+                    className="ghost danger pack-member-remove"
+                    onClick={() => removeMember(index)}
+                    disabled={pack.members.length === 1}
+                  >
+                    Remove member
+                  </button>
                 </div>
               </fieldset>
             );
