@@ -65,6 +65,10 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
   const [testToDelete, setTestToDelete] = useState<TestLibraryItem | null>(null);
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // The results table selects rather than acts, as the Object Library and Test Data tables do.
+  // Open Test sits once in the toolbar above instead of repeating on every row of a list that
+  // only grows.
+  const [selectedFile, setSelectedFile] = useState<string | null>(null);
 
   function loadLibrary() {
     setLoading(true);
@@ -278,6 +282,8 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
       setCreating(false);
     }
   }
+
+  const selectedIsVisible = selectedFile !== null && filtered.some((item) => item.file === selectedFile);
 
   return (
     <div className="obj-lib-split-container test-library-explorer">
@@ -603,30 +609,54 @@ export function TestLibrary({ initialFile, onSelectedFileChange, onDirtyChange, 
                     <option value="draft">Draft</option>
                   </select>
                 </div>
-                {selectedArea !== null && (
-                  <div className="test-library-clear-folder">
+                <div className="test-library-toolbar-actions">
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={!selectedIsVisible}
+                    onClick={() => selectedFile && openTest(selectedFile)}
+                  >
+                    Open Test
+                  </button>
+                  {selectedArea !== null && (
                     <button type="button" className="ghost" onClick={() => setSelectedArea(null)}>Show all folders</button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               <TableFrame label="Test Library results">
                 <table className="responsive-table test-library-table">
                   <thead>
-                    <tr><th>Test</th><th>Process area</th><th>Application</th><th>Steps</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr>
+                    <tr><th><span className="sr-only">Select</span></th><th>Test</th><th>Process area</th><th>Application</th><th className="numeric">Steps</th><th>Status</th></tr>
                   </thead>
                   <tbody>
                     {filtered.map((item) => (
-                      <tr key={item.file}>
+                      <tr
+                        key={item.file}
+                        className={item.file === selectedFile ? 'selected-row' : undefined}
+                        onClick={() => setSelectedFile(item.file)}
+                        onDoubleClick={() => openTest(item.file)}
+                      >
+                        {/* An explicit radio rather than "the row you last clicked": which Test
+                            the toolbar acts on has to be visible without relying on a highlight
+                            the reader might not have noticed. */}
+                        <td className="data-library-select" data-label="Select" onClick={(event) => event.stopPropagation()}>
+                          <input
+                            type="radio"
+                            name="selected-test"
+                            checked={item.file === selectedFile}
+                            onChange={() => setSelectedFile(item.file)}
+                            aria-label={`Select ${item.name}`}
+                          />
+                        </td>
                         <td data-label="Test">
                           <strong>{item.name}</strong>
                           <span className="test-library-file"><FileCode2 size={13} aria-hidden="true" /> {item.file}</span>
                         </td>
                         <td data-label="Process area">{item.processArea || <span className="hint">Untagged</span>}</td>
                         <td data-label="Application">{item.application}</td>
-                        <td data-label="Steps">{item.stepCount}</td>
+                        <td data-label="Steps" className="numeric">{item.stepCount}</td>
                         <td data-label="Status"><span className={`badge ${item.status === 'published' ? 'passed' : 'running'}`}>{statusLabel(item.status)}</span></td>
-                        <td data-label="Actions"><button type="button" className="ghost" onClick={() => openTest(item.file)}>Open Test</button></td>
                       </tr>
                     ))}
                     {!loading && filtered.length === 0 && (

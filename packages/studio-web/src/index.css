@@ -6549,9 +6549,13 @@ button.text-action:hover {
   margin: 0;
 }
 
-.test-library-clear-folder {
+/* Actions live in the toolbar beside search and the filters, on the same baseline, so the
+   results table carries data only. */
+.test-library-toolbar-actions {
   display: flex;
   align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .workspace-intro-row,

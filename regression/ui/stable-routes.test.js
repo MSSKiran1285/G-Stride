@@ -73,8 +73,10 @@ test('browser back and forward restore route-selected artifacts', async () => {
     await withPage(browser, 'stable-route-history', async (page) => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Compose/ }).first().click();
-      const regressionTestRow = page.locator('tr', { hasText: 'regression-sample.json' });
-      await regressionTestRow.getByRole('button', { name: 'Open Test' }).click();
+      // A Test is selected in the results table first and then opened from the toolbar, the same
+      // way a dataset is below — the row carries data, not an action.
+      await page.getByRole('radio', { name: 'Select Regression Sample' }).check();
+      await page.getByRole('button', { name: 'Open Test' }).click();
       assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
 
       // A dataset is now selected in the library first — which shows what depends on it — and
