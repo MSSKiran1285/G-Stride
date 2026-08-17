@@ -63,7 +63,6 @@ export const AddLineItem: Module = {
     if (!Array.isArray(rows) || rows.length === 0) {
       throw new Error('AddLineItem: at least one row is required.');
     }
-
     const addButtonField = params.addButtonField || 'AddLineItemButton';
     // Most grid tables need "click Add" to create the empty row before it can be filled — but
     // some Fiori Elements v4 (MDC) tables render an always-present "Creation Row" instead: a
@@ -71,6 +70,15 @@ export const AddLineItem: Module = {
     // (which is also what makes that Add control enabled in the first place — it's disabled
     // until the row has a value). Found via a real capture on Manage Sales Orders V2.
     const clickAfter = params.addClickTiming === 'after';
+    // In 'after' mode the click belongs BETWEEN rows and nowhere else: it commits the row just
+    // filled and moves the creation row on. Committing does NOT clear the creation row, so a
+    // click after the LAST row leaves it holding that row's values, and the caller's own save
+    // control then persists them a second time. That is a silent extra line item in a real SAP
+    // document — every Sales Order this suite created between 24 Jul and 16 Aug 2026 carried
+    // one (SO 336722: one row in, items 10 and 20 both qty 10; SO 337657: two rows in, items
+    // 10/20/30 with 30 duplicating 20). The last row is committed by the save step instead.
+    // 'before' mode is unaffected: there the click legitimately creates each row ahead of it.
+    const lastRowIndex = rows.length - 1;
     const evidence = { evidenceDir, runState };
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const rowKey = String(
@@ -93,7 +101,9 @@ export const AddLineItem: Module = {
           if (!value) continue;
           await fillTableCell(adapter, objectRepository, appId, fieldName, rowIndex, value, undefined, evidence);
         }
-        if (clickAfter) await clickControl(adapter, objectRepository, appId, addButtonField);
+        if (clickAfter && rowIndex < lastRowIndex) {
+          await clickControl(adapter, objectRepository, appId, addButtonField);
+        }
         await onChildProgress?.({
           label: 'Line items',
           completed: rowIndex + 1,
