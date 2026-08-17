@@ -64,8 +64,10 @@ test('unsaved new group is protected from shell navigation', async () => {
     await withPage(browser, 'unsaved-group-guard', async (page) => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Processes & Packs/ }).first().click();
-      await page.getByLabel('New Business Process file name').fill('unsaved-group');
-      await page.getByRole('button', { name: 'Create' }).click();
+      await page.getByRole('button', { name: 'Create New' }).click();
+      await page.getByRole('radio', { name: /Business Process/ }).check();
+      await page.getByLabel('File name').fill('unsaved-group');
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
       await expectDiscardGuard(page, () => page.getByRole('button', { name: /Execution Center/ }).first().click());
       await page.getByRole('heading', { name: 'Processes & Packs' }).waitFor();
     });

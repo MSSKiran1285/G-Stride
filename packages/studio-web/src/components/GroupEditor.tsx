@@ -19,9 +19,19 @@ interface GroupEditorProps {
   initialFile?: string;
   onSelectedFileChange?: (file: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  /** The workspace tree owns opening and creating, so the editor drops its own picker. */
+  showLibraryControls?: boolean;
+  /** A file name to start as a new unsaved Business Process, set by the workspace's Create New. */
+  newFile?: string;
 }
 
-export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }: GroupEditorProps = {}) {
+export function GroupEditor({
+  initialFile,
+  onSelectedFileChange,
+  onDirtyChange,
+  showLibraryControls = true,
+  newFile,
+}: GroupEditorProps = {}) {
   const [groupFiles, setGroupFiles] = useState<string[]>([]);
   const [testCaseFiles, setTestCaseFiles] = useState<string[]>([]);
   const [dataFiles, setDataFiles] = useState<string[]>([]);
@@ -118,6 +128,31 @@ export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }
       .finally(() => setLoadingArtifact(false));
     onSelectedFileChange?.(file);
   }
+
+  /**
+   * Starts an unsaved Business Process for a name the workspace tree asked for. Same draft the
+   * editor's own Create makes — this is the tree driving it rather than the inline field.
+   */
+  function startNew(file: string) {
+    setSelectedFile(file);
+    setGroup({
+      name: file.replace(/.json$/, ''),
+      appId: '',
+      testCaseFiles: [],
+      dataFile: undefined,
+      version: 1,
+      lifecycle: 'draft',
+      stages: [],
+    });
+    setDirty(true);
+    setSavedAt(null);
+    setError(null);
+  }
+
+  useEffect(() => {
+    if (newFile) startNew(newFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newFile]);
 
   function createNew() {
     if (!newFileName.trim()) return;
@@ -305,7 +340,7 @@ export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }
 
   return (
     <div className="stack">
-      <div className="panel row">
+      {showLibraryControls && <div className="panel row">
         <div style={{ flex: 1 }}>
           <label>Open Business Process</label>
           <GroupedPicker
@@ -326,7 +361,7 @@ export function GroupEditor({ initialFile, onSelectedFileChange, onDirtyChange }
             <button onClick={createNew}>Create</button>
           </div>
         </div>
-      </div>
+      </div>}
 
       {error && <AsyncFeedback state="error" message={error} />}
       {loading && <AsyncFeedback state="loading" message="Loading Business Processes…" />}

@@ -12,11 +12,13 @@ test('Regression Packs: create, bind independent members, save, reload and reope
     await withPage(browser, 'packs-create-save-reopen', async (page) => {
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Processes & Packs/ }).first().click();
-      await page.getByRole('tab', { name: 'Regression Packs' }).click();
+      await page.getByRole('button', { name: 'Regression Packs' }).click();
       assert.equal(new URL(page.url()).pathname, '/process-suites/packs');
 
-      await page.getByLabel('New Pack file name').fill('regression-sample-pack');
-      await page.getByRole('button', { name: 'Create Pack' }).click();
+      await page.getByRole('button', { name: 'Create New' }).click();
+      await page.getByRole('radio', { name: /Regression Pack/ }).check();
+      await page.getByLabel('File name').fill('regression-sample-pack');
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
       await page.getByLabel('Pack name').fill('Release Regression Pack');
       await page.getByLabel('Member 1 ID').fill('cleanup');
       await page.getByLabel('Member 1 artifact').selectOption('cleanup-abandoned-drafts.json');
@@ -46,8 +48,10 @@ test('unsaved Regression Pack changes are protected from shell navigation', asyn
   await withBrowser(async (browser) => {
     await withPage(browser, 'pack-unsaved-guard', async (page) => {
       await page.goto(`${BASE_URL}/process-suites/packs`);
-      await page.getByLabel('New Pack file name').fill('unsaved-pack');
-      await page.getByRole('button', { name: 'Create Pack' }).click();
+      await page.getByRole('button', { name: 'Create New' }).click();
+      await page.getByRole('radio', { name: /Regression Pack/ }).check();
+      await page.getByLabel('File name').fill('unsaved-pack');
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       const dialogPromise = page.waitForEvent('dialog');
       const navigation = page.getByRole('button', { name: /Execution Center/ }).first().click();

@@ -7,6 +7,10 @@ interface PackEditorProps {
   initialFile?: string;
   onSelectedFileChange?: (file: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  /** The workspace tree owns opening and creating, so the editor drops its own picker. */
+  showLibraryControls?: boolean;
+  /** A file name to start as a new unsaved Pack, set by the workspace's Create New. */
+  newFile?: string;
 }
 
 const newMember = (index: number): RegressionPackMember => ({
@@ -17,7 +21,13 @@ const newMember = (index: number): RegressionPackMember => ({
   iterationFailurePolicy: 'continue-next-iteration',
 });
 
-export function PackEditor({ initialFile, onSelectedFileChange, onDirtyChange }: PackEditorProps) {
+export function PackEditor({
+  initialFile,
+  onSelectedFileChange,
+  onDirtyChange,
+  showLibraryControls = true,
+  newFile,
+}: PackEditorProps) {
   const [files, setFiles] = useState<string[]>([]);
   const [testFiles, setTestFiles] = useState<string[]>([]);
   const [processFiles, setProcessFiles] = useState<string[]>([]);
@@ -91,6 +101,26 @@ export function PackEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
       .finally(() => setLoadingArtifact(false));
     onSelectedFileChange?.(file);
   }
+
+  /** Starts an unsaved Pack for a name the workspace tree asked for. */
+  function startNew(file: string) {
+    setSelectedFile(file);
+    setPack({
+      version: 1,
+      name: file.replace(/.json$/, ''),
+      description: '',
+      lifecycle: 'draft',
+      members: [newMember(0)],
+    });
+    setSavedAt(null);
+    setError(null);
+    setDirty(true);
+  }
+
+  useEffect(() => {
+    if (newFile) startNew(newFile);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newFile]);
 
   function create() {
     const requested = newFileName.trim();
@@ -179,7 +209,7 @@ export function PackEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
 
   return (
     <div className="stack">
-      <div className="panel row">
+      {showLibraryControls && <div className="panel row">
         <div style={{ flex: 1 }}>
           <label htmlFor="open-pack">Open Regression Pack</label>
           <select id="open-pack" aria-label="Open Regression Pack" value={selectedFile} onChange={(event) => open(event.target.value)}>
@@ -194,7 +224,7 @@ export function PackEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
             <button type="button" onClick={create}>Create Pack</button>
           </div>
         </div>
-      </div>
+      </div>}
 
       {loading && <AsyncFeedback state="loading" message="Loading Regression Packs…" />}
       {loadingArtifact && <AsyncFeedback state="loading" message={`Loading ${selectedFile}…`} compact />}

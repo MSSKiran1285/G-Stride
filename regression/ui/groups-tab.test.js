@@ -13,8 +13,10 @@ test('Business Processes: create, save, reload and reopen a process', async () =
       await page.goto(BASE_URL);
       await page.getByRole('button', { name: /Processes & Packs/ }).first().click();
 
-      await page.locator('input[placeholder="po-gr-invoice"]').fill('regression-sample-group');
-      await page.getByRole('button', { name: 'Create' }).click();
+      await page.getByRole('button', { name: 'Create New' }).click();
+      await page.getByRole('radio', { name: /Business Process/ }).check();
+      await page.getByLabel('File name').fill('regression-sample-group');
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       await page.locator('div:has(> label:text-is("App ID")) input').fill('createPurchaseOrder');
       await page.locator('li:has-text("cleanup-abandoned-drafts.json") button:has-text("+ Add")').click();
@@ -35,8 +37,12 @@ test('Business Process canvas authors and restores a typed stage hand-off', asyn
   await withBrowser(async (browser) => {
     await withPage(browser, 'process-typed-handoff', async (page) => {
       await page.goto(`${BASE_URL}/process-suites`);
-      await page.getByLabel('New Business Process file name').fill('visual-contract-process');
-      await page.getByRole('button', { name: 'Create' }).click();
+      // Creation now goes through the workspace tree: Create New asks which kind of scenario
+      // before it asks for a name, because the two produce different artifacts.
+      await page.getByRole('button', { name: 'Create New' }).click();
+      await page.getByRole('radio', { name: /Business Process/ }).check();
+      await page.getByLabel('File name').fill('visual-contract-process');
+      await page.getByRole('button', { name: 'Create', exact: true }).click();
       await page.getByLabel('Business Process App ID').fill('syntheticApp');
       for (const file of ['contract-producer.json', 'contract-consumer.json']) {
         await page.locator(`li:has-text("${file}") button:has-text("+ Add")`).click();
