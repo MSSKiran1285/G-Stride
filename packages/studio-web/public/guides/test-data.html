@@ -12,103 +12,191 @@
 
   <header class="masthead">
     <p class="eyebrow">G-Stride · Process Guide</p>
-    <h1>Test Data</h1>
+    <h1>Test Data — Datasets and Relationships</h1>
     <p class="standfirst">
-      Datasets are what let one Test run many scenarios. This is how to find them, build them,
-      type their columns, bulk-edit them in a spreadsheet, and join two of them without flattening
-      line items.
+      A standard operating procedure you can follow on screen. It covers every way data reaches a
+      Test: one flat file, a cell holding a list or a table, two files joined as header and child,
+      and nested JSON — with worked Sales Order examples for each.
     </p>
   </header>
 
   <section class="facts">
     <div><span class="k">Where</span><span class="v">Test Data</span></div>
-    <div><span class="k">Formats</span><span class="v">Flat CSV · Nested JSON</span></div>
+    <div><span class="k">Formats</span><span class="v">Flat CSV · Nested JSON · Header + child</span></div>
     <div><span class="k">Lives in</span><span class="v">data/</span></div>
     <div><span class="k">Used by</span><span class="v">Tests, Processes, Packs</span></div>
   </section>
 
   <section>
-    <h2>How the workspace is laid out</h2>
+    <h2>The one idea to hold on to</h2>
     <p style="margin:0;max-width:70ch;color:var(--ink-soft)">
-      Two tabs over one subject. <strong>Dataset library</strong> is every dataset file;
-      <strong>Relationships</strong> is the joins between them. Selecting a dataset explains it
-      before you act on it — what it holds, and what breaks if you rename or delete it.
+      Three separate things decide the size of a run. Confusing them is the single most common
+      source of "why did it create that?", so fix them in your head before touching anything.
     </p>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead>
+          <tr><th>What you change</th><th>What it controls</th><th>Sales Order effect</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Rows</strong> in the dataset</td>
+            <td>How many transactions run</td>
+            <td>3 rows → 3 sales orders, one after another</td>
+          </tr>
+          <tr>
+            <td><strong><code>⊞</code> table mode</strong> in a cell</td>
+            <td>How many line items <em>inside</em> one transaction</td>
+            <td>1 row whose cell holds 2 line rows → 1 order, 2 lines</td>
+          </tr>
+          <tr>
+            <td><strong>A relationship</strong> (header + child)</td>
+            <td>The same thing, but each in its own spreadsheet</td>
+            <td>5 header rows + 12 child rows → 5 orders with differing line counts</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <p class="note">
-      <b>Selection is a radio, not a highlight.</b> The selected dataset is what Rename and Delete
-      act on, so it is shown explicitly rather than left to whichever row you clicked last.
+      <b>Rows are transactions. Never scenarios-within-a-transaction.</b> A row is one complete
+      business document. If you find yourself adding a row to get a second line item, you want
+      <code>⊞</code> or a relationship instead — steps 12 and 16.
     </p>
   </section>
 
   <section>
-    <h2>Finding a dataset</h2>
+    <h2>Orientation</h2>
     <ol class="steps">
       <li class="step">
         <div class="step-n">01</div>
         <div class="step-body">
-          <h3>Search and filter</h3>
-          <p>Search matches the file name. The process-area filter narrows to one area; datasets you have not tagged appear as <strong>Untagged</strong>.</p>
+          <div class="step-head">
+            <h3>Two tabs over one subject</h3>
+            <span class="via">Test Data</span>
+          </div>
+          <p><strong>Dataset library</strong> is every dataset file. <strong>Relationships</strong> is the joins between them. Everything in this guide happens in one of those two.</p>
+          <p class="note"><b>Selection is a radio, not a highlight.</b> The selected dataset is what Rename and Delete act on, so it is shown explicitly rather than left to whichever row you clicked last.</p>
         </div>
       </li>
       <li class="step">
         <div class="step-n">02</div>
         <div class="step-body">
-          <h3>Select a row to inspect it</h3>
-          <p>The rail on the right gives format, process area, row count, and <strong>Used by</strong> — the Processes, Packs and relationships that reference this file. Its column names appear under the table.</p>
-          <p class="note"><b>Read "Used by" before renaming or deleting.</b> Renaming updates every reference for you. Deleting a referenced dataset needs confirmation, and the rail says plainly when nothing depends on it.</p>
+          <div class="step-head">
+            <h3>Find a dataset</h3>
+            <span class="via">Dataset library</span>
+          </div>
+          <ol class="substeps">
+            <li>Search matches the <strong>file name</strong>, not the contents.</li>
+            <li>The process-area filter narrows to one area; untagged files show as <strong>Untagged</strong>.</li>
+            <li>Select the row's radio. The panel on the right gives format, process area, row count and <strong>Used by</strong>.</li>
+          </ol>
+          <p class="note"><b>Read "Used by" before renaming or deleting.</b> It lists the Processes, Packs and relationships that reference this file. Renaming updates every one of them for you. Deleting a referenced dataset needs confirmation; the panel says plainly when nothing depends on it.</p>
         </div>
       </li>
     </ol>
   </section>
 
   <section>
-    <h2>Building a dataset</h2>
+    <h2>Part A · Building a dataset</h2>
     <ol class="steps">
       <li class="step">
         <div class="step-n">03</div>
         <div class="step-body">
-          <h3>New dataset</h3>
+          <div class="step-head">
+            <h3>New dataset</h3>
+            <span class="via">Dataset library → New dataset</span>
+          </div>
           <dl class="fields">
-            <div class="field"><dt>Format</dt><dd><span class="pill pick">pick</span><code>Flat CSV</code> for rows and columns, <code>Nested JSON</code> when a transaction owns child arrays</dd></div>
-            <div class="field"><dt>File name</dt><dd><span class="pill type">type</span>no extension needed</dd></div>
+            <div class="field"><dt>Format</dt><dd><span class="pill pick">pick</span><code>Flat CSV</code> for rows and columns, <code>Nested JSON</code> when a transaction owns child arrays (step 14)</dd></div>
+            <div class="field"><dt>File name</dt><dd><span class="pill type">type</span>no extension needed — <code>so-headers</code> becomes <code>so-headers.csv</code></dd></div>
             <div class="field"><dt>Columns</dt><dd><span class="pill type">type</span>comma-separated; CSV only</dd></div>
           </dl>
-          <p class="note"><b>Column names are the contract.</b> A Test binds to a column BY NAME, so these are what you will pick from when authoring a step. Name them for the business field, not the screen.</p>
+          <p class="note"><b>Column names are the contract.</b> A Test binds to a column BY NAME, so these are what you pick from when authoring a step. Name them for the business field — <code>soldToParty</code>, <code>requestedDeliveryDate</code> — not for the screen.</p>
+          <p class="note"><b>There is no "add column" button afterwards.</b> The dialog's hint is optimistic: to add a column later you download the CSV, add it in a spreadsheet and upload it back (steps 9–10). Worth getting the column list roughly right now.</p>
         </div>
       </li>
       <li class="step">
         <div class="step-n">04</div>
         <div class="step-body">
           <h3>Fill it in</h3>
-          <p><strong>+ Add row</strong> adds a scenario. Each row is one independent transaction at run time. <strong>Save dataset</strong> writes it — nothing is on disk until you do.</p>
+          <p><strong>+ Add row</strong> adds a transaction. <strong>Save dataset</strong> writes it — nothing reaches disk until you press it, so an edit can always be abandoned by closing the pop-out.</p>
+          <pre class="snippet"><span class="cap">so-headers.csv · two sales orders</span>orderType,salesOrg,distributionChannel,division,soldToParty,automationReferencePrefix,automationOwner
+OR,1710,10,00,USCU_S14,Q4HO2C,kiran
+OR,1710,10,00,USCU_S14,Q4HO2C,kiran</pre>
         </div>
       </li>
       <li class="step">
         <div class="step-n">05</div>
         <div class="step-body">
           <h3>Type the columns</h3>
-          <p>Expand <strong>Column schema</strong> to declare each column's type, sensitivity and an example. This is what lets a Test's typed contract validate a binding before it runs, and it keeps sensitive columns flagged everywhere they are used.</p>
+          <p>Expand <strong>Column schema</strong> and declare each column's <strong>type</strong>, <strong>sensitivity</strong> and an <strong>example</strong>.</p>
+          <ol class="substeps">
+            <li><strong>Type</strong> — <code>string</code>, <code>number</code>, <code>boolean</code>, <code>date</code>, <code>object</code>, <code>collection</code>.</li>
+            <li><strong>Sensitivity</strong> — <code>public</code>, <code>business</code>, <code>personal</code>, <code>secret</code>. This travels with the column everywhere it is used.</li>
+            <li><strong>Example</strong> — one representative value, shown when the column is offered in Compose.</li>
+          </ol>
+          <p class="note"><b>Never put credentials in a dataset.</b> Whatever the sensitivity says. Usernames and passwords resolve from system context or the encrypted store; a <code>secret</code> column is for business-confidential values, not for logging in.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">06</div>
+        <div class="step-body">
+          <h3>Rename or delete safely</h3>
+          <ol class="substeps">
+            <li>Select the dataset, then <strong>Rename</strong>. Every Process, Pack and relationship pointing at it is updated in the same move — you do not re-point them by hand.</li>
+            <li><strong>Delete</strong> refuses while something still references the file, and tells you what. Clear the reference first, or confirm deliberately.</li>
+          </ol>
         </div>
       </li>
     </ol>
   </section>
 
   <section>
-    <h2>Bulk editing in a spreadsheet</h2>
-    <p style="margin:0;max-width:70ch;color:var(--ink-soft)">
-      A browser grid is the wrong tool for fifty scenarios. Take the data out, work on it where
-      you are fast, bring it back.
-    </p>
+    <h2>Part B · Using a dataset from a Test</h2>
     <ol class="steps">
       <li class="step">
-        <div class="step-n">06</div>
+        <div class="step-n">07</div>
         <div class="step-body">
-          <h3>Download CSV</h3>
-          <p>Exports <strong>what is on screen</strong>, including edits you have not saved. Open it in Excel, Sheets, or anything else — edit values, add rows, delete rows.</p>
+          <div class="step-head">
+            <h3>Bind a column</h3>
+            <span class="via">Compose Tests → a step → Value</span>
+          </div>
+          <ol class="substeps">
+            <li>Open any step's <strong>Value</strong> field. Dataset columns are listed there, grouped by the file they come from.</li>
+            <li><strong>Pick</strong> one — that creates the binding, and the tag beside the box reads <code>dataset</code>.</li>
+            <li><strong>Typing</strong> instead makes the value fixed, and the tag reads <code>literal</code>.</li>
+            <li>A column that exists in several files is labelled with the others, so two same-named columns are told apart.</li>
+          </ol>
+          <p class="note"><b>The mistake worth knowing about.</b> Typing a column's <em>name</em> into a value box does not bind it — it stores that text. The tag reads <code>literal</code> rather than <code>dataset</code>. Publishing now rejects it, but picking from the list in the first place is easier than diagnosing it later.</p>
         </div>
       </li>
       <li class="step">
-        <div class="step-n">07</div>
+        <div class="step-n">08</div>
+        <div class="step-body">
+          <h3>You do not declare a contract</h3>
+          <p>A Test's inputs are <strong>inferred from the <code>${placeholder}</code> references in its steps</strong>. Write <code>${soldToParty}</code> somewhere and <code>soldToParty</code> becomes an input, bound to the dataset column of that name. Nothing to fill in.</p>
+          <p class="note"><b>Do not hand-declare a partial contract.</b> If a Test declares <em>any</em> contract, inference is switched off entirely and only the declared inputs bind — every other placeholder silently loses its data. Leave the contract alone unless you are declaring all of it.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Part C · Bulk editing in a spreadsheet</h2>
+    <p style="margin:0;max-width:70ch;color:var(--ink-soft)">
+      A browser grid is the wrong tool for fifty scenarios. Take the data out, work where you are
+      fast, bring it back. This is also the only way to add or remove a column.
+    </p>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">09</div>
+        <div class="step-body">
+          <h3>Download CSV</h3>
+          <p>Exports <strong>what is on screen</strong>, including edits you have not saved. Open it in Excel, Sheets, or anything else — edit values, add rows, delete rows, add or rename columns.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">10</div>
         <div class="step-body">
           <h3>Upload CSV</h3>
           <p><strong>Replaces every row</strong> in the open dataset. The result is loaded into the grid for review and is <em>not</em> written until you press <strong>Save dataset</strong> — so an upload can be abandoned like any other edit.</p>
@@ -124,44 +212,294 @@
   </section>
 
   <section>
-    <h2>Two shapes beyond a flat table</h2>
+    <h2>Part D · What one cell can hold</h2>
     <ol class="steps">
       <li class="step">
-        <div class="step-n">08</div>
+        <div class="step-n">11</div>
         <div class="step-body">
-          <h3>A cell holding a list or a table</h3>
-          <p>Every cell has two small buttons. <code>⋯</code> turns it into a <strong>list</strong>, stored as <code>a;b;c</code> — used by params that accept several values, such as the dialog titles a capture step will accept. <code>⊞</code> turns it into a <strong>table of rows</strong>, stored as JSON.</p>
-          <p class="note"><b>What the table mode is for.</b> An <em>Add Line Item(s)</em> step can point its whole row grid at one column via a single <code>${placeholder}</code>. That lets the data file decide how many line items each run creates — a 2-item order and a 7-item order become two rows of one dataset instead of two Tests.</p>
+          <div class="step-head">
+            <h3><code>⋯</code> — a list of values</h3>
+            <span class="via">open dataset → a cell</span>
+          </div>
+          <p>Stored as <code>a;b;c</code> in the one cell. Read by params that split on <code>;</code> — there are exactly two: the dialog titles <em>Capture Document Number</em> will accept, and the per-line delivered quantities on <em>Receive Open Line Item</em>. If neither is your case, you do not need list mode.</p>
+          <ol class="substeps">
+            <li>Click <code>⋯</code>. The single box becomes one box per item.</li>
+            <li><code>+ item</code> adds a box; the red <code>✕</code> removes one. The last item cannot be removed — collapse to <code>single value</code> instead.</li>
+            <li>Whitespace around each item is trimmed when the param is read, so <code>Success; Warning</code> and <code>Success;Warning</code> are identical.</li>
+            <li>In Compose, bind the param to the column as normal: <code>${successDialogTitles}</code>.</li>
+          </ol>
+          <pre class="snippet"><span class="cap">Worked example</span>orderRef,successDialogTitles
+SO-1,Success;Warning</pre>
         </div>
       </li>
       <li class="step">
-        <div class="step-n">09</div>
+        <div class="step-n">12</div>
         <div class="step-body">
-          <h3>Relationships — one header, many owned children</h3>
-          <p>When line items belong in their own file, join two CSVs instead of flattening them.</p>
-          <dl class="fields">
-            <div class="field"><dt>Header CSV / Header key</dt><dd>the parent file, and the column that identifies each row</dd></div>
-            <div class="field"><dt>Child CSV / Child foreign key</dt><dd>the children, and the column pointing back at the parent</dd></div>
-            <div class="field"><dt>Child collection name</dt><dd>what the children are called inside each transaction, e.g. <code>items</code></dd></div>
-          </dl>
-          <p><strong>Validate</strong> first, then <strong>Save relationship</strong>. Validation blocks duplicate header keys, missing keys, orphan children and collection-name collisions — it will not let you save a join that would silently drop rows.</p>
+          <div class="step-head">
+            <h3><code>⊞</code> — a table of rows</h3>
+            <span class="via">open dataset → a cell</span>
+          </div>
+          <p>Stored as a JSON array in the one cell. This is what lets a 2-line order and a 7-line order be two <em>rows of one dataset</em> rather than two Tests. It takes a change in Compose as well as in the data.</p>
+          <ol class="substeps">
+            <li><strong>In Test Data</strong>, click <code>⊞</code> on the cell. You get a small grid.</li>
+            <li>Name the columns. With no <code>columnMap</code> on the step (step 17), each column name must be the <strong>captured object name</strong> — <code>lineItemProductField</code>. With a map, use plain business names — <code>material</code>, <code>qty</code>. The map is the better habit.</li>
+            <li><code>+ Col</code> adds a column, <code>+ Add line</code> adds a row. <strong>Leave a cell blank to skip it</strong> — a blank net price lets SAP derive the price rather than forcing <code>0.00</code>.</li>
+            <li>Every dataset row should use the same column names in that cell. The <em>number</em> of lines may differ per row — that is the whole point.</li>
+            <li><strong>In Compose</strong>, open the <em>Add Line Item(s)</em> step and click <strong>Use a single data-file placeholder instead</strong>.</li>
+            <li>In <strong>Data-file placeholder for all rows</strong> type <code>${lineItems}</code>. One bare placeholder, no surrounding text.</li>
+            <li>Check <strong>When to click Add relative to filling the row</strong>: <code>before</code> for a grid where Add creates the row, <code>after</code> for a Fiori creation-row table you fill first.</li>
+          </ol>
+          <pre class="snippet"><span class="cap">Worked example · two orders of different sizes</span>orderRef,soldToParty,lineItems
+SO-1,C-1000,"[{""material"":""MZ-FG-EB01"",""qty"":""10""}]"
+SO-2,C-2000,"[{""material"":""MZ-FG-EB01"",""qty"":""5""},{""material"":""MZ-FG-EB02"",""qty"":""1""}]"</pre>
+          <p class="note"><b>Why the doubled quotes.</b> That is just CSV: the JSON contains commas and quotes, so the whole cell is quoted and each inner <code>"</code> is written <code>""</code>. The grid does this for you — it matters only if you edit the file by hand.</p>
+          <p class="note"><b>The mode is guessed from the value when you open the dataset.</b> A value that parses as an array of objects opens as a table, any value containing a <code>;</code> opens as a list, everything else opens single. So an address typed as <code>Line 1; Line 2</code> comes back as a two-item list — use a comma, or accept the list.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">13</div>
+        <div class="step-body">
+          <h3>When <code>⊞</code> stops being the right answer</h3>
+          <p>Table cells are fine for two or three variations. Past that, hand-building JSON blobs through a small grid is miserable and error-prone. Switch to a <strong>relationship</strong> (Part E) when any of these is true:</p>
+          <ol class="substeps">
+            <li>You have more than about three variations.</li>
+            <li>The line items have many columns of their own.</li>
+            <li>A business user needs to maintain the lines as an ordinary spreadsheet.</li>
+            <li>The same line items feed more than one Test.</li>
+          </ol>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">14</div>
+        <div class="step-body">
+          <h3>Nested JSON — the third option</h3>
+          <p>Create the dataset with format <strong>Nested JSON</strong> and you get a text editor instead of a grid: one root object per business transaction, child arrays owned by that transaction and never flattened. Press <strong>Validate and preview</strong> before saving; it reports the transaction and child counts it found.</p>
+          <pre class="snippet"><span class="cap">One transaction, nested</span>[ { "orderRef": "SO-2",
+    "soldToParty": "C-2000",
+    "items": [ { "material": "MZ-FG-EB01", "qty": "5" },
+               { "material": "MZ-FG-EB02", "qty": "1" } ] } ]</pre>
+          <p>Use it when the shape is genuinely hierarchical and you are comfortable editing JSON. For most people a relationship is the same power in two spreadsheets.</p>
         </div>
       </li>
     </ol>
   </section>
 
   <section>
-    <h2>Using it from a Test</h2>
-    <ol class="prep">
-      <li>Open any step's <strong>Value</strong> field in Compose. Dataset columns are listed there, grouped by the file they come from.</li>
-      <li>Picking one creates the binding. Typing instead makes the value fixed — the tag beside the box always says which you have.</li>
-      <li>A column that exists in several files is labelled with the others, so you can tell two same-named columns apart.</li>
+    <h2>Part E · Relationships</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">15</div>
+        <div class="step-body">
+          <h3>Build the two files</h3>
+          <ol class="substeps">
+            <li>Create the <strong>header</strong> dataset — one row per transaction — with a column that uniquely identifies each row.</li>
+            <li>Create the <strong>child</strong> dataset — one row per line — with a column pointing back at its parent, holding the same values.</li>
+            <li>The two key columns need not share a name, but it is easier when they do.</li>
+          </ol>
+          <pre class="snippet"><span class="cap">so-headers.csv</span>orderRef,orderType,salesOrg,distributionChannel,division,soldToParty
+SO-1,OR,1710,10,00,USCU_S14
+SO-2,OR,1710,10,00,USCU_S14
+
+<span class="cap" style="margin-top:.7rem">so-items.csv</span>orderRef,material,qty
+SO-1,MZ-FG-EB01,10
+SO-2,MZ-FG-EB01,5
+SO-2,MZ-FG-EB02,1</pre>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">16</div>
+        <div class="step-body">
+          <div class="step-head">
+            <h3>Define, validate, save</h3>
+            <span class="via">Test Data → Relationships</span>
+          </div>
+          <ol class="substeps">
+            <li>Press <strong>New relationship</strong> and give it a name — <code>sales-orders-with-items</code>.</li>
+            <li>Fill the five fields:</li>
+          </ol>
+          <dl class="fields">
+            <div class="field"><dt>Header CSV / Header key</dt><dd><code>so-headers.csv</code> <span class="arrow">·</span> <code>orderRef</code></dd></div>
+            <div class="field"><dt>Child CSV / Child foreign key</dt><dd><code>so-items.csv</code> <span class="arrow">·</span> <code>orderRef</code></dd></div>
+            <div class="field"><dt>Child collection name</dt><dd>what the children are called inside each transaction — <code>items</code></dd></div>
+          </dl>
+          <ol class="substeps" start="3">
+            <li><strong>Validate</strong> first. It refuses a join that would silently drop rows: a header key that repeats, a blank key on either side, a child pointing at a header that does not exist, and a collection name colliding with a column already in the header file. Fix the CSV and validate again.</li>
+            <li>Then <strong>Save relationship</strong>. It is stored as a named definition and listed beside the builder.</li>
+          </ol>
+          <p>The join produces one record per header row, children nested under the collection name:</p>
+          <pre class="snippet"><span class="cap">One record, as the run sees it</span>{ "orderRef": "SO-2",
+  "orderType": "OR", "salesOrg": "1710", "soldToParty": "USCU_S14",
+  "items": [ { "orderRef": "SO-2", "material": "MZ-FG-EB01", "qty": "5" },
+             { "orderRef": "SO-2", "material": "MZ-FG-EB02", "qty": "1" } ] }</pre>
+          <p class="note"><b>Each child row keeps its foreign key.</b> <code>orderRef</code> is still inside every item. That matters for the next step.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">17</div>
+        <div class="step-body">
+          <div class="step-head">
+            <h3>Make the Test consume it — <code>columnMap</code></h3>
+            <span class="via">Compose Tests → Add Line Item(s)</span>
+          </div>
+          <p>Without a map, <em>every</em> key in a child row is treated as a captured object name — including <code>orderRef</code>, which is not a control and never will be. The map tells the step which columns mean which controls; everything else is ignored by design.</p>
+          <ol class="substeps">
+            <li>On the <em>Add Line Item(s)</em> step set <strong>Rows</strong> to <code>${items}</code> — the collection name from step 16.</li>
+            <li>Fill <strong>Data column → object name</strong> with the mapping:</li>
+          </ol>
+          <pre class="snippet"><span class="cap">columnMap</span>{"material":"lineItemProductField","qty":"lineItemQuantityField"}</pre>
+          <ol class="substeps" start="3">
+            <li><code>orderRef</code> is not in the map, so it is skipped. No control lookup, no error.</li>
+            <li>A mapped column whose object does not exist is still a loud failure — the map removes the coupling, not the safety.</li>
+            <li>Cells are filled in the order the map declares them, not the order the CSV happens to serialise.</li>
+          </ol>
+          <p class="note"><b>Leave <code>columnMap</code> empty and nothing changes.</b> The old behaviour — row keys <em>are</em> object names — still applies, so existing Tests keep working untouched.</p>
+        </div>
+      </li>
     </ol>
-    <p class="note">
-      <b>The mistake worth knowing about.</b> Typing a column's name into a value box does not bind
-      it — it stores that text. The tag reads <code>literal</code> rather than <code>dataset</code>,
-      and publishing now rejects it, but it is easier to pick from the list in the first place.
-    </p>
+  </section>
+
+  <section>
+    <h2>Part F · Running it</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">18</div>
+        <div class="step-body">
+          <div class="step-head">
+            <h3>Point the execution at your data</h3>
+            <span class="via">Execution Center</span>
+          </div>
+          <ol class="substeps">
+            <li><strong>Data source</strong> — <code>Single CSV or nested JSON</code>, or <code>Header CSV + child CSV</code> for a relationship.</li>
+            <li>For a relationship, pick it from <strong>Saved relationship</strong>. That fills the header file, child file, both keys and the collection name from the definition you validated. The fields stay visible so you can see exactly what will run; editing any of them clears the dropdown.</li>
+            <li><strong>Maximum transaction records</strong> caps how many rows run — a smoke test over the first 2 of 50.</li>
+            <li><strong>Filter property / rule / value</strong> selects a subset: <code>salesOrg</code> <code>equals</code> <code>1710</code>, or <code>region</code> <code>is-not-empty</code>. Dotted paths reach into nested data — <code>header.salesOrg</code>.</li>
+          </ol>
+          <p class="note"><b>Transactional Tests need "Stop remaining iterations".</b> Any Test that creates SAP documents forces <strong>After an iteration failure → Stop remaining iterations</strong>. Leave it on "Continue" and preflight blocks the run — the Confirm and start button stays disabled with a <em>Blocked</em> finding saying so.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">19</div>
+        <div class="step-body">
+          <h3>Read the preflight before you authorise it</h3>
+          <ol class="substeps">
+            <li><strong>Resolved input mappings</strong> — every input, its source and where it resolved from. <code>processData</code> means a data column; <code>stageOutput</code> means an earlier Test in the chain produced it; <code>literal</code> usually means a binding you meant to make and did not.</li>
+            <li><strong>Approved effective data</strong> — the exact records, sealed into a snapshot that Start reuses. Under it, the line-item breakdown: <em>12 line items across 5 transactions (2, 3, 1, 4, 2)</em>. Check that shape against what you intended; a wrong line count is far cheaper to spot here than in a finished document.</li>
+            <li><strong>Findings</strong> — <em>Blocked</em> stops the run, <em>Review</em> needs your acknowledgement, <em>Information</em> is context.</li>
+          </ol>
+          <p class="note"><b>If preflight is blocked, the effective-data panel is not trustworthy.</b> The snapshot is deliberately not built for a blocked plan, so the panel says "No external dataset is bound" even when one is. Fix the blocking finding and read it again.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Part G · Worked scenarios</h2>
+    <ol class="steps">
+      <li class="step">
+        <div class="step-n">S1</div>
+        <div class="step-body">
+          <h3>Two sales orders, one after another</h3>
+          <p><strong>Neither cell mode nor a relationship.</strong> Add a second row to the dataset and save. Two rows → two iterations → two orders, each in a fresh browser session, each with its own automation reference and captured SO number. No Test change at all.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">S2</div>
+        <div class="step-body">
+          <h3>One sales order with two line items</h3>
+          <p>One dataset row. Put both lines in a <code>⊞</code> table cell (step 12), point <em>Add Line Item(s)</em> at <code>${lineItems}</code>, run. One iteration, one order, two lines. Preflight should read <em>2 line items across 1 transaction (2)</em>.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">S3</div>
+        <div class="step-body">
+          <h3>Five variations with different line counts</h3>
+          <p>The relationship model, and the reason it exists.</p>
+          <ol class="substeps">
+            <li><code>so-headers.csv</code> — 5 rows, one per variation.</li>
+            <li><code>so-items.csv</code> — 12 rows, distributed however you like across those 5.</li>
+            <li>One relationship, validated and saved (step 16).</li>
+            <li>One Test with <code>${items}</code> and a <code>columnMap</code> (step 17).</li>
+          </ol>
+          <p><strong>A sixth variation is one row in headers and N rows in items.</strong> Zero test edits, zero JSON, both files editable in Excel.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">S4</div>
+        <div class="step-body">
+          <h3>The same data across a chain of Tests</h3>
+          <p>Bind the dataset to the <strong>Business Process</strong>, not to each Test. One row is one pass through every stage: row 1 creates the order, then its delivery, then its billing document. Row 2 follows after.</p>
+          <p class="note"><b>Values hand over automatically.</b> A Test that captures <code>soNumber</code> makes it available to later stages, and <code>${soNumber}</code> in the delivery Test binds to that output rather than to any column. You do not wire it. If a stage output is missing the run stops with <em>Required output … is unavailable</em> — it never proceeds against a blank value. Note that a stage output <strong>shadows</strong> a dataset column of the same name; the Resolved input mappings table is where you see which won.</p>
+        </div>
+      </li>
+      <li class="step">
+        <div class="step-n">S5</div>
+        <div class="step-body">
+          <h3>Run only part of a dataset</h3>
+          <p>Do not maintain a second file. Use <strong>Maximum transaction records</strong> for "just the first few", or a <strong>filter</strong> for "only these" — <code>region</code> <code>equals</code> <code>US</code>. The preflight snapshot then contains only the selected records, so what you approve is exactly what runs.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Troubleshooting</h2>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>What you see</th><th>What it means</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>no control named "orderRef"</code></td>
+            <td>A child row's join key is being treated as an object name</td>
+            <td>Add a <code>columnMap</code> (step 17) so unmapped columns are ignored</td>
+          </tr>
+          <tr>
+            <td><code>no control named "material&nbsp;"</code></td>
+            <td>A trailing space in a column name — the lookup is exact</td>
+            <td>Retype the column name in the <code>⊞</code> grid or the CSV header</td>
+          </tr>
+          <tr>
+            <td><code>"rows" must be valid JSON</code></td>
+            <td>The cell behind <code>${lineItems}</code> is not an array of objects</td>
+            <td>Reopen the cell in <code>⊞</code> mode; check the CSV quoting</td>
+          </tr>
+          <tr>
+            <td><code>at least one row is required</code></td>
+            <td>The cell holds <code>[]</code></td>
+            <td>Add a line, or drop the step for that scenario</td>
+          </tr>
+          <tr>
+            <td><code>Unresolved placeholder "${x}"</code></td>
+            <td>No column, stage output or system value called <code>x</code></td>
+            <td>Check the spelling against the dataset's column list</td>
+          </tr>
+          <tr>
+            <td>Tag reads <code>literal</code>, not <code>dataset</code></td>
+            <td>The column name was typed rather than picked</td>
+            <td>Re-open the Value field and pick from the list</td>
+          </tr>
+          <tr>
+            <td><em>Blocked</em> — must stop after the first failed transaction</td>
+            <td>A transactional Test with the wrong failure policy</td>
+            <td>After an iteration failure → <strong>Stop remaining iterations</strong></td>
+          </tr>
+          <tr>
+            <td><em>duplicate header key</em> on Validate</td>
+            <td>Two header rows share a join value</td>
+            <td>Make the key unique — it identifies one transaction</td>
+          </tr>
+          <tr>
+            <td><em>orphan child record</em> on Validate</td>
+            <td>A child points at a header that is not there</td>
+            <td>Fix the foreign key, or add the missing header row</td>
+          </tr>
+          <tr>
+            <td><em>collection name collision</em> on Validate</td>
+            <td>The header file already has a column of that name</td>
+            <td>Rename the collection, or the header column</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <section>

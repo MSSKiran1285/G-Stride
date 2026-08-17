@@ -186,6 +186,73 @@ code {
 }
 .note b { color: var(--signal); font-weight: 660; }
 
+/* A worked example the reader can copy: file contents, a cell value, a param value.
+   It scrolls inside itself so a long JSON line never widens the page. */
+.snippet {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: .82rem;
+  line-height: 1.6;
+  background: var(--surface-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: .7rem .85rem;
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre;
+  color: var(--ink);
+}
+.snippet .cap {
+  display: block;
+  font-family: var(--sans);
+  font-size: .74rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 680;
+  color: var(--ink-faint);
+  margin-bottom: .4rem;
+  white-space: normal;
+}
+
+/* Reference tables: error → cause → fix, and decision grids. Scrolls inside itself so a wide
+   row never widens the page. */
+.tbl-wrap { overflow-x: auto; max-width: 100%; }
+.tbl {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 34rem;
+  font-size: .9rem;
+}
+.tbl th {
+  text-align: left;
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 680;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule-strong);
+  padding: .4rem .7rem .4rem 0;
+  white-space: nowrap;
+}
+.tbl td {
+  vertical-align: top;
+  padding: .55rem .7rem .55rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl code { font-size: .82rem; }
+
+/* A tighter ordered list for sub-steps inside a numbered step card. */
+.substeps {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  max-width: 70ch;
+  font-size: .95rem;
+}
+
 .legend { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; font-size: .88rem; color: var(--ink-soft); }
 .legend .item { display: inline-flex; align-items: center; gap: .4rem; }
 

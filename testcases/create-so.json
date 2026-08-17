@@ -14,7 +14,9 @@
     "Leaving Requested Quantity blank. The line item shows a validation error and the order will not save until a quantity greater than zero is entered."
   ],
   "transaction": {
-    "creates": ["salesOrder"],
+    "creates": [
+      "salesOrder"
+    ],
     "failureDisposition": "retain-for-review",
     "ownershipRequired": true
   },
@@ -99,8 +101,9 @@
       "module": "AddLineItem",
       "appId": "createSalesOrder",
       "params": {
-        "rows": "[{\"lineItemProductField\":\"${product}\",\"lineItemQuantityField\":\"${quantity}\"}]",
-        "addClickTiming": "after"
+        "rows": "${lineItems}",
+        "addClickTiming": "after",
+        "addButtonField": "AddLineItemButton"
       }
     },
     {
@@ -140,5 +143,7 @@
         "buttonText": "Close"
       }
     }
-  ]
+  ],
+  "version": 1,
+  "lifecycle": "draft"
 }

@@ -119,7 +119,7 @@ const PROCESS_GUIDES: { title: string; detail: string; href: string }[] = [
   },
   {
     title: 'Test Data',
-    detail: 'Build and find datasets, type their columns, bulk-edit in a spreadsheet, and join two files.',
+    detail: 'Full SOP: build and type a dataset, bulk-edit it, hold a list or a table in one cell, join a header to its children, and run any of it.',
     href: '/guides/test-data.html',
   },
 ];
