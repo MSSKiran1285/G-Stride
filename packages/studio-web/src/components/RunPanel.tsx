@@ -11,9 +11,40 @@ import type {
   RunStatus,
 } from '../types';
 import { FileChainPicker } from './FileChainPicker';
+import { AsyncFeedback } from './WorkspacePrimitives';
 
 function evidenceUrl(screenshotPath: string): string {
   return `/${screenshotPath.replace(/\\/g, '/')}`;
+}
+
+/**
+ * Owned child rows in one transaction record — line items, whether they arrive nested from a
+ * relational join or as a JSON array inside a single cell. Mirrors the server's own child count,
+ * which reports only a total: the total says "12 line items" without saying whether that is one
+ * order of twelve or six orders of two, and those are very different runs to authorise.
+ */
+function childRecordsIn(record: unknown): number {
+  let count = 0;
+  const visit = (value: unknown) => {
+    if (Array.isArray(value)) {
+      count += value.length;
+      value.forEach(visit);
+    } else if (value && typeof value === 'object') {
+      Object.values(value).forEach(visit);
+    } else if (typeof value === 'string' && value.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(value) as unknown;
+        if (Array.isArray(parsed)) {
+          count += parsed.length;
+          parsed.forEach(visit);
+        }
+      } catch {
+        // Not a row set — an ordinary value that happens to open with a bracket.
+      }
+    }
+  };
+  visit(record);
+  return count;
 }
 
 function CompletionBanner({ run }: { run: RunStatus }) {
@@ -136,6 +167,12 @@ export function RunPanel({
   const [headerKey, setHeaderKey] = useState('scenarioKey');
   const [childForeignKey, setChildForeignKey] = useState('scenarioKey');
   const [collectionPath, setCollectionPath] = useState('items');
+  // A join saved in Test Data has already been validated against the real files — duplicate
+  // header keys, orphan children and collection-name collisions all rejected. Re-typing its five
+  // values here invited a silent mismatch between the join you proved and the join you ran.
+  const [dataRelations, setDataRelations] = useState<string[]>([]);
+  const [selectedRelation, setSelectedRelation] = useState('');
+  const [relationError, setRelationError] = useState<string | null>(null);
   const [run, setRun] = useState<RunStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [monitorError, setMonitorError] = useState<string | null>(null);
@@ -169,6 +206,9 @@ export function RunPanel({
     api.listGroups().then(setGroups).catch((e) => setError(String(e)));
     api.listPacks().then(setPacks).catch((e) => setError(String(e)));
     api.listData().then(setDataFiles).catch((e) => setError(String(e)));
+    // A missing or unreadable relations folder just means "no saved joins to offer" — the manual
+    // fields below still work, so this must not raise the panel's error banner.
+    api.listDataRelations().then(setDataRelations).catch(() => setDataRelations([]));
     api.getExecutionMetrics().then(setHealthMetrics).catch(() => undefined);
     return () => {
       mountedRef.current = false;
@@ -255,6 +295,30 @@ export function RunPanel({
   function invalidatePreflight() {
     setPreflight(null);
     setWarningsAcknowledged(false);
+  }
+
+  /**
+   * Fills the five join fields from a saved relationship. They stay visible and editable
+   * afterwards: preflight and the review dialog report what will actually run, so hiding the
+   * resolved values behind a name would make the run less inspectable, not more.
+   */
+  async function applySavedRelation(file: string) {
+    setSelectedRelation(file);
+    setRelationError(null);
+    invalidatePreflight();
+    if (!file) return;
+    try {
+      const definition = await api.getDataRelation(file);
+      setDataFile(definition.headerFile);
+      setChildDataFile(definition.childFile);
+      setHeaderKey(definition.headerKey);
+      setChildForeignKey(definition.childForeignKey);
+      setCollectionPath(definition.collectionPath);
+    } catch (reason) {
+      // Leave whatever is already in the fields rather than half-applying a broken definition.
+      setSelectedRelation('');
+      setRelationError(`Could not load "${file}": ${String(reason)}`);
+    }
   }
 
   function executionKind(): ExecutionDraftKind {
@@ -546,7 +610,7 @@ export function RunPanel({
               </div>
               <div>
                 <label>{dataMode === 'relational-csv' ? 'Header data file' : 'Transaction data file'}</label>
-                <select aria-label="Execution data file" value={dataFile} onChange={(e) => setDataFile(e.target.value)}>
+                <select aria-label="Execution data file" value={dataFile} onChange={(e) => { setDataFile(e.target.value); setSelectedRelation(''); }}>
                   <option value="">— none —</option>
                   {dataFiles.map((f) => (
                     <option key={f} value={f}>
@@ -557,9 +621,28 @@ export function RunPanel({
               </div>
               {dataMode === 'relational-csv' && (
                 <>
+                  {dataRelations.length > 0 && (
+                    <div>
+                      <label htmlFor="execution-saved-relation">Saved relationship</label>
+                      <select
+                        id="execution-saved-relation"
+                        value={selectedRelation}
+                        onChange={(event) => void applySavedRelation(event.target.value)}
+                      >
+                        <option value="">— enter the join manually —</option>
+                        {dataRelations.map((file) => (
+                          <option key={file} value={file}>{file.replace(/\.json$/, '')}</option>
+                        ))}
+                      </select>
+                      <span className="hint">
+                        Fills the five fields below from a join already validated in Test Data.
+                      </span>
+                    </div>
+                  )}
+                  {relationError && <AsyncFeedback state="error" message={relationError} />}
                   <div>
                     <label htmlFor="execution-child-data">Child data file</label>
-                    <select id="execution-child-data" value={childDataFile} onChange={(event) => setChildDataFile(event.target.value)}>
+                    <select id="execution-child-data" value={childDataFile} onChange={(event) => { setChildDataFile(event.target.value); setSelectedRelation(''); }}>
                       <option value="">— select child file —</option>
                       {dataFiles.filter((file) => file.endsWith('.csv') && file !== dataFile).map((file) => (
                         <option key={file} value={file}>{file}</option>
@@ -568,15 +651,15 @@ export function RunPanel({
                   </div>
                   <div>
                     <label htmlFor="execution-header-key">Header join key</label>
-                    <input id="execution-header-key" value={headerKey} onChange={(event) => setHeaderKey(event.target.value)} />
+                    <input id="execution-header-key" value={headerKey} onChange={(event) => { setHeaderKey(event.target.value); setSelectedRelation(''); }} />
                   </div>
                   <div>
                     <label htmlFor="execution-child-key">Child foreign key</label>
-                    <input id="execution-child-key" value={childForeignKey} onChange={(event) => setChildForeignKey(event.target.value)} />
+                    <input id="execution-child-key" value={childForeignKey} onChange={(event) => { setChildForeignKey(event.target.value); setSelectedRelation(''); }} />
                   </div>
                   <div>
                     <label htmlFor="execution-collection-path">Child collection name</label>
-                    <input id="execution-collection-path" value={collectionPath} onChange={(event) => setCollectionPath(event.target.value)} />
+                    <input id="execution-collection-path" value={collectionPath} onChange={(event) => { setCollectionPath(event.target.value); setSelectedRelation(''); }} />
                   </div>
                 </>
               )}
@@ -756,6 +839,20 @@ export function RunPanel({
                       <span>{data.sourceFiles.join(' + ')}</span>
                     </summary>
                     <p className="snapshot-fingerprint">Data hash: {data.contentHash}</p>
+                    {(() => {
+                      // Per-record, so the shape of the run is visible before SAP is opened: a
+                      // transaction with more or fewer lines than intended shows up here rather
+                      // than in the finished document.
+                      const perRecord = data.records.map(childRecordsIn);
+                      const total = perRecord.reduce((sum, n) => sum + n, 0);
+                      if (total === 0) return null;
+                      return (
+                        <p className="hint" data-testid={`child-distribution-${data.bindingId}`}>
+                          {total} line item{total === 1 ? '' : 's'} across {perRecord.length} transaction
+                          {perRecord.length === 1 ? '' : 's'} ({perRecord.join(', ')})
+                        </p>
+                      );
+                    })()}
                     <pre aria-label={`Selected records for ${data.bindingId}`}>{JSON.stringify(data.records, null, 2)}</pre>
                   </details>
                 ))}
