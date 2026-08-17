@@ -37,6 +37,16 @@ export const AddLineItem: Module = {
         default: 'AddLineItemButton',
       },
       { key: 'rows', label: 'Rows', required: true },
+      {
+        key: 'columnMap',
+        label: 'Data column → object name',
+        required: false,
+        placeholder: '{"material":"lineItemProductField","qty":"lineItemQuantityField"}',
+        // Authored here, never bound to data: it is the Test's own statement of which data
+        // columns mean which controls, so a dataset that carries extra columns (a join key,
+        // a business reference, a comment) does not have to be reshaped to suit the screen.
+        literalOnly: true,
+      },
       { key: 'lineItemCountKey', label: 'Line count (runState key)', required: false, placeholder: 'default: lineItemCount', literalOnly: true, advanced: true, default: 'lineItemCount' },
       {
         key: 'addClickTiming',
@@ -63,6 +73,44 @@ export const AddLineItem: Module = {
     if (!Array.isArray(rows) || rows.length === 0) {
       throw new Error('AddLineItem: at least one row is required.');
     }
+
+    // Without a map, every key in a row is taken to be a captured object name — which forces the
+    // data file to carry SAP control names, and makes any extra column fatal. A relational CSV
+    // hands each child row over complete with its foreign key, so that shape could not be used
+    // here at all: the join key resolved to "no control named orderRef".
+    //
+    // With a map, the Test states which data columns mean which controls. Anything unmapped is
+    // ignored by design rather than by luck, so the child CSV can be a plain business
+    // spreadsheet, and a mistyped object name is still a loud failure rather than a silent skip.
+    let columnMap: Record<string, string> | null = null;
+    if (params.columnMap?.trim()) {
+      try {
+        const parsed = JSON.parse(params.columnMap);
+        if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('not an object');
+        columnMap = parsed as Record<string, string>;
+      } catch {
+        throw new Error(
+          'AddLineItem: "columnMap" must be a JSON object of {data column: object name}, '
+          + 'e.g. {"material":"lineItemProductField"}.'
+        );
+      }
+      const unnamed = Object.entries(columnMap).filter(([, objectName]) => !objectName?.trim());
+      if (unnamed.length > 0) {
+        throw new Error(
+          `AddLineItem: "columnMap" leaves ${unnamed.map(([column]) => `"${column}"`).join(', ')} `
+          + 'without an object name. Remove the entry or give it the control it fills.'
+        );
+      }
+    }
+
+    /** The cells to fill for one row, in the order the author declared them. */
+    const cellsFor = (row: Record<string, string>): Array<[string, string]> => {
+      if (!columnMap) return Object.entries(row);
+      return Object.entries(columnMap)
+        .filter(([column]) => column in row)
+        .map(([column, objectName]) => [objectName, row[column]] as [string, string]);
+    };
+
     const addButtonField = params.addButtonField || 'AddLineItemButton';
     // Most grid tables need "click Add" to create the empty row before it can be filled — but
     // some Fiori Elements v4 (MDC) tables render an always-present "Creation Row" instead: a
@@ -97,7 +145,7 @@ export const AddLineItem: Module = {
       });
       try {
         if (!clickAfter) await clickControl(adapter, objectRepository, appId, addButtonField);
-        for (const [fieldName, value] of Object.entries(rows[rowIndex])) {
+        for (const [fieldName, value] of cellsFor(rows[rowIndex])) {
           if (!value) continue;
           await fillTableCell(adapter, objectRepository, appId, fieldName, rowIndex, value, undefined, evidence);
         }
