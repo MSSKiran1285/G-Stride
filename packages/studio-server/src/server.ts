@@ -235,6 +235,24 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     return columns;
   };
 
+/**
+ * Outputs that are one value per EXECUTION, not one per stage.
+ *
+ * The server inserts CreateAutomationRunReference as step 1 of every Test that creates SAP
+ * documents, and that module declares these three. So the moment a Business Process contains two
+ * transactional Tests — Create SO then Create Delivery — every one of them collides, and the
+ * process could not be saved at all. o2c-e2e, the product's own flagship process, is exactly that
+ * shape.
+ *
+ * The collision is not real. The module is deliberately idempotent: the first stage mints the
+ * reference and later stages reuse it, because an audit trail pointing at three unrelated
+ * identifiers for one run is the opposite of a correlation key. Whichever stage a consumer reads
+ * it from, the value is the same, so there is no ambiguity to warn about. Any OTHER duplicated
+ * output still is ambiguous — two stages producing different document numbers under one name —
+ * and stays an error.
+ */
+  const RUN_SCOPED_OUTPUTS = new Set(['automationReference', 'automationOwner', 'transactionFailureDisposition']);
+
   const validateTestForPublishing = (testCase: TestCase) => {
     const issues: Array<{ code: string; path: string; message: string }> = [];
     if (!testCase.contract) {
@@ -1080,7 +1098,7 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
           const outputs = new Map<string, { type: string }>();
           for (const output of contract.outputs) {
             const owner = outputOwners.get(output.name);
-            if (owner) {
+            if (owner && !RUN_SCOPED_OUTPUTS.has(output.name)) {
               return res.status(400).json({ error: `Output "${output.name}" is declared by both "${owner}" and "${stage.stageId}".` });
             }
             outputOwners.set(output.name, stage.stageId);

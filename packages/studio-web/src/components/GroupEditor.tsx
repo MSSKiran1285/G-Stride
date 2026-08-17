@@ -12,6 +12,24 @@ import { DomainTag } from './DomainTag';
 import { GroupedPicker } from './GroupedPicker';
 import { AsyncFeedback } from './WorkspacePrimitives';
 
+/**
+ * Outputs that are one value per EXECUTION, not one per stage.
+ *
+ * The server inserts CreateAutomationRunReference as step 1 of every Test that creates SAP
+ * documents, and that module declares these three. So the moment a Business Process contains two
+ * transactional Tests — Create SO then Create Delivery — every one of them collides, and the
+ * process could not be saved at all. o2c-e2e, the product's own flagship process, is exactly that
+ * shape.
+ *
+ * The collision is not real. The module is deliberately idempotent: the first stage mints the
+ * reference and later stages reuse it, because an audit trail pointing at three unrelated
+ * identifiers for one run is the opposite of a correlation key. Whichever stage a consumer reads
+ * it from, the value is the same, so there is no ambiguity to warn about. Any OTHER duplicated
+ * output still is ambiguous — two stages producing different document numbers under one name —
+ * and stays an error.
+ */
+const RUN_SCOPED_OUTPUTS = new Set(['automationReference', 'automationOwner', 'transactionFailureDisposition']);
+
 const UNTAGGED = '(untagged)';
 const sortDomains = (a: string, b: string) => (a === UNTAGGED ? 1 : b === UNTAGGED ? -1 : a.localeCompare(b));
 
@@ -316,8 +334,10 @@ export function GroupEditor({
       }
       for (const output of contract?.outputs ?? []) {
         const previous = outputs.get(output.name);
-        if (previous) issues.push(`Output "${output.name}" is declared by both ${previous} and ${stage.stageId}.`);
-        else outputs.set(output.name, stage.stageId);
+        if (previous && !RUN_SCOPED_OUTPUTS.has(output.name)) {
+          issues.push(`Output "${output.name}" is declared by both ${previous} and ${stage.stageId}.`);
+        }
+        outputs.set(output.name, stage.stageId);
       }
       stageIds.add(stage.stageId);
     });
