@@ -24,6 +24,8 @@ test('GET /api/testcases/library returns filterable business metadata for legacy
     processArea: '',
     status: 'ready',
     stepCount: 1,
+    // create-po declares no transaction block in this fixture, so it creates no document.
+    transactional: false,
   });
 });
 
@@ -42,6 +44,7 @@ test('POST /api/testcases/:file creates metadata without overwriting an existing
     processArea: 'Lead to Cash',
     status: 'draft',
     stepCount: 0,
+    transactional: false,
   });
 
   const conflict = await api.post('/api/testcases/library-created.json', {

@@ -697,6 +697,11 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
               processArea: tags[file] ?? '',
               status: testCase.lifecycle === 'published' ? 'published' : testCase.lifecycle === 'draft' || steps.length === 0 ? 'draft' : 'ready',
               stepCount: steps.length,
+              // Whether this Test creates SAP business documents. The client cannot read a Test
+              // file, so without this it cannot tell that "stop after the first failed
+              // transaction" is mandatory here, and would keep offering a policy that preflight
+              // is bound to reject.
+              transactional: Array.isArray(testCase.transaction?.creates) && testCase.transaction.creates.length > 0,
             }];
           } catch {
             return []; // skip an unreadable/malformed file rather than fail the whole library

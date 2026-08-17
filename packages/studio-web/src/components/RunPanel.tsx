@@ -151,6 +151,9 @@ export function RunPanel({
   const [groups, setGroups] = useState<string[]>([]);
   const [packs, setPacks] = useState<string[]>([]);
   const [dataFiles, setDataFiles] = useState<string[]>([]);
+  // Which Tests create SAP business documents. Only the server can know — it reads the files —
+  // and the Execution Center needs it to stop offering a failure policy preflight will reject.
+  const [transactionalTests, setTransactionalTests] = useState<Set<string>>(new Set());
   const [chain, setChain] = useState<string[]>([]);
   const [mode, setMode] = useState<'single' | 'chain' | 'suite' | 'batch' | 'pack'>('single');
   const [appId, setAppId] = useState('createPurchaseOrder');
@@ -209,6 +212,11 @@ export function RunPanel({
     // A missing or unreadable relations folder just means "no saved joins to offer" — the manual
     // fields below still work, so this must not raise the panel's error banner.
     api.listDataRelations().then(setDataRelations).catch(() => setDataRelations([]));
+    api.listTestLibrary()
+      .then((items) => setTransactionalTests(new Set(items.filter((item) => item.transactional).map((item) => item.file))))
+      // Failing to learn this is not fatal: the policy stays author-chosen and preflight remains
+      // the backstop, exactly as before.
+      .catch(() => setTransactionalTests(new Set()));
     api.getExecutionMetrics().then(setHealthMetrics).catch(() => undefined);
     return () => {
       mountedRef.current = false;
@@ -280,6 +288,30 @@ export function RunPanel({
     childForeignKey,
     collectionPath,
   ]);
+
+  /**
+   * True when the current selection includes a Test that creates SAP business documents.
+   *
+   * Only the modes that name Test files can answer this. Batch and Pack select Processes and
+   * Packs, whose members the client never sees — preflight remains the backstop there, and Pack
+   * already forces the policy by mode.
+   */
+  const selectionIsTransactional = (mode === 'single' || mode === 'chain' || mode === 'suite')
+    && chain.some((file) => transactionalTests.has(file));
+
+  /**
+   * A Test that creates documents may not continue past a failed transaction — preflight blocks
+   * the run outright if it would. The default used to follow the MODE, so Single Test always
+   * started on "Continue to next transaction" and every transactional single-Test run hit that
+   * block on first use. It follows the selected Tests instead, and the invalid option is removed
+   * rather than left to be chosen and rejected.
+   */
+  useEffect(() => {
+    if (selectionIsTransactional && iterationFailurePolicy !== 'stop-execution') {
+      setIterationFailurePolicy('stop-execution');
+      invalidatePreflight();
+    }
+  }, [selectionIsTransactional, iterationFailurePolicy]);
 
   // Switching modes carries over a selection that means something different in the
   // new mode (a test case file isn't a group name) — start the composition over.
@@ -695,10 +727,21 @@ export function RunPanel({
               id="execution-failure-policy"
               value={iterationFailurePolicy}
               onChange={(event) => setIterationFailurePolicy(event.target.value as typeof iterationFailurePolicy)}
+              disabled={selectionIsTransactional}
             >
               <option value="stop-execution">Stop remaining iterations</option>
-              <option value="continue-next-iteration">Continue to next transaction</option>
+              {/* Withheld rather than offered-and-rejected: preflight blocks this combination,
+                  so presenting it would only be a longer route to the same answer. */}
+              {!selectionIsTransactional && (
+                <option value="continue-next-iteration">Continue to next transaction</option>
+              )}
             </select>
+            {selectionIsTransactional && (
+              <span className="hint">
+                Fixed: the selection creates SAP business documents, which may not continue past a
+                failed transaction.
+              </span>
+            )}
           </div>
           <div>
             <label htmlFor="execution-max-records">Maximum transaction records</label>

@@ -166,6 +166,8 @@ export interface TestLibraryItem {
   processArea: string;
   status: TestLibraryStatus;
   stepCount: number;
+  /** Declares SAP business documents in `transaction.creates` — see the failure policy in RunPanel. */
+  transactional?: boolean;
 }
 
 export type TestValueType = 'string' | 'number' | 'boolean' | 'date' | 'object' | 'collection';
