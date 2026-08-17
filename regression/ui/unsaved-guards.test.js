@@ -68,7 +68,9 @@ test('unsaved new group is protected from shell navigation', async () => {
       await page.getByRole('radio', { name: /Business Process/ }).check();
       await page.getByLabel('File name').fill('unsaved-group');
       await page.getByRole('button', { name: 'Create', exact: true }).click();
-      await expectDiscardGuard(page, () => page.getByRole('button', { name: /Execution Center/ }).first().click());
+      // The scenario composes in a modal, so the shell is unreachable behind it by design.
+      // Leaving the modal is now the boundary that has to protect the unsaved draft.
+      await expectDiscardGuard(page, () => page.getByRole('button', { name: 'Close this scenario' }).click());
       await page.getByRole('heading', { name: 'Processes & Packs' }).waitFor();
     });
   });

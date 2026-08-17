@@ -99,6 +99,22 @@ export function ProcessPacksWorkspace({
     }
   }
 
+  /** Leaving the pop-out returns to the tree; an unsaved draft is confirmed away, not dropped. */
+  function closeScenario() {
+    if (!confirmDiscard()) return;
+    setDirty(false);
+    onDirtyChange?.(false);
+    if (section === 'processes') {
+      setPendingNewProcess(undefined);
+      setOpenProcess('');
+    } else {
+      setPendingNewPack(undefined);
+      setOpenPack('');
+    }
+    onSectionChange(section);
+    refreshTree();
+  }
+
   function submitCreate() {
     const requested = createName.trim();
     if (!requested) return setCreateError('Give the new scenario a file name.');
@@ -258,29 +274,45 @@ export function ProcessPacksWorkspace({
             : 'A Regression Pack runs independent Tests or Business Processes with member-specific bindings.'}
         </p>
 
-        {nothingOpen ? (
-          <EmptyState
-            title={section === 'processes' ? 'No Business Process open' : 'No Regression Pack open'}
-            description="Pick one from the tree, or use Create New to orchestrate a new scenario."
-          />
-        ) : section === 'processes' ? (
-          <GroupEditor
-            initialFile={openProcess || undefined}
-            newFile={pendingNewProcess}
-            showLibraryControls={false}
-            onSelectedFileChange={(file) => { setOpenProcess(file); onProcessFileChange(file); refreshTree(); }}
-            onDirtyChange={handleDirty}
-          />
-        ) : (
-          <PackEditor
-            initialFile={openPack || undefined}
-            newFile={pendingNewPack}
-            showLibraryControls={false}
-            onSelectedFileChange={(file) => { setOpenPack(file); onPackFileChange(file); refreshTree(); }}
-            onDirtyChange={handleDirty}
-          />
-        )}
+        <EmptyState
+          title={
+            section === 'processes'
+              ? `${counts.processes} Business Process${counts.processes === 1 ? '' : 'es'}`
+              : `${counts.packs} Regression Pack${counts.packs === 1 ? '' : 's'}`
+          }
+          description="Pick one from the tree to compose it, or use Create New to orchestrate a new scenario."
+        />
       </main>
+
+      {/* Composing happens in a pop-out, the same shell Compose's step editor and Test Data's
+          dataset editor use, so "entering a task" looks the same wherever you do it. The tree
+          stays behind it as the answer to "what else is there". */}
+      {!nothingOpen && (
+        <PopDialog
+          className="scenario-dialog"
+          title={`${(section === 'processes' ? openProcess : openPack).replace(/.json$/, '')} — ${section === 'processes' ? 'Business Process' : 'Regression Pack'}`}
+          closeLabel="Close this scenario"
+          onClose={closeScenario}
+        >
+          {section === 'processes' ? (
+            <GroupEditor
+              initialFile={openProcess || undefined}
+              newFile={pendingNewProcess}
+              showLibraryControls={false}
+              onSelectedFileChange={(file) => { setOpenProcess(file); onProcessFileChange(file); refreshTree(); }}
+              onDirtyChange={handleDirty}
+            />
+          ) : (
+            <PackEditor
+              initialFile={openPack || undefined}
+              newFile={pendingNewPack}
+              showLibraryControls={false}
+              onSelectedFileChange={(file) => { setOpenPack(file); onPackFileChange(file); refreshTree(); }}
+              onDirtyChange={handleDirty}
+            />
+          )}
+        </PopDialog>
+      )}
 
       {createOpen && (
         <PopDialog

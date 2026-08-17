@@ -54,7 +54,9 @@ test('unsaved Regression Pack changes are protected from shell navigation', asyn
       await page.getByRole('button', { name: 'Create', exact: true }).click();
 
       const dialogPromise = page.waitForEvent('dialog');
-      const navigation = page.getByRole('button', { name: /Execution Center/ }).first().click();
+      // Same as the Business Process guard: the modal owns the exit, so that is where the
+      // unsaved draft is defended.
+      const navigation = page.getByRole('button', { name: 'Close this scenario' }).click();
       const dialog = await dialogPromise;
       assert.match(dialog.message(), /unsaved changes/i);
       await dialog.dismiss();

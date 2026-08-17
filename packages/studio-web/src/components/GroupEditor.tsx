@@ -81,6 +81,10 @@ export function GroupEditor({
 
   useEffect(() => {
     if (!initialFile || initialFile === selectedFile) return;
+    // A brand new scenario exists only as an unsaved draft in memory. Creating one also sets the
+    // route, so this effect would otherwise fetch a file that is not on disk yet and report
+    // "Error: Not found" over a perfectly good draft.
+    if (initialFile === newFile) return;
     setSelectedFile(initialFile);
     setSavedAt(null);
     setError(null);
@@ -90,7 +94,7 @@ export function GroupEditor({
       .then(setGroup)
       .catch((e) => setError(String(e)))
       .finally(() => setLoadingArtifact(false));
-  }, [initialFile, selectedFile]);
+  }, [initialFile, selectedFile, newFile]);
 
   // Same guard as the test case editor — a saved-then-forgotten group is worse than
   // a confirm dialog on an accidental reload.

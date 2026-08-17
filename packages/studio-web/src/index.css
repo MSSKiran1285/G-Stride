@@ -8719,6 +8719,17 @@ button.pill:disabled,
   width: min(92rem, 100%);
 }
 
+/* Composing a scenario needs the room a dataset does: the stage topology and the member list are
+   both wide, side-by-side forms. */
+.scenario-dialog {
+  width: min(92rem, 100%);
+}
+
+.scenario-dialog .pop-dialog-body {
+  max-height: 78vh;
+  overflow: auto;
+}
+
 .pop-dialog:focus {
   outline: none;
 }

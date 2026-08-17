@@ -58,6 +58,8 @@ export function PackEditor({
 
   useEffect(() => {
     if (!initialFile || initialFile === selectedFile) return;
+    // See GroupEditor: a new draft is not on disk, and fetching it reports "Not found" over it.
+    if (initialFile === newFile) return;
     setSelectedFile(initialFile);
     setSavedAt(null);
     setError(null);
@@ -67,7 +69,7 @@ export function PackEditor({
       .then(setPack)
       .catch((reason) => setError(String(reason)))
       .finally(() => setLoadingArtifact(false));
-  }, [initialFile, selectedFile]);
+  }, [initialFile, selectedFile, newFile]);
 
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
