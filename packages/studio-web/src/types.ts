@@ -159,6 +159,17 @@ export interface TestValidationIssue {
   message: string;
 }
 
+/** Per-App-ID capture health — see /api/objects/coverage for what each field does and does not mean. */
+export interface ObjectCoverage {
+  appId: string;
+  captured: number;
+  unreferenced: string[];
+  verified: number;
+  drifted: number;
+  neverVerified: number;
+  missing: Array<{ name: string; referencedBy: string[] }>;
+}
+
 export interface TestLibraryItem {
   file: string;
   name: string;

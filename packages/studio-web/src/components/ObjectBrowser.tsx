@@ -21,7 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { api } from '../api';
-import type { ObjectControl, ObjectVerificationEvent, ObjectReconcileResult } from '../types';
+import type { ObjectControl, ObjectVerificationEvent, ObjectReconcileResult, ObjectCoverage } from '../types';
 import { AsyncFeedback, EmptyState } from './WorkspacePrimitives';
 
 const UNTAGGED = '(untagged)';
@@ -125,11 +125,23 @@ export function ObjectBrowser({
   // Layout UI states
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  // What this App ID's capture covers. The library showed what HAS been captured and nothing
+  // about the state it is in, so a stale capture looked exactly like a fresh one.
+  const [coverage, setCoverage] = useState<ObjectCoverage | null>(null);
+
   const domainOf = useCallback((id: string) => appIdTags[id] || UNTAGGED, [appIdTags]);
 
   function refreshTags() {
     api.listTags('appId').then(setAppIdTags).catch(() => undefined);
     api.listProcessAreas().then(setProcessAreas).catch(() => undefined);
+  }
+
+  function refreshCoverage(forAppId: string) {
+    if (!forAppId) return setCoverage(null);
+    api.getObjectCoverage()
+      .then((all) => setCoverage(all.find((entry) => entry.appId === forAppId) ?? null))
+      // Coverage is context, not the page — losing it must not take the object list with it.
+      .catch(() => setCoverage(null));
   }
 
   function refreshObjects() {
@@ -248,9 +260,11 @@ export function ObjectBrowser({
     setReconcileResult(null);
     if (!appId) {
       setObjects([]);
+      setCoverage(null);
       return;
     }
     refreshObjects();
+    refreshCoverage(appId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appId]);
 
@@ -680,6 +694,23 @@ export function ObjectBrowser({
                 <span className="obj-lib-controls-count">
                   {objects.length} controls <Info size={14} />
                 </span>
+                {coverage && coverage.captured > 0 && (
+                  <span
+                    className="obj-coverage-chip"
+                    title={
+                      'Reconcile checks every stored object against the live screen. '
+                      + 'Nothing here has been checked since it was captured.'
+                    }
+                  >
+                    {coverage.drifted > 0 && <strong className="drifted">{coverage.drifted} drifted</strong>}
+                    {coverage.neverVerified > 0 && (
+                      <span>{coverage.neverVerified} never verified</span>
+                    )}
+                    {coverage.drifted === 0 && coverage.neverVerified === 0 && (
+                      <span>all {coverage.verified} verified</span>
+                    )}
+                  </span>
+                )}
               </div>
               {filter && (
                 <button type="button" className="btn-clear-filters" onClick={() => setFilter('')}>
@@ -699,6 +730,16 @@ export function ObjectBrowser({
                 style={{ flex: 1 }}
               />
             </div>
+
+            {/* A Test naming an object this App ID does not hold. It is what blocks publishing,
+                and it is otherwise invisible until a run fails or a publish is attempted —
+                usually the result of a rename or a delete that left the Test behind. */}
+            {coverage && coverage.missing.length > 0 && (
+              <div className="fiori-message-strip error" role="alert" style={{ marginBottom: '0.65rem' }}>
+                <strong>{coverage.missing.length} object{coverage.missing.length === 1 ? '' : 's'} referenced but not captured.</strong>{' '}
+                {coverage.missing.map((entry) => `${entry.name} (${entry.referencedBy.join(', ')})`).join(' · ')}
+              </div>
+            )}
 
             {error && <AsyncFeedback state="error" message={error} onRetry={refreshObjects} />}
             {actionError && <AsyncFeedback state="error" message={actionError} />}

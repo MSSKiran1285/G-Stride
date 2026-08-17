@@ -1805,6 +1805,94 @@ export function createStudioServer(options: StudioServerOptions = {}): Express {
     }
   });
 
+  /**
+   * What each App ID's capture actually covers.
+   *
+   * The Object Library shows what HAS been captured and says nothing about the state it is in, so
+   * a stale capture is indistinguishable from a fresh one until a run fails on it.
+   *
+   * `missing` is every object a Test names that the repository does not hold — a rename or a
+   * delete that left a Test pointing at nothing. It is the same answer the publish validator
+   * gives, available without attempting to publish. Note what it deliberately cannot tell you: a
+   * field no Test references AND no capture holds is invisible here, because nothing in this
+   * product knows it should exist. createSalesOrder's absent Customer Reference is exactly that
+   * shape — only SAP's own incompleteness log names it.
+   *
+   * `unreferenced` means "named by no Test parameter", which is not the same as unused. A module
+   * that resolves its controls internally rather than through an `objectKind` param — Login and
+   * its three fields — will show as unreferenced while being used on every single run. Read it as
+   * a prompt to look, never as a delete list.
+   */
+  app.get('/api/objects/coverage', (_req, res) => {
+    try {
+      const referenced = new Map<string, Map<string, Set<string>>>();
+      const record = (appId: string, name: string, file: string) => {
+        if (!referenced.has(appId)) referenced.set(appId, new Map());
+        const byName = referenced.get(appId)!;
+        if (!byName.has(name)) byName.set(name, new Set());
+        byName.get(name)!.add(file);
+      };
+
+      if (existsSync(testCasesDir)) {
+        for (const file of readdirSync(testCasesDir).filter((entry) => entry.endsWith('.json'))) {
+          let testCase: TestCase;
+          try {
+            testCase = JSON.parse(readFileSync(path.join(testCasesDir, file), 'utf-8'));
+          } catch {
+            continue; // an unreadable Test is not a coverage gap — skip it, as the library does
+          }
+          const steps = Array.isArray(testCase.steps) ? testCase.steps : [];
+          const defaultAppId = steps.find((step) => typeof step?.appId === 'string' && step.appId.trim())?.appId?.trim() ?? '';
+          for (const step of steps) {
+            let moduleInfo;
+            try {
+              moduleInfo = registry.get(step?.module);
+            } catch {
+              continue;
+            }
+            const appId = step.appId?.trim() || defaultAppId;
+            if (!appId) continue;
+            for (const descriptor of moduleInfo.describe?.params ?? []) {
+              if (!descriptor.objectKind) continue;
+              const value = step.params?.[descriptor.key];
+              if (typeof value !== 'string' || !value.trim()) continue;
+              // A placeholder resolves at run time and cannot be checked from here. It is a
+              // publishing issue in its own right, not a missing capture.
+              if (/\$\{[^}]+\}/.test(value)) continue;
+              record(appId, value.trim(), file);
+            }
+          }
+        }
+      }
+
+      const appIds = new Set([...objectRepository.listAppIds(), ...referenced.keys()]);
+      const coverage = [...appIds].sort().map((appId) => {
+        const captured = objectRepository.listByApp(appId);
+        const capturedNames = new Set(captured.map((control) => control.name));
+        const byName = referenced.get(appId) ?? new Map<string, Set<string>>();
+        const missing = [...byName.entries()]
+          .filter(([name]) => !capturedNames.has(name))
+          .map(([name, files]) => ({ name, referencedBy: [...files].sort() }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        const usedNames = new Set([...byName.keys()].filter((name) => capturedNames.has(name)));
+        return {
+          appId,
+          captured: captured.length,
+          // Captured but referenced by no Test: either not needed yet, or dead weight from a
+          // scan that grabbed the whole screen.
+          unreferenced: captured.filter((control) => !usedNames.has(control.name)).map((control) => control.name).sort(),
+          verified: captured.filter((control) => control.verificationStatus === 'verified').length,
+          drifted: captured.filter((control) => control.verificationStatus === 'drifted').length,
+          neverVerified: captured.filter((control) => !control.verificationStatus || control.verificationStatus === 'never').length,
+          missing,
+        };
+      });
+      res.json(coverage);
+    } catch (err: any) {
+      res.status(err.status ?? 500).json({ error: err.message });
+    }
+  });
+
   app.get('/api/objects/:appId', (req, res) => {
     const controls = objectRepository.listByApp(req.params.appId);
     const duplicates = findLikelyDuplicates(controls);

@@ -7970,6 +7970,26 @@ button.pill:disabled,
   border-radius: 4px;
 }
 
+/* Capture health beside the control count: read, not clicked, so it takes the muted tone
+   rather than being dressed as a control. Drift is the one part that is coloured, because it
+   is the one part that means something is already wrong. */
+.obj-coverage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--panel-subtle);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.45rem;
+}
+
+.obj-coverage-chip .drifted {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .obj-lib-controls-count {
   font-size: 0.8rem;
   color: var(--text-soft);

@@ -4,6 +4,7 @@ import type {
   ObjectControl,
   ObjectVerificationEvent,
   ObjectReconcileResult,
+  ObjectCoverage,
   RunStatus,
   RerunReview,
   Dataset,
@@ -127,6 +128,7 @@ export const api = {
       body: JSON.stringify({ newName }),
     }),
   listAppIds: () => request<string[]>('/api/app-ids'),
+  getObjectCoverage: () => request<ObjectCoverage[]>('/api/objects/coverage'),
   deleteAppId: (appId: string) =>
     request<{ ok: true }>(`/api/app-ids/${encodeURIComponent(appId)}`, { method: 'DELETE' }),
   getModuleUsage: (module: string, paramKey: string) =>
