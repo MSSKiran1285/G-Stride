@@ -265,10 +265,11 @@ export function PackEditor({
             return (
               <fieldset key={`${member.id}-${index}`} className="panel stack" aria-label={`Pack member ${index + 1}`}>
                 <legend>Member {index + 1}</legend>
-                {/* One lane reads left to right: what it is called, what it runs, and what data it
-                    runs on. The policies sit on the row beneath, because they are the part you
-                    set once and rarely revisit. */}
-                <div className="pack-member-row">
+                {/* One grid for the whole member, not a row per line: both lines share the same
+                    four column tracks, so every label and every control sits on the same vertical
+                    line whichever row it is on. Reading order is what the lane IS — name, kind,
+                    artifact, data — then how it behaves. */}
+                <div className="pack-member-grid">
                   <div className="pack-member-field">
                     <label>Member ID</label>
                     <input aria-label={`Member ${index + 1} ID`} value={member.id} onChange={(event) => updateMember(index, { id: event.target.value })} />
@@ -294,9 +295,6 @@ export function PackEditor({
                       {dataFiles.map((file) => <option key={file} value={file}>{file}</option>)}
                     </select>
                   </div>
-                </div>
-
-                <div className="pack-member-row">
                   <div className="pack-member-field">
                     <label>App ID override</label>
                     <input aria-label={`Member ${index + 1} App ID`} value={member.appId ?? ''} onChange={(event) => updateMember(index, { appId: event.target.value || undefined })} />

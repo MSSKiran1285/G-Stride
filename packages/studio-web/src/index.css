@@ -7588,60 +7588,61 @@ button.pill:disabled,
 
 /* "What are you orchestrating?" — the two answers produce different artifacts with different
    rules, so each option carries the sentence that distinguishes them rather than a bare name. */
-/* A Pack member is one lane, and it reads across rather than down: label to the left of its
-   control, four to a row, so a Pack with six members is six lines instead of six blocks. The
-   two-column stack it replaced made every member the height of a form.
+/* A Pack member is one lane, and it reads across rather than down. Four fields to a line,
+   label beside its control, so a Pack with six members is six lanes instead of six forms.
 
-   The rows wrap rather than scroll — a lane that cannot fit its four fields should fold onto the
-   next line, not put a scrollbar inside a dialog that already scrolls. */
-.pack-member-row {
-  display: flex;
-  flex-wrap: wrap;
+   One grid for the whole member rather than a row per line: both lines share the same four
+   column tracks, and the label column inside each is a fixed width, so every label starts on the
+   same vertical line and every control does too. Sizing each field independently is what made
+   the first attempt look cluttered — the second line's columns landed wherever the first line's
+   text happened to end. */
+.pack-member-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem 1.6rem;
   align-items: center;
-  gap: 0.5rem 1.25rem;
-}
-
-.pack-member-row + .pack-member-row {
-  margin-top: 0.6rem;
 }
 
 .pack-member-field {
-  display: flex;
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
   align-items: center;
   gap: 0.55rem;
-  flex: 1 1 16rem;
   min-width: 0;
 }
 
-/* Labels share one width so the controls line up down the two rows instead of stepping in and
-   out with the length of each word. */
 .pack-member-field > label {
-  flex: 0 0 auto;
-  width: 7.5rem;
   margin: 0;
-  text-align: left;
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   font-weight: 700;
   color: var(--text-soft);
+  line-height: 1.25;
 }
 
 .pack-member-field > input,
 .pack-member-field > select {
-  flex: 1 1 auto;
-  min-width: 0;
   margin: 0;
+  min-width: 0;
+  width: 100%;
 }
 
-/* Remove sits at the end of the policy row rather than on a line of its own. */
+/* Sits in the lane's last cell so it lines up with the column above it rather than floating
+   loose at the end of the line. */
 .pack-member-remove {
-  flex: 0 0 auto;
-  margin-left: auto;
+  justify-self: end;
+  align-self: center;
 }
 
-@media (max-width: 70rem) {
-  .pack-member-field { flex-basis: 100%; }
+/* Two per line, then one — the label column stays fixed throughout, so the alignment survives
+   the narrowing. */
+@media (max-width: 82rem) {
+  .pack-member-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 48rem) {
+  .pack-member-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 .create-kind-choice {
