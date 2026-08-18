@@ -1,6 +1,39 @@
 {
   "executionHistory": [
     {
+      "id": "ISOLATED-UI-2026-08-18T04-54-56-213Z",
+      "label": "Isolated UI regression",
+      "startedAt": "2026-08-18T04:54:59.342Z",
+      "finishedAt": "2026-08-18T04:56:54.310Z",
+      "passed": 55,
+      "failed": 0,
+      "skipped": 15,
+      "mode": "Headless UI",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "ISOLATED-API-2026-08-18T04-54-08-333Z",
+      "label": "Isolated API regression",
+      "startedAt": "2026-08-18T04:54:11.483Z",
+      "finishedAt": "2026-08-18T04:54:42.985Z",
+      "passed": 85,
+      "failed": 0,
+      "skipped": 4,
+      "mode": "API",
+      "targetClass": "Isolated"
+    },
+    {
+      "id": "CORE-2026-08-18T04-53-20-236Z",
+      "label": "Core regression",
+      "startedAt": "2026-08-18T04:53:22.092Z",
+      "finishedAt": "2026-08-18T04:53:55.426Z",
+      "passed": 113,
+      "failed": 0,
+      "skipped": 0,
+      "mode": "Unit / Integration",
+      "targetClass": "Isolated"
+    },
+    {
       "id": "CORE-2026-08-11T17-22-36-060Z",
       "label": "Core regression",
       "startedAt": "2026-08-11T17:22:36.360Z",
@@ -181,39 +214,6 @@
       "label": "Core regression",
       "startedAt": "2026-08-11T05:29:07.348Z",
       "finishedAt": "2026-08-11T05:29:15.122Z",
-      "passed": 90,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-11T05-06-38-262Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-11T05:06:38.411Z",
-      "finishedAt": "2026-08-11T05:06:46.657Z",
-      "passed": 90,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-11T05-04-43-406Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-11T05:04:43.554Z",
-      "finishedAt": "2026-08-11T05:04:51.848Z",
-      "passed": 90,
-      "failed": 0,
-      "skipped": 0,
-      "mode": "Unit / Integration",
-      "targetClass": "Isolated"
-    },
-    {
-      "id": "CORE-2026-08-11T04-55-13-374Z",
-      "label": "Core regression",
-      "startedAt": "2026-08-11T04:55:13.523Z",
-      "finishedAt": "2026-08-11T04:55:20.916Z",
       "passed": 90,
       "failed": 0,
       "skipped": 0,
