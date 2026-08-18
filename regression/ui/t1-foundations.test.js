@@ -104,12 +104,12 @@ test('T1.3 primary text and controls meet normal-text contrast in both themes', 
   await withBrowser(async (browser) => {
     await withPage(browser, 't1-theme-contrast', async (page) => {
       await page.goto(BASE_URL);
-      await page.locator('.step-nav-btn.primary').first().waitFor();
+      await page.locator('.lhs-nav-item.active').first().waitFor();
       for (const theme of ['light', 'dark']) {
         await page.evaluate((nextTheme) => document.documentElement.setAttribute('data-theme', nextTheme), theme);
         const colors = await page.evaluate(() => {
           const body = getComputedStyle(document.body);
-          const primary = getComputedStyle(document.querySelector('.step-nav-btn.primary'));
+          const primary = getComputedStyle(document.querySelector('.lhs-nav-item.active'));
           return {
             bodyText: body.color,
             bodyBackground: body.backgroundColor,

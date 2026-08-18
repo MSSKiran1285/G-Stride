@@ -144,6 +144,12 @@
      canvas; this is the neutral that actually draws the box. */
   --section-border: #55637a;
 
+  /* Table rows. Hover is a stronger grey than the surface but nowhere near the selection; the
+     selected row is the same solid neutral every other "this one" in the product uses. */
+  --row-hover: #e6eaf0;
+  --row-selected: #37475a;
+  --row-selected-text: #ffffff;
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -791,6 +797,13 @@ button.pill,
   background: var(--bg);
 }
 
+.workspace-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+}
+
 .workspace-header {
   display: flex;
   align-items: center;
@@ -808,121 +821,6 @@ button.pill,
 }
 
 /* Uniform Slim Bottom Navigation & Context Bar (Light Coral Tint with Varying Hues) */
-.workspace-bottom-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.15rem 1rem;
-  min-height: 28px;
-  max-height: 28px;
-  height: 28px;
-  background: var(--panel-subtle);
-  border-top: 1px solid #fca5a5;
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 -2px 10px rgba(225, 29, 72, 0.08);
-  z-index: 40;
-  width: 100%;
-  box-sizing: border-box;
-  /* No transform here: the stage reserves exactly this bar's height, so nudging the bar upward
-     moved only its paint and left it covering the bottom of every workspace. */
-  position: relative;
-}
-
-.workspace-bottom-left,
-.workspace-bottom-right,
-.workflow-step-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-/* UNIFORM SLIM STYLING FOR ALL 4 CONTROLS:
-   1. Search
-   2. SAP Verification Target Badge
-   3. Back Button
-   4. Next Button
-*/
-.workspace-bottom-bar .header-search-trigger,
-.workspace-bottom-bar .context-target,
-.workspace-bottom-bar .step-nav-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  height: 22px;
-  min-height: 22px;
-  max-height: 22px;
-  padding: 0 0.55rem;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  border-radius: 4px;
-  white-space: nowrap;
-  box-sizing: border-box;
-  margin: 0;
-  transition: all 0.15s ease;
-}
-
-.workspace-bottom-bar .header-search-trigger svg,
-.workspace-bottom-bar .context-target svg,
-.workspace-bottom-bar .step-nav-btn svg {
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-}
-
-/* 1. Search Trigger */
-.workspace-bottom-bar .header-search-trigger {
-  color: var(--text);
-  border: 1px solid #fca5a5;
-  background: #ffffff;
-  cursor: pointer;
-}
-.workspace-bottom-bar .header-search-trigger:hover,
-.workspace-bottom-bar .header-search-trigger:focus-visible {
-  color: var(--text);
-  border-color: var(--border-strong);
-  background: var(--panel-subtle);
-  outline: none;
-}
-
-/* 2. SAP Target Badge */
-.workspace-bottom-bar .context-target {
-  background: #f0fdf4;
-  border: 1px solid #86efac;
-  color: #15803d;
-  cursor: pointer;
-}
-.workspace-bottom-bar .context-target:hover {
-  background: #dcfce7;
-  border-color: #4ade80;
-  color: #166534;
-}
-
-/* 3. Back Button */
-.workspace-bottom-bar .step-nav-btn {
-  background: #ffffff;
-  border: 1px solid #fca5a5;
-  color: var(--text);
-  cursor: pointer;
-}
-.workspace-bottom-bar .step-nav-btn:hover {
-  background: var(--panel-subtle);
-  border-color: #f87171;
-  color: var(--text);
-}
-
-/* 4. Next Button (Primary Coral Action) */
-.workspace-bottom-bar .step-nav-btn.primary {
-  background: var(--action-solid);
-  border: 1px solid var(--action-solid);
-  color: #ffffff;
-  cursor: pointer;
-}
-.workspace-bottom-bar .step-nav-btn.primary:hover {
-  background: var(--action-solid-hover);
-  border-color: var(--action-solid-hover);
-}
 
 .breadcrumb-path {
   display: flex;
@@ -2667,7 +2565,10 @@ th {
 }
 
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--accent-soft); }
+/* Hover is a change of ground, not of meaning: a readable grey that is clearly a shade darker
+   than the row, without being the dark of a selection. The accent tint that used to be here
+   turned every table pink under the pointer. */
+tr:hover td { background: var(--row-hover); }
 
 /* Workflow Footer */
 .workflow-footer-bar {
@@ -8137,15 +8038,17 @@ button.pill:disabled,
   color: var(--text);
 }
 
+/* Close Session and Add member follow the standard outlined button; they were falling through
+   to whatever the cascade happened to give them. */
 .cozy-btn-close {
-  background: #f1f5f9;
-  color: #1e293b;
-  border: 1px solid #cbd5e1;
-  border-radius: 9999px !important;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm) !important;
   cursor: pointer;
 }
 .cozy-btn-close:hover:not(:disabled) {
-  background: #e2e8f0;
+  background: var(--panel-subtle);
 }
 
 .cozy-session-status {
@@ -8374,12 +8277,14 @@ button.pill:disabled,
 }
 
 .obj-table-clean tr:hover {
-  background: var(--panel-subtle);
+  background: var(--row-hover);
 }
 
+/* Selected is the solid neutral the rest of the product uses for "this one", not a pink wash
+   with red text — which read as an error on the row you had just chosen. */
 .obj-table-clean tr.selected-row > td {
-  background: var(--accent-soft) !important;
-  color: var(--accent);
+  background: var(--row-selected) !important;
+  color: var(--row-selected-text) !important;
 }
 
 /* Top Right Action Pills Bar */
@@ -9296,7 +9201,10 @@ button.pill:disabled,
 }
 
 .data-library-table tbody tr { cursor: pointer; }
-.data-library-table tbody tr.selected-row > td { background: var(--accent-soft) !important; }
+.data-library-table tbody tr.selected-row > td {
+  background: var(--row-selected) !important;
+  color: var(--row-selected-text) !important;
+}
 
 .data-library-name {
   padding: 0;

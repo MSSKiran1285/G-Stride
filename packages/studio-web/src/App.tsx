@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft,
-  ArrowRight,
   BookOpen,
   Database,
   FileCheck2,
@@ -232,20 +230,6 @@ export function App() {
     navigateToPath(studioRoutes.run(runId), false);
   };
 
-  const goToNextStep = () => {
-    const idx = navSteps.findIndex((s) => s.id === view);
-    if (idx >= 0 && idx < navSteps.length - 1) {
-      navigateTo(navSteps[idx + 1].id);
-    }
-  };
-
-  const goToPrevStep = () => {
-    const idx = navSteps.findIndex((s) => s.id === view);
-    if (idx > 0) {
-      navigateTo(navSteps[idx - 1].id);
-    }
-  };
-
   const openSettings = (integration: 'sap' | 'salesforce' | 'oracle' | 'servicenow' = 'sap') => {
     setSettingsInitialIntegration(integration);
     setSettingsOpen(true);
@@ -347,6 +331,30 @@ export function App() {
               <span className="bc-sep" aria-hidden="true">/</span>
               <span className="bc-current">{currentStep.label}</span>
             </div>
+          </div>
+
+          {/* Both of these lived in the bottom bar and nowhere else: search has no keyboard
+              shortcut, and this is the only place the product says which tenant it is pointed at
+              and whether that tenant has been verified. Removing the bar without them would have
+              taken a capability and a safety signal with it. */}
+          <div className="workspace-header-right">
+            <button
+              type="button"
+              className="header-search-trigger"
+              onClick={() => setSearchOpen(true)}
+              title="Search Tests, Objects, Datasets, Processes, Packs and Runs"
+            >
+              <Search size={13} aria-hidden="true" /> Search
+            </button>
+            <button
+              type="button"
+              className={`context-target${workspaceContext?.target.configured ? ' configured' : ''}`}
+              onClick={() => openSettings('sap')}
+              title="Open SAP target settings"
+            >
+              <Sliders size={13} aria-hidden="true" />
+              <span>{targetLabel}</span>
+            </button>
           </div>
         </header>
 
@@ -581,42 +589,6 @@ export function App() {
           )}
         </div>
 
-        <footer className="workspace-bottom-bar" aria-label="Workspace navigation and context">
-          <div className="workspace-bottom-left">
-            <button
-              type="button"
-              className="header-search-trigger"
-              onClick={() => setSearchOpen(true)}
-              title="Search Tests, Objects, Datasets, Processes, Packs and Runs"
-            >
-              <Search size={13} aria-hidden="true" /> Search
-            </button>
-            <button
-              type="button"
-              className={`context-target${workspaceContext?.target.configured ? ' configured' : ''}`}
-              onClick={() => openSettings('sap')}
-              title="Open SAP target settings"
-            >
-              <Sliders size={13} aria-hidden="true" />
-              <span>{targetLabel}</span>
-            </button>
-          </div>
-
-          <div className="workspace-bottom-right">
-            <div className="workflow-step-actions" aria-label="Workflow navigation">
-              {view !== 'launchpad' && (
-                <button type="button" className="step-nav-btn" onClick={goToPrevStep}>
-                  <ArrowLeft size={13} aria-hidden="true" /> Back
-                </button>
-              )}
-              {view !== 'documents' && (
-                <button type="button" className="step-nav-btn primary" onClick={goToNextStep}>
-                  Next <ArrowRight size={13} aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          </div>
-        </footer>
       </div>
       {settingsOpen && (
         <SettingsPanel
