@@ -10,9 +10,13 @@
  * ruled out the shape the product exists for: Create Sales Order, then its Delivery, then its
  * Billing Document.
  *
- * The collision was never real. The module is idempotent by design: the first stage mints the
- * reference and later stages reuse it, so whichever stage a consumer reads it from, the value is
- * the same. Any other duplicated output still is ambiguous, and stays an error.
+ * CORRECTED 18 Aug 2026. This used to justify the exemption by saying the module is idempotent,
+ * so every stage reads the same value. That is false — each stage runs in its own runState and a
+ * three-stage process mints three different references (BL-064). The exemption stands anyway,
+ * because blocking the save would ban the product's central scenario over a collision no author
+ * chose; but it is a trade-off, not a safety proof. What these tests pin is the SAVE behaviour,
+ * which is what they always actually asserted. Any other duplicated output stays an error,
+ * because there the ambiguity is authored rather than structural.
  */
 
 const { test, before } = require('node:test');

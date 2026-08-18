@@ -13,20 +13,26 @@ import { GroupedPicker } from './GroupedPicker';
 import { AsyncFeedback } from './WorkspacePrimitives';
 
 /**
- * Outputs that are one value per EXECUTION, not one per stage.
+ * Outputs that every transactional Test declares by construction.
  *
  * The server inserts CreateAutomationRunReference as step 1 of every Test that creates SAP
  * documents, and that module declares these three. So the moment a Business Process contains two
  * transactional Tests — Create SO then Create Delivery — every one of them collides, and the
  * process could not be saved at all. o2c-e2e, the product's own flagship process, is exactly that
- * shape.
+ * shape, so the exemption has to exist.
  *
- * The collision is not real. The module is deliberately idempotent: the first stage mints the
- * reference and later stages reuse it, because an audit trail pointing at three unrelated
- * identifiers for one run is the opposite of a correlation key. Whichever stage a consumer reads
- * it from, the value is the same, so there is no ambiguity to warn about. Any OTHER duplicated
- * output still is ambiguous — two stages producing different document numbers under one name —
- * and stays an error.
+ * CORRECTED 18 Aug 2026. This used to say the collision "is not real" because the module is
+ * idempotent and every stage therefore reads the same value. An external review challenged that
+ * and it is false: executeTestCaseChain declares a fresh runState per call and the orchestrator
+ * calls it once per stage, so a three-stage process mints three DIFFERENT references. Measured:
+ * Q4HO2C2608187FA7, Q4HO2C260818AEF9, Q4HO2C260818EF07.
+ *
+ * So the exemption is a deliberate trade-off, not a proof of safety. Blocking the save would ban
+ * the product's central scenario over a collision no author chose and none can avoid; allowing it
+ * means a consumer binding one of these names in a later stage gets that stage's own value, not
+ * the run's. That is tracked as BL-064 and is a real defect — do not read this exemption as
+ * saying the values agree. Any OTHER duplicated output stays an error, because there the
+ * ambiguity is authored rather than structural.
  */
 const RUN_SCOPED_OUTPUTS = new Set(['automationReference', 'automationOwner', 'transactionFailureDisposition']);
 
