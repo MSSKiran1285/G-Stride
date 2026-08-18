@@ -286,7 +286,7 @@ export function App() {
             onClick={() => navigateTo('launchpad')}
             aria-label="G-Stride — go to Automation Overview"
           >
-            <img src="/g-stride-logo.png" alt="G-Stride" className="brand-logo-icon" width="22" height="22" />
+            <img src="/g-stride-logo.png" alt="G-Stride" className="brand-logo-icon" width="18" height="18" />
             {!sidebarCollapsed && (
               <span className="brand-title-wrap">
                 <span className="brand-name">G-Stride</span>
