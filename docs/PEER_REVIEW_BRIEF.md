@@ -2,6 +2,12 @@
 
 > Hand this whole file to the reviewer. It is written to be pasted verbatim into an AI
 > assistant with repository access, or read by a human engineer before they open the code.
+>
+> **The repository under review is `SAP-QA-4-HANA` (G-Stride).** It is a fork of
+> `SAP-S4HANA-Studio-UI-Redesign` and the two share most engine, core and CLI code, so a review
+> of the wrong one produces findings that are mostly right and citations that are all wrong. If
+> `HANDOVER.md` is not at the root, you are in the wrong checkout. G-Stride at v2.2.0 records
+> 113 core, 85 API and 55 UI passing; the parent records 90 core.
 > Everything in the "What we already know is wrong" section is deliberate: a review that
 > spends its time rediscovering our known list is a review we did not need.
 
@@ -73,9 +79,13 @@ blocking finding. The controls that exist today:
   failed transaction.
 - Every transactional Test must declare `retain-for-review` as its failure disposition and
   must require an accountable run owner.
-- Every transactional Test must carry an owner-linked **automation reference** step, and that
-  reference is idempotent across the stages of one process, so one execution has one
-  correlation key.
+- Every transactional Test must carry an owner-linked **automation reference** step.
+  **Correction, 18 Aug 2026:** an earlier draft of this brief said that reference is idempotent
+  across the stages of one process. It is not. Each stage runs in its own `runState`, so a
+  three-stage process mints three unrelated references, and preflight only checks that *some*
+  selected Test contains the step — not that each transactional Test does, nor that it runs
+  before a side effect, nor that it is written into SAP. Only Supplier Invoice writes it into a
+  SAP field at all. Treat this control as substantially weaker than the rest of the list.
 - Credentials resolve from system context or an encrypted store, **never** from test data.
 - The approved data set is hashed into a snapshot at preflight and that exact snapshot is what
   Start reuses.

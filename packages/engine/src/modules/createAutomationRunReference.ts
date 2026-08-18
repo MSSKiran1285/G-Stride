@@ -32,19 +32,27 @@ export const CreateAutomationRunReference: Module = {
     if (!owner) throw new Error('CreateAutomationRunReference requires a non-empty owner.');
 
     /**
-     * One reference per EXECUTION, not per Test.
+     * Reuse an existing reference rather than overwriting it.
      *
-     * executeTestCaseChain shares a single runState across every stage, and this module used to
-     * assign unconditionally — so a Process that ran three transactional Tests minted three
-     * references, each overwriting the last. The audit trail then pointed at three unrelated
-     * identifiers for one run, which is the opposite of what an owner-linked correlation
-     * reference is for. It became reachable the moment every transactional Test was given its
-     * own step (15 Aug 2026); before that only the lead Test carried one and the chain inherited
-     * it by accident rather than by design.
+     * CAUTION — this guard does NOT currently deliver one reference per execution, and the
+     * comment that used to sit here claimed it did. An external review challenged the claim on
+     * 18 Aug 2026 and it does not survive contact with the engine.
      *
-     * Keeping the first one is what makes both true at once: a Test still creates its own
-     * reference when run standalone, and a chain of them shares the first stage's. runState is
-     * fresh per execution, so nothing leaks between runs.
+     * executeTestCaseChain declares `const runState = {}` at the top of each call, and
+     * executionOrchestrator calls it ONCE PER STAGE with a single-element array. So every stage
+     * of a Business Process starts with an empty runState, this guard never sees the previous
+     * stage's value, and a three-stage process mints three unrelated references. Measured
+     * directly against the built engine: Sales Order, Delivery and Billing produced
+     * Q4HO2C2608187FA7, Q4HO2C260818AEF9 and Q4HO2C260818EF07.
+     *
+     * The guard is real, but only within ONE call — the legacy path that passes several Tests to
+     * executeTestCaseChain together. On the orchestrator path, which is what the Studio runs, it
+     * is inert.
+     *
+     * Values do hand forward between stages, but through a different mechanism entirely:
+     * contract outputs into stageOutputs, then stageInputRow into the next stage's dataRow. A
+     * reference that is meant to be per-execution has to travel that way, or be minted above the
+     * stage loop. Tracked as BL-064; do not assume this guard covers it.
      */
     const referenceKey = params.captureAs || 'automationReference';
     const existing = runState[referenceKey];
