@@ -92,7 +92,7 @@ test('browser back and forward restore route-selected artifacts', async () => {
       await page.getByLabel('Test name').waitFor();
       assert.equal(new URL(page.url()).pathname, '/compose/tests/regression-sample.json');
       await page.goForward();
-      await page.getByRole('heading', { name: 'Datasets' }).waitFor();
+      await page.getByRole('heading', { name: 'Test Data' }).waitFor();
       assert.equal(new URL(page.url()).pathname, '/data');
     });
   });

@@ -54,7 +54,7 @@ test('unsaved new dataset is protected from shell navigation', async () => {
       page.once('dialog', (dialog) => dialog.accept());
       await page.getByRole('button', { name: 'Close dataset' }).click();
       await editor.waitFor({ state: 'detached' });
-      await page.getByRole('heading', { name: 'Datasets' }).waitFor();
+      await page.getByRole('heading', { name: 'Test Data' }).waitFor();
     });
   });
 });

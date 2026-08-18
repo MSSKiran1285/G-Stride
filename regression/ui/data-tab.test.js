@@ -127,7 +127,7 @@ test('Dataset Library search actually filters by file name and does not silently
   await withBrowser(async (browser) => {
     await withPage(browser, 'data-library-search', async (page) => {
       await page.goto(`${BASE_URL}/data`);
-      await page.getByRole('heading', { name: 'Datasets' }).waitFor();
+      await page.getByRole('heading', { name: 'Test Data' }).waitFor();
 
       // Baseline: the library must actually load real rows before search is exercised. Before
       // the async listDataLibrary() fetch resolves, libraryItems starts as [] and genuinely

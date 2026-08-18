@@ -493,10 +493,33 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
 
   return (
     <div className="stack data-workspace">
+      {/* No title and no standfirst: the sidebar already says Test Data, and the two section
+          buttons below say what is in it. A heading that repeats the nav and a sentence that
+          describes the obvious were costing a third of the screen above the actual work. */}
       <header className="data-workspace-heading">
-        <div>
-          <h1>Datasets</h1>
-          <p className="hint">Find a dataset, inspect what depends on it, then rename or remove it safely.</p>
+        <div className="workspace-tabs" role="tablist" aria-label="Test Data sections">
+          <button
+            type="button"
+            role="tab"
+            id="tab-dataset-library"
+            aria-selected={activeTab === 'library'}
+            aria-controls="panel-dataset-library"
+            className={activeTab === 'library' ? 'section-toggle active' : 'section-toggle'}
+            onClick={() => setActiveTab('library')}
+          >
+            Dataset library <span className="workspace-tab-count">{libraryItems.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="tab-relationships"
+            aria-selected={activeTab === 'relationships'}
+            aria-controls="panel-relationships"
+            className={activeTab === 'relationships' ? 'section-toggle active' : 'section-toggle'}
+            onClick={() => setActiveTab('relationships')}
+          >
+            Relationships <span className="workspace-tab-count">{relationFiles.length}</span>
+          </button>
         </div>
         <div className="row" style={{ flex: '0 0 auto' }}>
           <button type="button" className="primary" onClick={() => { setNewDatasetOpen(true); setError(null); }}>
@@ -508,31 +531,6 @@ export function DataEditor({ initialFile, onSelectedFileChange, onDirtyChange }:
 
       {error && <AsyncFeedback state="error" message={error} />}
       {loading && <AsyncFeedback state="loading" message="Loading datasets…" />}
-
-      <div className="workspace-tabs" role="tablist" aria-label="Test Data sections">
-        <button
-          type="button"
-          role="tab"
-          id="tab-dataset-library"
-          aria-selected={activeTab === 'library'}
-          aria-controls="panel-dataset-library"
-          className={activeTab === 'library' ? 'workspace-tab active' : 'workspace-tab'}
-          onClick={() => setActiveTab('library')}
-        >
-          Dataset library <span className="workspace-tab-count">{libraryItems.length}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="tab-relationships"
-          aria-selected={activeTab === 'relationships'}
-          aria-controls="panel-relationships"
-          className={activeTab === 'relationships' ? 'workspace-tab active' : 'workspace-tab'}
-          onClick={() => setActiveTab('relationships')}
-        >
-          Relationships <span className="workspace-tab-count">{relationFiles.length}</span>
-        </button>
-      </div>
 
       {activeTab === 'library' ? (
         <div className="data-split" role="tabpanel" id="panel-dataset-library" aria-labelledby="tab-dataset-library">

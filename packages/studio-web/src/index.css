@@ -4,7 +4,12 @@
   /* 'Inter Variable' is the family name the bundled @fontsource-variable/inter registers; plain
      'Inter' follows it so a locally installed copy is still used if the bundle ever fails. */
   --font-sans: 'Inter Variable', 'Inter', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-mono: 'IBM Plex Mono', "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  /* Tables read in IBM Plex: it is the face with the clearest figures at small sizes, which is
+     what a grid of counts, dates and identifiers is mostly made of. Self-hosted via
+     @fontsource, declared in studio-web's package.json — it had been sitting in node_modules
+     undeclared, so a clean install would have dropped it and fallen back silently to Inter. */
+  --font-table: 'IBM Plex Sans', 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-size-xs: 0.68rem;
   --font-size-sm: 0.75rem;
   --font-size-md: 0.85rem;
@@ -109,6 +114,10 @@
   --lhs-width: 320px;
   --lhs-width-collapsed: 68px;
 
+  /* Section outlines on the Overview. A hairline in the border tint vanishes against the
+     canvas; this is the neutral that actually draws the box. */
+  --section-border: #55637a;
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -204,7 +213,9 @@ button, input, select, textarea {
   color: inherit;
 }
 
-/* Global Uniform Pill-Shaped Buttons & Consistent Font Size */
+/* Global button shape: a soft rectangle, one height, width taken from the text it holds.
+   These were 9999px pills at 0.68rem, which made every button an ellipse whose width said
+   nothing about its label and whose height drifted with its padding. */
 button,
 input[type="button"],
 input[type="submit"],
@@ -232,10 +243,44 @@ button.pill,
 .step-nav-btn,
 .header-search-trigger,
 .btn-scan-new-object {
-  border-radius: 9999px !important;
-  font-size: 0.68rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em !important;
+  border-radius: var(--radius-sm) !important;
+  /* One height for every button in the product; the label decides the width. */
+  min-height: 34px !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+/* Two sections of one workspace, shown as a segmented pair rather than an underlined tab strip:
+   they sit on the header line beside the actions, where a tab rail would need a row of its own. */
+.section-toggle {
+  border: 1px solid var(--border) !important;
+  background: var(--panel) !important;
+  color: var(--text-soft) !important;
+  font-weight: 600 !important;
+  gap: 0.4rem;
+}
+
+.section-toggle:hover {
+  background: var(--panel-subtle) !important;
+  color: var(--text) !important;
+}
+
+.section-toggle.active {
+  background: var(--lhs-item-active) !important;
+  border-color: var(--lhs-item-active) !important;
+  color: var(--lhs-item-active-text) !important;
+}
+
+.section-toggle.active .workspace-tab-count {
+  color: var(--lhs-item-active-text);
+  opacity: 0.75;
+}
+
+.data-workspace-heading .workspace-tabs {
+  border-bottom: 0;
+  gap: 0.5rem;
+  flex: 0 0 auto;
 }
 
 /* Custom Scrollbar */
@@ -1603,9 +1648,12 @@ button {
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
-  border-radius: var(--radius-full);
-  padding: 0.5rem 0.95rem;
-  font-size: 0.83rem;
+  border-radius: var(--radius-sm);
+  /* Vertical padding is 0 because min-height sets the height — the two together would make a
+     button that grows with its font instead of holding the line. */
+  padding: 0 0.9rem;
+  min-height: 34px;
+  font-size: 0.78rem;
   font-weight: 600;
   transition: all 0.15s ease-in-out;
   user-select: none;
@@ -4667,6 +4715,14 @@ button.template-card {
   font-weight: 750;
 }
 
+/* An explorer workspace is exactly the height of the stage and scrolls inside its own panes, so
+   the body must clip rather than scroll — otherwise a few pixels of overshoot put a second
+   scrollbar at the far right of the window, outside the pane it belongs to. Applies to every
+   module on this shell: Object Library, Compose Tests, Processes & Packs. */
+.workspace-body:has(.obj-lib-split-container) {
+  overflow: hidden;
+}
+
 .workspace-stage {
   display: flex;
   flex: 1;
@@ -4846,7 +4902,7 @@ button.template-card {
   gap: 0.75rem;
   margin-bottom: 0.55rem;
   background: #ffffff;
-  border: 2px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 12px;
   padding: 0.45rem 0.85rem;
   box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
@@ -4947,7 +5003,7 @@ button.template-card {
   align-items: center;
   gap: 0.35rem;
   background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 8px;
   padding: 0.25rem 0.55rem;
   box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.06);
@@ -5023,7 +5079,7 @@ button.template-card {
   z-index: 100;
   width: 260px;
   background: #ffffff;
-  border: 2px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 12px;
   padding: 0.5rem;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 4px 10px -2px rgba(15, 23, 42, 0.08);
@@ -5173,13 +5229,13 @@ button.template-card {
 
 .ref-impact-group.actual-group {
   background: #ffffff;
-  border: 2px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
 }
 
 .ref-impact-group.modeled-group {
   background: #fffcf9;
-  border: 2px solid #fdba74;
+  border: 1px solid var(--section-border);
   box-shadow: 0 4px 14px -2px rgba(234, 88, 12, 0.09), 0 2px 6px -1px rgba(234, 88, 12, 0.04);
 }
 
@@ -5381,7 +5437,7 @@ button.template-card {
 
 .ref-table-card {
   background: #ffffff;
-  border: 2px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
@@ -6847,7 +6903,7 @@ button.text-action:hover {
   gap: 0.65rem;
   padding: 0.45rem 0.75rem;
   background: var(--panel);
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 8px;
   box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.05);
 }
@@ -6902,7 +6958,7 @@ button.text-action:hover {
   flex-direction: column;
   gap: 0.4rem;
   background: var(--panel);
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 10px;
   padding: 0.45rem 0.75rem;
   box-shadow: 0 2px 6px -1px rgba(15, 23, 42, 0.04);
@@ -6966,7 +7022,7 @@ button.text-action:hover {
 /* Audit Table & Sorting */
 .audit-table-card {
   background: var(--panel);
-  border: 2px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
@@ -7142,7 +7198,7 @@ button.text-action:hover {
   justify-content: space-between;
   padding: 0.35rem 0.75rem;
   background: var(--panel);
-  border: 1.5px solid #cbd5e1;
+  border: 1px solid var(--section-border);
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
@@ -7377,6 +7433,7 @@ button.pill:disabled,
 .responsive-table,
 .ref-trend-table,
 .table-wrap table {
+  font-family: var(--font-table) !important;
   /* This block carries !important throughout, so it is what actually sets table type - the base
      `table` rule never wins. The scale has to be applied here to take effect. */
   font-size: var(--type-table) !important;
@@ -7401,7 +7458,15 @@ button.pill:disabled,
 .responsive-table td,
 .ref-trend-table td,
 .table-wrap table td {
-  padding: 0.35rem 0.5rem !important;
+  /* One line per cell: a wrapped cell makes its whole row taller and the column edges stop
+     lining up, which is what a table is for. Anything too long is truncated with an ellipsis
+     and still readable via the cell's title. */
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 0;
+  /* Between cosy and roomy: 10px top and bottom against a 13px line. */
+  padding: 10px 0.6rem !important;
   font-size: var(--type-table) !important;
   line-height: var(--type-table-lh) !important;
   /* height on a cell is a minimum, so rows grow with the taller type rather than clipping. */
