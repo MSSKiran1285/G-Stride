@@ -9322,14 +9322,22 @@ button.pill:disabled,
 /* The library table's radio column stays tight so the dataset name leads. */
 /* A cell that holds a control rather than text has nothing to truncate, and the shared ellipsis
    rule was painting a stray "..." beside the radio. */
-.data-library-select,
-.step-select,
-td.drag-handle-cell {
-  width: 2.25rem !important;
-  text-align: center !important;
+/* A cell that holds a control or a chip has nothing to truncate, and the shared ellipsis rule
+   was painting a stray "..." beside it — the radio in the Steps table being the visible one.
+   Enumerating the classes missed cells as markup changed (the drag handle was .drag-handle, not
+   the .drag-handle-cell that had been listed), so this asks the cell what it CONTAINS instead. */
+.responsive-table td:has(input, button, select, textarea, .badge, .chip-set, .step-param-chip),
+.obj-table-clean td:has(input, button, select, textarea, .badge),
+.table-wrap table td:has(input, button, select, textarea, .badge) {
   overflow: visible !important;
   text-overflow: clip !important;
   max-width: none !important;
+}
+
+.data-library-select,
+.step-select {
+  width: 2.25rem !important;
+  text-align: center !important;
 }
 
 .data-columns-panel {
