@@ -835,16 +835,16 @@ button.pill,
 
 /* 1. Search Trigger */
 .workspace-bottom-bar .header-search-trigger {
-  color: #9f1239;
+  color: var(--text);
   border: 1px solid #fca5a5;
   background: #ffffff;
   cursor: pointer;
 }
 .workspace-bottom-bar .header-search-trigger:hover,
 .workspace-bottom-bar .header-search-trigger:focus-visible {
-  color: #881337;
-  border-color: #f87171;
-  background: #fff1f2;
+  color: var(--text);
+  border-color: var(--border-strong);
+  background: var(--panel-subtle);
   outline: none;
 }
 
@@ -865,7 +865,7 @@ button.pill,
 .workspace-bottom-bar .step-nav-btn {
   background: #ffffff;
   border: 1px solid #fca5a5;
-  color: #9f1239;
+  color: var(--text);
   cursor: pointer;
 }
 .workspace-bottom-bar .step-nav-btn:hover {
@@ -876,7 +876,7 @@ button.pill,
 
 /* 4. Next Button (Primary Coral Action) */
 .workspace-bottom-bar .step-nav-btn.primary {
-  background: linear-gradient(135deg, #e11d48 0%, #be123c 100%);
+  background: var(--action-solid);
   border: 1px solid #be123c;
   color: #ffffff;
   cursor: pointer;
@@ -1679,15 +1679,15 @@ button:disabled {
 }
 
 button.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
+  background: var(--action-solid);
+  border-color: var(--action-solid);
+  color: var(--action-solid-text);
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(240, 111, 97, 0.24);
+  box-shadow: none;
 }
 button.primary:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  background: var(--action-solid-hover);
+  border-color: var(--action-solid-hover);
 }
 
 button.secondary {
@@ -7354,17 +7354,34 @@ button.text-action:hover {
    UNIFORM THEME BUTTON PALETTE & COMPACT TABLES
    ========================================================================== */
 
-/* Primary & Action Buttons across Portal */
+/* Every solid action button in the product, on one neutral.
+   These were five different reds and a blue — #be123c here, #b91c1c on Open scan session, a
+   blue gradient on Scan New Object, a green on Select Now — so "the button you press" looked
+   like a different decision on every screen, and several read as warnings. Crimson is left to
+   destructive actions, which is the one place a red button should mean something. */
 button.primary,
 .btn-primary,
 .step-nav-btn.primary,
-.step-nav-btn {
-  background: #be123c !important;
-  border-color: #9f1239 !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  box-shadow: 0 2px 4px rgba(190, 18, 60, 0.2) !important;
+.step-nav-btn,
+.cozy-btn-open,
+.cozy-btn-capture,
+.btn-scan-new-object {
+  background: var(--action-solid) !important;
+  border-color: var(--action-solid) !important;
+  color: var(--action-solid-text) !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
   transition: all 0.15s ease-in-out !important;
+}
+
+button.primary:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.step-nav-btn:hover:not(:disabled),
+.cozy-btn-open:hover:not(:disabled),
+.cozy-btn-capture:hover:not(:disabled),
+.btn-scan-new-object:hover:not(:disabled) {
+  background: var(--action-solid-hover) !important;
+  border-color: var(--action-solid-hover) !important;
 }
 
 button.primary:hover:not(:disabled),
@@ -7406,10 +7423,12 @@ button.pill:hover:not(:disabled),
 .pill-neutral:hover:not(:disabled),
 .pill-success:hover:not(:disabled),
 .pill-danger:hover:not(:disabled) {
-  background: #be123c !important;
-  color: #ffffff !important;
-  border-color: #9f1239 !important;
-  transform: translateY(-1px) !important;
+  /* Hovering any toolbar pill used to turn it crimson — including the neutral ones and the
+     destructive one — so every button in the row flashed the same warning colour on the way
+     past it. Hover is a lift in tone, not a change of meaning. */
+  background: var(--panel-subtle) !important;
+  color: var(--text) !important;
+  border-color: var(--border-strong) !important;
 }
 
 /* The active choice in a toolbar, not a page-level primary — it sits among neutral siblings and
@@ -7481,7 +7500,11 @@ button.pill:disabled,
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
-  max-width: 0;
+  /* NOT max-width: 0. That is the usual ellipsis trick, but it only behaves under
+     table-layout: fixed — in auto layout it collapses every column to its minimum and they ride
+     over each other, which is what the radio, Test and File columns were doing. A generous cap
+     leaves normal columns to size themselves and only bites on a genuinely long value. */
+  max-width: 22rem;
   /* Between cosy and roomy: 10px top and bottom against a 13px line. */
   padding: 10px 0.6rem !important;
   font-size: var(--type-table) !important;
@@ -7815,23 +7838,14 @@ button.pill:disabled,
   padding: 0.45rem 0.75rem;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-  border: 1px solid #1d4ed8;
-  border-radius: 9999px !important;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-.btn-scan-new-object:hover {
-  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
-  box-shadow: 0 2px 4px rgba(29, 78, 216, 0.25);
-}
-
+/* Pressed in, rather than a different colour: it is the same action either way. */
 .btn-scan-new-object.active {
-  background: #0284c7;
-  border-color: #0369a1;
+  background: var(--action-solid-hover) !important;
+  border-color: var(--action-solid-hover) !important;
 }
 
 /* Tree Drag and Drop & Folder Action Styles */
@@ -8012,37 +8026,29 @@ button.pill:disabled,
 }
 
 .cozy-btn-open {
-  background: #b91c1c;
-  color: #ffffff;
-  border: 1px solid #991b1b;
-  border-radius: 9999px !important;
+  border-radius: var(--radius-sm) !important;
   cursor: pointer;
-}
-.cozy-btn-open:hover:not(:disabled) {
-  background: #991b1b;
 }
 
 .cozy-btn-capture {
-  background: #be123c;
-  color: #ffffff;
-  border: 1px solid #9f1239;
-  border-radius: 9999px !important;
+  border-radius: var(--radius-sm) !important;
   cursor: pointer;
 }
 .cozy-btn-capture:hover:not(:disabled) {
   background: #9f1239;
 }
 
+/* Select Now is a mode, not a success — a green button among neutrals read as "done". */
 .cozy-btn-select {
-  background: #e6f4ea;
-  color: #047857;
-  border: 1px solid #a7f3d0;
-  border-radius: 9999px !important;
+  background: var(--panel-subtle);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm) !important;
   cursor: pointer;
 }
 .cozy-btn-select:hover:not(:disabled) {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--border);
+  color: var(--text);
 }
 
 .cozy-btn-close {
