@@ -286,7 +286,7 @@ export function ObjectScanner({
               </button>
 
               <button
-                className={`cozy-btn ${picking === 'waiting' ? 'danger-solid' : 'cozy-btn-select'}`}
+                className={`cozy-btn ${picking === 'waiting' ? 'cozy-btn-select is-picking' : 'cozy-btn-select'}`}
                 onClick={picking === 'waiting' ? stopPicking : startPicking}
                 disabled={busy || !session}
               >

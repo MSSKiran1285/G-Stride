@@ -816,9 +816,9 @@ button.pill,
   min-height: 28px;
   max-height: 28px;
   height: 28px;
-  background: linear-gradient(90deg, #fff1f2 0%, #ffe4e6 25%, #fecdd3 55%, #ffedd5 85%, #fff7ed 100%);
+  background: var(--panel-subtle);
   border-top: 1px solid #fca5a5;
-  border-bottom: 1px solid #fecdd3;
+  border-bottom: 1px solid var(--border);
   box-shadow: 0 -2px 10px rgba(225, 29, 72, 0.08);
   z-index: 40;
   width: 100%;
@@ -907,21 +907,21 @@ button.pill,
   cursor: pointer;
 }
 .workspace-bottom-bar .step-nav-btn:hover {
-  background: #fff1f2;
+  background: var(--panel-subtle);
   border-color: #f87171;
-  color: #881337;
+  color: var(--text);
 }
 
 /* 4. Next Button (Primary Coral Action) */
 .workspace-bottom-bar .step-nav-btn.primary {
   background: var(--action-solid);
-  border: 1px solid #be123c;
+  border: 1px solid var(--action-solid);
   color: #ffffff;
   cursor: pointer;
 }
 .workspace-bottom-bar .step-nav-btn.primary:hover {
-  background: linear-gradient(135deg, #be123c 0%, #9f1239 100%);
-  border-color: #9f1239;
+  background: var(--action-solid-hover);
+  border-color: var(--action-solid-hover);
 }
 
 .breadcrumb-path {
@@ -7410,7 +7410,6 @@ button.primary,
 .step-nav-btn.primary,
 .step-nav-btn,
 .cozy-btn-open,
-.cozy-btn-capture,
 .btn-scan-new-object {
   background: var(--action-solid) !important;
   border-color: var(--action-solid) !important;
@@ -7424,7 +7423,6 @@ button.primary:hover:not(:disabled),
 .btn-primary:hover:not(:disabled),
 .step-nav-btn:hover:not(:disabled),
 .cozy-btn-open:hover:not(:disabled),
-.cozy-btn-capture:hover:not(:disabled),
 .btn-scan-new-object:hover:not(:disabled) {
   background: var(--action-solid-hover) !important;
   border-color: var(--action-solid-hover) !important;
@@ -7433,9 +7431,9 @@ button.primary:hover:not(:disabled),
 button.primary:hover:not(:disabled),
 .btn-primary:hover:not(:disabled),
 .step-nav-btn:hover:not(:disabled) {
-  background: #9f1239 !important;
-  border-color: #881337 !important;
-  color: #ffffff !important;
+  background: var(--action-solid-hover) !important;
+  border-color: var(--action-solid-hover) !important;
+  color: var(--action-solid-text) !important;
   transform: translateY(-1px) !important;
 }
 
@@ -7448,14 +7446,16 @@ button.pill,
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: #fff1f2 !important;
-  border: 1px solid #fecdd3 !important;
-  color: #be123c !important;
+  background: var(--panel) !important;
+  border: 1px solid var(--border-strong) !important;
+  color: var(--text) !important;
   font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: var(--track-label) !important;
-  border-radius: 9999px !important;
+  /* A toolbar pill is a button and squares off with the rest; only a status BADGE keeps the
+     stadium, and that is set on .pill, .code-badge further up. */
+  border-radius: var(--radius-sm) !important;
   padding: 0.3rem 0.75rem !important;
   height: 28px !important;
   min-height: 28px !important;
@@ -7475,6 +7475,19 @@ button.pill:hover:not(:disabled),
   background: var(--panel-subtle) !important;
   color: var(--text) !important;
   border-color: var(--border-strong) !important;
+}
+
+/* Delete is the one action in a toolbar that should look different from its neighbours. */
+.pill-danger,
+button.pill-danger {
+  color: var(--danger) !important;
+  border-color: var(--danger-border, var(--border-strong)) !important;
+}
+
+.pill-danger:hover:not(:disabled),
+button.pill-danger:hover:not(:disabled) {
+  background: var(--danger-bg, var(--panel-subtle)) !important;
+  color: var(--danger) !important;
 }
 
 /* The active choice in a toolbar, not a page-level primary — it sits among neutral siblings and
@@ -8090,12 +8103,17 @@ button.pill:disabled,
   cursor: pointer;
 }
 
+/* Capture is the second step of a session that is already open, not a second primary — two
+   solid buttons side by side make the reader choose between them. */
 .cozy-btn-capture {
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border-strong) !important;
   border-radius: var(--radius-sm) !important;
   cursor: pointer;
 }
 .cozy-btn-capture:hover:not(:disabled) {
-  background: #9f1239;
+  background: var(--panel-subtle);
 }
 
 /* Select Now is a mode, not a success — a green button among neutrals read as "done". */
@@ -8106,6 +8124,14 @@ button.pill:disabled,
   border-radius: var(--radius-sm) !important;
   cursor: pointer;
 }
+/* Pressed: the same button, held down, rather than a different button in a different colour.
+   Stopping a capture session removes nothing, so it is not a destructive action. */
+.cozy-btn-select.is-picking {
+  background: var(--action-solid) !important;
+  color: var(--action-solid-text) !important;
+  border-color: var(--action-solid) !important;
+}
+
 .cozy-btn-select:hover:not(:disabled) {
   background: var(--border);
   color: var(--text);
@@ -9386,7 +9412,17 @@ button.pill:disabled,
 }
 
 /* The library table's radio column stays tight so the dataset name leads. */
-.data-library-select { width: 2.25rem !important; text-align: center !important; }
+/* A cell that holds a control rather than text has nothing to truncate, and the shared ellipsis
+   rule was painting a stray "..." beside the radio. */
+.data-library-select,
+.step-select,
+td.drag-handle-cell {
+  width: 2.25rem !important;
+  text-align: center !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  max-width: none !important;
+}
 
 .data-columns-panel {
   gap: 0.4rem;
