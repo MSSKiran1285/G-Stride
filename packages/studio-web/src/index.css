@@ -3,17 +3,39 @@
 :root {
   /* 'Inter Variable' is the family name the bundled @fontsource-variable/inter registers; plain
      'Inter' follows it so a locally installed copy is still used if the bundle ever fails. */
-  --font-sans: 'Inter Variable', 'Inter', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: 'IBM Plex Mono', "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  /* Tables read in IBM Plex: it is the face with the clearest figures at small sizes, which is
-     what a grid of counts, dates and identifiers is mostly made of. Self-hosted via
-     @fontsource, declared in studio-web's package.json — it had been sitting in node_modules
-     undeclared, so a clean install would have dropped it and fallen back silently to Inter. */
-  --font-table: 'IBM Plex Sans', 'Inter Variable', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-size-xs: 0.68rem;
-  --font-size-sm: 0.75rem;
-  --font-size-md: 0.85rem;
-  --font-size-lg: 1rem;
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Kept as an alias so the table rules keep reading, but it is the one sans stack now — there
+     is no separate table face. */
+  --font-table: var(--font-sans);
+  /* ---- Typography. One system, defined once, referenced everywhere. ----
+     Composite font shorthands rather than loose sizes: a role carries its weight, size and
+     line-height together, so a heading cannot end up at body weight because someone set only
+     the size. Anything that needs a variant beyond the shorthand (tabular figures, tracking,
+     casing) has it listed beside the token it belongs to and applied in the same rule. */
+  --text-page-title:   600 24px/1.2   var(--font-sans);
+  --text-section:      600 15px/1.35  var(--font-sans);
+  --text-metric:       600 28px/1.1   var(--font-sans);
+  --text-body:         400 14px/1.55  var(--font-sans);
+  --text-table-cell:   400 13px/1.45  var(--font-sans);
+  --text-table-header: 600 11px/1.3   var(--font-sans);
+  --text-label:        600 11px/1.3   var(--font-sans);
+  --text-caption:      400 12px/1.45  var(--font-sans);
+  --text-button:       600 12px/1     var(--font-sans);
+  --text-badge:        600 10px/1     var(--font-sans);
+  --text-code:         400 12.5px/1.5 var(--font-mono);
+
+  /* Tracking, as a token so the three uppercase roles cannot drift apart. */
+  --track-display: -0.01em;
+  --track-label: 0.07em;
+  --track-badge: 0.08em;
+  --track-button: 0.02em;
+
+  /* Retained so older declarations resolve onto the scale instead of a bare rem. */
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 14px;
+  --font-size-lg: 15px;
 
   /* Typography scale. Absolute px rather than rem: the scale is specified in px, and the two must
      not drift apart if the root size is ever changed. */
@@ -188,31 +210,48 @@ html, body, #root {
   padding: 0;
 }
 
+/* The base every component inherits. Nothing below re-declares a family; roles below re-declare
+   only the composite that belongs to them.
+
+   The root stays at the browser default rather than being pinned to 14px. Two reasons: pinning it
+   overrides a reader who has set a larger font size, which is an accessibility regression; and
+   every existing rem in this sheet was written against a 16px root, so moving it would silently
+   shrink ~250 declarations by 12.5%. Body text is 14px via the token, which is what the base was
+   asking for. */
+html {
+  font-size: 100%;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans);
-  font-size: var(--type-body);
-  line-height: var(--type-body-lh);
+  font: var(--text-body);
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Headings had no base rules at all, so they took the browser's em-relative defaults and grew with
-   the body size. Pinning them keeps the scale where it is specified. */
+/* Italics are out of the interface: emphasis is carried by weight and colour, which survive at
+   11-13px where a slanted face just blurs. */
+em, i, cite, address, dfn {
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Headings had no base rules at all, so they took the browser's em-relative defaults and grew
+   with the body size. They are pinned to the scale instead. Negative tracking applies at 24px
+   and above only — below that it closes letters that need the room. */
 h1 {
-  font-size: var(--type-page-title);
-  line-height: var(--type-page-title-lh);
+  font: var(--text-page-title);
+  letter-spacing: var(--track-display);
 }
 
-h2 {
-  font-size: var(--type-section-title);
-  line-height: var(--type-section-title-lh);
-}
-
-h3 {
-  font-size: 18px;
-  line-height: var(--type-section-title-lh);
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font: var(--text-section);
+  letter-spacing: 0;
 }
 
 button, input, select, textarea {
@@ -253,9 +292,8 @@ button.pill,
   border-radius: var(--radius-sm) !important;
   /* One height for every button in the product; the label decides the width. */
   min-height: 34px !important;
-  font-size: 0.78rem !important;
-  font-weight: 600 !important;
-  letter-spacing: 0 !important;
+  font: var(--text-button) !important;
+  letter-spacing: var(--track-button) !important;
 }
 
 /* Two sections of one workspace, shown as a segmented pair rather than an underlined tab strip:
@@ -373,7 +411,7 @@ button.pill,
 }
 
 .brand-name {
-  font-weight: 800;
+  font-weight: 700;
   font-size: 0.95rem;
   color: var(--lhs-text);
   line-height: 1.15;
@@ -382,7 +420,7 @@ button.pill,
 }
 
 .brand-tag {
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-soft);
   margin-top: 0.15rem;
@@ -431,7 +469,7 @@ button.pill,
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.25rem 0.5rem 1.25rem;
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -443,7 +481,7 @@ button.pill,
   color: var(--accent);
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-full);
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -565,8 +603,8 @@ button.pill,
   right: -6px;
   background: var(--border-strong);
   color: var(--bg);
-  font-size: 0.55rem;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   width: 13px;
   height: 13px;
   border-radius: 50%;
@@ -612,7 +650,7 @@ button.pill,
 }
 
 .nav-mini-badge {
-  font-size: 0.62rem;
+  font-size: 11px;
   font-weight: 700;
   padding: 0.1rem 0.4rem;
   border-radius: var(--radius-full);
@@ -644,7 +682,7 @@ button.pill,
   color: var(--text-soft);
   margin-bottom: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
 }
 
 .tool-sparkle-icon {
@@ -716,7 +754,7 @@ button.pill,
 }
 
 .system-host {
-  font-size: 0.68rem;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -815,7 +853,7 @@ button.pill,
   min-height: 22px;
   max-height: 22px;
   padding: 0 0.55rem;
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 600;
   line-height: 1;
   border-radius: 4px;
@@ -913,7 +951,7 @@ button.pill,
 }
 
 .bc-current {
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
 }
 
@@ -1089,8 +1127,8 @@ button.pill,
 
 .hero-title {
   font-size: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-weight: 700;
+  letter-spacing: 0;
   color: var(--text);
   line-height: 1.15;
   margin: 0;
@@ -1160,7 +1198,7 @@ button.pill,
   font-weight: 700;
   color: var(--text-soft);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
 }
 
 .stat-icon-bg {
@@ -1178,10 +1216,10 @@ button.pill,
 
 .stat-number {
   font-size: 2rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
   line-height: 1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .stat-footer {
@@ -1214,10 +1252,10 @@ button.pill,
 
 .section-heading {
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .section-subtext {
@@ -1281,11 +1319,11 @@ button.pill,
 }
 
 .pipeline-step-badge {
-  font-size: 0.65rem;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--accent);
-  letter-spacing: 0.06em;
+  letter-spacing: var(--track-label);
 }
 
 .pipeline-icon {
@@ -1367,13 +1405,13 @@ button.pill,
 
 .template-code {
   font-size: 0.85rem;
-  font-weight: 800;
-  font-family: monospace;
+  font-weight: 700;
+  font-family: var(--font-mono);
   color: var(--text);
 }
 
 .template-badge {
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
   padding: 0.15rem 0.5rem;
   border-radius: var(--radius-full);
@@ -1441,7 +1479,7 @@ button.pill,
 
 .side-card-header h3 {
   font-size: 0.95rem;
-  font-weight: 800;
+  font-weight: 700;
   margin: 0;
   color: var(--text);
 }
@@ -1457,7 +1495,7 @@ button.pill,
   font-weight: 700;
   text-transform: uppercase;
   color: var(--text-soft);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
 }
 
 .resilience-bar-wrap {
@@ -1482,7 +1520,7 @@ button.pill,
 
 .resilience-value {
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--success);
 }
 
@@ -1549,20 +1587,20 @@ button.pill,
 }
 
 .doc-feed-key {
-  font-size: 0.65rem;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
 }
 
 .doc-feed-val {
   font-size: 0.82rem;
-  font-weight: 800;
-  font-family: monospace;
+  font-weight: 700;
+  font-family: var(--font-mono);
   color: var(--text);
 }
 
 .doc-feed-app {
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
@@ -1631,7 +1669,7 @@ button.pill,
 
 .panel-title {
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
   display: flex;
   align-items: center;
@@ -1736,7 +1774,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   border-radius: 7px;
   background: var(--warning-bg);
   font-size: 0.75rem;
-  font-weight: 750;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -1792,7 +1830,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   color: #fff;
   object-fit: cover;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .account-identity {
@@ -1815,7 +1853,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
 
 .account-identity small {
   color: var(--text-soft);
-  font-size: 0.64rem;
+  font-size: 11px;
 }
 
 .account-popover {
@@ -1969,7 +2007,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   border-radius: 7px;
   background: var(--panel-subtle);
   font-size: 0.75rem;
-  font-weight: 750;
+  font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -2042,7 +2080,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 0.85rem;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -2217,7 +2255,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
 
 .integration-list small {
   color: var(--text-soft);
-  font-size: 0.63rem;
+  font-size: 11px;
   line-height: 1.35;
 }
 
@@ -2255,7 +2293,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
 .run-progress-context {
   overflow: hidden;
   color: var(--text-soft);
-  font-size: 0.68rem;
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2451,7 +2489,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
 
 .audit-run-title-row > div > span {
   color: var(--text-soft);
-  font-size: 0.68rem;
+  font-size: 11px;
 }
 
 .audit-run-meta,
@@ -2460,7 +2498,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   flex-wrap: wrap;
   gap: 0.4rem 1rem;
   color: var(--text-soft);
-  font-size: 0.68rem;
+  font-size: 11px;
 }
 
 .audit-run-chips span,
@@ -2511,7 +2549,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
   width: fit-content;
   color: var(--text-muted);
   background: transparent;
-  font-size: 0.62rem;
+  font-size: 11px;
 }
 
 .audit-run-action {
@@ -2528,7 +2566,7 @@ input[type="text"], input[type="number"], input[type="password"], input[type="ur
 
 .audit-run-action > span {
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 11px;
 }
 
 .audit-empty {
@@ -2594,7 +2632,7 @@ label {
   color: var(--text-soft);
   margin-bottom: 0.35rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
 }
 
 /* Tables */
@@ -2625,7 +2663,7 @@ th {
   font-weight: 700;
   font-size: var(--type-table-head);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
 }
 
 tr:last-child td { border-bottom: none; }
@@ -2740,21 +2778,17 @@ tr:hover td { background: var(--accent-soft); }
 .section-title {
   margin: 0 0 0.4rem;
   color: var(--text);
-  font-size: var(--type-section-title);
-  line-height: var(--type-section-title-lh);
-  font-weight: 750;
+  font: var(--text-section);
 }
 
 .hint {
   color: var(--text-soft);
-  font-size: var(--type-secondary);
-  line-height: var(--type-secondary-lh);
+  font: var(--text-caption);
 }
 
 .error-text {
   color: var(--danger);
-  font-size: 0.82rem;
-  line-height: 1.45;
+  font: var(--text-caption);
 }
 
 .fiori-message-strip {
@@ -2791,11 +2825,9 @@ tr:hover td { background: var(--accent-soft); }
   padding: 0.15rem 0.5rem;
   background: var(--panel-subtle);
   color: var(--text-soft);
-  font-size: 0.68rem;
-  line-height: 1.35;
-  font-weight: 750;
+  font: var(--text-badge);
   text-transform: uppercase;
-  letter-spacing: 0.035em;
+  letter-spacing: var(--track-badge);
   white-space: nowrap;
 }
 
@@ -2964,7 +2996,7 @@ button.neutral-solid {
 
 .completion-label {
   flex: 1;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .run-progress {
@@ -3102,7 +3134,7 @@ button.neutral-solid {
 .snapshot-reference {
   color: var(--muted);
   font-size: 0.78rem;
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 .execution-member {
@@ -3189,7 +3221,7 @@ button.neutral-solid {
 
 .diagnosis-grid dd {
   margin: 0.15rem 0 0;
-  font-weight: 650;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -3326,7 +3358,7 @@ button.neutral-solid {
   border: 1px solid var(--danger-border);
   border-radius: var(--radius-sm);
   background: var(--danger-bg);
-  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-family: var(--font-mono);
 }
 
 .sticky-top {
@@ -3387,7 +3419,7 @@ button.neutral-solid {
 .step-params {
   width: 100%;
   color: var(--text-soft);
-  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   overflow-wrap: anywhere;
 }
@@ -3638,7 +3670,7 @@ button.neutral-solid {
   margin: 0;
   color: var(--text-soft);
   font-size: 0.7rem;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono);
 }
 
 .context-unverified {
@@ -3730,7 +3762,7 @@ button.neutral-solid {
   margin: 0.2rem 0 0.35rem;
   color: var(--text);
   font-size: clamp(1.35rem, 2.5vw, 2rem);
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 .execution-hero p {
@@ -3751,7 +3783,7 @@ button.neutral-solid {
   color: var(--success-hover);
   background: var(--success-bg);
   font-size: 0.75rem;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .execution-stepper {
@@ -4113,7 +4145,7 @@ button.template-card {
   margin: var(--space-1) 0 0;
   color: var(--text);
   font-size: clamp(1.4rem, 2vw, 1.8rem);
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 .workspace-page-heading p {
@@ -4286,7 +4318,7 @@ button.template-card {
 
 .grouped-picker-group-toggle {
   color: var(--text);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .grouped-picker-group-toggle small {
@@ -4296,7 +4328,7 @@ button.template-card {
 .grouped-picker-option {
   padding-left: 1.9rem;
   color: var(--text-soft);
-  font-weight: 550;
+  font-weight: 500;
 }
 
 .grouped-picker-option:hover,
@@ -4441,8 +4473,8 @@ button.template-card {
     content: attr(data-label);
     color: var(--text-soft);
     font-size: var(--font-size-xs);
-    font-weight: 750;
-    letter-spacing: 0.04em;
+    font-weight: 700;
+    letter-spacing: var(--track-label);
     text-transform: uppercase;
   }
 
@@ -4667,7 +4699,7 @@ button.template-card {
   overflow: hidden;
   color: inherit;
   font-size: 0.82rem;
-  font-weight: 650;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -4724,7 +4756,7 @@ button.template-card {
 }
 
 .canvas-shell .bc-current {
-  font-weight: 750;
+  font-weight: 700;
 }
 
 /* An explorer workspace is exactly the height of the stage and scrolls inside its own panes, so
@@ -4821,7 +4853,7 @@ button.template-card {
   padding: 0.55rem 0.7rem;
   color: var(--text);
   font-size: 0.76rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 .help-guide-item summary::-webkit-details-marker { display: none; }
 .help-guide-item summary::before {
@@ -4862,7 +4894,7 @@ button.template-card {
   font-size: 1.3rem;
   font-weight: 700;
   color: #0f172a;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   line-height: 1.2;
 }
 
@@ -5001,7 +5033,7 @@ button.template-card {
   font-size: 1.05rem;
   font-weight: 700;
   color: #0f172a;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .ref-impact-filters {
@@ -5062,7 +5094,7 @@ button.template-card {
 }
 
 .ref-pill-label {
-  font-size: 0.6rem;
+  font-size: 11px;
   color: #64748b;
   line-height: 1;
 }
@@ -5149,7 +5181,7 @@ button.template-card {
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
 }
 
 .ref-datepicker-inputs {
@@ -5162,7 +5194,7 @@ button.template-card {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 600;
   color: #64748b;
 }
@@ -5271,9 +5303,9 @@ button.template-card {
 }
 
 .ref-badge-title {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--track-label);
 }
 
 .ref-badge-title.green-title {
@@ -5285,7 +5317,7 @@ button.template-card {
 }
 
 .ref-badge-desc {
-  font-size: 0.68rem;
+  font-size: 11px;
   color: #64748b;
 }
 
@@ -5342,7 +5374,7 @@ button.template-card {
 }
 
 .ref-card-title {
-  font-size: 0.65rem;
+  font-size: 11px;
   font-weight: 600;
   color: #334155;
 }
@@ -5360,7 +5392,7 @@ button.template-card {
 }
 
 .ref-card-sub {
-  font-size: 0.6rem;
+  font-size: 11px;
   color: #64748b;
 }
 
@@ -5559,8 +5591,8 @@ button.template-card {
   display: block;
   margin-bottom: 0.15rem;
   color: var(--accent);
-  font-size: 0.65rem;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.075em;
   text-transform: uppercase;
 }
@@ -5570,7 +5602,7 @@ button.template-card {
   color: var(--text);
   font-size: 1.6rem;
   line-height: 1.1;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
 }
 
 .canvas-overview-intro p {
@@ -5710,7 +5742,7 @@ button.template-card {
   flex-direction: column;
   gap: 0.25rem;
   color: var(--text-soft);
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -5718,7 +5750,7 @@ button.template-card {
   max-width: 52rem;
   margin: 0 0 0.35rem;
   color: var(--text-soft);
-  font-size: 0.68rem;
+  font-size: 11px;
 }
 
 .execution-impact-top-header {
@@ -5739,10 +5771,10 @@ button.template-card {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  font-size: 0.65rem;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
 }
 
@@ -5769,7 +5801,7 @@ button.template-card {
   margin: 0;
   color: var(--text);
   font-size: 1.05rem;
-  letter-spacing: -0.025em;
+  letter-spacing: 0;
 }
 
 .execution-impact-heading p {
@@ -5821,7 +5853,7 @@ button.template-card {
   gap: 0.35rem;
   min-width: 0;
   color: var(--text-soft);
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -5831,9 +5863,9 @@ button.template-card {
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
   background: var(--panel);
-  font-size: 0.5rem;
-  font-weight: 750;
-  letter-spacing: 0.04em;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
 }
 
@@ -5848,7 +5880,7 @@ button.template-card {
   color: var(--text);
   font-size: 1.25rem;
   line-height: 1;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .impact-metric-value.negative {
@@ -5858,7 +5890,7 @@ button.template-card {
 .impact-metric-detail {
   grid-column: 1 / -1;
   color: var(--text-soft);
-  font-size: 0.62rem;
+  font-size: 11px;
   line-height: 1.2;
 }
 
@@ -5871,7 +5903,7 @@ button.template-card {
 
 .impact-outcome-counts span {
   color: var(--text-soft);
-  font-size: 0.62rem;
+  font-size: 11px;
 }
 
 .impact-outcome-counts strong {
@@ -6021,8 +6053,8 @@ button.template-card {
   gap: 0.35rem;
   margin: 0;
   color: var(--text);
-  font-size: 0.67rem;
-  font-weight: 650;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
 }
@@ -6097,7 +6129,7 @@ button.template-card {
   padding-top: 0.6rem;
   color: var(--text);
   border-bottom: 0;
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .impact-cost-breakdown .total dd {
@@ -6264,8 +6296,8 @@ button.text-action:hover {
 }
 
 .run-status-text {
-  font-size: 0.68rem;
-  font-weight: 750;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: capitalize;
 }
 
@@ -6333,7 +6365,7 @@ button.text-action:hover {
   margin: 0;
   color: var(--text);
   font-size: 1.15rem;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .canvas-inspector-actions {
@@ -6359,8 +6391,8 @@ button.text-action:hover {
 .canvas-detail-list dt {
   margin-bottom: 0.2rem;
   color: var(--text-soft);
-  font-size: 0.68rem;
-  font-weight: 650;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .canvas-detail-list dd {
@@ -6368,7 +6400,7 @@ button.text-action:hover {
   margin: 0;
   color: var(--text);
   font-size: 0.78rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .canvas-inspector-note {
@@ -6541,7 +6573,7 @@ button.text-action:hover {
   border-radius: var(--radius-md);
   background: var(--panel-subtle);
   color: var(--text);
-  font-family: Consolas, "SFMono-Regular", monospace;
+  font-family: var(--font-mono);
   font-size: .84rem;
   line-height: 1.5;
   tab-size: 2;
@@ -6892,7 +6924,7 @@ button.text-action:hover {
   font-weight: 700;
   color: var(--text);
   margin: 0 0 0.1rem 0;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .audit-subtitle {
@@ -6951,9 +6983,23 @@ button.text-action:hover {
   gap: 0.05rem;
 }
 
+/* Every number that appears in a column or changes in place gets tabular figures, so it does
+   not jitter as it updates and lines up on its last digit when stacked. */
+.metric-value,
+.ref-summary-num,
+.ref-card-value,
+.impact-metric-value,
+.workspace-tab-count,
+.folder-count,
+.obj-lib-controls-count,
+.audit-run-status,
+.run-progress-meta strong {
+  font-variant-numeric: tabular-nums;
+}
+
 .metric-value {
   font-size: 1.1rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
   line-height: 1.1;
 }
@@ -7051,10 +7097,10 @@ button.text-action:hover {
 .audit-evidence-table th {
   background: var(--panel-subtle);
   padding: 0.4rem 0.55rem !important;
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   border-bottom: 1px solid var(--border);
   white-space: nowrap !important;
@@ -7113,7 +7159,7 @@ button.text-action:hover {
 }
 
 .td-evidence-id {
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-weight: 600;
   white-space: nowrap !important;
 }
@@ -7342,7 +7388,7 @@ button.text-action:hover {
   height: 28px !important;
   min-height: 28px !important;
   padding: 0 0.75rem !important;
-  font-size: 0.68rem !important;
+  font-size: 11px !important;
   border-radius: 9999px !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -7405,10 +7451,10 @@ button.pill,
   background: #fff1f2 !important;
   border: 1px solid #fecdd3 !important;
   color: #be123c !important;
-  font-size: 0.68rem !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.04em !important;
+  letter-spacing: var(--track-label) !important;
   border-radius: 9999px !important;
   padding: 0.3rem 0.75rem !important;
   height: 28px !important;
@@ -7467,7 +7513,10 @@ button.pill:disabled,
 .obj-table-clean,
 .ref-trend-table,
 .table-wrap table {
-  font-family: var(--font-table) !important;
+  font: var(--text-table-cell) !important;
+  /* Figures line up on their last digit down a column, which is the entire reason a count or a
+     duration is in a table rather than a sentence. */
+  font-variant-numeric: tabular-nums !important;
   /* This block carries !important throughout, so it is what actually sets table type - the base
      `table` rule never wins. The scale has to be applied here to take effect. */
   font-size: var(--type-table) !important;
@@ -7481,13 +7530,11 @@ button.pill:disabled,
 .ref-trend-table th,
 .table-wrap table th {
   padding: 0.25rem 0.5rem !important;
-  font-size: var(--type-table-head) !important;
-  font-weight: 700 !important;
+  font: var(--text-table-header) !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.03em !important;
+  letter-spacing: var(--track-label) !important;
   background: var(--panel-subtle) !important;
   height: 26px !important;
-  line-height: 1.2 !important;
 }
 
 .responsive-table td,
@@ -7507,8 +7554,8 @@ button.pill:disabled,
   max-width: 22rem;
   /* Between cosy and roomy: 10px top and bottom against a 13px line. */
   padding: 10px 0.6rem !important;
-  font-size: var(--type-table) !important;
-  line-height: var(--type-table-lh) !important;
+  font: var(--text-table-cell) !important;
+  font-variant-numeric: tabular-nums !important;
   /* height on a cell is a minimum, so rows grow with the taller type rather than clipping. */
   height: 26px !important;
   vertical-align: middle !important;
@@ -7638,7 +7685,7 @@ button.pill:disabled,
 }
 
 .obj-tree-folder-row .folder-count {
-  font-size: 0.68rem;
+  font-size: 11px;
   color: #64748b;
   background: #e2e8f0;
   padding: 0.05rem 0.35rem;
@@ -7736,8 +7783,8 @@ button.pill:disabled,
 
 .pack-member-field > label {
   margin: 0;
-  font-size: 0.66rem;
-  letter-spacing: 0.06em;
+  font-size: 11px;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   font-weight: 700;
   color: var(--text-soft);
@@ -7818,7 +7865,7 @@ button.pill:disabled,
 .tree-empty-item {
   font-size: 0.73rem;
   color: #94a3b8;
-  font-style: italic;
+  font-style: normal;
   padding: 0.2rem 0.5rem;
 }
 
@@ -7973,12 +8020,25 @@ button.pill:disabled,
   gap: 0.35rem;
 }
 
+/* The uppercase roles are the only text allowed below 12px, and only at 600 with tracking —
+   uppercase at a small size without letter-spacing is where legibility actually goes. */
+.eyebrow,
+.canvas-eyebrow,
+.cozy-label,
+.detail-facts dt,
+.field dt,
+.data-rail-facts dt {
+  font: var(--text-label);
+  letter-spacing: var(--track-label);
+  text-transform: uppercase;
+}
+
 .cozy-label {
   font-size: 0.75rem;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
 }
 
 .cozy-input-wrapper {
@@ -8008,7 +8068,7 @@ button.pill:disabled,
 .cozy-btn {
   height: 36px;
   padding: 0 1rem;
-  font-size: 0.68rem !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
   border-radius: 9999px !important;
   display: inline-flex;
@@ -8449,7 +8509,7 @@ button.pill:disabled,
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   color: #475569;
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 600;
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
@@ -8463,10 +8523,10 @@ button.pill:disabled,
 }
 
 .inspector-field-group label {
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
   color: #64748b;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
 }
 
@@ -8486,7 +8546,7 @@ button.pill:disabled,
   border: 1px solid var(--border);
   padding: 0.45rem 0.65rem;
   border-radius: 6px;
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.76rem;
   box-sizing: border-box;
 }
@@ -8528,7 +8588,7 @@ button.pill:disabled,
 
 .inspector-json-block pre {
   margin: 0;
-  font-family: monospace;
+  font-family: var(--font-mono);
   font-size: 0.76rem;
   color: #1e293b;
   white-space: pre-wrap;
@@ -8675,7 +8735,7 @@ button.pill:disabled,
   text-transform: none;
   letter-spacing: 0;
   font-size: 0.8rem;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text);
 }
 
@@ -8697,7 +8757,7 @@ button.pill:disabled,
   width: 6.6rem;
   padding: 0.35rem 0.4rem;
   font-size: 0.74rem;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-soft);
   background: var(--panel-subtle);
   border: 1px solid var(--border);
@@ -8721,7 +8781,7 @@ button.pill:disabled,
   text-transform: none;
   letter-spacing: 0;
   font-size: 0.85rem;
-  font-weight: 550;
+  font-weight: 500;
   color: var(--text);
 }
 
@@ -8784,7 +8844,7 @@ button.pill:disabled,
 .step-editor .is-soft,
 .step-editor .step-check.is-soft > span {
   color: var(--text-soft);
-  font-style: italic;
+  font-style: normal;
 }
 
 .step-editor .is-soft:focus {
@@ -8952,9 +9012,9 @@ button.pill:disabled,
 }
 
 .rows-grid-colhead > span {
-  font-size: 0.66rem;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: var(--text-soft);
 }
@@ -8978,7 +9038,7 @@ button.pill:disabled,
    soft styling has to reach the placeholder rather than the input's own text colour. */
 .step-editor .is-soft::placeholder {
   color: var(--text-soft);
-  font-style: italic;
+  font-style: normal;
   opacity: 1;
 }
 
@@ -9011,7 +9071,7 @@ button.pill:disabled,
   border: 1px solid var(--border);
   background: var(--panel-subtle);
   color: var(--text-soft);
-  font-size: 0.68rem;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -9048,9 +9108,9 @@ button.pill:disabled,
 
 .value-picker-group-label {
   margin: 0.1rem 0.45rem 0.2rem;
-  font-size: 0.66rem;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--track-label);
   text-transform: uppercase;
   color: var(--text-soft);
 }
@@ -9123,7 +9183,7 @@ button.pill:disabled,
   align-items: center;
   gap: 0.35rem;
   font-size: 0.76rem;
-  font-weight: 650;
+  font-weight: 600;
   color: var(--accent);
 }
 
@@ -9153,7 +9213,7 @@ button.pill:disabled,
   margin: 0.15rem 0 0.35rem;
   font-size: 1.6rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .data-workspace-heading .hint { margin: 0; }
@@ -9175,7 +9235,7 @@ button.pill:disabled,
   background: transparent;
   color: var(--text-soft);
   font-size: 0.9rem;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -9217,9 +9277,9 @@ button.pill:disabled,
   border: 0;
   background: transparent;
   color: var(--text);
-  font-family: var(--font-mono, ui-monospace, monospace);
+  font-family: var(--font-mono);
   font-size: 0.82rem;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
 }
 .data-library-name[aria-pressed='true'] { color: var(--accent); }
@@ -9228,7 +9288,7 @@ button.pill:disabled,
 
 .data-rail-title {
   margin: 0.1rem 0 0;
-  font-family: var(--font-mono, ui-monospace, monospace);
+  font-family: var(--font-mono);
   font-size: 1.05rem;
   font-weight: 700;
   overflow-wrap: anywhere;
@@ -9268,7 +9328,7 @@ button.pill:disabled,
 }
 .data-relation-card:hover { border-color: var(--accent-border); }
 .data-relation-card.selected { border-color: var(--accent); background: var(--accent-soft); }
-.data-relation-name { font-weight: 660; font-size: 0.85rem; color: var(--text); }
+.data-relation-name { font-weight: 600; font-size: 0.85rem; color: var(--text); }
 
 /* The dataset grid can be far wider than the dialog, so it scrolls inside it
    rather than stretching the dialog past the viewport. */
