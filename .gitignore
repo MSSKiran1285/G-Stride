@@ -18,6 +18,12 @@ tmp/
 studio-*.log
 .studio-server*.log
 debug.log
+# The SQLite stores stay out of git — they are binary, they merge badly, and run-history and
+# document-log carry execution data that has no business in source control.
+#
+# The Object Library is the exception that has to travel: a clone with no controls cannot run a
+# single Test. `taf objects export` writes it as reviewable JSON, and that IS committed.
+!object-library.json
 *.db
 *.db-shm
 *.db-wal
