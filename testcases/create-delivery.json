@@ -10,7 +10,8 @@
   "commonErrorsAndTips": [
     "\"No results found\" when searching the due list. This does not necessarily mean the order failed — it usually means the order has already been delivered and no longer has open quantity.",
     "The header \"select all\" checkbox doesn't enable \"Create Deliveries.\" On some Fiori due-list screens, the header checkbox does not reliably register selection with the underlying template. If the Create button stays greyed out, select the row's own checkbox instead.",
-    "Clicking \"Post GI\" before \"Save.\" The Post GI action is not available until picking quantities have been explicitly saved; always Save first, then Post GI.",
+    "Entering the same picking quantity for every item. Each item's Picking Quantity must match its own Delivery Quantity — copying one item's quantity onto another blocks with \"Picking quantity is greater than delivery quantity.\"",
+    "There is no separate \"Save\" step for picking. \"Copy Picking Quantity\" (after entering each item's picking quantity) commits picking directly and advances the process flow to \"GI Ready\" — an explicit Save click afterward finds Save already disabled, since there is nothing left to save.",
     "Picking quantity exceeds available stock. Post GI will fail with a \"Deficit of SL Unrestricted-use stock\" error. Check on-hand stock via the Manage Stock app before large or repeated test runs."
   ],
   "transaction": {
@@ -123,7 +124,7 @@
       "params": {
         "field": "pickingQuantityField",
         "rowIndex": "0",
-        "value": "${quantity}"
+        "value": "${quantity1}"
       }
     },
     {
@@ -132,14 +133,15 @@
       "params": {
         "field": "pickingQuantityField",
         "rowIndex": "1",
-        "value": "${quantity}"
+        "value": "${quantity2}"
       }
     },
     {
       "module": "ClickByText",
       "params": {
-        "text": "Save",
-        "timeoutMs": "15000"
+        "text": "Copy Picking Quantity",
+        "timeoutMs": "15000",
+        "matchMode": "contains"
       }
     },
     {
