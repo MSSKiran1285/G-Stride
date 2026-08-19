@@ -355,9 +355,10 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
   private async locateTableCell(
     { tableId, columnId, rowIndex, columnAttr = 'data-sap-ui-colid', rowIndexAttr = 'data-sap-ui-rowindex' }: TableCellLocator,
     timeoutMs: number
-  ): Promise<Locator> {
+  ): Promise<{ handle: Locator; healedTableId?: string; healedColumnId?: string }> {
     try {
-      return await this.locateTableCellOnce(tableId, columnId, rowIndex, columnAttr, rowIndexAttr, timeoutMs);
+      const handle = await this.locateTableCellOnce(tableId, columnId, rowIndex, columnAttr, rowIndexAttr, timeoutMs);
+      return { handle };
     } catch (err) {
       // Only heal after the real ids have been given the full timeout to render — trying
       // suffix-matching as an eager pre-check (rather than a genuine failure fallback) was
@@ -371,7 +372,18 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
       const healedTableId = await this.healIdBySuffix(tableId, healTimeout);
       const healedColumnId = await this.healIdBySuffix(columnId, healTimeout);
       if (!healedTableId && !healedColumnId) throw err;
-      return this.locateTableCellOnce(healedTableId ?? tableId, healedColumnId ?? columnId, rowIndex, columnAttr, rowIndexAttr, timeoutMs);
+      const handle = await this.locateTableCellOnce(
+        healedTableId ?? tableId,
+        healedColumnId ?? columnId,
+        rowIndex,
+        columnAttr,
+        rowIndexAttr,
+        timeoutMs
+      );
+      // Only report a heal for the id that actually changed — healIdBySuffix may have
+      // returned null for the other one (it was already fine), and persisting it as
+      // "healed" would overwrite a perfectly good stored id with itself for no reason.
+      return { handle, healedTableId: healedTableId ?? undefined, healedColumnId: healedColumnId ?? undefined };
     }
   }
 
@@ -473,10 +485,10 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
   private async locate(
     locator: ObjectLocator,
     timeoutMs = FioriPlaywrightAdapter.DEFAULT_TIMEOUT_MS
-  ): Promise<{ handle: Locator; healedControlId?: string }> {
+  ): Promise<{ handle: Locator; healedControlId?: string; healedTableId?: string; healedColumnId?: string }> {
     if (locator.tableCell) {
-      const handle = await this.locateTableCell(locator.tableCell, timeoutMs);
-      return { handle };
+      const { handle, healedTableId, healedColumnId } = await this.locateTableCell(locator.tableCell, timeoutMs);
+      return { handle, healedTableId, healedColumnId };
     }
     if (!locator.controlId) {
       throw new Error('ObjectLocator must specify either controlId or tableCell');
@@ -494,9 +506,9 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
   }
 
   async waitFor(locator: ObjectLocator, timeoutMs = FioriPlaywrightAdapter.DEFAULT_TIMEOUT_MS): Promise<ActionResult> {
-    const { handle, healedControlId } = await this.locate(locator, timeoutMs);
+    const { handle, healedControlId, healedTableId, healedColumnId } = await this.locate(locator, timeoutMs);
     await handle.waitFor({ state: 'visible', timeout: timeoutMs });
-    return { healedControlId };
+    return { healedControlId, healedTableId, healedColumnId };
   }
 
   async performAction(
@@ -505,7 +517,7 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
     value?: string,
     options?: { pressKey?: string }
   ): Promise<ActionResult> {
-    const { handle, healedControlId } = await this.locate(locator);
+    const { handle, healedControlId, healedTableId, healedColumnId } = await this.locate(locator);
     if (action === 'click') {
       // sap.m.CheckBox (and similar widgets) render a real, native <input type="checkbox">
       // deliberately sized to 0x0 — the visible box a user actually sees and clicks is a
@@ -526,7 +538,7 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
       } else {
         await handle.click();
       }
-      return { healedControlId };
+      return { healedControlId, healedTableId, healedColumnId };
     }
     if (action === 'fill') {
       // Many UI5 controls (sap.m.Input, etc.) wrap the real <input> inside an outer div with the control's id.
@@ -546,16 +558,16 @@ export class FioriPlaywrightAdapter implements IAutomationAdapter {
       // not on the input event fill() dispatches — press Tab (or a caller-specified key, e.g. Enter
       // for a search field) to commit the value like a real user would.
       await target.press(options?.pressKey ?? 'Tab');
-      return { healedControlId };
+      return { healedControlId, healedTableId, healedColumnId };
     }
     throw new Error(`Unsupported action "${action}"`);
   }
 
   async readValue(locator: ObjectLocator): Promise<{ value: string } & ActionResult> {
-    const { handle, healedControlId } = await this.locate(locator);
+    const { handle, healedControlId, healedTableId, healedColumnId } = await this.locate(locator);
     const input = handle.locator('input, textarea');
     const value = (await input.count()) > 0 ? await input.first().inputValue() : ((await handle.textContent()) ?? '');
-    return { value, healedControlId };
+    return { value, healedControlId, healedTableId, healedColumnId };
   }
 
   async apiGet(path: string): Promise<unknown> {

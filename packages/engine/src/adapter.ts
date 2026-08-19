@@ -39,10 +39,14 @@ export interface ActionResult {
    * Set when the control was found via a self-healing fallback rather than at
    * the exact stored controlId — the id that actually worked, so the caller
    * can persist the fix back to the object repository. Absent (or equal to
-   * the requested controlId) when no healing occurred, and never set for
-   * tableCell locators, which don't participate in healing.
+   * the requested controlId) when no healing occurred. Not set for tableCell
+   * locators — see healedTableId/healedColumnId instead.
    */
   healedControlId?: string;
+  /** tableCell equivalent of healedControlId, for the table's own id. */
+  healedTableId?: string;
+  /** tableCell equivalent of healedControlId, for the column's own id. */
+  healedColumnId?: string;
 }
 
 /**

@@ -14,6 +14,21 @@ function persistHealing(objectRepository: ObjectRepository, control: ControlDefi
   objectRepository.upsert({ ...control, controlId: healedControlId });
 }
 
+/** persistHealing's tableCell equivalent — a column can drift in its own id (controlId), its
+ *  table's id (tableId), or both independently, so each is only overwritten when the adapter
+ *  actually reports a change for it. */
+function persistTableCellHealing(
+  objectRepository: ObjectRepository,
+  column: ControlDefinition,
+  healedTableId?: string,
+  healedColumnId?: string
+): void {
+  const nextTableId = healedTableId && healedTableId !== column.tableId ? healedTableId : column.tableId;
+  const nextControlId = healedColumnId && healedColumnId !== column.controlId ? healedColumnId : column.controlId;
+  if (nextTableId === column.tableId && nextControlId === column.controlId) return;
+  objectRepository.upsert({ ...column, tableId: nextTableId, controlId: nextControlId });
+}
+
 export interface EvidenceOptions {
   evidenceDir?: string;
   runState?: Record<string, unknown>;
@@ -120,7 +135,8 @@ export async function waitForTableCell(
   timeoutMs?: number
 ): Promise<void> {
   const column = objectRepository.get(appId, columnFieldName);
-  await adapter.waitFor(toTableCellLocator(column, rowIndex, style), timeoutMs);
+  const { healedTableId, healedColumnId } = await adapter.waitFor(toTableCellLocator(column, rowIndex, style), timeoutMs);
+  persistTableCellHealing(objectRepository, column, healedTableId, healedColumnId);
 }
 
 export async function clickTableCell(
@@ -132,7 +148,8 @@ export async function clickTableCell(
   style?: TableCellStyle
 ): Promise<void> {
   const column = objectRepository.get(appId, columnFieldName);
-  await adapter.performAction(toTableCellLocator(column, rowIndex, style), 'click');
+  const { healedTableId, healedColumnId } = await adapter.performAction(toTableCellLocator(column, rowIndex, style), 'click');
+  persistTableCellHealing(objectRepository, column, healedTableId, healedColumnId);
 }
 
 export async function fillTableCell(
@@ -147,7 +164,8 @@ export async function fillTableCell(
 ): Promise<void> {
   const column = objectRepository.get(appId, columnFieldName);
   const locator = toTableCellLocator(column, rowIndex, style);
-  await adapter.performAction(locator, 'fill', value);
+  const { healedTableId, healedColumnId } = await adapter.performAction(locator, 'fill', value);
+  persistTableCellHealing(objectRepository, column, healedTableId, healedColumnId);
   await maybeCaptureFieldEvidence(adapter, locator, buildEvidenceCaption(column, value), evidence);
 }
 
@@ -160,6 +178,7 @@ export async function readTableCellValue(
   style?: TableCellStyle
 ): Promise<string> {
   const column = objectRepository.get(appId, columnFieldName);
-  const { value } = await adapter.readValue(toTableCellLocator(column, rowIndex, style));
+  const { value, healedTableId, healedColumnId } = await adapter.readValue(toTableCellLocator(column, rowIndex, style));
+  persistTableCellHealing(objectRepository, column, healedTableId, healedColumnId);
   return value;
 }
