@@ -118,5 +118,139 @@
         "answer": "It means the document has a real number but has not yet updated financial accounting. Clicking \"Post Billing Document\" moves it to \"Completed.\""
       }
     ]
-  }
+  },
+  "version": 1,
+  "lifecycle": "draft",
+  "stages": [
+    {
+      "stageId": "stage-1-create-so",
+      "testCaseFile": "create-so.json",
+      "inputBindings": {
+        "automationReferencePrefix": {
+          "source": "processData",
+          "path": "automationReferencePrefix"
+        },
+        "automationOwner": {
+          "source": "processData",
+          "path": "automationOwner"
+        },
+        "url": {
+          "source": "systemContext",
+          "key": "sap.url"
+        },
+        "username": {
+          "source": "systemContext",
+          "key": "sap.username"
+        },
+        "password": {
+          "source": "systemContext",
+          "key": "sap.password"
+        },
+        "urlBase": {
+          "source": "systemContext",
+          "key": "sap.urlBase"
+        },
+        "orderType": {
+          "source": "processData",
+          "path": "orderType"
+        },
+        "salesOrg": {
+          "source": "processData",
+          "path": "salesOrg"
+        },
+        "distributionChannel": {
+          "source": "processData",
+          "path": "distributionChannel"
+        },
+        "division": {
+          "source": "processData",
+          "path": "division"
+        },
+        "soldToParty": {
+          "source": "processData",
+          "path": "soldToParty"
+        },
+        "lineItems": {
+          "source": "processData",
+          "path": "lineItems"
+        }
+      }
+    },
+    {
+      "stageId": "stage-2-create-delivery",
+      "testCaseFile": "create-delivery.json",
+      "inputBindings": {
+        "automationReferencePrefix": {
+          "source": "processData",
+          "path": "automationReferencePrefix"
+        },
+        "automationOwner": {
+          "source": "stageOutput",
+          "stageId": "stage-1-create-so",
+          "output": "automationOwner"
+        },
+        "url": {
+          "source": "systemContext",
+          "key": "sap.url"
+        },
+        "username": {
+          "source": "systemContext",
+          "key": "sap.username"
+        },
+        "password": {
+          "source": "systemContext",
+          "key": "sap.password"
+        },
+        "urlBase": {
+          "source": "systemContext",
+          "key": "sap.urlBase"
+        },
+        "soNumber": {
+          "source": "stageOutput",
+          "stageId": "stage-1-create-so",
+          "output": "soNumber"
+        },
+        "quantity": {
+          "source": "processData",
+          "path": "quantity"
+        }
+      }
+    },
+    {
+      "stageId": "stage-3-create-billing",
+      "testCaseFile": "create-billing.json",
+      "inputBindings": {
+        "automationReferencePrefix": {
+          "source": "processData",
+          "path": "automationReferencePrefix"
+        },
+        "automationOwner": {
+          "source": "stageOutput",
+          "stageId": "stage-2-create-delivery",
+          "output": "automationOwner"
+        },
+        "url": {
+          "source": "systemContext",
+          "key": "sap.url"
+        },
+        "username": {
+          "source": "systemContext",
+          "key": "sap.username"
+        },
+        "password": {
+          "source": "systemContext",
+          "key": "sap.password"
+        },
+        "urlBase": {
+          "source": "systemContext",
+          "key": "sap.urlBase"
+        },
+        "deliveryNumber": {
+          "source": "stageOutput",
+          "stageId": "stage-2-create-delivery",
+          "output": "deliveryNumber"
+        }
+      }
+    }
+  ]
 }

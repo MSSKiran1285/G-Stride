@@ -40,5 +40,10 @@
   },
   "dependencies": {
     "lucide-react": "^1.27.0"
+  },
+  "allowScripts": {
+    "better-sqlite3": true,
+    "esbuild": true,
+    "keytar": true
   }
 }

@@ -1,2 +1,2 @@
 orderType,salesOrg,distributionChannel,division,soldToParty,product,quantity,automationReferencePrefix,automationOwner,lineItems
-OR,1710,10,00,USCU_S14,MZ-FG-EB01,10,Q4HO2C,kiran,"[{""lineItemProductField"":""MZ-FG-EB01"",""lineItemQuantityField"":""10""},{""lineItemProductField"":""MZ-FG-EB01"",""lineItemQuantityField"":""4""}]"
+OR,1710,10,00,USCU_S14,MZ-FG-EB01,10,Q4HO2C,kiran,"[{""lineItemProductField"":""MZ-FG-EB01"",""lineItemQuantityField"":""10""}]"

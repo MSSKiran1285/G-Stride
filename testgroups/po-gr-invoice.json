@@ -70,5 +70,139 @@
         "answer": "False — the system either blocks the posting or raises an over-delivery warning, depending on configuration."
       }
     ]
-  }
+  },
+  "version": 1,
+  "lifecycle": "draft",
+  "stages": [
+    {
+      "stageId": "stage-1-create-po",
+      "testCaseFile": "create-po.json",
+      "inputBindings": {
+        "automationReferencePrefix": {
+          "source": "processData",
+          "path": "automationReferencePrefix"
+        },
+        "automationOwner": {
+          "source": "processData",
+          "path": "automationOwner"
+        },
+        "url": {
+          "source": "systemContext",
+          "key": "sap.url"
+        },
+        "username": {
+          "source": "systemContext",
+          "key": "sap.username"
+        },
+        "password": {
+          "source": "systemContext",
+          "key": "sap.password"
+        },
+        "urlBase": {
+          "source": "systemContext",
+          "key": "sap.urlBase"
+        },
+        "supplier": {
+          "source": "processData",
+          "path": "supplier"
+        },
+        "material": {
+          "source": "processData",
+          "path": "material"
+        },
+        "plant": {
+          "source": "processData",
+          "path": "plant"
+        },
+        "quantity": {
+          "source": "processData",
+          "path": "quantity"
+        },
+        "netPrice": {
+          "source": "processData",
+          "path": "netPrice"
+        }
+      }
+    },
+    {
+      "stageId": "stage-2-post-goods-receipt",
+      "testCaseFile": "post-goods-receipt.json",
+      "inputBindings": {
+        "automationReferencePrefix": {
+          "source": "processData",
+          "path": "automationReferencePrefix"
+        },
+        "automationOwner": {
+          "source": "stageOutput",
+          "stageId": "stage-1-create-po",
+          "output": "automationOwner"
+        },
+        "url": {
+          "source": "systemContext",
+          "key": "sap.url"
+        },
+        "username": {
+          "source": "systemContext",
+          "key": "sap.username"
+        },
+        "password": {
+          "source": "systemContext",
+          "key": "sap.password"
+        },
+        "poNumber": {
+          "source": "stageOutput",
+          "stageId": "stage-1-create-po",
+          "output": "poNumber"
+        },
+        "deliveredQuantity": {
+          "source": "processData",
+          "path": "deliveredQuantity"
+        }
+      }
+    },
+    {
+      "stageId": "stage-3-post-supplier-invoice",
+      "testCaseFile": "post-supplier-invoice.json",
+      "inputBindings": {
+        "automationReferencePrefix": {
+          "source": "processData",
+          "path": "automationReferencePrefix"
+        },
+        "automationOwner": {
+          "source": "stageOutput",
+          "stageId": "stage-2-post-goods-receipt",
+          "output": "automationOwner"
+        },
+        "url": {
+          "source": "systemContext",
+          "key": "sap.url"
+        },
+        "username": {
+          "source": "systemContext",
+          "key": "sap.username"
+        },
+        "password": {
+          "source": "systemContext",
+          "key": "sap.password"
+        },
+        "urlBase": {
+          "source": "systemContext",
+          "key": "sap.urlBase"
+        },
+        "supplier": {
+          "source": "processData",
+          "path": "supplier"
+        },
+        "today": {
+          "source": "systemContext",
+          "key": "runtime.today"
+        },
+        "poNumber": {
+          "source": "stageOutput",
+          "stageId": "stage-1-create-po",
+          "output": "poNumber"
+        }
+      }
+    }
+  ]
 }
